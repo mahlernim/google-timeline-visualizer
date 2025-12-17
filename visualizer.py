@@ -171,7 +171,11 @@ def parse_timeline(input_path, year):
         print(f"Error reading JSON: {e}")
         sys.exit(1)
         
-    segments = data.get('semanticSegments', [])
+    # Handle both formats: direct array or {"semanticSegments": [...]}
+    if isinstance(data, list):
+        segments = data
+    else:
+        segments = data.get('semanticSegments', [])
     print(f"Parsing {len(segments)} segments for year {year}...")
     
     points = [] # dicts of {dt, lat, lon}
@@ -202,21 +206,45 @@ def parse_timeline(input_path, year):
                         t = dateutil.parser.parse(tm_str)
                         points.append({'dt':t, 'lat':lat, 'lon':lon})
                     except: pass
-        
-        # 2. Visit (Top Candidate)
+
+        # 2. Activity (start/end geo coordinates)
+        if 'activity' in seg:
+            activity = seg['activity']
+            end_time = seg.get('endTime')
+            for geo_key, time_val in [('start', start_str), ('end', end_time)]:
+                geo_str = activity.get(geo_key)
+                if geo_str and time_val:
+                    try:
+                        # "geo:37.479385,127.105506"
+                        coords = geo_str.replace('geo:', '').replace('°','')
+                        parts = coords.split(',')
+                        lat = float(parts[0])
+                        lon = float(parts[1])
+                        t = dateutil.parser.parse(time_val)
+                        points.append({'dt':t, 'lat':lat, 'lon':lon})
+                    except: pass
+
+        # 3. Visit (Top Candidate)
         if 'visit' in seg:
             visit = seg['visit']
             if 'topCandidate' in visit:
-                 loc = visit['topCandidate'].get('placeLocation', {})
-                 latlng = loc.get('latLng')
-                 if latlng:
-                     try:
-                        parts = latlng.replace('°','').split(',')
-                        lat = float(parts[0])
-                        lon = float(parts[1])
-                        # Use segment start time for visit anchor
-                        points.append({'dt':dt, 'lat':lat, 'lon':lon})
-                     except: pass
+                 loc = visit['topCandidate'].get('placeLocation')
+                 if loc:
+                     # Handle both formats: string "geo:lat,lon" or dict {"latLng": "..."}
+                     if isinstance(loc, str):
+                         latlng = loc
+                     else:
+                         latlng = loc.get('latLng')
+                     if latlng:
+                         try:
+                            # Parse "geo:lat,lon" format
+                            latlng = latlng.replace('geo:', '').replace('°','')
+                            parts = latlng.split(',')
+                            lat = float(parts[0])
+                            lon = float(parts[1])
+                            # Use segment start time for visit anchor
+                            points.append({'dt':dt, 'lat':lat, 'lon':lon})
+                         except: pass
 
     if not points:
         print(f"No data points found for year {year}.")
