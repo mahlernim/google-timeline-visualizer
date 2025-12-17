@@ -33,6 +33,7 @@ try:
     import matplotlib.font_manager as fm
     from PIL import Image
     import dateutil.parser
+    from tqdm import tqdm
 except ImportError as e:
     print(f"Error: Missing dependency {e.name}. Please run: pip install -r requirements.txt")
     sys.exit(1)
@@ -386,7 +387,9 @@ def main():
     ani = animation.FuncAnimation(fig, update, frames=len(frame_indices), blit=False)
     
     print(f"Saving to {args.output}...")
-    ani.save(args.output, writer='ffmpeg', fps=DEFAULT_FPS, dpi=100)
+    with tqdm(total=len(frame_indices), desc="Rendering", unit="frame") as pbar:
+        ani.save(args.output, writer='ffmpeg', fps=DEFAULT_FPS, dpi=100,
+                 progress_callback=lambda i, n: pbar.update(1))
     print("Done!")
 
 if __name__ == "__main__":
