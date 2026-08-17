@@ -21,11 +21,11 @@ jobs:
       - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v5
       - name: Test, lint, and build
-        run: ./gradlew test lint assembleDebug --stacktrace
+        run: ./gradlew test lint assembleGithubDebug assemblePlayDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: timeline-visualizer-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/*/debug/*.apk
           if-no-files-found: error
 
   python:

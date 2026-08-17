@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; }
+  html, body { width: 1024px; height: 500px; margin: 0; overflow: hidden; }
+  body { font-family: Arial, sans-serif; color: #24191d; background: #fff8fa; }
+  .canvas { position: relative; width: 100%; height: 100%; overflow: hidden; background: linear-gradient(135deg, #fff8fa 0%, #ffe8f0 57%, #f7d7e5 100%); }
+  .route { position: absolute; inset: 0; }
+  .copy { position: absolute; left: 492px; top: 104px; width: 470px; }
+  h1 { margin: 0; font-size: 58px; line-height: 1.05; letter-spacing: -2px; }
+  p { margin: 28px 0 0; font-size: 25px; line-height: 1.35; color: #65555b; }
+  .brand { margin-top: 38px; font-weight: 700; color: #e90064; font-size: 22px; letter-spacing: .2px; }
+</style>
+<div class="canvas">
+  <svg class="route" viewBox="0 0 1024 500" aria-hidden="true">
+    <path d="M-60 436C89 300 190 430 288 330c91-92 56-186 136-250" fill="none" stroke="#24191d" stroke-width="24" stroke-linecap="round" opacity=".12"/>
+    <path d="M-60 436C89 300 190 430 288 330c91-92 56-186 136-250" fill="none" stroke="#e90064" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="288" cy="330" r="16" fill="#fff8fa" stroke="#e90064" stroke-width="10"/>
+    <g transform="translate(330 42)">
+      <path d="M82 0C37 0 0 37 0 82c0 63 82 153 82 153s82-90 82-153C164 37 127 0 82 0z" fill="#e90064"/>
+      <circle cx="82" cy="82" r="36" fill="#fff"/>
+    </g>
+  </svg>
+  <div class="copy">
+    <h1>Your year.<br>One moving map.</h1>
+    <p>Turn your Timeline export into a travel video—right on your phone.</p>
+    <div class="brand">Timeline Visualizer</div>
+  </div>
+</div>

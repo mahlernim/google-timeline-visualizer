@@ -15,6 +15,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.shadows.ShadowDialog
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
@@ -29,6 +30,7 @@ class MainActivityTest {
     @Before
     fun setUp() {
         store.clear()
+        context.getSharedPreferences("display", Context.MODE_PRIVATE).edit().clear().commit()
     }
 
     @After
@@ -64,7 +66,7 @@ class MainActivityTest {
     }
 
     @Test
-    fun checkForUpdatesOpensOfficialLatestRelease() {
+    fun checkForUpdatesOpensConfiguredDistributionPage() {
         val activity = launchActivity()
         activity.findViewById<View>(R.id.checkUpdatesButton).performClick()
 
@@ -72,7 +74,34 @@ class MainActivityTest {
         assertNotNull(intent)
         assertEquals(Intent.ACTION_VIEW, intent.action)
         assertEquals(
-            "https://github.com/mahlernim/google-timeline-visualizer/releases/latest",
+            BuildConfig.UPDATE_URL,
+            intent.dataString,
+        )
+    }
+
+    @Test
+    fun firstTimelineLoadShowsMapPrivacyDisclosure() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.importButton).performClick()
+
+        val dialog = ShadowDialog.getLatestDialog()
+        assertNotNull(dialog)
+        assertEquals(true, dialog.isShowing)
+        assertEquals(
+            activity.getString(R.string.map_privacy_message),
+            dialog.findViewById<android.widget.TextView>(android.R.id.message)?.text?.toString(),
+        )
+    }
+
+    @Test
+    fun privacyPolicyOpensPublicEnglishPolicy() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.privacyPolicyButton).performClick()
+
+        val intent = shadowOf(activity).nextStartedActivity
+        assertEquals(Intent.ACTION_VIEW, intent.action)
+        assertEquals(
+            "https://github.com/mahlernim/google-timeline-visualizer/blob/main/docs/privacy.md",
             intent.dataString,
         )
     }

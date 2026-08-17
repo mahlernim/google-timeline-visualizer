@@ -1,0 +1,20 @@
+Bring a year of travel to life.
+
+Timeline Visualizer turns a Google Maps Timeline export into an animated map video on your Android phone. Choose a year or month range, preview the route, and create an MP4 that is ready to watch or share.
+
+Create your story
+• Load a Timeline.json export from Android or iPhone
+• Select a whole year or a custom range of months
+• Personalize a reusable title such as “2026 Mina's Timeline”
+• Preview the animation before creating the full-quality video
+• Choose a 15, 30, 60, or 90-second video
+
+Keep your videos together
+Completed videos appear in Creations with a thumbnail, title, date, duration, and Timeline period. You can also add older MP4 files, then watch or share them from one place.
+
+Designed for privacy
+Your Timeline.json, route list, titles, and generated videos are processed on your device and are not uploaded to the developer. No Google sign-in, analytics, advertising, or location permission is used.
+
+To draw the map, the app requests map tiles from CARTO. Those requests include map-area tile coordinates and normal network information, which may reveal places in your Timeline to CARTO. The app explains this before the first Timeline is loaded and lets you cancel.
+
+Timeline Visualizer is an independent open-source app. It is not affiliated with or endorsed by Google. Google Maps is a trademark of Google LLC.

@@ -49,6 +49,10 @@
     <string name="timeline_preview">선택한 기간의 움직이는 지도 미리보기</string>
     <string name="playback_position">타임라인 재생 위치</string>
     <string name="privacy_summary">JSON은 이 기기 안에 보관됩니다. CARTO에는 표시된 지도 영역의 타일 요청만 전송되며, 분석 도구나 계정은 사용하지 않습니다.</string>
+    <string name="map_privacy_title">타임라인을 불러오기 전에</string>
+    <string name="map_privacy_message">지도를 그리기 위해 타임라인 비주얼라이저는 타임라인에 포함된 지역의 지도 타일 좌표와 IP 주소, 사용자 에이전트 같은 일반적인 네트워크 정보를 CARTO에 전송합니다. 이 정보로 타임라인에 포함된 장소가 CARTO에 알려질 수 있습니다.\n\nTimeline.json, 전체 이동 경로, 제목, 영상은 CARTO나 개발자에게 업로드되지 않습니다.</string>
+    <string name="continue_action">계속</string>
+    <string name="privacy_policy">개인정보 처리방침</string>
     <string name="creations">만든 영상</string>
     <string name="add_existing_videos">영상 추가</string>
     <string name="adding_videos">추가 중…</string>
@@ -73,6 +77,8 @@
         <item quantity="other">영상 %1$d개를 추가했습니다</item>
     </plurals>
     <string name="unknown_duration">길이 정보 없음</string>
-    <string name="check_for_updates">GitHub에서 업데이트 확인</string>
-    <string name="github_unavailable">GitHub 릴리스 페이지를 열 수 없습니다</string>
+    <string name="check_for_updates">업데이트 확인</string>
+    <string name="project_on_github">GitHub 프로젝트</string>
+    <string name="update_page_unavailable">업데이트 페이지를 열 수 없습니다</string>
+    <string name="web_page_unavailable">웹페이지를 열 수 없습니다</string>
 </resources>

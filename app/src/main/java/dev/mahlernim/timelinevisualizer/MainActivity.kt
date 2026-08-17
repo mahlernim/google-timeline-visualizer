@@ -94,7 +94,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        binding.importButton.setOnClickListener { openTimeline.launch(arrayOf("application/json", "text/json", "text/plain")) }
+        binding.importButton.setOnClickListener { requestTimelineImport() }
         binding.exportHelpButton.setOnClickListener { showExportHelp() }
         binding.playButton.setOnClickListener { togglePreview() }
         binding.exportButton.setOnClickListener { chooseExportDestination() }
@@ -107,7 +107,9 @@ class MainActivity : AppCompatActivity() {
             creationsExpanded = !creationsExpanded
             renderCreations()
         }
-        binding.checkUpdatesButton.setOnClickListener { openLatestRelease() }
+        binding.privacyPolicyButton.setOnClickListener { openPrivacyPolicy() }
+        binding.githubProjectButton.setOnClickListener { openWebPage(PROJECT_URL, R.string.web_page_unavailable) }
+        binding.checkUpdatesButton.setOnClickListener { openUpdates() }
         binding.timelineSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
@@ -136,7 +138,7 @@ class MainActivity : AppCompatActivity() {
         configureMonthDropdowns()
         renderCreations()
 
-        intent?.data?.let(::importTimeline)
+        intent?.data?.let { requestTimelineImport(it) }
     }
 
     override fun onDestroy() {
@@ -656,11 +658,51 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun openLatestRelease() {
+    private fun requestTimelineImport(uri: Uri? = null) {
+        val continueImport = {
+            if (uri != null) {
+                importTimeline(uri)
+            } else {
+                openTimeline.launch(arrayOf("application/json", "text/json", "text/plain"))
+            }
+        }
+        if (preferences.getBoolean(MAP_PRIVACY_ACCEPTED, false)) {
+            continueImport()
+            return
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.map_privacy_title)
+            .setMessage(R.string.map_privacy_message)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.continue_action) { _, _ ->
+                preferences.edit { putBoolean(MAP_PRIVACY_ACCEPTED, true) }
+                continueImport()
+            }
+            .show()
+    }
+
+    private fun openUpdates() {
+        val opened = runCatching {
+            startActivity(Intent(Intent.ACTION_VIEW, BuildConfig.UPDATE_URL.toUri()))
+        }.isSuccess
+        if (!opened && BuildConfig.UPDATE_FALLBACK_URL != BuildConfig.UPDATE_URL) {
+            openWebPage(BuildConfig.UPDATE_FALLBACK_URL, R.string.update_page_unavailable)
+        } else if (!opened) {
+            Snackbar.make(binding.root, R.string.update_page_unavailable, Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    private fun openPrivacyPolicy() {
+        val language = resources.configuration.locales[0]?.language
+        val url = if (language == Locale.KOREAN.language) PRIVACY_URL_KO else PRIVACY_URL
+        openWebPage(url, R.string.web_page_unavailable)
+    }
+
+    private fun openWebPage(url: String, errorMessage: Int) {
         runCatching {
-            startActivity(Intent(Intent.ACTION_VIEW, LATEST_RELEASE_URL.toUri()))
+            startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
         }.onFailure {
-            Snackbar.make(binding.root, R.string.github_unavailable, Snackbar.LENGTH_LONG).show()
+            Snackbar.make(binding.root, errorMessage, Snackbar.LENGTH_LONG).show()
         }
     }
 
@@ -733,7 +775,11 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TITLE_UPDATE_DELAY_MS = 450L
         private const val COLLAPSED_CREATION_COUNT = 3
-        private const val LATEST_RELEASE_URL =
-            "https://github.com/mahlernim/google-timeline-visualizer/releases/latest"
+        private const val MAP_PRIVACY_ACCEPTED = "map_privacy_accepted_v1"
+        private const val PROJECT_URL = "https://github.com/mahlernim/google-timeline-visualizer"
+        private const val PRIVACY_URL =
+            "https://github.com/mahlernim/google-timeline-visualizer/blob/main/docs/privacy.md"
+        private const val PRIVACY_URL_KO =
+            "https://github.com/mahlernim/google-timeline-visualizer/blob/main/docs/privacy.ko.md"
     }
 }

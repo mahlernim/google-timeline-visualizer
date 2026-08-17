@@ -1,7 +1,14 @@
 # Privacy
 
-Google Timeline Visualizer is designed to process sensitive location history
-locally.
+[한국어](privacy.ko.md)
+
+**Effective date:** August 17, 2026
+
+**Developer:** MahlerLab
+
+**Contact:** [mahlerlabdiy@gmail.com](mailto:mahlerlabdiy@gmail.com)
+
+Timeline Visualizer is designed to process sensitive location history locally.
 
 ## Data the app can access
 
@@ -29,12 +36,17 @@ so video references and preview images are not copied to another device.
 
 The app requests raster map tiles from CARTO. Those requests contain standard
 zoom/x/y tile identifiers and normal network metadata such as an IP address and
-user agent. Tile identifiers correspond to viewed geographic areas. The app does
-not send the Timeline JSON, a list of route coordinates, video frames, titles, or
-generated videos to CARTO or to the developer.
+user agent. Tile identifiers correspond to geographic areas in the selected
+Timeline and may reveal those areas to CARTO. Before the first Timeline is loaded,
+the app explains this transfer and lets the user cancel. The app does not send the
+Timeline JSON, a list of route coordinates, video frames, titles, or generated
+videos to CARTO or to the developer.
 
 The application has no analytics, advertising, crash-reporting, login, or
 developer-operated server.
+
+All network requests made by the app use encrypted HTTPS connections. CARTO may
+process network and tile-request information under its own privacy notice.
 
 ## Deleting data
 

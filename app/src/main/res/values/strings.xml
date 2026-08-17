@@ -52,6 +52,10 @@
     <string name="timeline_preview">Animated map preview of the selected year</string>
     <string name="playback_position">Timeline playback position</string>
     <string name="privacy_summary">Private by design: the JSON stays on this device. CARTO receives tile requests for the map areas shown; no analytics or account is used.</string>
+    <string name="map_privacy_title">Before loading your Timeline</string>
+    <string name="map_privacy_message">To draw the map, Timeline Visualizer sends CARTO the tile coordinates for areas in your Timeline, together with normal network information such as your IP address and user agent. This may reveal places in your Timeline to CARTO.\n\nYour Timeline.json, route list, titles, and videos are never uploaded to CARTO or the developer.</string>
+    <string name="continue_action">Continue</string>
+    <string name="privacy_policy">Privacy policy</string>
     <string name="creations">Creations</string>
     <string name="add_existing_videos">Add videos</string>
     <string name="adding_videos">Adding…</string>
@@ -77,6 +81,8 @@
         <item quantity="other">%1$d videos added</item>
     </plurals>
     <string name="unknown_duration">Unknown length</string>
-    <string name="check_for_updates">Check for updates on GitHub</string>
-    <string name="github_unavailable">Could not open the GitHub releases page</string>
+    <string name="check_for_updates">Check for updates</string>
+    <string name="project_on_github">Project on GitHub</string>
+    <string name="update_page_unavailable">Could not open the update page</string>
+    <string name="web_page_unavailable">Could not open the web page</string>
 </resources>

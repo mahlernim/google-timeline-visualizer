@@ -369,6 +369,14 @@
             android:textAppearance="?attr/textAppearanceBodySmall" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/privacyPolicyButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/privacy_policy" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/checkUpdatesButton"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
@@ -377,5 +385,13 @@
             android:text="@string/check_for_updates"
             app:icon="@android:drawable/ic_menu_info_details"
             app:iconGravity="textStart" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/githubProjectButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/project_on_github" />
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

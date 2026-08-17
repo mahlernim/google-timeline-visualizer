@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.0
+
+- Add a clear first-load disclosure before map-area tile coordinates and normal
+  network information are sent to CARTO, with an option to cancel.
+- Add direct English and Korean privacy-policy links inside the app.
+- Route **Check for updates** to GitHub Releases for direct installs and to Google
+  Play for Play-distributed installs.
+- Add a separately labeled project source link and prevent cleartext network traffic.
+- Add an adaptive launcher icon and explicit English and Korean language support.
+- Prepare a signed Android App Bundle and complete bilingual Play listing materials.
+
 ## 1.3.0
 
 - Add a persistent Creations library for generated and imported MP4 videos.

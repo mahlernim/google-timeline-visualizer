@@ -23,18 +23,25 @@ jobs:
         env:
           SIGNING_KEY_BASE64: ${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}
         run: echo "$SIGNING_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/timeline-visualizer-release.jks"
-      - name: Test and build signed APK
+      - name: Test and build signed GitHub APK and Play bundle
         env:
           ANDROID_SIGNING_STORE_FILE: ${{ runner.temp }}/timeline-visualizer-release.jks
           ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
           ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
           ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
-        run: ./gradlew test lint assembleRelease --stacktrace
+        run: ./gradlew test lint assembleGithubRelease bundlePlayRelease --stacktrace
+      - name: Save Play Console bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: timeline-visualizer-play-${{ github.ref_name }}
+          path: app/build/outputs/bundle/playRelease/app-play-release.aab
+          if-no-files-found: error
+          retention-days: 30
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp app/build/outputs/apk/release/app-release.apk "TimelineVisualizer-${GITHUB_REF_NAME}.apk"
+          cp app/build/outputs/apk/github/release/app-github-release.apk "TimelineVisualizer-${GITHUB_REF_NAME}.apk"
           sha256sum "TimelineVisualizer-${GITHUB_REF_NAME}.apk" > "TimelineVisualizer-${GITHUB_REF_NAME}.apk.sha256"
           gh release create "$GITHUB_REF_NAME" \
             "TimelineVisualizer-${GITHUB_REF_NAME}.apk" \

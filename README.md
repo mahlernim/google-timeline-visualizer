@@ -15,7 +15,7 @@ an MP4 ready to share.
 The app is not yet on Google Play. Install it from this repository's
 [latest release](https://github.com/mahlernim/google-timeline-visualizer/releases/latest):
 
-1. Under **Assets**, download `TimelineVisualizer-v1.3.0.apk` on your phone.
+1. Under **Assets**, download `TimelineVisualizer-v1.4.0.apk` on your phone.
 2. Open the downloaded file.
 3. If Android blocks the installation, select **Settings**, allow your browser or
    file manager to **Install unknown apps**, then return and try again.
@@ -75,8 +75,9 @@ entry is marked **File unavailable** so you can remove it from the list.
 
 **Remove from list** leaves the MP4 untouched. **Delete video** is a separate,
 confirmed action that permanently deletes the file when its storage provider allows
-it. Use **Check for updates on GitHub** at the bottom of the app to open the latest
-official release.
+it. Use **Check for updates** at the bottom of the app to open the appropriate
+official update page. The separately labeled **Project on GitHub** link opens the
+source code.
 
 Long flights and other sparse routes are interpolated along a great-circle path,
 so the camera follows the trip smoothly instead of jumping to the destination.
@@ -102,7 +103,8 @@ the default title.
 
 The basemap is the only network feature. CARTO receives requests for the map areas
 shown and serves tiles based on OpenStreetMap data. This can reveal viewed areas to
-the tile provider, but the Timeline JSON is not uploaded. See the full
+the tile provider, but the Timeline JSON is not uploaded. Before the first Timeline
+is loaded, the app explains this transfer and lets you cancel. See the full
 [privacy explanation](docs/privacy.md).
 
 ## Desktop Python version
