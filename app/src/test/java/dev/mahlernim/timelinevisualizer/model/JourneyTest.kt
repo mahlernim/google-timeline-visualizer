@@ -42,13 +42,65 @@ class JourneyTest {
     @Test
     fun movingHeadStaysInsideItsCameraViewport() {
         val journey = Journey.from(listOf(seoul, bohol), 2025)
-        val position = journey.positionAt(0.5f)
-        val projected = WebMercator.project(position.point)
-        val viewport = TimelinePainter().viewport(journey, 0.5f, 480, 480)
+        val painter = TimelinePainter()
 
-        assertTrue(projected.x in viewport.minX..viewport.maxX)
-        assertTrue(projected.y in viewport.minY..viewport.maxY)
-        assertEquals((viewport.minX + viewport.maxX) / 2.0, projected.x, 0.0001)
+        for (sample in 0..100) {
+            val progress = sample / 100f
+            val position = journey.positionAt(progress)
+            val projected = WebMercator.project(position.point)
+            val viewport = painter.viewport(journey, progress, 480, 480)
+            val x = unwrapNear(projected.x, (viewport.minX + viewport.maxX) / 2.0)
+            val screenX = (x - viewport.minX) / (viewport.maxX - viewport.minX)
+            val screenY = (projected.y - viewport.minY) / (viewport.maxY - viewport.minY)
+
+            assertTrue("Marker x was $screenX at $progress", screenX in 0.25..0.75)
+            assertTrue("Marker y was $screenY at $progress", screenY in 0.25..0.75)
+        }
+    }
+
+    @Test
+    fun commuteReversalsMoveTheCameraLessThanTheMarker() {
+        val home = seoul.copy(latitude = 37.50, longitude = 126.95)
+        val office = seoul.copy(latitude = 37.50, longitude = 127.05)
+        val points = List(365) { index ->
+            (if (index % 2 == 0) home else office).copy(
+                instant = Instant.parse("2025-01-01T00:00:00Z").plusSeconds(index * 43_200L),
+            )
+        }
+        val journey = Journey.from(points, 2025)
+        val painter = TimelinePainter()
+        val markerCenters = mutableListOf<Double>()
+        val cameraCenters = mutableListOf<Double>()
+
+        for (sample in 0..240) {
+            val progress = sample / 240f
+            markerCenters += WebMercator.project(journey.positionAt(progress).point).x
+            val viewport = painter.viewport(journey, progress, 480, 480)
+            cameraCenters += (viewport.minX + viewport.maxX) / 2.0
+        }
+
+        val markerTravel = markerCenters.zipWithNext { a, b -> kotlin.math.abs(b - a) }.sum()
+        val cameraTravel = cameraCenters.zipWithNext { a, b -> kotlin.math.abs(b - a) }.sum()
+        assertTrue(
+            "Camera traveled $cameraTravel world units while marker traveled $markerTravel",
+            cameraTravel < markerTravel * 0.45,
+        )
+        assertEquals(1, (0..240).map { sample ->
+            painter.viewport(journey, sample / 240f, 480, 480).zoom
+        }.distinct().size)
+    }
+
+    @Test
+    fun cameraTrackIsDeterministicWhenSeeking() {
+        val journey = Journey.from(listOf(seoul, bohol), 2025)
+        val painter = TimelinePainter()
+        val first = painter.viewport(journey, 0.63f, 480, 480)
+
+        painter.viewport(journey, 0.05f, 480, 480)
+        painter.viewport(journey, 0.95f, 480, 480)
+        val afterSeeking = painter.viewport(journey, 0.63f, 480, 480)
+
+        assertEquals(first, afterSeeking)
     }
 
     @Test
@@ -73,5 +125,12 @@ class JourneyTest {
 
         assertEquals(4, timeline.forYear(2025).points.size)
         assertEquals(2, timeline.forRange(2025, 6, 7).points.size)
+    }
+
+    private fun unwrapNear(value: Double, reference: Double): Double {
+        var result = value
+        while (result - reference > 0.5) result -= 1.0
+        while (result - reference < -0.5) result += 1.0
+        return result
     }
 }

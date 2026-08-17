@@ -17,6 +17,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.math.ln
 import kotlin.math.log2
 import kotlin.math.max
 import kotlin.math.min
@@ -35,6 +36,10 @@ data class Viewport(
 class TimelinePainter {
     private var cachedJourney: Journey? = null
     private var cachedPrepared: PreparedJourney? = null
+    private var cachedCameraJourney: Journey? = null
+    private var cachedCameraWidth = 0
+    private var cachedCameraHeight = 0
+    private var cachedCameraTrack: CameraTrack? = null
     private val routePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.rgb(233, 0, 100)
         style = Paint.Style.STROKE
@@ -76,6 +81,11 @@ class TimelinePainter {
     }
 
     fun viewport(journey: Journey, progress: Float, width: Int, height: Int): Viewport {
+        if (width <= 0 || height <= 0) return rawViewport(journey, progress, width, height)
+        return cameraTrack(journey, width, height).viewportAt(progress)
+    }
+
+    private fun rawViewport(journey: Journey, progress: Float, width: Int, height: Int): Viewport {
         val prepared = prepare(journey)
         val current = journey.positionAt(progress)
         val tailDistance = max(0.0, current.distanceKm - CAMERA_CONTEXT_KM)
@@ -112,6 +122,82 @@ class TimelinePainter {
             .coerceIn(2, 15)
         return Viewport(minX, maxX, minY, maxY, zoom)
     }
+
+    private fun cameraTrack(journey: Journey, width: Int, height: Int): CameraTrack {
+        if (
+            cachedCameraJourney === journey &&
+            cachedCameraWidth == width &&
+            cachedCameraHeight == height
+        ) {
+            return cachedCameraTrack!!
+        }
+        val track = buildCameraTrack(journey, width, height)
+        cachedCameraJourney = journey
+        cachedCameraWidth = width
+        cachedCameraHeight = height
+        cachedCameraTrack = track
+        return track
+    }
+
+    private fun buildCameraTrack(journey: Journey, width: Int, height: Int): CameraTrack {
+        val aspect = width.toDouble() / height.coerceAtLeast(1)
+        val frames = ArrayList<CameraFrame>(CAMERA_TRACK_SAMPLES + 1)
+        var previous: CameraFrame? = null
+        for (sample in 0..CAMERA_TRACK_SAMPLES) {
+            val progress = sample.toFloat() / CAMERA_TRACK_SAMPLES
+            val raw = rawViewport(journey, progress, width, height)
+            val rawCenterX = (raw.minX + raw.maxX) / 2.0
+            val rawCenterY = (raw.minY + raw.maxY) / 2.0
+            val rawSpanY = (raw.maxY - raw.minY).coerceAtLeast(MIN_VIEWPORT_SPAN)
+            val marker = WebMercator.project(journey.positionAt(progress).point)
+            val frame = if (previous == null) {
+                CameraFrame(rawCenterX, rawCenterY, rawSpanY, raw.zoom)
+            } else {
+                val zoomAlpha = if (rawSpanY > previous.spanY) ZOOM_OUT_ALPHA else ZOOM_IN_ALPHA
+                val spanY = kotlin.math.exp(
+                    lerp(ln(previous.spanY), ln(rawSpanY), zoomAlpha),
+                ).coerceIn(MIN_VIEWPORT_SPAN, MAX_VIEWPORT_SPAN)
+                val spanX = spanY * aspect
+                val markerX = unwrapNear(marker.x, previous.centerX)
+                var centerX = previous.centerX
+                var centerY = previous.centerY
+                val deadHalfX = spanX * CAMERA_DEAD_ZONE_HALF
+                val deadHalfY = spanY * CAMERA_DEAD_ZONE_HALF
+                centerX = when {
+                    markerX < centerX - deadHalfX -> markerX + deadHalfX
+                    markerX > centerX + deadHalfX -> markerX - deadHalfX
+                    else -> centerX
+                }
+                centerY = when {
+                    marker.y < centerY - deadHalfY -> marker.y + deadHalfY
+                    marker.y > centerY + deadHalfY -> marker.y - deadHalfY
+                    else -> centerY
+                }
+                centerY = clampCenterY(centerY, spanY)
+                val continuousZoom = log2(width.coerceAtLeast(1) / (256.0 * spanX))
+                val tileZoom = stabilizedTileZoom(previous.zoom, continuousZoom)
+                CameraFrame(centerX, centerY, spanY, tileZoom)
+            }
+            frames.add(frame)
+            previous = frame
+        }
+        return CameraTrack(frames, aspect)
+    }
+
+    private fun stabilizedTileZoom(previous: Int, continuous: Double): Int {
+        var zoom = previous
+        while (zoom < MAX_TILE_ZOOM && continuous >= zoom + 1.0 + TILE_ZOOM_HYSTERESIS) zoom++
+        while (zoom > MIN_TILE_ZOOM && continuous < zoom - TILE_ZOOM_HYSTERESIS) zoom--
+        return zoom.coerceIn(MIN_TILE_ZOOM, MAX_TILE_ZOOM)
+    }
+
+    private fun clampCenterY(centerY: Double, spanY: Double): Double {
+        val half = spanY / 2.0
+        return if (half >= 0.5) 0.5 else centerY.coerceIn(half, 1.0 - half)
+    }
+
+    private fun lerp(start: Double, end: Double, fraction: Double): Double =
+        start + (end - start) * fraction
 
     fun requiredTiles(viewport: Viewport): List<VisibleTile> {
         val count = 1 shl viewport.zoom
@@ -334,9 +420,53 @@ class TimelinePainter {
         }
     }
 
+    private data class CameraFrame(
+        val centerX: Double,
+        val centerY: Double,
+        val spanY: Double,
+        val zoom: Int,
+    )
+
+    private data class CameraTrack(
+        val frames: List<CameraFrame>,
+        val aspect: Double,
+    ) {
+        fun viewportAt(progress: Float): Viewport {
+            if (frames.size == 1) return frames.first().toViewport(aspect)
+            val position = progress.coerceIn(0f, 1f) * frames.lastIndex
+            val fromIndex = floor(position).toInt().coerceIn(0, frames.lastIndex)
+            val toIndex = (fromIndex + 1).coerceAtMost(frames.lastIndex)
+            val fraction = position - fromIndex
+            val from = frames[fromIndex]
+            val to = frames[toIndex]
+            val centerX = from.centerX + (to.centerX - from.centerX) * fraction
+            val centerY = from.centerY + (to.centerY - from.centerY) * fraction
+            val spanY = kotlin.math.exp(
+                ln(from.spanY) + (ln(to.spanY) - ln(from.spanY)) * fraction,
+            )
+            val zoom = if (fraction < 0.5) from.zoom else to.zoom
+            return CameraFrame(centerX, centerY, spanY, zoom).toViewport(aspect)
+        }
+
+        private fun CameraFrame.toViewport(aspect: Double): Viewport {
+            val halfY = spanY / 2.0
+            val halfX = spanY * aspect / 2.0
+            return Viewport(centerX - halfX, centerX + halfX, centerY - halfY, centerY + halfY, zoom)
+        }
+    }
+
     companion object {
         private val DATE_FORMAT = DateTimeFormatter.ofPattern("MMMM yyyy")
         private const val CAMERA_CONTEXT_KM = 650.0
         private const val TRAIL_KM = 650.0
+        private const val CAMERA_TRACK_SAMPLES = 480
+        private const val CAMERA_DEAD_ZONE_HALF = 0.20
+        private const val ZOOM_OUT_ALPHA = 0.32
+        private const val ZOOM_IN_ALPHA = 0.065
+        private const val TILE_ZOOM_HYSTERESIS = 0.15
+        private const val MIN_VIEWPORT_SPAN = 0.0003
+        private const val MAX_VIEWPORT_SPAN = 0.72
+        private const val MIN_TILE_ZOOM = 2
+        private const val MAX_TILE_ZOOM = 15
     }
 }

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.0
+
+- Add a central camera dead zone so routine back-and-forth travel does not move
+  the entire map on every frame.
+- Smooth camera scale changes and add zoom hysteresis to prevent rapid zoom
+  breathing around tile-level boundaries.
+- Precompute a deterministic camera track so preview, seeking, replay, tile
+  preparation, and final MP4 generation use the same view.
+- Preserve every Timeline point and retain adaptive tracking for long-distance trips.
+
 ## 1.4.0
 
 - Add a clear first-load disclosure before map-area tile coordinates and normal

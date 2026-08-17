@@ -15,7 +15,7 @@ an MP4 ready to share.
 The app is not yet on Google Play. Install it from this repository's
 [latest release](https://github.com/mahlernim/google-timeline-visualizer/releases/latest):
 
-1. Under **Assets**, download `TimelineVisualizer-v1.4.0.apk` on your phone.
+1. Under **Assets**, download `TimelineVisualizer-v1.5.0.apk` on your phone.
 2. Open the downloaded file.
 3. If Android blocks the installation, select **Settings**, allow your browser or
    file manager to **Install unknown apps**, then return and try again.
@@ -81,6 +81,9 @@ source code.
 
 Long flights and other sparse routes are interpolated along a great-circle path,
 so the camera follows the trip smoothly instead of jumping to the destination.
+During local travel, the marker can move within a stable central area before the
+camera follows it. This reduces rapid back-and-forth map movement on commutes
+without changing or removing any Timeline points.
 
 ## Supported exports
 
