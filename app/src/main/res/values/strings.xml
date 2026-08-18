@@ -11,7 +11,8 @@
     <string name="export_video">Create video</string>
     <string name="video_title_template">Video title template</string>
     <string name="title_template_help">Use {year} and {name}. Saved for your next video.</string>
-    <string name="year">Year</string>
+    <string name="start_year">Start year</string>
+    <string name="end_year">End year</string>
     <string name="duration">Journey duration</string>
     <string name="start_month">Start month</string>
     <string name="end_month">End month</string>
@@ -19,6 +20,9 @@
     <string name="share">Share</string>
     <string name="share_travel_video">Share travel video</string>
     <string name="import_failed">Import failed</string>
+    <string name="import_failed_detail">This Timeline file could not be read. Choose a valid Timeline.json export.</string>
+    <string name="remembered_timeline_unavailable">The previously used Timeline is no longer available.</string>
+    <string name="choose_timeline_again">Choose the Timeline.json file again.</string>
     <string name="video_export_failed">Video export failed</string>
     <string name="location_settings_unavailable">Location settings are unavailable on this phone</string>
     <string name="traveler">Traveler</string>
@@ -30,6 +34,9 @@
         <item quantity="other">%1$d seconds</item>
     </plurals>
     <string name="reading_timeline">Reading Timeline export…</string>
+    <string name="opening_timeline">Opening file…</string>
+    <string name="preparing_trips">Preparing trips…</string>
+    <string name="loading_timeline">Loading Timeline</string>
     <string name="video_saved">Your video is ready</string>
     <string name="video_ready">Video ready</string>
     <string name="watch_video">Watch video</string>
@@ -47,6 +54,8 @@
     <string name="video_creation_notification_channel_description">Progress and completion alerts for timeline videos</string>
     <string name="no_video_player">No app is available to play this video</string>
     <string name="journey_summary">%1$s points · %2$s km · %3$s</string>
+    <string name="period_same_year">%1$s–%2$s %3$d</string>
+    <string name="period_cross_year">%1$s %2$d–%3$s %4$d</string>
     <string name="preparing_map_progress">Preparing map · %1$d/%2$d</string>
     <string name="creating_video_progress">Creating video · %1$d%%</string>
     <string name="finishing_video_progress">Finishing video · %1$d%%</string>
@@ -75,6 +84,15 @@
     <string name="watch">Watch</string>
     <string name="more">More</string>
     <string name="video_thumbnail">Video thumbnail</string>
+    <string name="save_overview_image">Save overview image</string>
+    <string name="share_overview_image">Share overview image</string>
+    <string name="overview_image">Journey overview image</string>
+    <string name="overview_file_name">%1$s-overview.png</string>
+    <string name="overview_saved">Overview image saved</string>
+    <string name="overview_save_cancelled">Overview image was not saved</string>
+    <string name="overview_save_failed">Could not save the overview image</string>
+    <string name="overview_share_failed">Could not share the overview image</string>
+    <string name="overview_unavailable">The overview image is no longer available</string>
     <string name="file_unavailable">File unavailable</string>
     <string name="remove_from_list">Remove from list</string>
     <string name="delete_video">Delete video</string>
@@ -95,4 +113,9 @@
     <string name="project_on_github">Project on GitHub</string>
     <string name="update_page_unavailable">Could not open the update page</string>
     <string name="web_page_unavailable">Could not open the web page</string>
+    <string name="render_date_pattern">MMMM yyyy</string>
+    <string name="distance_unit">km</string>
+    <string name="map_attribution">© OpenStreetMap  © CARTO</string>
+    <string name="timeline_video">Timeline video</string>
+    <string name="default_video_filename">Timeline video.mp4</string>
 </resources>

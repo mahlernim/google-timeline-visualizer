@@ -14,6 +14,7 @@ import dev.mahlernim.timelinevisualizer.model.WebMercator
 import dev.mahlernim.timelinevisualizer.model.WorldPoint
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.floor
 import kotlin.math.ln
@@ -218,28 +219,42 @@ class TimelinePainter {
 
     private fun overviewViewport(journey: Journey, width: Int, height: Int): Viewport {
         val prepared = prepare(journey)
-        val aspect = width.toDouble() / height.coerceAtLeast(1)
         val minX = prepared.unwrappedX.minOrNull() ?: 0.5
         val maxX = prepared.unwrappedX.maxOrNull() ?: minX
         val minY = prepared.projected.minOfOrNull { it.y } ?: 0.5
         val maxY = prepared.projected.maxOfOrNull { it.y } ?: minY
-        val centerX = (minX + maxX) / 2.0
+        val contentCenterX = (minX + maxX) / 2.0
         val contentCenterY = (minY + maxY) / 2.0
         val contentSpanX = (maxX - minX).coerceAtLeast(MIN_VIEWPORT_SPAN)
         val contentSpanY = (maxY - minY).coerceAtLeast(MIN_VIEWPORT_SPAN)
-        val spanY = max(contentSpanY, contentSpanX / aspect)
-            .times(OVERVIEW_PADDING)
-            .coerceIn(MIN_VIEWPORT_SPAN, MAX_OVERVIEW_VIEWPORT_SPAN)
-        val spanX = spanY * aspect
-        val centerY = clampCenterY(contentCenterY, spanY)
+        val safe = overviewSafeArea(width, height)
+        val worldPerPixel = max(
+            contentSpanX / safe.width().coerceAtLeast(1f),
+            contentSpanY / safe.height().coerceAtLeast(1f),
+        ).times(OVERVIEW_PADDING)
+        val spanX = (worldPerPixel * width).coerceAtLeast(MIN_VIEWPORT_SPAN)
+        val spanY = (worldPerPixel * height).coerceIn(MIN_VIEWPORT_SPAN, MAX_OVERVIEW_VIEWPORT_SPAN)
+        val minViewportX = contentCenterX - safe.centerX() * worldPerPixel
+        var minViewportY = contentCenterY - safe.centerY() * worldPerPixel
+        if (spanY <= 1.0) minViewportY = minViewportY.coerceIn(0.0, 1.0 - spanY)
         val zoom = floor(log2(width.coerceAtLeast(1) / (256.0 * spanX))).toInt()
             .coerceIn(MIN_TILE_ZOOM, MAX_TILE_ZOOM)
         return Viewport(
-            centerX - spanX / 2.0,
-            centerX + spanX / 2.0,
-            centerY - spanY / 2.0,
-            centerY + spanY / 2.0,
+            minViewportX,
+            minViewportX + spanX,
+            minViewportY,
+            minViewportY + spanY,
             zoom,
+        )
+    }
+
+    internal fun overviewSafeArea(width: Int, height: Int): RectF {
+        val scale = width / 720f
+        return RectF(
+            OVERVIEW_SIDE_INSET * scale,
+            OVERLAY_BOTTOM * scale + OVERVIEW_HEADER_GAP * scale,
+            width - OVERVIEW_SIDE_INSET * scale,
+            height - OVERVIEW_BOTTOM_INSET * scale,
         )
     }
 
@@ -326,6 +341,7 @@ class TimelinePainter {
             TimelineFrame(progress.coerceIn(0f, 1f), 0f),
             DEFAULT_JOURNEY_DURATION_SECONDS,
             title,
+            RenderText.ENGLISH,
             tiles,
         )
     }
@@ -338,6 +354,7 @@ class TimelinePainter {
         frame: TimelineFrame,
         journeyDurationSeconds: Int,
         title: String,
+        renderText: RenderText = RenderText.ENGLISH,
         tiles: (TileId) -> Bitmap?,
     ) {
         if (journey.points.isEmpty() || width <= 0 || height <= 0) return
@@ -397,7 +414,7 @@ class TimelinePainter {
         }
         headPaint.alpha = previousHeadAlpha
         headRingPaint.alpha = previousRingAlpha
-        drawOverlay(canvas, width, height, current, title)
+        drawOverlay(canvas, width, height, current, title, renderText)
     }
 
     private fun drawBackground(canvas: Canvas, width: Int, height: Int) {
@@ -435,14 +452,21 @@ class TimelinePainter {
         }
     }
 
-    private fun drawOverlay(canvas: Canvas, width: Int, height: Int, position: JourneyPosition, title: String) {
+    private fun drawOverlay(
+        canvas: Canvas,
+        width: Int,
+        height: Int,
+        position: JourneyPosition,
+        title: String,
+        renderText: RenderText,
+    ) {
         val scale = width / 720f
-        val card = RectF(34f * scale, 28f * scale, width - 34f * scale, 132f * scale)
+        val card = RectF(34f * scale, 28f * scale, width - 34f * scale, OVERLAY_BOTTOM * scale)
         canvas.drawRoundRect(card, 24f * scale, 24f * scale, cardPaint)
         titlePaint.textSize = 34f * scale
         bodyPaint.textSize = 20f * scale
         attributionPaint.textSize = 13f * scale
-        val displayTitle = title.ifBlank { "My Trips" }
+        val displayTitle = title.ifBlank { renderText.fallbackTitle }
         val availableWidth = card.width() - 36f * scale
         while (titlePaint.textSize > 20f * scale && titlePaint.measureText(displayTitle) > availableWidth) {
             titlePaint.textSize -= 1f * scale
@@ -452,10 +476,17 @@ class TimelinePainter {
             displayTitle.take(count.coerceAtLeast(1)).trimEnd() + "…"
         }
         canvas.drawText(fittedTitle, width / 2f, 72f * scale, titlePaint)
-        val date = DATE_FORMAT.format(position.point.instant.atZone(ZoneId.systemDefault()))
+        val date = DateTimeFormatter.ofPattern(renderText.datePattern, renderText.locale)
+            .format(position.point.instant.atZone(ZoneId.systemDefault()))
         val distance = position.distanceKm
-        canvas.drawText("$date  ·  ${String.format(Locale.US, "%,.0f", distance)} km", width / 2f, 108f * scale, bodyPaint)
-        canvas.drawText("© OpenStreetMap  © CARTO", width - 12f * scale, height - 12f * scale, attributionPaint)
+        val number = NumberFormat.getNumberInstance(renderText.locale).apply { maximumFractionDigits = 0 }
+        canvas.drawText(
+            "$date  ·  ${number.format(distance)} ${renderText.distanceUnit}",
+            width / 2f,
+            108f * scale,
+            bodyPaint,
+        )
+        canvas.drawText(renderText.attribution, width - 12f * scale, height - 12f * scale, attributionPaint)
     }
 
     private fun worldToScreen(point: WorldPoint, viewport: Viewport, width: Int, height: Int): Pair<Float, Float> {
@@ -626,7 +657,6 @@ class TimelinePainter {
     }
 
     companion object {
-        private val DATE_FORMAT = DateTimeFormatter.ofPattern("MMMM yyyy")
         private const val CAMERA_CONTEXT_KM = 650.0
         private const val DEFAULT_JOURNEY_DURATION_SECONDS = 30
         private const val TRAIL_VISIBLE_SECONDS = 2.5
@@ -635,6 +665,10 @@ class TimelinePainter {
         private const val MIN_ROUTE_PIXEL_SPACING = 1.35f
         private const val OVERVIEW_ROUTE_ALPHA = 190
         private const val OVERVIEW_PADDING = 1.22
+        private const val OVERLAY_BOTTOM = 132f
+        private const val OVERVIEW_SIDE_INSET = 34f
+        private const val OVERVIEW_HEADER_GAP = 20f
+        private const val OVERVIEW_BOTTOM_INSET = 34f
         private const val CAMERA_TRACK_SAMPLES = 480
         private const val CAMERA_DEAD_ZONE_HALF = 0.20
         private const val ZOOM_OUT_ALPHA = 0.32
@@ -642,7 +676,7 @@ class TimelinePainter {
         private const val TILE_ZOOM_HYSTERESIS = 0.15
         private const val MIN_VIEWPORT_SPAN = 0.0003
         private const val MAX_VIEWPORT_SPAN = 0.72
-        private const val MAX_OVERVIEW_VIEWPORT_SPAN = 1.0
+        private const val MAX_OVERVIEW_VIEWPORT_SPAN = 1.25
         private const val MIN_TILE_ZOOM = 2
         private const val MAX_TILE_ZOOM = 15
     }

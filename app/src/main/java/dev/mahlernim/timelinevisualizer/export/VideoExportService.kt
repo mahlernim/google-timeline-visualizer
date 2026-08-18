@@ -13,6 +13,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.os.SystemClock
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -97,11 +98,12 @@ class VideoExportService : Service() {
             ),
         )
         try {
-            Mp4Exporter(contentResolver, TileRepository(applicationContext)).export(
+            val overview = Mp4Exporter(contentResolver, TileRepository(applicationContext)).export(
                 uri,
                 request.journey,
                 request.title,
                 request.durationSeconds,
+                request.renderText,
             ) { progress ->
                 val snapshot = VideoExportSnapshot(
                     status = VideoExportStatus.RUNNING,
@@ -122,6 +124,13 @@ class VideoExportService : Service() {
                         buildProgressNotification(snapshot, startedAtElapsed),
                     )
                 }
+            }
+            try {
+                withContext(Dispatchers.IO) {
+                    CreationMedia(applicationContext).saveGeneratedOverview(uri, overview)
+                }
+            } finally {
+                overview.recycle()
             }
             persistUriAccess(uri)
             registerCreation(uri, request)
@@ -150,9 +159,10 @@ class VideoExportService : Service() {
             finishForeground()
             notificationManager.notify(NOTIFICATION_ID, buildCancelledNotification())
         } catch (error: Throwable) {
+            Log.e(TAG, "Video export failed", error)
             deleteIncompleteVideo(uri)
             requestStore.clear()
-            finishWithFailure(request, error.message ?: getString(R.string.video_export_failed), startId)
+            finishWithFailure(request, getString(R.string.video_export_failed), startId)
             return
         } finally {
             exportJob = null
@@ -231,9 +241,10 @@ class VideoExportService : Service() {
                 createdAtMillis = System.currentTimeMillis(),
                 durationSeconds = metadata?.durationSeconds?.takeIf { it > 0 }
                     ?: ceil(TimelineAnimation.totalDurationSeconds(request.durationSeconds).toDouble()).toInt(),
-                year = request.journey.year,
-                startMonth = request.startMonth,
-                endMonth = request.endMonth,
+                startYear = request.period.startYear,
+                startMonth = request.period.startMonth,
+                endYear = request.period.endYear,
+                endMonth = request.period.endMonth,
             ),
         )
     }
@@ -272,13 +283,13 @@ class VideoExportService : Service() {
     private fun buildCompletedNotification(uri: Uri, title: String): Notification {
         val watch = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, "video/mp4")
-            clipData = ClipData.newRawUri("Timeline video", uri)
+            clipData = ClipData.newRawUri(getString(R.string.timeline_video), uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         val share = Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
             type = "video/mp4"
             putExtra(Intent.EXTRA_STREAM, uri)
-            clipData = ClipData.newRawUri("Timeline video", uri)
+            clipData = ClipData.newRawUri(getString(R.string.timeline_video), uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }, getString(R.string.share_travel_video))
         return notificationBuilder()
@@ -399,6 +410,7 @@ class VideoExportService : Service() {
         private const val CANCEL_REQUEST_CODE = 4104
         private const val WATCH_REQUEST_CODE = 4105
         private const val SHARE_REQUEST_CODE = 4106
+        private const val TAG = "TimelineExport"
 
         internal fun foregroundServiceTypeForApi(apiLevel: Int): Int =
             if (apiLevel >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {

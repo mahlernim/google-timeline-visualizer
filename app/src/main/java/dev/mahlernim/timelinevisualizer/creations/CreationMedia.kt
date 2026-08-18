@@ -9,6 +9,8 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import androidx.core.graphics.scale
+import dev.mahlernim.timelinevisualizer.R
+import java.io.OutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
@@ -56,7 +58,7 @@ class CreationMedia(private val context: Context) {
             }
         }.getOrDefault(0)
         return VideoMetadata(
-            fileName = fileName?.takeIf(String::isNotBlank) ?: "Timeline video.mp4",
+            fileName = fileName?.takeIf(String::isNotBlank) ?: context.getString(R.string.default_video_filename),
             durationSeconds = duration.coerceAtLeast(0),
             lastModifiedMillis = lastModified,
         )
@@ -97,17 +99,66 @@ class CreationMedia(private val context: Context) {
         return thumbnail
     }
 
+    fun saveGeneratedOverview(uri: Uri, overview: Bitmap) {
+        val png = overviewFile(uri)
+        png.parentFile?.mkdirs()
+        FileOutputStream(png).use { output ->
+            check(overview.compress(Bitmap.CompressFormat.PNG, 100, output))
+        }
+
+        val scale = min(THUMBNAIL_SIZE.toFloat() / overview.width, THUMBNAIL_SIZE.toFloat() / overview.height)
+        val thumbnail = overview.scale(
+            (overview.width * scale).toInt().coerceAtLeast(1),
+            (overview.height * scale).toInt().coerceAtLeast(1),
+        )
+        try {
+            val destination = thumbnailFile(uri)
+            destination.parentFile?.mkdirs()
+            FileOutputStream(destination).use { output ->
+                check(thumbnail.compress(Bitmap.CompressFormat.JPEG, 88, output))
+            }
+        } finally {
+            if (thumbnail !== overview) thumbnail.recycle()
+        }
+    }
+
+    fun cachedOverview(uri: Uri): File? = overviewFile(uri).takeIf(File::isFile)
+
+    fun copyOverview(uri: Uri, output: OutputStream): Boolean {
+        val source = cachedOverview(uri) ?: return false
+        source.inputStream().buffered().use { input -> input.copyTo(output) }
+        return true
+    }
+
+    fun deleteOverview(uri: Uri) {
+        overviewFile(uri).delete()
+    }
+
+    fun pruneOverviewCache(nowMillis: Long = System.currentTimeMillis()) {
+        overviewDirectory().listFiles()?.forEach { file ->
+            if (nowMillis - file.lastModified() > OVERVIEW_CACHE_MAX_AGE_MS) file.delete()
+        }
+    }
+
     fun deleteThumbnail(uri: Uri) {
         thumbnailFile(uri).delete()
     }
 
     private fun thumbnailFile(uri: Uri): File {
+        return File(File(context.filesDir, "creation-thumbnails"), "${uriKey(uri)}.jpg")
+    }
+
+    private fun overviewFile(uri: Uri): File = File(overviewDirectory(), "${uriKey(uri)}.png")
+
+    private fun overviewDirectory(): File = File(context.cacheDir, "overview-images")
+
+    private fun uriKey(uri: Uri): String {
         val digest = MessageDigest.getInstance("SHA-256").digest(uri.toString().toByteArray(Charsets.UTF_8))
-        val name = digest.joinToString("") { byte -> "%02x".format(byte) }
-        return File(File(context.filesDir, "creation-thumbnails"), "$name.jpg")
+        return digest.joinToString("") { byte -> "%02x".format(byte) }
     }
 
     companion object {
         private const val THUMBNAIL_SIZE = 320
+        private const val OVERVIEW_CACHE_MAX_AGE_MS = 7L * 24 * 60 * 60 * 1_000
     }
 }

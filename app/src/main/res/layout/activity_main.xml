@@ -66,6 +66,32 @@
             android:textAppearance="?attr/textAppearanceBodySmall" />
 
         <LinearLayout
+            android:id="@+id/loadingGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/importProgress"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:indeterminate="true"
+                android:contentDescription="@string/loading_timeline" />
+
+            <TextView
+                android:id="@+id/loadingStageText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:text="@string/opening_timeline"
+                android:textAppearance="?attr/textAppearanceBodyMedium" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/editorGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -84,13 +110,13 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:hint="@string/year">
+                    android:hint="@string/start_year">
 
                     <AutoCompleteTextView
-                        android:id="@+id/yearDropdown"
+                        android:id="@+id/startYearDropdown"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="@string/year"
+                        android:hint="@string/start_year"
                         android:inputType="none" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -103,16 +129,31 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:hint="@string/duration">
+                    android:hint="@string/end_year">
 
                     <AutoCompleteTextView
-                        android:id="@+id/durationDropdown"
+                        android:id="@+id/endYearDropdown"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="@string/duration"
+                        android:hint="@string/end_year"
                         android:inputType="none" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:hint="@string/duration">
+
+                <AutoCompleteTextView
+                    android:id="@+id/durationDropdown"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/duration"
+                    android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -298,6 +339,24 @@
                         app:icon="@android:drawable/ic_menu_share"
                         app:iconGravity="textStart" />
                 </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/saveOverviewButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/save_overview_image" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/shareOverviewButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/share_overview_image"
+                    app:icon="@android:drawable/ic_menu_share"
+                    app:iconGravity="textStart" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/createAnotherButton"

@@ -2,6 +2,7 @@ package dev.mahlernim.timelinevisualizer.model
 
 import java.time.Instant
 import java.time.Month
+import java.time.YearMonth
 import java.time.ZoneId
 import kotlin.math.asin
 import kotlin.math.atan2
@@ -33,11 +34,43 @@ data class Timeline(
 
     fun forRange(year: Int, startMonth: Int, endMonth: Int): Journey {
         require(startMonth in 1..12 && endMonth in startMonth..12)
+        return forRange(
+            TimelinePeriod(
+                start = YearMonth.of(year, startMonth),
+                endInclusive = YearMonth.of(year, endMonth),
+            ),
+        )
+    }
+
+    fun forRange(period: TimelinePeriod): Journey {
         val selected = points.filter {
             val date = it.instant.atZone(ZoneId.systemDefault())
-            date.year == year && date.monthValue in startMonth..endMonth
+            val month = YearMonth.of(date.year, date.monthValue)
+            month >= period.start && month <= period.endInclusive
         }.sortedBy { it.instant }
-        return Journey.from(selected, year)
+        return Journey.from(selected, period)
+    }
+}
+
+data class TimelinePeriod(
+    val start: YearMonth,
+    val endInclusive: YearMonth,
+) {
+    init {
+        require(endInclusive >= start) { "The end month must not be before the start month" }
+    }
+
+    val startYear: Int get() = start.year
+    val startMonth: Int get() = start.monthValue
+    val endYear: Int get() = endInclusive.year
+    val endMonth: Int get() = endInclusive.monthValue
+    val yearLabel: String get() = if (startYear == endYear) startYear.toString() else "$startYear\u2013$endYear"
+
+    companion object {
+        fun sameYear(year: Int, startMonth: Int = 1, endMonth: Int = 12): TimelinePeriod = TimelinePeriod(
+            start = YearMonth.of(year, startMonth),
+            endInclusive = YearMonth.of(year, endMonth),
+        )
     }
 }
 
@@ -55,10 +88,11 @@ data class RouteSample(
 )
 
 data class Journey(
-    val year: Int,
+    val period: TimelinePeriod,
     val points: List<GeoPoint>,
     val cumulativeDistanceKm: DoubleArray,
 ) {
+    val year: Int get() = period.startYear
     val totalDistanceKm: Double get() = cumulativeDistanceKm.lastOrNull() ?: 0.0
     val renderPath: List<RouteSample> = buildRenderPath()
 
@@ -119,12 +153,14 @@ data class Journey(
     }
 
     companion object {
-        fun from(points: List<GeoPoint>, year: Int): Journey {
+        fun from(points: List<GeoPoint>, year: Int): Journey = from(points, TimelinePeriod.sameYear(year))
+
+        fun from(points: List<GeoPoint>, period: TimelinePeriod): Journey {
             val distances = DoubleArray(points.size)
             for (index in 1 until points.size) {
                 distances[index] = distances[index - 1] + haversineKm(points[index - 1], points[index])
             }
-            return Journey(year, points, distances)
+            return Journey(period, points, distances)
         }
 
         private fun haversineKm(a: GeoPoint, b: GeoPoint): Double {

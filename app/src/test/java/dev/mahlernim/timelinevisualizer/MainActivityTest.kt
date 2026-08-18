@@ -2,12 +2,15 @@ package dev.mahlernim.timelinevisualizer
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Looper
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.AutoCompleteTextView
 import androidx.test.core.app.ApplicationProvider
 import dev.mahlernim.timelinevisualizer.creations.CreationRecord
 import dev.mahlernim.timelinevisualizer.creations.CreationStore
+import dev.mahlernim.timelinevisualizer.data.TimelineSourceStore
 import dev.mahlernim.timelinevisualizer.export.VideoExportCoordinator
 import dev.mahlernim.timelinevisualizer.export.VideoExportSnapshot
 import dev.mahlernim.timelinevisualizer.export.VideoExportStateStore
@@ -15,6 +18,7 @@ import dev.mahlernim.timelinevisualizer.export.VideoExportStatus
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,12 +28,14 @@ import org.robolectric.shadows.ShadowDialog
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
+import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class MainActivityTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val store = CreationStore(context)
+    private val timelineSourceStore = TimelineSourceStore(context)
     private lateinit var controller: ActivityController<MainActivity>
 
     @Before
@@ -38,6 +44,7 @@ class MainActivityTest {
         VideoExportStateStore(context).clear()
         VideoExportCoordinator.resetForTest()
         context.getSharedPreferences("display", Context.MODE_PRIVATE).edit().clear().commit()
+        timelineSourceStore.clearForTest()
     }
 
     @After
@@ -46,6 +53,7 @@ class MainActivityTest {
         store.clear()
         VideoExportStateStore(context).clear()
         VideoExportCoordinator.resetForTest()
+        timelineSourceStore.clearForTest()
     }
 
     @Test
@@ -57,8 +65,9 @@ class MainActivityTest {
                 fileName = "timeline.mp4",
                 createdAtMillis = 1_786_900_000_000L,
                 durationSeconds = 30,
-                year = 2026,
+                startYear = 2026,
                 startMonth = 1,
+                endYear = 2026,
                 endMonth = 12,
             ),
         )
@@ -166,8 +175,66 @@ class MainActivityTest {
         )
     }
 
-    private fun launchActivity(): MainActivity {
-        controller = Robolectric.buildActivity(MainActivity::class.java).setup()
+    @Test
+    fun missingRememberedDocumentIsClearedAndLoadingStateAlwaysEnds() {
+        val missing = Uri.fromFile(File(context.cacheDir, "missing-timeline.json"))
+        assertTrue(timelineSourceStore.replace(missing))
+        acceptPrivacyDisclosure()
+
+        val activity = launchActivity()
+        waitUntil { timelineSourceStore.load() == null }
+
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.loadingGroup).visibility)
+        assertEquals(true, activity.findViewById<View>(R.id.importButton).isEnabled)
+        assertEquals(
+            activity.getString(R.string.remembered_timeline_unavailable),
+            activity.findViewById<android.widget.TextView>(R.id.statusText).text.toString(),
+        )
+    }
+
+    @Test
+    fun explicitlyOpenedTimelineTakesPrecedenceOverRememberedDocument() {
+        val remembered = Uri.fromFile(File(context.cacheDir, "missing-remembered.json"))
+        assertTrue(timelineSourceStore.replace(remembered))
+        acceptPrivacyDisclosure()
+        val explicit = Uri.fromFile(repoRoot().resolve("test-fixtures/seoul-bohol-sample.json"))
+
+        val activity = launchActivity(Intent(Intent.ACTION_VIEW, explicit))
+        waitUntil { activity.findViewById<View>(R.id.editorGroup).visibility == View.VISIBLE }
+
+        assertEquals(explicit, timelineSourceStore.load())
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.loadingGroup).visibility)
+    }
+
+    private fun acceptPrivacyDisclosure() {
+        context.getSharedPreferences("display", Context.MODE_PRIVATE).edit()
+            .putBoolean("map_privacy_accepted_v1", true)
+            .commit()
+    }
+
+    private fun waitUntil(condition: () -> Boolean) {
+        repeat(200) {
+            shadowOf(Looper.getMainLooper()).idle()
+            if (condition()) return
+            Thread.sleep(10)
+        }
+        error("The asynchronous activity operation did not finish")
+    }
+
+    private fun repoRoot(): File {
+        var current = File(System.getProperty("user.dir") ?: error("Working directory unavailable")).absoluteFile
+        while (!File(current, "settings.gradle.kts").isFile) {
+            current = current.parentFile ?: error("Repository root unavailable")
+        }
+        return current
+    }
+
+    private fun launchActivity(intent: Intent? = null): MainActivity {
+        controller = if (intent == null) {
+            Robolectric.buildActivity(MainActivity::class.java)
+        } else {
+            Robolectric.buildActivity(MainActivity::class.java, intent)
+        }.setup()
         return controller.get()
     }
 }

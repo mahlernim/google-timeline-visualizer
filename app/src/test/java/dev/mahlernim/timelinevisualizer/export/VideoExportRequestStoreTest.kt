@@ -4,7 +4,12 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
+import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
+import dev.mahlernim.timelinevisualizer.render.RenderText
 import java.time.Instant
+import java.time.YearMonth
+import java.io.DataOutputStream
+import java.io.File
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -30,11 +35,13 @@ class VideoExportRequestStoreTest {
         )
         val request = VideoExportRequest(
             outputUri = "content://documents/timeline.mp4",
-            journey = Journey.from(points, 2026),
+            journey = Journey.from(
+                points,
+                TimelinePeriod(YearMonth.of(2025, 12), YearMonth.of(2026, 6)),
+            ),
             title = "2026 Mina's Timeline",
             durationSeconds = 60,
-            startMonth = 1,
-            endMonth = 6,
+            renderText = RenderText("ja", "マイタイムライン", "yyyy年M月", "km", "attribution"),
         )
 
         store.save(request)
@@ -43,9 +50,8 @@ class VideoExportRequestStoreTest {
         assertEquals(request.outputUri, restored.outputUri)
         assertEquals(request.title, restored.title)
         assertEquals(request.durationSeconds, restored.durationSeconds)
-        assertEquals(request.startMonth, restored.startMonth)
-        assertEquals(request.endMonth, restored.endMonth)
-        assertEquals(request.journey.year, restored.journey.year)
+        assertEquals(request.period, restored.period)
+        assertEquals(request.renderText, restored.renderText)
         assertEquals(request.journey.points, restored.journey.points)
     }
 
@@ -56,13 +62,36 @@ class VideoExportRequestStoreTest {
             journey = Journey.from(emptyList(), 2026),
             title = "Timeline",
             durationSeconds = 30,
-            startMonth = 1,
-            endMonth = 12,
         )
         store.save(request)
 
         store.clear()
 
         assertNull(store.load())
+    }
+
+    @Test
+    fun readsVersionOneAsASameYearEnglishRequest() {
+        val requestFile = File(context.filesDir, "pending-video-export.bin")
+        DataOutputStream(requestFile.outputStream().buffered()).use { output ->
+            output.writeInt(1)
+            output.writeUTF("content://documents/legacy.mp4")
+            output.writeUTF("Legacy timeline")
+            output.writeInt(30)
+            output.writeInt(2025)
+            output.writeInt(3)
+            output.writeInt(11)
+            output.writeInt(1)
+            output.writeLong(Instant.parse("2025-06-01T00:00:00Z").toEpochMilli())
+            output.writeDouble(35.0)
+            output.writeDouble(139.0)
+        }
+
+        val restored = store.load()!!
+
+        assertEquals(YearMonth.of(2025, 3), restored.period.start)
+        assertEquals(YearMonth.of(2025, 11), restored.period.endInclusive)
+        assertEquals(RenderText.ENGLISH, restored.renderText)
+        assertEquals(1, restored.journey.points.size)
     }
 }

@@ -24,4 +24,12 @@ class TitleTemplateTest {
     fun blankResultUsesFallback() {
         assertEquals("My Timeline", TitleTemplate.resolve("  ", 2026, "Mina", "My Timeline"))
     }
+
+    @Test
+    fun resolvesYearPlaceholderToMultiYearLabel() {
+        assertEquals(
+            "2025–2026 Mina's Timeline",
+            TitleTemplate.resolve("{year} {name}'s Timeline", "2025–2026", "Mina", "My Timeline"),
+        )
+    }
 }

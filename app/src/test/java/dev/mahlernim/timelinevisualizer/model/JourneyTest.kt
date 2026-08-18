@@ -8,6 +8,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.time.Instant
+import java.time.YearMonth
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -125,6 +126,25 @@ class JourneyTest {
 
         assertEquals(4, timeline.forYear(2025).points.size)
         assertEquals(2, timeline.forRange(2025, 6, 7).points.size)
+    }
+
+    @Test
+    fun rangeCanSpanMultipleYearsInclusively() {
+        val timeline = Timeline(
+            listOf(
+                seoul.copy(instant = Instant.parse("2025-11-15T00:00:00Z")),
+                seoul.copy(instant = Instant.parse("2025-12-15T00:00:00Z")),
+                bohol.copy(instant = Instant.parse("2026-01-15T00:00:00Z")),
+                bohol.copy(instant = Instant.parse("2026-02-15T00:00:00Z")),
+            ),
+        )
+        val period = TimelinePeriod(YearMonth.of(2025, 12), YearMonth.of(2026, 1))
+
+        val journey = timeline.forRange(period)
+
+        assertEquals(period, journey.period)
+        assertEquals(2, journey.points.size)
+        assertEquals("2025–2026", journey.period.yearLabel)
     }
 
     private fun unwrapNear(value: Double, reference: Double): Double {

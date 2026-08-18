@@ -1,8 +1,8 @@
 # Privacy
 
-[한국어](privacy.ko.md)
+[한국어](privacy.ko.md) · [日本語](privacy.ja.md)
 
-**Effective date:** August 17, 2026
+**Effective date:** August 18, 2026
 
 **Developer:** MahlerLab
 
@@ -28,6 +28,10 @@ backup and device transfer. Generated videos are written to the destination the
 user chooses. Cached basemap image tiles may remain in the app's temporary cache
 and can be removed by clearing the app cache or uninstalling the app.
 
+After a successful Timeline import, the app stores only the selected document URI
+so it can request access to the same document on the next launch. Replacing the
+selection replaces this URI. The Timeline contents are not duplicated.
+
 On Android 13 and newer, the app may request notification permission so it can
 show video progress and a completion alert. Declining this permission does not
 stop video creation and does not grant access to any personal data.
@@ -36,6 +40,10 @@ For the Creations library, the app stores a local index containing the selected
 video URI, title, filename, duration, creation date, and Timeline period when
 available. A small thumbnail is stored in private app storage. The app requests
 persistent access only to MP4 files that the user creates or explicitly adds.
+Newly generated videos use a small final-overview thumbnail in private storage.
+A 1080 × 1080 overview PNG may remain temporarily in app cache for the completion
+screen's save and share actions. No visible PNG is created unless the user chooses
+where to save it.
 
 Android backup and device-transfer rules exclude the Creations index and thumbnails
 so video references and preview images are not copied to another device.

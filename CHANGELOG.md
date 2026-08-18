@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.8.0
+
+- Implements GitHub issues #11 through #17 as one coordinated release.
+- Keep the complete final route inside the visible map below the title card in previews, videos, thumbnails, and overview images.
+- Use the final journey overview as the deterministic thumbnail for newly created videos.
+- Save or share a 1080 × 1080 journey overview PNG after video creation.
+- Remember and reopen the most recently used Timeline document when Android retains access.
+- Show active, stage-aware feedback while large Timeline files are opened and prepared.
+- Select inclusive month ranges across multiple years with explicit start and end years.
+- Add complete Japanese app, renderer, privacy, documentation, and Play Store resources.
+- Localize rendered dates, numbers, distance units, fallback titles, and user-facing failures.
+
 ## 1.7.0
 
 - Keep video creation responsive on dense yearly Timelines by drawing a bounded,

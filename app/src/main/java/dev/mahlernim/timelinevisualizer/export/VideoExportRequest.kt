@@ -3,6 +3,8 @@ package dev.mahlernim.timelinevisualizer.export
 import android.content.Context
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
+import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
+import dev.mahlernim.timelinevisualizer.render.RenderText
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.File
@@ -13,9 +15,10 @@ data class VideoExportRequest(
     val journey: Journey,
     val title: String,
     val durationSeconds: Int,
-    val startMonth: Int,
-    val endMonth: Int,
-)
+    val renderText: RenderText = RenderText.ENGLISH,
+) {
+    val period: TimelinePeriod get() = journey.period
+}
 
 class VideoExportRequestStore(context: Context) {
     private val requestFile = File(context.filesDir, REQUEST_FILE)
@@ -24,13 +27,19 @@ class VideoExportRequestStore(context: Context) {
     @Synchronized
     fun save(request: VideoExportRequest) {
         DataOutputStream(temporaryFile.outputStream().buffered()).use { output ->
-            output.writeInt(FILE_VERSION)
+            output.writeInt(CURRENT_FILE_VERSION)
             output.writeUTF(request.outputUri)
             output.writeUTF(request.title)
             output.writeInt(request.durationSeconds)
-            output.writeInt(request.journey.year)
-            output.writeInt(request.startMonth)
-            output.writeInt(request.endMonth)
+            output.writeInt(request.period.startYear)
+            output.writeInt(request.period.startMonth)
+            output.writeInt(request.period.endYear)
+            output.writeInt(request.period.endMonth)
+            output.writeUTF(request.renderText.localeTag)
+            output.writeUTF(request.renderText.fallbackTitle)
+            output.writeUTF(request.renderText.datePattern)
+            output.writeUTF(request.renderText.distanceUnit)
+            output.writeUTF(request.renderText.attribution)
             output.writeInt(request.journey.points.size)
             request.journey.points.forEach { point ->
                 output.writeLong(point.instant.toEpochMilli())
@@ -49,13 +58,31 @@ class VideoExportRequestStore(context: Context) {
         if (!requestFile.isFile) return null
         return runCatching {
             DataInputStream(requestFile.inputStream().buffered()).use { input ->
-                check(input.readInt() == FILE_VERSION) { "Unsupported video request" }
+                val version = input.readInt()
+                check(version in 1..CURRENT_FILE_VERSION) { "Unsupported video request" }
                 val outputUri = input.readUTF()
                 val title = input.readUTF()
                 val durationSeconds = input.readInt()
-                val year = input.readInt()
+                val startYear = input.readInt()
                 val startMonth = input.readInt()
-                val endMonth = input.readInt()
+                val endYear: Int
+                val endMonth: Int
+                val renderText: RenderText
+                if (version == 1) {
+                    endYear = startYear
+                    endMonth = input.readInt()
+                    renderText = RenderText.ENGLISH
+                } else {
+                    endYear = input.readInt()
+                    endMonth = input.readInt()
+                    renderText = RenderText(
+                        localeTag = input.readUTF(),
+                        fallbackTitle = input.readUTF(),
+                        datePattern = input.readUTF(),
+                        distanceUnit = input.readUTF(),
+                        attribution = input.readUTF(),
+                    )
+                }
                 val pointCount = input.readInt().coerceIn(0, MAX_POINT_COUNT)
                 val points = List(pointCount) {
                     GeoPoint(
@@ -66,11 +93,16 @@ class VideoExportRequestStore(context: Context) {
                 }
                 VideoExportRequest(
                     outputUri = outputUri,
-                    journey = Journey.from(points, year),
+                    journey = Journey.from(
+                        points,
+                        TimelinePeriod(
+                            start = java.time.YearMonth.of(startYear, startMonth),
+                            endInclusive = java.time.YearMonth.of(endYear, endMonth),
+                        ),
+                    ),
                     title = title,
                     durationSeconds = durationSeconds,
-                    startMonth = startMonth,
-                    endMonth = endMonth,
+                    renderText = renderText,
                 )
             }
         }.getOrNull()
@@ -83,7 +115,7 @@ class VideoExportRequestStore(context: Context) {
     }
 
     companion object {
-        private const val FILE_VERSION = 1
+        private const val CURRENT_FILE_VERSION = 2
         private const val MAX_POINT_COUNT = 2_000_000
         private const val REQUEST_FILE = "pending-video-export.bin"
         private const val TEMPORARY_FILE = "pending-video-export.tmp"

@@ -19,6 +19,7 @@
 
 ## Release
 
+- Version name `1.8.0` and version code `10`
 - Upload the signed `playRelease` Android App Bundle
 - On first enrollment, preserve the existing app-signing key so GitHub and Play installs remain update-compatible
 - Register a separate upload key for later Play releases
@@ -30,7 +31,8 @@
 
 - Upload the 512×512 app icon and 1024×500 feature graphic
 - Upload at least two current phone screenshots for each maintained locale
-- Paste and proofread the English and Korean listing text
+- Paste and proofread the English, Korean, and Japanese listing text
+- Upload four current screenshots and the localized feature graphic for each maintained locale
 - Complete Data safety, content rating, target audience, ads, and app-access forms
 - Confirm the public privacy policy and support address work without signing in
 - Confirm the Play build opens Google Play, not GitHub Releases, for updates

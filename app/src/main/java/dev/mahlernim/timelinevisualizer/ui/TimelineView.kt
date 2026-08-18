@@ -10,6 +10,7 @@ import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.render.TileId
 import dev.mahlernim.timelinevisualizer.render.TimelineAnimation
 import dev.mahlernim.timelinevisualizer.render.TimelinePainter
+import dev.mahlernim.timelinevisualizer.render.RenderText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -50,7 +51,13 @@ class TimelineView @JvmOverloads constructor(
             field = next
             markFrameDirty()
         }
-    var videoTitle: String = "My Trips"
+    var videoTitle: String = ""
+        set(value) {
+            if (field == value) return
+            field = value
+            markFrameDirty()
+        }
+    var renderText: RenderText = RenderText.ENGLISH
         set(value) {
             if (field == value) return
             field = value
@@ -118,6 +125,7 @@ class TimelineView @JvmOverloads constructor(
             animationFrame,
             journeyDurationSeconds,
             videoTitle,
+            renderText,
             tiles::cached,
         )
         frameDirty = false

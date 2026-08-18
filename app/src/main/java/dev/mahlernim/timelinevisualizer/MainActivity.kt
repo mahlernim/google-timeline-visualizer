@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
@@ -18,6 +19,7 @@ import android.widget.SeekBar
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.graphics.Insets
 import androidx.core.content.edit
 import androidx.core.net.toUri
@@ -33,6 +35,7 @@ import dev.mahlernim.timelinevisualizer.creations.CreationMedia
 import dev.mahlernim.timelinevisualizer.creations.CreationRecord
 import dev.mahlernim.timelinevisualizer.creations.CreationStore
 import dev.mahlernim.timelinevisualizer.data.TimelineParser
+import dev.mahlernim.timelinevisualizer.data.TimelineSourceStore
 import dev.mahlernim.timelinevisualizer.databinding.ActivityMainBinding
 import dev.mahlernim.timelinevisualizer.databinding.ItemCreationBinding
 import dev.mahlernim.timelinevisualizer.export.ExportProgress
@@ -45,9 +48,13 @@ import dev.mahlernim.timelinevisualizer.export.VideoExportSnapshot
 import dev.mahlernim.timelinevisualizer.export.VideoExportStatus
 import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.model.Timeline
+import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
 import dev.mahlernim.timelinevisualizer.model.TitleTemplate
 import dev.mahlernim.timelinevisualizer.render.TimelineAnimation
+import dev.mahlernim.timelinevisualizer.render.RenderText
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.DateFormatSymbols
@@ -55,6 +62,7 @@ import java.text.DateFormat
 import java.text.NumberFormat
 import java.util.Date
 import java.util.Locale
+import java.time.YearMonth
 import kotlin.math.ceil
 
 class MainActivity : AppCompatActivity() {
@@ -64,7 +72,11 @@ class MainActivity : AppCompatActivity() {
     private var animation: ValueAnimator? = null
     private var pendingExport: VideoExportRequest? = null
     private var lastVideoUri: Uri? = null
-    private var selectedYear: Int? = null
+    private var lastVideoTitle: String? = null
+    private var pendingOverviewVideoUri: Uri? = null
+    private var importJob: Job? = null
+    private var selectedStartYear: Int? = null
+    private var selectedEndYear: Int? = null
     private var selectedStartMonth = 1
     private var selectedEndMonth = 12
     private val titleHandler = Handler(Looper.getMainLooper())
@@ -72,6 +84,7 @@ class MainActivity : AppCompatActivity() {
     private val preferences by lazy { getSharedPreferences("display", MODE_PRIVATE) }
     private val creationStore by lazy { CreationStore(applicationContext) }
     private val creationMedia by lazy { CreationMedia(applicationContext) }
+    private val timelineSourceStore by lazy { TimelineSourceStore(applicationContext) }
     private val applyTitleChanges = Runnable { commitTitlePreferences() }
     private var creationRenderGeneration = 0
     private var creationsExpanded = false
@@ -85,6 +98,16 @@ class MainActivity : AppCompatActivity() {
         val request = pendingExport
         pendingExport = null
         if (uri != null && request != null) startVideoExport(uri, request)
+    }
+
+    private val createOverviewImage = registerForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri ->
+        val videoUri = pendingOverviewVideoUri
+        pendingOverviewVideoUri = null
+        if (uri == null) {
+            Snackbar.make(binding.root, R.string.overview_save_cancelled, Snackbar.LENGTH_SHORT).show()
+        } else if (videoUri != null) {
+            copyOverviewImage(videoUri, uri)
+        }
     }
 
     private val requestNotificationPermission = registerForActivityResult(
@@ -111,6 +134,8 @@ class MainActivity : AppCompatActivity() {
         binding.exportButton.setOnClickListener { chooseExportDestination() }
         binding.cancelExportButton.setOnClickListener { VideoExportService.cancel(applicationContext) }
         binding.shareButton.setOnClickListener { lastVideoUri?.let(::shareVideo) }
+        binding.saveOverviewButton.setOnClickListener { lastVideoUri?.let(::chooseOverviewDestination) }
+        binding.shareOverviewButton.setOnClickListener { lastVideoUri?.let(::shareOverviewImage) }
         binding.watchVideoButton.setOnClickListener { lastVideoUri?.let(::watchVideo) }
         binding.createAnotherButton.setOnClickListener { prepareAnotherVideo() }
         binding.addExistingVideoButton.setOnClickListener { addExistingVideos.launch(arrayOf("video/mp4")) }
@@ -148,6 +173,7 @@ class MainActivity : AppCompatActivity() {
         binding.durationDropdown.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, durations))
         binding.durationDropdown.setText(resources.getQuantityString(R.plurals.duration_seconds, 30, 30), false)
         binding.timelineView.journeyDurationSeconds = 30
+        binding.timelineView.renderText = currentRenderText()
         binding.durationDropdown.setOnItemClickListener { _, _, _, _ ->
             animation?.cancel()
             binding.timelineView.journeyDurationSeconds = selectedDurationSeconds()
@@ -156,15 +182,23 @@ class MainActivity : AppCompatActivity() {
         makeDropdownOpenReliably(binding.durationDropdown)
         configureMonthDropdowns()
         renderCreations()
+        lifecycleScope.launch(Dispatchers.IO) { creationMedia.pruneOverviewCache() }
         VideoExportCoordinator.restore(applicationContext)
         observeVideoExport()
         VideoExportService.resumeIfNeeded(applicationContext)
 
-        intent?.data?.let { requestTimelineImport(it) }
+        val incoming = intent?.data
+        if (incoming != null) {
+            requestTimelineImport(incoming)
+        } else if (preferences.getBoolean(MAP_PRIVACY_ACCEPTED, false)) {
+            timelineSourceStore.load()?.let { importTimeline(it, remembered = true) }
+        }
     }
 
     override fun onDestroy() {
         titleHandler.removeCallbacks(applyTitleChanges)
+        importJob?.cancel()
+        setTimelineLoading(false)
         animation?.cancel()
         super.onDestroy()
     }
@@ -184,62 +218,97 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateResolvedTitle() {
-        val year = selectedYear ?: return
-        binding.timelineView.videoTitle = resolvedTitle(year)
+        val period = currentPeriod() ?: return
+        binding.timelineView.videoTitle = resolvedTitle(period)
     }
 
-    private fun resolvedTitle(year: Int): String = TitleTemplate.resolve(
+    private fun resolvedTitle(period: TimelinePeriod): String = TitleTemplate.resolve(
         template = binding.titleInput.text?.toString().orEmpty(),
-        year = year,
+        yearLabel = period.yearLabel,
         name = binding.ownerInput.text?.toString().orEmpty().ifBlank { getString(R.string.traveler) },
         fallback = getString(R.string.default_title),
     )
 
-    private fun importTimeline(uri: Uri) {
+    private fun importTimeline(uri: Uri, remembered: Boolean = false) {
+        if (importJob?.isActive == true) return
         animation?.cancel()
-        binding.importButton.isEnabled = false
         binding.editorGroup.visibility = View.GONE
-        binding.statusText.text = getString(R.string.reading_timeline)
-        lifecycleScope.launch {
-            val result = runCatching {
-                withContext(Dispatchers.IO) {
+        setTimelineLoading(true, R.string.opening_timeline)
+        importJob = lifecycleScope.launch {
+            try {
+                binding.loadingStageText.setText(R.string.reading_timeline)
+                val loaded = withContext(Dispatchers.IO) {
                     contentResolver.openInputStream(uri)?.use(TimelineParser()::parse)
-                        ?: error("The selected file could not be opened")
+                        ?: throw java.io.FileNotFoundException()
                 }
-            }
-            binding.importButton.isEnabled = true
-            result.onSuccess { loaded ->
+                binding.loadingStageText.setText(R.string.preparing_trips)
                 timeline = loaded
                 configureYears(loaded)
                 binding.editorGroup.visibility = View.VISIBLE
-            }.onFailure { error ->
+                if (!remembered) rememberTimelineSource(uri)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Throwable) {
+                Log.e(TAG, "Timeline import failed", error)
                 timeline = null
-                binding.statusText.text = error.message ?: getString(R.string.import_failed)
-                Snackbar.make(binding.root, R.string.import_failed, Snackbar.LENGTH_LONG).show()
+                if (remembered) {
+                    timelineSourceStore.clear()
+                    releaseUriAccess(uri)
+                    binding.statusText.setText(R.string.remembered_timeline_unavailable)
+                    Snackbar.make(binding.root, R.string.choose_timeline_again, Snackbar.LENGTH_LONG).show()
+                } else {
+                    binding.statusText.setText(R.string.import_failed_detail)
+                    Snackbar.make(binding.root, R.string.import_failed, Snackbar.LENGTH_LONG).show()
+                }
+            } finally {
+                setTimelineLoading(false)
+                importJob = null
             }
+        }
+    }
+
+    private fun setTimelineLoading(loading: Boolean, stage: Int = R.string.opening_timeline) {
+        binding.loadingGroup.visibility = if (loading) View.VISIBLE else View.GONE
+        if (loading) binding.loadingStageText.setText(stage)
+        binding.importButton.isEnabled = !loading
+        binding.exportHelpButton.isEnabled = !loading
+    }
+
+    private fun rememberTimelineSource(uri: Uri) {
+        if (!persistUriAccess(uri, includeWrite = false)) return
+        val previous = timelineSourceStore.load()
+        if (timelineSourceStore.replace(uri)) {
+            if (previous != null && previous != uri) releaseUriAccess(previous)
+        } else if (previous != uri) {
+            releaseUriAccess(uri)
         }
     }
 
     private fun configureYears(loaded: Timeline) {
         val years = loaded.years
-        binding.yearDropdown.setAdapter(
-            ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, years.map(Int::toString)),
-        )
-        makeDropdownOpenReliably(binding.yearDropdown)
-        binding.yearDropdown.setOnItemClickListener { _, _, position, _ -> selectYear(years[position]) }
-        binding.yearDropdown.setText(String.format(Locale.getDefault(), "%d", years.first()), false)
-        selectYear(years.first())
-    }
-
-    private fun selectYear(year: Int) {
-        selectedYear = year
+        val labels = years.map { NumberFormat.getIntegerInstance().apply { isGroupingUsed = false }.format(it) }
+        binding.startYearDropdown.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, labels))
+        binding.endYearDropdown.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, labels))
+        makeDropdownOpenReliably(binding.startYearDropdown)
+        makeDropdownOpenReliably(binding.endYearDropdown)
+        binding.startYearDropdown.setOnItemClickListener { _, _, position, _ ->
+            selectedStartYear = years[position]
+            normalizeRange(changedStart = true)
+        }
+        binding.endYearDropdown.setOnItemClickListener { _, _, position, _ ->
+            selectedEndYear = years[position]
+            normalizeRange(changedStart = false)
+        }
+        selectedStartYear = years.first()
+        selectedEndYear = years.first()
+        updateYearDropdowns()
         updateResolvedTitle()
         selectRange()
     }
 
     private fun selectRange() {
-        val year = selectedYear ?: return
-        val selected = timeline?.forRange(year, selectedStartMonth, selectedEndMonth) ?: return
+        val period = currentPeriod() ?: return
+        val selected = timeline?.forRange(period) ?: return
         animation?.cancel()
         journey = selected
         binding.timelineView.journey = selected
@@ -254,10 +323,28 @@ class MainActivity : AppCompatActivity() {
 
     private fun journeySummary(selected: Journey): String {
         val number = NumberFormat.getNumberInstance().apply { maximumFractionDigits = 0 }
-        val period = if (selectedStartMonth == 1 && selectedEndMonth == 12) {
-            selected.year.toString()
+        val range = selected.period
+        val period = if (
+            range.startYear == range.endYear &&
+            range.startMonth == 1 &&
+            range.endMonth == 12
+        ) {
+            NumberFormat.getIntegerInstance().apply { isGroupingUsed = false }.format(range.startYear)
+        } else if (range.startYear == range.endYear) {
+            getString(
+                R.string.period_same_year,
+                monthNames[range.startMonth - 1],
+                monthNames[range.endMonth - 1],
+                range.startYear,
+            )
         } else {
-            "${monthNames[selectedStartMonth - 1]}–${monthNames[selectedEndMonth - 1]} ${selected.year}"
+            getString(
+                R.string.period_cross_year,
+                monthNames[range.startMonth - 1],
+                range.startYear,
+                monthNames[range.endMonth - 1],
+                range.endYear,
+            )
         }
         return getString(
             R.string.journey_summary,
@@ -277,20 +364,48 @@ class MainActivity : AppCompatActivity() {
         makeDropdownOpenReliably(binding.endMonthDropdown)
         binding.startMonthDropdown.setOnItemClickListener { _, _, position, _ ->
             selectedStartMonth = position + 1
-            if (selectedStartMonth > selectedEndMonth) {
-                selectedEndMonth = selectedStartMonth
-                binding.endMonthDropdown.setText(monthNames[selectedEndMonth - 1], false)
-            }
-            selectRange()
+            normalizeRange(changedStart = true)
         }
         binding.endMonthDropdown.setOnItemClickListener { _, _, position, _ ->
             selectedEndMonth = position + 1
-            if (selectedEndMonth < selectedStartMonth) {
-                selectedStartMonth = selectedEndMonth
-                binding.startMonthDropdown.setText(monthNames[selectedStartMonth - 1], false)
-            }
-            selectRange()
+            normalizeRange(changedStart = false)
         }
+    }
+
+    private fun normalizeRange(changedStart: Boolean) {
+        val startYear = selectedStartYear ?: return
+        val endYear = selectedEndYear ?: return
+        val start = YearMonth.of(startYear, selectedStartMonth)
+        val end = YearMonth.of(endYear, selectedEndMonth)
+        if (start > end) {
+            if (changedStart) {
+                selectedEndYear = start.year
+                selectedEndMonth = start.monthValue
+            } else {
+                selectedStartYear = end.year
+                selectedStartMonth = end.monthValue
+            }
+            updateYearDropdowns()
+            binding.startMonthDropdown.setText(monthNames[selectedStartMonth - 1], false)
+            binding.endMonthDropdown.setText(monthNames[selectedEndMonth - 1], false)
+        }
+        updateResolvedTitle()
+        selectRange()
+    }
+
+    private fun updateYearDropdowns() {
+        val formatter = NumberFormat.getIntegerInstance().apply { isGroupingUsed = false }
+        selectedStartYear?.let { binding.startYearDropdown.setText(formatter.format(it), false) }
+        selectedEndYear?.let { binding.endYearDropdown.setText(formatter.format(it), false) }
+    }
+
+    private fun currentPeriod(): TimelinePeriod? {
+        val startYear = selectedStartYear ?: return null
+        val endYear = selectedEndYear ?: return null
+        return TimelinePeriod(
+            start = YearMonth.of(startYear, selectedStartMonth),
+            endInclusive = YearMonth.of(endYear, selectedEndMonth),
+        )
     }
 
     private fun togglePreview() {
@@ -365,17 +480,17 @@ class MainActivity : AppCompatActivity() {
         val selected = journey ?: return
         animation?.cancel()
         commitTitlePreferences()
-        val title = resolvedTitle(selected.year)
+        val title = resolvedTitle(selected.period)
         pendingExport = VideoExportRequest(
             outputUri = "",
             journey = selected,
             title = title,
             durationSeconds = selectedDurationSeconds(),
-            startMonth = selectedStartMonth,
-            endMonth = selectedEndMonth,
+            renderText = currentRenderText(),
         )
-        val slug = title.lowercase(Locale.US).replace(Regex("[^a-z0-9]+"), "-").trim('-').ifBlank { "timeline" }
-        createVideo.launch("$slug-${selected.year}.mp4")
+        val slug = title.lowercase(Locale.ROOT).replace(Regex("[^a-z0-9]+"), "-").trim('-').ifBlank { "timeline" }
+        val periodSuffix = periodFileSuffix(selected.period)
+        createVideo.launch("$slug-$periodSuffix.mp4")
     }
 
     private fun startVideoExport(uri: Uri, request: VideoExportRequest) {
@@ -418,7 +533,11 @@ class MainActivity : AppCompatActivity() {
                 setExporting(false)
                 snapshot.outputUri?.toUri()?.let { uri ->
                     lastVideoUri = uri
+                    lastVideoTitle = snapshot.title
                     binding.videoReadyGroup.visibility = View.VISIBLE
+                    val hasOverview = creationMedia.cachedOverview(uri) != null
+                    binding.saveOverviewButton.isEnabled = hasOverview
+                    binding.shareOverviewButton.isEnabled = hasOverview
                 }
                 binding.statusText.text = getString(R.string.video_saved)
                 if (lastRenderedExportStatus != VideoExportStatus.COMPLETE) renderCreations()
@@ -429,7 +548,7 @@ class MainActivity : AppCompatActivity() {
             }
             VideoExportStatus.FAILED -> {
                 setExporting(false)
-                binding.statusText.text = snapshot.errorMessage ?: getString(R.string.video_export_failed)
+                binding.statusText.setText(R.string.video_export_failed)
             }
         }
         lastRenderedExportStatus = snapshot.status
@@ -480,7 +599,11 @@ class MainActivity : AppCompatActivity() {
         binding.shareButton.isEnabled = !exporting
         binding.watchVideoButton.isEnabled = !exporting
         binding.createAnotherButton.isEnabled = !exporting
-        binding.yearDropdown.isEnabled = !exporting
+        val hasOverview = lastVideoUri?.let { creationMedia.cachedOverview(it) != null } == true
+        binding.saveOverviewButton.isEnabled = !exporting && hasOverview
+        binding.shareOverviewButton.isEnabled = !exporting && hasOverview
+        binding.startYearDropdown.isEnabled = !exporting
+        binding.endYearDropdown.isEnabled = !exporting
         binding.durationDropdown.isEnabled = !exporting
         binding.startMonthDropdown.isEnabled = !exporting
         binding.endMonthDropdown.isEnabled = !exporting
@@ -590,11 +713,30 @@ class MainActivity : AppCompatActivity() {
 
     private fun creationDetails(record: CreationRecord, available: Boolean): String {
         val parts = mutableListOf<String>()
-        if (record.year != null && record.startMonth != null && record.endMonth != null) {
-            parts += if (record.startMonth == 1 && record.endMonth == 12) {
-                record.year.toString()
+        if (
+            record.startYear != null && record.startMonth != null &&
+            record.endYear != null && record.endMonth != null
+        ) {
+            parts += if (
+                record.startYear == record.endYear &&
+                record.startMonth == 1 && record.endMonth == 12
+            ) {
+                record.startYear.toString()
+            } else if (record.startYear == record.endYear) {
+                getString(
+                    R.string.period_same_year,
+                    monthNames[record.startMonth - 1],
+                    monthNames[record.endMonth - 1],
+                    record.startYear,
+                )
             } else {
-                "${monthNames[record.startMonth - 1]}–${monthNames[record.endMonth - 1]} ${record.year}"
+                getString(
+                    R.string.period_cross_year,
+                    monthNames[record.startMonth - 1],
+                    record.startYear,
+                    monthNames[record.endMonth - 1],
+                    record.endYear,
+                )
             }
         }
         parts += if (record.durationSeconds > 0) formatVideoDuration(record.durationSeconds)
@@ -658,6 +800,7 @@ class MainActivity : AppCompatActivity() {
             if (deleted) {
                 creationStore.remove(record.uri)
                 creationMedia.deleteThumbnail(uri)
+                creationMedia.deleteOverview(uri)
                 releaseUriAccess(uri)
                 if (lastVideoUri == uri) {
                     lastVideoUri = null
@@ -671,15 +814,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun persistUriAccess(uri: Uri, includeWrite: Boolean) {
+    private fun persistUriAccess(uri: Uri, includeWrite: Boolean): Boolean {
         val read = Intent.FLAG_GRANT_READ_URI_PERMISSION
         val requested = read or if (includeWrite) Intent.FLAG_GRANT_WRITE_URI_PERMISSION else 0
         val persisted = runCatching {
             contentResolver.takePersistableUriPermission(uri, requested)
         }.isSuccess
         if (!persisted && requested != read) {
-            runCatching { contentResolver.takePersistableUriPermission(uri, read) }
+            return runCatching { contentResolver.takePersistableUriPermission(uri, read) }.isSuccess
         }
+        return persisted
     }
 
     private fun releaseUriAccess(uri: Uri) {
@@ -726,7 +870,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun openPrivacyPolicy() {
         val language = resources.configuration.locales[0]?.language
-        val url = if (language == Locale.KOREAN.language) PRIVACY_URL_KO else PRIVACY_URL
+        val url = when (language) {
+            Locale.KOREAN.language -> PRIVACY_URL_KO
+            Locale.JAPANESE.language -> PRIVACY_URL_JA
+            else -> PRIVACY_URL
+        }
         openWebPage(url, R.string.web_page_unavailable)
     }
 
@@ -741,7 +889,7 @@ class MainActivity : AppCompatActivity() {
     private fun watchVideo(uri: Uri) {
         val intent = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, "video/mp4")
-            clipData = ClipData.newRawUri("Timeline video", uri)
+            clipData = ClipData.newRawUri(getString(R.string.timeline_video), uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         runCatching { startActivity(intent) }
@@ -752,9 +900,89 @@ class MainActivity : AppCompatActivity() {
         startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
             type = "video/mp4"
             putExtra(Intent.EXTRA_STREAM, uri)
-            clipData = ClipData.newRawUri("Timeline video", uri)
+            clipData = ClipData.newRawUri(getString(R.string.timeline_video), uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }, getString(R.string.share_travel_video)))
+    }
+
+    private fun chooseOverviewDestination(videoUri: Uri) {
+        if (creationMedia.cachedOverview(videoUri) == null) {
+            Snackbar.make(binding.root, R.string.overview_unavailable, Snackbar.LENGTH_LONG).show()
+            return
+        }
+        pendingOverviewVideoUri = videoUri
+        val title = lastVideoTitle.orEmpty().ifBlank { getString(R.string.default_title) }
+        val periodSuffix = creationStore.list()
+            .firstOrNull { it.uri == videoUri.toString() }
+            ?.let(::periodFileSuffix)
+        val baseName = listOfNotNull(title, periodSuffix).joinToString("-")
+        createOverviewImage.launch(getString(R.string.overview_file_name, baseName))
+    }
+
+    private fun copyOverviewImage(videoUri: Uri, destination: Uri) {
+        binding.saveOverviewButton.isEnabled = false
+        lifecycleScope.launch {
+            val saved = withContext(Dispatchers.IO) {
+                runCatching {
+                    contentResolver.openOutputStream(destination, "w")?.use { output ->
+                        check(creationMedia.copyOverview(videoUri, output))
+                    } ?: error("Overview destination is unavailable")
+                }.isSuccess
+            }
+            binding.saveOverviewButton.isEnabled = creationMedia.cachedOverview(videoUri) != null
+            Snackbar.make(
+                binding.root,
+                if (saved) R.string.overview_saved else R.string.overview_save_failed,
+                Snackbar.LENGTH_LONG,
+            ).show()
+        }
+    }
+
+    private fun shareOverviewImage(videoUri: Uri) {
+        val file = creationMedia.cachedOverview(videoUri)
+        if (file == null) {
+            Snackbar.make(binding.root, R.string.overview_unavailable, Snackbar.LENGTH_LONG).show()
+            return
+        }
+        runCatching {
+            val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+            startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                type = "image/png"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                clipData = ClipData.newRawUri(getString(R.string.overview_image), uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }, getString(R.string.share_overview_image)))
+        }.onFailure { error ->
+            Log.e(TAG, "Could not share overview image", error)
+            Snackbar.make(binding.root, R.string.overview_share_failed, Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    private fun currentRenderText(): RenderText {
+        val locale = resources.configuration.locales[0] ?: Locale.getDefault()
+        return RenderText(
+            localeTag = locale.toLanguageTag(),
+            fallbackTitle = getString(R.string.default_title),
+            datePattern = getString(R.string.render_date_pattern),
+            distanceUnit = getString(R.string.distance_unit),
+            attribution = getString(R.string.map_attribution),
+        )
+    }
+
+    private fun periodFileSuffix(period: TimelinePeriod): String = listOf(
+        "${period.startYear}-${period.startMonth.toString().padStart(2, '0')}",
+        "${period.endYear}-${period.endMonth.toString().padStart(2, '0')}",
+    ).joinToString("_")
+
+    private fun periodFileSuffix(record: CreationRecord): String? {
+        val startYear = record.startYear ?: return null
+        val startMonth = record.startMonth ?: return null
+        val endYear = record.endYear ?: return null
+        val endMonth = record.endMonth ?: return null
+        return listOf(
+            "$startYear-${startMonth.toString().padStart(2, '0')}",
+            "$endYear-${endMonth.toString().padStart(2, '0')}",
+        ).joinToString("_")
     }
 
     private fun showExportHelp() {
@@ -806,5 +1034,8 @@ class MainActivity : AppCompatActivity() {
             "https://github.com/mahlernim/google-timeline-visualizer/blob/main/docs/privacy.md"
         private const val PRIVACY_URL_KO =
             "https://github.com/mahlernim/google-timeline-visualizer/blob/main/docs/privacy.ko.md"
+        private const val PRIVACY_URL_JA =
+            "https://github.com/mahlernim/google-timeline-visualizer/blob/main/docs/privacy.ja.md"
+        private const val TAG = "TimelineVisualizer"
     }
 }

@@ -11,12 +11,13 @@ data class CreationRecord(
     val fileName: String,
     val createdAtMillis: Long,
     val durationSeconds: Int,
-    val year: Int? = null,
+    val startYear: Int? = null,
     val startMonth: Int? = null,
+    val endYear: Int? = null,
     val endMonth: Int? = null,
 )
 
-class CreationStore(context: Context) {
+class CreationStore(private val context: Context) {
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     fun list(): List<CreationRecord> = decode(preferences.getString(KEY_RECORDS, null))
@@ -48,8 +49,9 @@ class CreationStore(context: Context) {
                     put("fileName", record.fileName)
                     put("createdAtMillis", record.createdAtMillis)
                     put("durationSeconds", record.durationSeconds)
-                    record.year?.let { put("year", it) }
+                    record.startYear?.let { put("startYear", it) }
                     record.startMonth?.let { put("startMonth", it) }
+                    record.endYear?.let { put("endYear", it) }
                     record.endMonth?.let { put("endMonth", it) }
                 },
             )
@@ -65,7 +67,8 @@ class CreationStore(context: Context) {
                 for (index in 0 until array.length()) {
                     val item = array.optJSONObject(index) ?: continue
                     val uri = item.optString("uri").takeIf(String::isNotBlank) ?: continue
-                    val fileName = item.optString("fileName").takeIf(String::isNotBlank) ?: "Timeline video.mp4"
+                    val fileName = item.optString("fileName").takeIf(String::isNotBlank)
+                        ?: context.getString(dev.mahlernim.timelinevisualizer.R.string.default_video_filename)
                     add(
                         CreationRecord(
                             uri = uri,
@@ -74,8 +77,12 @@ class CreationStore(context: Context) {
                             fileName = fileName,
                             createdAtMillis = item.optLong("createdAtMillis", 0L),
                             durationSeconds = item.optInt("durationSeconds", 0).coerceAtLeast(0),
-                            year = item.optionalPositiveInt("year"),
+                            startYear = item.optionalPositiveInt("startYear")
+                                ?: item.optionalPositiveInt("year"),
                             startMonth = item.optionalPositiveInt("startMonth"),
+                            endYear = item.optionalPositiveInt("endYear")
+                                ?: item.optionalPositiveInt("startYear")
+                                ?: item.optionalPositiveInt("year"),
                             endMonth = item.optionalPositiveInt("endMonth"),
                         ),
                     )

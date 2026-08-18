@@ -11,7 +11,8 @@
     <string name="export_video">영상 만들기</string>
     <string name="video_title_template">영상 제목 템플릿</string>
     <string name="title_template_help">{year}와 {name}을 사용할 수 있으며 다음 영상에도 저장됩니다.</string>
-    <string name="year">연도</string>
+    <string name="start_year">시작 연도</string>
+    <string name="end_year">종료 연도</string>
     <string name="duration">이동 재생 길이</string>
     <string name="start_month">시작 월</string>
     <string name="end_month">종료 월</string>
@@ -19,6 +20,9 @@
     <string name="share">공유</string>
     <string name="share_travel_video">여행 영상 공유</string>
     <string name="import_failed">파일을 불러오지 못했습니다</string>
+    <string name="import_failed_detail">이 타임라인 파일을 읽을 수 없습니다. 올바른 Timeline.json 내보내기 파일을 선택해 주세요.</string>
+    <string name="remembered_timeline_unavailable">이전에 사용한 타임라인 파일을 더 이상 열 수 없습니다.</string>
+    <string name="choose_timeline_again">Timeline.json 파일을 다시 선택해 주세요.</string>
     <string name="video_export_failed">영상을 내보내지 못했습니다</string>
     <string name="location_settings_unavailable">이 휴대전화에서 위치 설정을 열 수 없습니다</string>
     <string name="traveler">여행자</string>
@@ -29,6 +33,9 @@
         <item quantity="other">%1$d초</item>
     </plurals>
     <string name="reading_timeline">타임라인 내보내기를 읽는 중…</string>
+    <string name="opening_timeline">파일을 여는 중…</string>
+    <string name="preparing_trips">여행 경로를 준비하는 중…</string>
+    <string name="loading_timeline">타임라인 불러오는 중</string>
     <string name="video_saved">영상이 준비되었습니다</string>
     <string name="video_ready">영상 준비 완료</string>
     <string name="watch_video">영상 보기</string>
@@ -46,6 +53,8 @@
     <string name="video_creation_notification_channel_description">타임라인 영상의 진행률과 완성 알림</string>
     <string name="no_video_player">이 영상을 재생할 앱이 없습니다</string>
     <string name="journey_summary">위치 %1$s개 · %2$s km · %3$s</string>
+    <string name="period_same_year">%3$d년 %1$s–%2$s</string>
+    <string name="period_cross_year">%2$d년 %1$s–%4$d년 %3$s</string>
     <string name="preparing_map_progress">지도 준비 중 · 타일 %1$d/%2$d</string>
     <string name="creating_video_progress">영상 만드는 중 · %1$d%%</string>
     <string name="finishing_video_progress">영상 마무리 중 · %1$d%%</string>
@@ -72,6 +81,15 @@
     <string name="watch">보기</string>
     <string name="more">더보기</string>
     <string name="video_thumbnail">영상 미리보기 이미지</string>
+    <string name="save_overview_image">전체 경로 이미지 저장</string>
+    <string name="share_overview_image">전체 경로 이미지 공유</string>
+    <string name="overview_image">여행 전체 경로 이미지</string>
+    <string name="overview_file_name">%1$s-전체경로.png</string>
+    <string name="overview_saved">전체 경로 이미지를 저장했습니다</string>
+    <string name="overview_save_cancelled">전체 경로 이미지를 저장하지 않았습니다</string>
+    <string name="overview_save_failed">전체 경로 이미지를 저장하지 못했습니다</string>
+    <string name="overview_share_failed">전체 경로 이미지를 공유하지 못했습니다</string>
+    <string name="overview_unavailable">전체 경로 이미지를 더 이상 사용할 수 없습니다</string>
     <string name="file_unavailable">파일을 찾을 수 없음</string>
     <string name="remove_from_list">목록에서 제거</string>
     <string name="delete_video">영상 파일 삭제</string>
@@ -91,4 +109,9 @@
     <string name="project_on_github">GitHub 프로젝트</string>
     <string name="update_page_unavailable">업데이트 페이지를 열 수 없습니다</string>
     <string name="web_page_unavailable">웹페이지를 열 수 없습니다</string>
+    <string name="render_date_pattern">yyyy년 M월</string>
+    <string name="distance_unit">km</string>
+    <string name="map_attribution">© OpenStreetMap  © CARTO</string>
+    <string name="timeline_video">타임라인 영상</string>
+    <string name="default_video_filename">타임라인 영상.mp4</string>
 </resources>

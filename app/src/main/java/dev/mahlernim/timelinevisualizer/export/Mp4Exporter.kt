@@ -15,6 +15,7 @@ import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.render.TimelineAnimation
 import dev.mahlernim.timelinevisualizer.render.TimelineFrame
 import dev.mahlernim.timelinevisualizer.render.TimelinePainter
+import dev.mahlernim.timelinevisualizer.render.RenderText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -41,8 +42,9 @@ class Mp4Exporter(
         journey: Journey,
         title: String,
         durationSeconds: Int,
+        renderText: RenderText,
         onProgress: (ExportProgress) -> Unit,
-    ) = withContext(Dispatchers.Default) {
+    ): Bitmap = withContext(Dispatchers.Default) {
         require(journey.points.size >= 2) { "At least two location points are needed" }
         val width = 480
         val height = 480
@@ -61,6 +63,11 @@ class Mp4Exporter(
                 val frame = TimelineFrame(1f, outroProgress)
                 addAll(painter.requiredTiles(painter.viewport(journey, frame, width, height)).map { it.id })
             }
+            addAll(
+                painter.requiredTiles(
+                    painter.viewport(journey, TimelineFrame(1f, 1f), OVERVIEW_SIZE, OVERVIEW_SIZE),
+                ).map { it.id },
+            )
         }
         onProgress(ExportProgress(0f, ExportPhase.PREPARING_MAP, 0, requiredTiles.size))
         requiredTiles.forEachIndexed { index, tile ->
@@ -156,6 +163,7 @@ class Mp4Exporter(
                     animationFrame,
                     durationSeconds,
                     title,
+                    renderText,
                     tileRepository::cached,
                 )
                 bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
@@ -203,7 +211,20 @@ class Mp4Exporter(
                 }
             }
             while (!drain(true)) coroutineContext.ensureActive()
+            val overview = Bitmap.createBitmap(OVERVIEW_SIZE, OVERVIEW_SIZE, Bitmap.Config.ARGB_8888)
+            painter.draw(
+                Canvas(overview),
+                OVERVIEW_SIZE,
+                OVERVIEW_SIZE,
+                journey,
+                TimelineFrame(1f, 1f),
+                durationSeconds,
+                title,
+                renderText,
+                tileRepository::cached,
+            )
             onProgress(ExportProgress(1f, ExportPhase.COMPLETE, 1, 1))
+            overview
         } finally {
             runCatching { codec.stop() }
             codec.release()
@@ -264,6 +285,7 @@ class Mp4Exporter(
 
     companion object {
         private const val OUTRO_TILE_SAMPLES = 12
+        const val OVERVIEW_SIZE = 1080
         private const val PREPARING_PROGRESS_WEIGHT = 0.10f
         private const val JOURNEY_PROGRESS_WEIGHT = 0.80f
         private const val FINISHING_PROGRESS_WEIGHT = 0.10f
