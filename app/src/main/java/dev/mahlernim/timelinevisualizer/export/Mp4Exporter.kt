@@ -21,8 +21,6 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
 import kotlin.coroutines.coroutineContext
-import kotlin.math.ceil
-import kotlin.math.max
 
 enum class ExportPhase { PREPARING_MAP, CREATING_VIDEO, FINISHING_VIDEO, COMPLETE }
 
@@ -51,11 +49,12 @@ class Mp4Exporter(
         val fps = 24
         val painter = TimelinePainter()
 
-        val sampleCount = max(durationSeconds * 2, ceil(journey.totalDistanceKm / 250.0).toInt())
-            .coerceIn(20, durationSeconds * 8)
+        // Sampling the camera coarsely used to miss tiles the render then asked for, leaving blank
+        // patches. The camera track is precomputed, so asking every frame it will draw is cheap.
+        val journeyFrameCount = durationSeconds * fps
         val requiredTiles = buildSet {
-            for (sample in 0..sampleCount) {
-                val progress = sample.toFloat() / sampleCount
+            for (frame in 0 until journeyFrameCount) {
+                val progress = if (journeyFrameCount == 1) 1f else frame.toFloat() / (journeyFrameCount - 1)
                 addAll(painter.requiredTiles(painter.viewport(journey, progress, width, height)).map { it.id })
             }
             for (sample in 0..OUTRO_TILE_SAMPLES) {
@@ -132,7 +131,6 @@ class Mp4Exporter(
         try {
             codec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
             codec.start()
-            val journeyFrameCount = durationSeconds * fps
             val outroFrameCount = (TimelineAnimation.OUTRO_SECONDS * fps).toInt()
             val frameCount = journeyFrameCount + outroFrameCount
             for (frame in 0 until frameCount) {

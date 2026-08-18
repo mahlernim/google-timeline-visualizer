@@ -87,6 +87,18 @@ data class RouteSample(
     val distanceKm: Double,
 )
 
+/**
+ * A stretch of the journey between two long hops. A transfer leg is a single untracked jump such
+ * as a flight; a local leg is everything travelled around one area between those jumps.
+ */
+data class JourneyLeg(
+    val startKm: Double,
+    val endKm: Double,
+    val isTransfer: Boolean,
+) {
+    val lengthKm: Double get() = endKm - startKm
+}
+
 data class Journey(
     val period: TimelinePeriod,
     val points: List<GeoPoint>,
@@ -95,9 +107,19 @@ data class Journey(
     val year: Int get() = period.startYear
     val totalDistanceKm: Double get() = cumulativeDistanceKm.lastOrNull() ?: 0.0
     val renderPath: List<RouteSample> = buildRenderPath()
+    val legs: List<JourneyLeg> = buildLegs()
+    private val legStartsKm: DoubleArray = DoubleArray(legs.size) { legs[it].startKm }
 
     fun pointIndexAt(progress: Float): Int {
         return positionAt(progress).toIndex
+    }
+
+    /** The leg covering [distanceKm] along the route. */
+    fun legAt(distanceKm: Double): JourneyLeg {
+        if (legs.isEmpty()) return JourneyLeg(0.0, totalDistanceKm, false)
+        val found = legStartsKm.binarySearch(distanceKm.coerceIn(0.0, totalDistanceKm))
+        val index = if (found >= 0) found else -found - 2
+        return legs[index.coerceIn(0, legs.lastIndex)]
     }
 
     fun positionAt(progress: Float): JourneyPosition = positionAtDistance(
@@ -149,6 +171,28 @@ data class Journey(
                     )
                 }
             }
+        }
+    }
+
+    /**
+     * Splits the route at hops long enough to be a flight or another untracked transfer. The camera
+     * frames a local leg on its own, so a distant city cannot widen the view while it is still far
+     * away along the route.
+     */
+    private fun buildLegs(): List<JourneyLeg> {
+        if (points.size < 2 || totalDistanceKm <= 0.0) return emptyList()
+        return buildList {
+            var legStart = 0.0
+            for (index in 1..points.lastIndex) {
+                val hopKm = cumulativeDistanceKm[index] - cumulativeDistanceKm[index - 1]
+                if (hopKm < TRANSFER_MIN_KM) continue
+                val transferStart = cumulativeDistanceKm[index - 1]
+                if (transferStart > legStart) add(JourneyLeg(legStart, transferStart, false))
+                add(JourneyLeg(transferStart, cumulativeDistanceKm[index], true))
+                legStart = cumulativeDistanceKm[index]
+            }
+            // A journey ending on a transfer leaves nothing behind it, so skip the empty remainder.
+            if (totalDistanceKm > legStart) add(JourneyLeg(legStart, totalDistanceKm, false))
         }
     }
 
@@ -205,6 +249,12 @@ data class Journey(
 
         private const val MAX_RENDER_STEP_KM = 75.0
         private const val MAX_STEPS_PER_SEGMENT = 320
+
+        /**
+         * A single hop this long is a flight or another untracked transfer. Road and city travel
+         * arrives as densely sampled Timeline paths, so it never reaches this in one step.
+         */
+        const val TRANSFER_MIN_KM = 120.0
     }
 }
 

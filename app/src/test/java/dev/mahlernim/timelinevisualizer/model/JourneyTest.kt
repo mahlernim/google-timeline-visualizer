@@ -15,6 +15,7 @@ import java.time.YearMonth
 class JourneyTest {
     private val seoul = GeoPoint(Instant.parse("2025-06-01T00:00:00Z"), 37.5665, 126.9780)
     private val bohol = GeoPoint(Instant.parse("2025-06-01T04:00:00Z"), 9.8500, 124.1435)
+    private val bogota = GeoPoint(Instant.parse("2026-06-05T00:00:00Z"), 4.71, -74.07)
 
     @Test
     fun continuouslyInterpolatesALongFlight() {
@@ -92,6 +93,84 @@ class JourneyTest {
     }
 
     @Test
+    fun splitsLongHopsIntoTransferLegs() {
+        val journey = Journey.from(cityFlightCityPoints(), 2026)
+
+        assertEquals(listOf(false, true, false), journey.legs.map { it.isTransfer })
+        assertTrue("The flight leg was ${journey.legs[1].lengthKm} km", journey.legs[1].lengthKm > 300)
+        assertTrue(journey.legAt(journey.legs[1].startKm + 1.0).isTransfer)
+        assertTrue(!journey.legAt(0.0).isTransfer)
+        assertTrue(!journey.legAt(journey.totalDistanceKm).isTransfer)
+    }
+
+    @Test
+    fun localTravelWithoutLongHopsStaysOneLeg() {
+        val journey = Journey.from(cityPoints(7.90, -72.50, 40), 2026)
+
+        assertEquals(1, journey.legs.size)
+        assertEquals(false, journey.legs.single().isTransfer)
+        assertEquals(journey.totalDistanceKm, journey.legs.single().endKm, 1e-9)
+    }
+
+    @Test
+    fun aJourneyEndingOnATransferHasNoEmptyTrailingLeg() {
+        val points = cityPoints(7.90, -72.50, 20) + bogota
+
+        val legs = Journey.from(points, 2026).legs
+
+        assertEquals(listOf(false, true), legs.map { it.isTransfer })
+        assertTrue(legs.none { it.lengthKm <= 0.0 })
+    }
+
+    @Test
+    fun cityTravelZoomsInBetweenFlights() {
+        val journey = Journey.from(cityFlightCityPoints(), 2026)
+        val painter = TimelinePainter()
+        val localWidths = mutableListOf<Double>()
+        val transferWidths = mutableListOf<Double>()
+
+        for (sample in 0..400) {
+            val progress = sample / 400f
+            val viewport = painter.viewport(journey, progress, 480, 480)
+            val widthKm = (viewport.maxX - viewport.minX) * EQUATOR_KM * kotlin.math.cos(Math.toRadians(7.9))
+            val leg = journey.legAt(journey.positionAt(progress).distanceKm)
+            if (leg.isTransfer) transferWidths += widthKm else localWidths += widthKm
+        }
+
+        val tightestLocal = localWidths.min()
+        assertTrue(
+            "The camera never reached city scale, tightest frame was $tightestLocal km",
+            tightestLocal < 25.0,
+        )
+        assertTrue(
+            "Half of local travel should be framed tightly, median was ${localWidths.sorted()[localWidths.size / 2]} km",
+            localWidths.sorted()[localWidths.size / 2] < 60.0,
+        )
+        assertTrue(
+            "The flight should pull the camera out, widest frame was ${transferWidths.max()} km",
+            transferWidths.max() > 500.0,
+        )
+    }
+
+    /** Local travel around Cúcuta, a flight to Medellín, then local travel there. */
+    private fun cityFlightCityPoints(): List<GeoPoint> =
+        cityPoints(7.90, -72.50, 40) + cityPoints(6.24, -75.57, 40, startHour = 100)
+
+    private fun cityPoints(
+        latitude: Double,
+        longitude: Double,
+        count: Int,
+        startHour: Long = 0,
+    ): List<GeoPoint> = List(count) { index ->
+        val offset = index * 0.004
+        GeoPoint(
+            Instant.parse("2026-06-01T00:00:00Z").plusSeconds((startHour + index) * 3_600L),
+            latitude + if (index % 2 == 0) offset else -offset,
+            longitude + offset,
+        )
+    }
+
+    @Test
     fun cameraTrackIsDeterministicWhenSeeking() {
         val journey = Journey.from(listOf(seoul, bohol), 2025)
         val painter = TimelinePainter()
@@ -152,5 +231,9 @@ class JourneyTest {
         while (result - reference > 0.5) result -= 1.0
         while (result - reference < -0.5) result += 1.0
         return result
+    }
+
+    private companion object {
+        const val EQUATOR_KM = 40_075.0
     }
 }

@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+- Split each Journey at long untracked hops, such as flights, and frame every
+  stretch of local travel on its own. The camera now reaches city scale on the
+  routes actually travelled instead of holding a regional view for the whole
+  video, zooms out only for the long hop, and settles back in on arrival.
+- Speed up the return to a closer view after a long hop so the camera no longer
+  stays wide for the rest of the video.
+- Prepare map tiles for every frame the export will draw. The previous sampling
+  missed tiles the renderer then asked for, which could leave blank patches in
+  the saved video.
+- Desktop Python generator: apply the same leg-aware camera, and interpolate the
+  marker inside each segment so a long flight sweeps across the map instead of
+  freezing on the arrival point.
+
 ## 1.9.0
 
 - Implements issues #21, #23, and #24.

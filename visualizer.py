@@ -45,9 +45,17 @@ THEME_COLOR = '#ff0055' # Pink/Red
 TILE_URL = "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
 
 # Camera Physics
-SMOOTHING_FACTOR = 0.1 
-LOOKAHEAD_KM = 500 
-MIN_ZOOM_SPAN_METERS = 5000 
+SMOOTHING_FACTOR = 0.1
+LOCAL_CONTEXT_KM = 25
+MIN_ZOOM_SPAN_METERS = 5000
+LOCAL_PADDING = 1.8
+TRANSFER_PADDING = 2.8
+# A single hop this long is a flight or another untracked transfer. Road and city travel arrives as
+# densely sampled Timeline paths, so it never reaches this in one step.
+TRANSFER_MIN_KM = 120
+# The camera leaves a city faster than it settles back into the next one.
+ZOOM_OUT_ALPHA = 0.32
+ZOOM_IN_ALPHA = 0.18
 
 # Web Mercator Constants
 R_EARTH = 6378137.0
@@ -64,6 +72,65 @@ def meters_to_latlon(x, y):
     lon = math.degrees(x / R_EARTH)
     lat = math.degrees(2 * math.atan(math.exp(y / R_EARTH)) - math.pi / 2)
     return lat, lon
+
+def interpolate_latlon(lat1, lon1, lat2, lon2, fraction):
+    """Great-circle position between two points, so long hops sweep instead of teleporting."""
+    if fraction <= 0:
+        return lat1, lon1
+    if fraction >= 1:
+        return lat2, lon2
+    p1, l1 = math.radians(lat1), math.radians(lon1)
+    p2, l2 = math.radians(lat2), math.radians(lon2)
+    ax, ay, az = math.cos(p1) * math.cos(l1), math.cos(p1) * math.sin(l1), math.sin(p1)
+    bx, by, bz = math.cos(p2) * math.cos(l2), math.cos(p2) * math.sin(l2), math.sin(p2)
+    omega = math.acos(max(-1.0, min(1.0, ax * bx + ay * by + az * bz)))
+    if math.sin(omega) < 1e-8:
+        left, right = 1 - fraction, fraction
+    else:
+        left = math.sin((1 - fraction) * omega) / math.sin(omega)
+        right = math.sin(fraction * omega) / math.sin(omega)
+    x, y, z = left * ax + right * bx, left * ay + right * by, left * az + right * bz
+    return math.degrees(math.atan2(z, math.sqrt(x * x + y * y))), math.degrees(math.atan2(y, x))
+
+
+def build_legs(cum_dist):
+    """Split the route at hops long enough to be a flight or another untracked transfer.
+
+    Returns (start_km, end_km, is_transfer) tuples covering the whole route. The camera frames a
+    local leg on its own, so a distant city cannot widen the view while it is still far away.
+    """
+    total = cum_dist[-1]
+    if total <= 0:
+        return [(0.0, 0.0, False)]
+    legs = []
+    leg_start = 0.0
+    for i in range(1, len(cum_dist)):
+        if cum_dist[i] - cum_dist[i - 1] < TRANSFER_MIN_KM:
+            continue
+        if cum_dist[i - 1] > leg_start:
+            legs.append((leg_start, cum_dist[i - 1], False))
+        legs.append((cum_dist[i - 1], cum_dist[i], True))
+        leg_start = cum_dist[i]
+    # A journey ending on a transfer leaves nothing behind it, so skip the empty remainder.
+    if total > leg_start:
+        legs.append((leg_start, total, False))
+    return legs
+
+
+def leg_at(legs, distance_km):
+    index = bisect.bisect_right([leg[0] for leg in legs], distance_km) - 1
+    return legs[max(0, min(index, len(legs) - 1))]
+
+
+def position_at_distance(cum_dist, lats, lons, distance_km):
+    """Interpolated position at an odometer distance, rather than snapping to the next point."""
+    total = cum_dist[-1]
+    d = max(0.0, min(total, distance_km))
+    to = min(max(bisect.bisect_left(cum_dist, d), 1), len(cum_dist) - 1)
+    segment = cum_dist[to] - cum_dist[to - 1]
+    fraction = 0.0 if segment <= 0 else (d - cum_dist[to - 1]) / segment
+    return interpolate_latlon(lats[to - 1], lons[to - 1], lats[to], lons[to], fraction)
+
 
 def haversine_dist(lat1, lon1, lat2, lon2):
     R = 6371.0
@@ -299,51 +366,66 @@ def main():
     print(f"Target: {DEFAULT_DURATION}s @ {DEFAULT_FPS}fps. {km_per_frame:.3f} km/frame")
     
     frames_dist = [i * km_per_frame for i in range(total_frames)]
+    # frame_indices is the last point already travelled through; the marker itself is interpolated
+    # so a flight sweeps across the map instead of freezing on the arrival point.
     frame_indices = []
+    frame_points = []
     for d in frames_dist:
-        idx = bisect.bisect_left(cum_dist, d)
-        idx = min(idx, len(cum_dist)-1)
+        idx = min(max(bisect.bisect_right(cum_dist, d) - 1, 0), len(cum_dist) - 1)
         frame_indices.append(idx)
-        
+        lat, lon = position_at_distance(cum_dist, lats, lons, d)
+        frame_points.append(latlon_to_meters(lat, lon))
+
+    legs = build_legs(cum_dist)
+    transfers = sum(1 for leg in legs if leg[2])
+    print(f"Route split into {len(legs)} legs ({transfers} long-distance transfers)")
+
     # Camera Calculation
     print("Calculating camera path...")
     cam_centers = []
     cam_spans = []
     
-    curr_x, curr_y = xs[0], ys[0]
-    curr_span = 10000.0 # Start with 10km view
-    
+    curr_x, curr_y = frame_points[0]
+    curr_span = None
+
     for i, frame_d in enumerate(frames_dist):
-        idx = frame_indices[i]
-        
-        # Lookahead
-        target_d = frame_d + LOOKAHEAD_KM
-        look_idx = bisect.bisect_left(cum_dist, target_d)
-        look_idx = min(look_idx, len(cum_dist)-1)
-        
-        # Get bounds of window
-        w_xs = xs[idx : look_idx+1] or [xs[idx]]
-        w_ys = ys[idx : look_idx+1] or [ys[idx]]
-        
-        min_x, max_x = min(w_xs), max(w_xs)
-        min_y, max_y = min(w_ys), max(w_ys)
-        
-        span_x = max_x - min_x
-        span_y = max_y - min_y
-        
-        target_span = max(span_x, span_y, MIN_ZOOM_SPAN_METERS) * 3.0
-        
+        leg_start, leg_end, is_transfer = leg_at(legs, frame_d)
+        # A transfer spans its whole hop so the flight reads as one wide move; a local leg keeps a
+        # short window, and clamping to the leg stops the next city widening the view too early.
+        context = (leg_end - leg_start) if is_transfer else LOCAL_CONTEXT_KM
+        padding = TRANSFER_PADDING if is_transfer else LOCAL_PADDING
+        tail_d = max(leg_start, frame_d - context)
+        look_d = min(leg_end, frame_d + context)
+
+        lo = bisect.bisect_left(cum_dist, tail_d)
+        hi = bisect.bisect_right(cum_dist, look_d)
+        w_xs = list(xs[lo:hi])
+        w_ys = list(ys[lo:hi])
+        for edge in (tail_d, look_d):
+            e_x, e_y = latlon_to_meters(*position_at_distance(cum_dist, lats, lons, edge))
+            w_xs.append(e_x)
+            w_ys.append(e_y)
+
+        span_x = max(w_xs) - min(w_xs)
+        span_y = max(w_ys) - min(w_ys)
+        target_span = max(span_x, span_y, MIN_ZOOM_SPAN_METERS) * padding
+
         # Center Target (Current Position implies following the dot)
-        t_x, t_y = xs[idx], ys[idx]
-        
+        t_x, t_y = frame_points[i]
+
         # Update
         curr_x += (t_x - curr_x) * SMOOTHING_FACTOR
         curr_y += (t_y - curr_y) * SMOOTHING_FACTOR
-        curr_span += (target_span - curr_span) * (SMOOTHING_FACTOR * 0.5)
-        
+        if curr_span is None:
+            curr_span = target_span
+        else:
+            # Zoom in logarithmic space, and settle back into a city slower than we leave one.
+            alpha = ZOOM_OUT_ALPHA if target_span > curr_span else ZOOM_IN_ALPHA
+            curr_span = math.exp(math.log(curr_span) + (math.log(target_span) - math.log(curr_span)) * alpha)
+
         cam_centers.append((curr_x, curr_y))
         cam_spans.append(curr_span)
-        
+
     # Visualization
     print("Setting up animation...")
     fig, ax = plt.subplots(figsize=(10,10))
@@ -386,23 +468,23 @@ def main():
             map_layer.set_data(img)
             map_layer.set_extent(ext)
             
-        # Path
-        _xs = xs[:frame_idx+1]
-        _ys = ys[:frame_idx+1]
+        # Path, ending at the interpolated marker rather than the last point passed
+        head_x, head_y = frame_points[i]
+        _xs = list(xs[:frame_idx+1]) + [head_x]
+        _ys = list(ys[:frame_idx+1]) + [head_y]
         path_line.set_data(_xs, _ys)
-        
+
         # Tail
-        curr_km = cum_dist[frame_idx]
+        curr_km = frames_dist[i]
         start_km = max(0, curr_km - DEFAULT_TAIL_KM)
         start_idx = bisect.bisect_left(cum_dist, start_km)
-        
-        txs = xs[start_idx : frame_idx+1]
-        tys = ys[start_idx : frame_idx+1]
+
+        txs = list(xs[start_idx : frame_idx+1]) + [head_x]
+        tys = list(ys[start_idx : frame_idx+1]) + [head_y]
         tail_line.set_data(txs, tys)
-        
-        if _xs:
-            head_point.set_data([_xs[-1]], [_ys[-1]])
-            
+
+        head_point.set_data([head_x], [head_y])
+
         if timestamps:
             date_text.set_text(timestamps[frame_idx].strftime('%B %Y'))
             

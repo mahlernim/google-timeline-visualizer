@@ -109,8 +109,13 @@ class TimelinePainter {
     private fun rawViewport(journey: Journey, progress: Float, width: Int, height: Int): Viewport {
         val prepared = prepare(journey)
         val current = journey.positionAt(progress)
-        val tailDistance = max(0.0, current.distanceKm - CAMERA_CONTEXT_KM)
-        val lookaheadDistance = min(journey.totalDistanceKm, current.distanceKm + CAMERA_CONTEXT_KM)
+        val leg = journey.legAt(current.distanceKm)
+        // A transfer spans its whole hop so the flight reads as one wide move; a local leg keeps a
+        // short window, and clamping to the leg stops the next city widening the view too early.
+        val contextKm = if (leg.isTransfer) leg.lengthKm else LOCAL_CONTEXT_KM
+        val padding = if (leg.isTransfer) TRANSFER_PADDING else LOCAL_PADDING
+        val tailDistance = max(leg.startKm, current.distanceKm - contextKm)
+        val lookaheadDistance = min(leg.endKm, current.distanceKm + contextKm)
         val focus = buildList {
             add(journey.positionAtDistance(tailDistance).point)
             val start = prepared.lowerBound(tailDistance)
@@ -131,8 +136,8 @@ class TimelinePainter {
         val contentSpanX = max(0.00015, (wrappedX.maxOrNull() ?: centerX) - (wrappedX.minOrNull() ?: centerX))
         val contentSpanY = max(0.00015, (ys.maxOrNull() ?: centerY) - (ys.minOrNull() ?: centerY))
         val aspect = width.toDouble() / height.coerceAtLeast(1)
-        var spanY = max(contentSpanY * 2.8, contentSpanX * 2.8 / aspect)
-        spanY = spanY.coerceIn(0.0003, 0.72)
+        var spanY = max(contentSpanY * padding, contentSpanX * padding / aspect)
+        spanY = spanY.coerceIn(MIN_VIEWPORT_SPAN, MAX_VIEWPORT_SPAN)
         val spanX = spanY * aspect
         val minY = (centerY - spanY / 2).coerceAtLeast(0.0)
         val maxY = (centerY + spanY / 2).coerceAtMost(1.0)
@@ -140,7 +145,7 @@ class TimelinePainter {
         val minX = centerX - spanX / 2
         val maxX = centerX + spanX / 2
         val zoom = floor(log2(width.coerceAtLeast(1) / (256.0 * max(maxX - minX, adjustedSpanY * aspect)))).toInt()
-            .coerceIn(2, 15)
+            .coerceIn(MIN_TILE_ZOOM, MAX_TILE_ZOOM)
         return Viewport(minX, maxX, minY, maxY, zoom)
     }
 
@@ -657,7 +662,9 @@ class TimelinePainter {
     }
 
     companion object {
-        private const val CAMERA_CONTEXT_KM = 650.0
+        private const val LOCAL_CONTEXT_KM = 25.0
+        private const val LOCAL_PADDING = 1.8
+        private const val TRANSFER_PADDING = 2.8
         private const val DEFAULT_JOURNEY_DURATION_SECONDS = 30
         private const val TRAIL_VISIBLE_SECONDS = 2.5
         private const val MIN_TRAIL_KM = 80.0
@@ -669,10 +676,10 @@ class TimelinePainter {
         private const val OVERVIEW_SIDE_INSET = 34f
         private const val OVERVIEW_HEADER_GAP = 20f
         private const val OVERVIEW_BOTTOM_INSET = 34f
-        private const val CAMERA_TRACK_SAMPLES = 480
+        private const val CAMERA_TRACK_SAMPLES = 720
         private const val CAMERA_DEAD_ZONE_HALF = 0.20
         private const val ZOOM_OUT_ALPHA = 0.32
-        private const val ZOOM_IN_ALPHA = 0.065
+        private const val ZOOM_IN_ALPHA = 0.18
         private const val TILE_ZOOM_HYSTERESIS = 0.15
         private const val MIN_VIEWPORT_SPAN = 0.0003
         private const val MAX_VIEWPORT_SPAN = 0.72

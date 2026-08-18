@@ -111,9 +111,13 @@ source code.
 
 Long flights and other sparse routes are interpolated along a great-circle path,
 so the camera follows the trip smoothly instead of jumping to the destination.
-During local travel, the marker can move within a stable central area before the
-camera follows it. This reduces rapid back-and-forth map movement on commutes
-without changing or removing any Timeline points.
+The route is split at those long hops, and each stretch of local travel is framed
+on its own. The camera stays zoomed in on the streets you actually covered, pulls
+out only for the long hop itself, and settles back in on arrival, so a distant
+city never widens the view while you are still far from it. During local travel,
+the marker can move within a stable central area before the camera follows it.
+This reduces rapid back-and-forth map movement on commutes without changing or
+removing any Timeline points.
 
 ## Supported exports
 
