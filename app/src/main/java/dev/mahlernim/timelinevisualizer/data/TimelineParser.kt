@@ -1,5 +1,6 @@
 package dev.mahlernim.timelinevisualizer.data
 
+import com.google.gson.Strictness
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.google.gson.stream.MalformedJsonException
@@ -28,7 +29,7 @@ class TimelineParser {
     private fun parseSupportedTimeline(input: InputStream): Timeline {
         val points = mutableListOf<GeoPoint>()
         JsonReader(InputStreamReader(input, Charsets.UTF_8)).use { reader ->
-            reader.isLenient = true
+            reader.strictness = Strictness.LENIENT
             when (reader.peek()) {
                 JsonToken.BEGIN_ARRAY -> readSegments(reader, points)
                 JsonToken.BEGIN_OBJECT -> readRootObject(reader, points)

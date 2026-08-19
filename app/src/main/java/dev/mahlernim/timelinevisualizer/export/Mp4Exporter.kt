@@ -251,6 +251,7 @@ class Mp4Exporter(
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun selectEncoder(width: Int, height: Int, bitrate: Int): EncoderChoice {
         val preferredFormats = listOf(
             MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar,
@@ -274,6 +275,7 @@ class Mp4Exporter(
         error("This device does not expose a compatible H.264 encoder")
     }
 
+    @Suppress("DEPRECATION")
     private fun argbToYuv420(pixels: IntArray, output: ByteArray, width: Int, height: Int, colorFormat: Int) {
         val frameSize = width * height
         var yIndex = 0
