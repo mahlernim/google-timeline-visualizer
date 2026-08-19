@@ -72,6 +72,19 @@ class TimelineView @JvmOverloads constructor(
             markFrameDirty()
         }
 
+    /**
+     * Width divided by height of the video that will be exported. The preview matches it so the
+     * user sees the real framing before committing to an export.
+     */
+    var previewAspect: Float = 1f
+        set(value) {
+            val next = if (value.isFinite() && value > 0f) value else 1f
+            if (field == next) return
+            field = next
+            requestLayout()
+            markFrameDirty()
+        }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         if (!scope.coroutineContext[Job]!!.isActive) {
@@ -94,9 +107,15 @@ class TimelineView @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val width = MeasureSpec.getSize(widthMeasureSpec)
-        val desiredHeight = width.coerceAtLeast((320 * resources.displayMetrics.density).toInt())
-        setMeasuredDimension(width, resolveSize(desiredHeight, heightMeasureSpec))
+        val availableWidth = MeasureSpec.getSize(widthMeasureSpec)
+        val density = resources.displayMetrics.density
+        val maxHeight = (MAX_PREVIEW_DP * density).toInt()
+        val minHeight = (MIN_PREVIEW_DP * density).toInt()
+        // Fit the export aspect inside the available box: a tall portrait preview loses width
+        // rather than pushing the buttons below it off screen.
+        val height = (availableWidth / previewAspect).toInt().coerceIn(minHeight, maxHeight)
+        val width = (height * previewAspect).toInt().coerceIn(1, availableWidth)
+        setMeasuredDimension(width, resolveSize(height, heightMeasureSpec))
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -178,5 +197,10 @@ class TimelineView @JvmOverloads constructor(
         val action = afterNextFrameRendered ?: return
         afterNextFrameRendered = null
         post(action)
+    }
+
+    private companion object {
+        const val MIN_PREVIEW_DP = 240
+        const val MAX_PREVIEW_DP = 460
     }
 }

@@ -9,7 +9,8 @@ import dev.mahlernim.timelinevisualizer.render.RenderText
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
-import dev.mahlernim.timelinevisualizer.render.VideoQuality
+import dev.mahlernim.timelinevisualizer.render.VideoFormat
+import dev.mahlernim.timelinevisualizer.render.VideoFormatPreset
 import java.time.Instant
 import java.time.YearMonth
 import java.io.DataOutputStream
@@ -49,7 +50,7 @@ class VideoExportRequestStoreTest {
             cameraSettings = CameraSettings(
                 CameraMovement.FIXED,
                 LongTripCompression.STRONG,
-                VideoQuality.ULTRA,
+                VideoFormatPreset.PORTRAIT_1080,
             ),
         )
 
@@ -135,6 +136,70 @@ class VideoExportRequestStoreTest {
 
         assertEquals(CameraMovement.STEADY, restored.cameraSettings.cameraMovement)
         assertEquals(LongTripCompression.BALANCED, restored.cameraSettings.longTripCompression)
-        assertEquals(VideoQuality.HIGH, restored.cameraSettings.videoQuality)
+        assertEquals(VideoFormatPreset.SQUARE_720, restored.cameraSettings.videoFormatPreset)
+        assertEquals(720, restored.cameraSettings.videoFormat.width)
+    }
+
+    @Test
+    fun resumesAVersionFourRequestAtTheSquareSizeItStartedWith() {
+        val requestFile = File(context.filesDir, "pending-video-export.bin")
+        DataOutputStream(requestFile.outputStream().buffered()).use { output ->
+            output.writeInt(4)
+            output.writeUTF("content://documents/version-four.mp4")
+            output.writeUTF("Version four")
+            output.writeInt(30)
+            output.writeInt(2026)
+            output.writeInt(1)
+            output.writeInt(2026)
+            output.writeInt(12)
+            output.writeUTF("en")
+            output.writeUTF("My Timeline")
+            output.writeUTF("MMM yyyy")
+            output.writeUTF("km")
+            output.writeUTF("attribution")
+            output.writeUTF("DYNAMIC")
+            output.writeUTF("GENTLE")
+            output.writeUTF("ULTRA")
+            output.writeInt(1)
+            output.writeLong(Instant.parse("2026-06-01T00:00:00Z").toEpochMilli())
+            output.writeDouble(35.0)
+            output.writeDouble(139.0)
+        }
+
+        val restored = store.load()!!
+
+        assertEquals(CameraMovement.DYNAMIC, restored.cameraSettings.cameraMovement)
+        assertEquals(LongTripCompression.GENTLE, restored.cameraSettings.longTripCompression)
+        assertEquals(VideoFormatPreset.SQUARE_1080, restored.cameraSettings.videoFormatPreset)
+        assertEquals(1080, restored.cameraSettings.videoFormat.width)
+        assertEquals(1080, restored.cameraSettings.videoFormat.height)
+        assertEquals(24, restored.cameraSettings.videoFormat.frameRate)
+    }
+
+    @Test
+    fun restoresACustomFormatExactly() {
+        val custom = VideoFormat.custom(1280, 720, 60)
+        val request = VideoExportRequest(
+            outputUri = "content://documents/custom.mp4",
+            journey = Journey.from(
+                listOf(
+                    GeoPoint(Instant.parse("2026-01-02T03:04:05Z"), 37.5665, 126.9780),
+                    GeoPoint(Instant.parse("2026-06-07T08:09:10Z"), 9.6500, 123.8500),
+                ),
+                2026,
+            ),
+            title = "Custom",
+            durationSeconds = 30,
+            cameraSettings = CameraSettings(
+                videoFormatPreset = VideoFormatPreset.CUSTOM,
+                customFormat = custom,
+            ),
+        )
+        store.save(request)
+
+        val restored = VideoExportRequestStore(context).load()!!
+
+        assertEquals(VideoFormatPreset.CUSTOM, restored.cameraSettings.videoFormatPreset)
+        assertEquals(custom, restored.cameraSettings.videoFormat)
     }
 }

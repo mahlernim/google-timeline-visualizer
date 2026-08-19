@@ -23,20 +23,18 @@ enum class LongTripCompression(val exponent: Double) {
     STRONG(0.75),
 }
 
-enum class VideoQuality(
-    val size: Int,
-    val bitrate: Int,
-) {
-    STANDARD(480, 2_500_000),
-    HIGH(720, 5_000_000),
-    ULTRA(1080, 8_000_000),
-}
-
 data class CameraSettings(
     val cameraMovement: CameraMovement = CameraMovement.STEADY,
     val longTripCompression: LongTripCompression = LongTripCompression.BALANCED,
-    val videoQuality: VideoQuality = VideoQuality.STANDARD,
+    val videoFormatPreset: VideoFormatPreset = VideoFormatPreset.DEFAULT,
+    val customFormat: VideoFormat? = null,
 ) {
+    /** The format the exporter and the preview should use for the current selection. */
+    val videoFormat: VideoFormat
+        get() = videoFormatPreset.format
+            ?: customFormat
+            ?: VideoFormatPreset.DEFAULT.format!!
+
     companion object {
         val DEFAULT = CameraSettings()
     }

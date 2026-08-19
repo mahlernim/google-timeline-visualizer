@@ -197,7 +197,7 @@
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:maxLines="1" android:text="@string/journey" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
 
             <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" app:cardCornerRadius="20dp" app:strokeWidth="0dp">
-                <dev.mahlernim.timelinevisualizer.ui.TimelineView android:id="@+id/timelineView" android:layout_width="match_parent" android:layout_height="360dp" android:background="@color/map_surface" android:contentDescription="@string/timeline_preview" android:minHeight="320dp" />
+                <dev.mahlernim.timelinevisualizer.ui.TimelineView android:id="@+id/timelineView" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:background="@color/map_surface" android:contentDescription="@string/timeline_preview" />
             </com.google.android.material.card.MaterialCardView>
 
             <SeekBar android:id="@+id/timelineSeek" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:contentDescription="@string/playback_position" android:max="1000" />

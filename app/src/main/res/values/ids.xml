@@ -1,3 +1,6 @@
 <resources>
     <item name="customDurationInput" type="id" />
+    <item name="customFormatWidthInput" type="id" />
+    <item name="customFormatHeightInput" type="id" />
+    <item name="customFormatFrameRateInput" type="id" />
 </resources>

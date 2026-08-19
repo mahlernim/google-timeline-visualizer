@@ -2,6 +2,7 @@ package dev.mahlernim.timelinevisualizer
 
 import android.animation.ValueAnimator
 import android.Manifest
+import android.app.ActivityManager
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
@@ -71,7 +72,11 @@ import dev.mahlernim.timelinevisualizer.render.RenderText
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
-import dev.mahlernim.timelinevisualizer.render.VideoQuality
+import dev.mahlernim.timelinevisualizer.render.VideoFormat
+import dev.mahlernim.timelinevisualizer.render.VideoFormatPreset
+import dev.mahlernim.timelinevisualizer.export.EncoderSupport
+import dev.mahlernim.timelinevisualizer.export.describe
+import dev.mahlernim.timelinevisualizer.export.VideoEncoderSupport
 import dev.mahlernim.timelinevisualizer.ui.CameraSettingsPreferences
 import dev.mahlernim.timelinevisualizer.ui.LocationFilterPreferences
 import dev.mahlernim.timelinevisualizer.videos.GeneratedMediaRepository
@@ -130,6 +135,8 @@ class MainActivity : AppCompatActivity() {
     private val cameraSettingsPreferences by lazy { CameraSettingsPreferences(applicationContext) }
     private val locationFilterPreferences by lazy { LocationFilterPreferences(applicationContext) }
     private var cameraSettings = CameraSettings.DEFAULT
+    private var videoFormatOptions: List<VideoFormatPreset> = emptyList()
+    private var videoFormatSupported = true
     private var locationFilterMode = LocationFilterMode.CONSERVATIVE
     private var routeDurationSeconds = VideoDuration.DEFAULT_SECONDS
     private val applyTitleChanges = Runnable { commitTitlePreferences() }
@@ -634,7 +641,7 @@ class MainActivity : AppCompatActivity() {
         editor.periodSummaryText.text = selectedPeriodSummary(selected, ignoredCount)
         val canCreate = canCreateVideo(selected)
         editor.playButton.isEnabled = canCreate
-        editor.exportButton.isEnabled = canCreate
+        editor.exportButton.isEnabled = canCreate && videoFormatSupported
     }
 
     internal fun selectedPeriodSummary(selected: Journey, ignoredCount: Int = 0): String {
@@ -883,20 +890,14 @@ class MainActivity : AppCompatActivity() {
             R.string.compression_balanced,
             R.string.compression_strong,
         ).map(::getString)
-        val qualityLabels = listOf(
-            R.string.quality_standard,
-            R.string.quality_high,
-            R.string.quality_ultra,
-        ).map(::getString)
-
         listOf(
             settingsScreen.cameraMovementDropdown to cameraLabels,
             settingsScreen.longTripDropdown to compressionLabels,
-            settingsScreen.videoQualityDropdown to qualityLabels,
         ).forEach { (dropdown, labels) ->
             dropdown.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, labels))
             makeDropdownOpenReliably(dropdown)
         }
+        makeDropdownOpenReliably(settingsScreen.videoFormatDropdown)
 
         settingsScreen.cameraMovementDropdown.setOnItemClickListener { _, _, position, _ ->
             updateAdvancedSettings(cameraSettings.copy(cameraMovement = CameraMovement.values()[position]))
@@ -904,8 +905,13 @@ class MainActivity : AppCompatActivity() {
         settingsScreen.longTripDropdown.setOnItemClickListener { _, _, position, _ ->
             updateAdvancedSettings(cameraSettings.copy(longTripCompression = LongTripCompression.values()[position]))
         }
-        settingsScreen.videoQualityDropdown.setOnItemClickListener { _, _, position, _ ->
-            updateAdvancedSettings(cameraSettings.copy(videoQuality = VideoQuality.values()[position]))
+        settingsScreen.videoFormatDropdown.setOnItemClickListener { _, _, position, _ ->
+            val preset = videoFormatOptions.getOrNull(position) ?: return@setOnItemClickListener
+            if (preset.isCustom) {
+                showCustomFormatDialog()
+            } else {
+                updateAdvancedSettings(cameraSettings.copy(videoFormatPreset = preset))
+            }
         }
         settingsScreen.resetAdvancedSettingsButton.setOnClickListener {
             applyAdvancedSettings(cameraSettingsPreferences.reset())
@@ -983,12 +989,190 @@ class MainActivity : AppCompatActivity() {
             ),
             false,
         )
-        settingsScreen.videoQualityDropdown.setText(
-            getString(listOf(R.string.quality_standard, R.string.quality_high, R.string.quality_ultra)[settings.videoQuality.ordinal]),
-            false,
-        )
+        applyVideoFormat(settings)
         showProgress(editor.timelineSeek.progress / 1000f)
     }
+
+    /**
+     * Rebuilds the format dropdown for [settings] and reports whether this device can encode the
+     * chosen format.
+     *
+     * An unsupported format is never swapped for a working one: it stays selected and visible, the
+     * warning explains why, and Create stays disabled until the user picks something else. That
+     * matters most after a cloud restore, where `camera-settings` can arrive from a phone with a
+     * more capable encoder.
+     */
+    private fun applyVideoFormat(settings: CameraSettings) {
+        val format = settings.videoFormat
+        videoFormatOptions = videoFormatOptions(settings.videoFormatPreset)
+        settingsScreen.videoFormatDropdown.setAdapter(
+            ArrayAdapter(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                videoFormatOptions.map { videoFormatLabel(it, settings) },
+            ),
+        )
+        settingsScreen.videoFormatDropdown.setText(
+            videoFormatLabel(settings.videoFormatPreset, settings),
+            false,
+        )
+        val warning = videoFormatWarning(format)
+        videoFormatSupported = warning == null
+        settingsScreen.videoFormatWarningText.text = warning
+            ?: getString(R.string.format_slow_warning)
+        settingsScreen.videoFormatWarningText.visibility = when {
+            warning != null -> View.VISIBLE
+            format.longEdge >= SLOW_EXPORT_EDGE -> View.VISIBLE
+            else -> View.GONE
+        }
+        editor.timelineView.previewAspect = format.aspect
+        journey?.let { editor.exportButton.isEnabled = canCreateVideo(it) && videoFormatSupported }
+    }
+
+    /**
+     * The presets worth offering. Anything this device cannot encode is left out, except the
+     * current selection and the default, which stay listed so the dropdown never silently loses
+     * the value it is displaying.
+     */
+    private fun videoFormatOptions(selected: VideoFormatPreset): List<VideoFormatPreset> {
+        val profiles = VideoEncoderSupport.deviceProfiles()
+        val largeFramesAffordable = largeFramesAffordable()
+        return VideoFormatPreset.values().filter { preset ->
+            val format = preset.format
+                ?: return@filter true
+            if (preset == selected || preset == VideoFormatPreset.DEFAULT) return@filter true
+            if (!largeFramesAffordable && format.longEdge > MODEST_MEMORY_MAX_EDGE) return@filter false
+            profiles.isEmpty() || VideoEncoderSupport.select(format, profiles) is EncoderSupport.Supported
+        }
+    }
+
+    /**
+     * Whether this device has the heap for the largest frames.
+     *
+     * A 3840x2160 export holds an ARGB bitmap, its pixel copy, and the YUV buffer at once — about
+     * 80 MB — so the encoder saying yes is not enough on its own.
+     */
+    private fun largeFramesAffordable(): Boolean {
+        val activityManager = getSystemService(ActivityManager::class.java) ?: return false
+        if (activityManager.isLowRamDevice) return false
+        return activityManager.memoryClass >= LARGE_FRAME_MEMORY_CLASS_MB
+    }
+
+    private fun videoFormatLabel(preset: VideoFormatPreset, settings: CameraSettings): String = when (preset) {
+        VideoFormatPreset.SQUARE_480 -> getString(R.string.format_square_480)
+        VideoFormatPreset.SQUARE_720 -> getString(R.string.format_square_720)
+        VideoFormatPreset.SQUARE_1080 -> getString(R.string.format_square_1080)
+        VideoFormatPreset.PORTRAIT_1080 -> getString(R.string.format_portrait_1080)
+        VideoFormatPreset.LANDSCAPE_1080 -> getString(R.string.format_landscape_1080)
+        VideoFormatPreset.LANDSCAPE_2160 -> getString(R.string.format_landscape_2160)
+        VideoFormatPreset.CUSTOM -> settings.customFormat
+            ?.takeIf { settings.videoFormatPreset.isCustom }
+            ?.let { getString(R.string.format_custom_summary, it.width, it.height, it.frameRate) }
+            ?: getString(R.string.format_custom)
+    }
+
+    /**
+     * The message to show for [format], or null when this device can encode it. When the platform
+     * reports no encoders at all — an emulator or a stripped image — nothing is claimed here and
+     * the exporter reports the real failure instead of guessing.
+     */
+    private fun videoFormatWarning(format: VideoFormat): String? {
+        val profiles = VideoEncoderSupport.deviceProfiles()
+        if (profiles.isEmpty()) return null
+        return when (val support = VideoEncoderSupport.select(format, profiles)) {
+            is EncoderSupport.Supported -> null
+            is EncoderSupport.Unsupported -> support.reason.describe(this, format)
+        }
+    }
+
+    private fun showCustomFormatDialog() {
+        val current = cameraSettings.videoFormat
+        val widthInput = numberInput(R.id.customFormatWidthInput, current.width)
+        val heightInput = numberInput(R.id.customFormatHeightInput, current.height)
+        val widthLayout = TextInputLayout(this).apply {
+            hint = getString(R.string.custom_format_width)
+            addView(widthInput)
+        }
+        val heightLayout = TextInputLayout(this).apply {
+            hint = getString(R.string.custom_format_height)
+            addView(heightInput)
+        }
+        val frameRateInput = AutoCompleteTextView(this).apply {
+            id = R.id.customFormatFrameRateInput
+            inputType = InputType.TYPE_NULL
+            setAdapter(
+                ArrayAdapter(
+                    context,
+                    android.R.layout.simple_dropdown_item_1line,
+                    VideoFormat.FRAME_RATES.map { String.format(Locale.ROOT, "%d", it) },
+                ),
+            )
+            setText(String.format(Locale.ROOT, "%d", current.frameRate), false)
+        }
+        makeDropdownOpenReliably(frameRateInput)
+        val frameRateLayout = TextInputLayout(this).apply {
+            hint = getString(R.string.custom_format_frame_rate)
+            addView(frameRateInput)
+        }
+        val margin = (24 * resources.displayMetrics.density).toInt()
+        val container = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(margin, 0, margin, 0)
+            addView(widthLayout)
+            addView(heightLayout)
+            addView(frameRateLayout)
+        }
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.custom_format_title)
+            .setView(container)
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.done, null)
+            .create()
+        dialog.show()
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).setOnClickListener {
+            val width = widthInput.text?.toString()?.trim()?.toIntOrNull()
+            val height = heightInput.text?.toString()?.trim()?.toIntOrNull()
+            val frameRate = frameRateInput.text?.toString()?.trim()?.toIntOrNull()
+            widthLayout.error = sizeError(width)
+            heightLayout.error = sizeError(height)
+            frameRateLayout.error = if (frameRate in VideoFormat.FRAME_RATES) {
+                null
+            } else {
+                getString(R.string.custom_format_frame_rate_range)
+            }
+            if (widthLayout.error != null || heightLayout.error != null || frameRateLayout.error != null) {
+                return@setOnClickListener
+            }
+            val format = VideoFormat.custom(width!!, height!!, frameRate!!)
+            val warning = videoFormatWarning(format)
+            if (warning != null) {
+                widthLayout.error = warning
+                return@setOnClickListener
+            }
+            updateAdvancedSettings(
+                cameraSettings.copy(
+                    videoFormatPreset = VideoFormatPreset.CUSTOM,
+                    customFormat = format,
+                ),
+            )
+            dialog.dismiss()
+        }
+        // Re-select the stored preset so a dismissed dialog does not leave "Custom…" showing.
+        dialog.setOnDismissListener { applyVideoFormat(cameraSettings) }
+    }
+
+    private fun numberInput(inputId: Int, value: Int): TextInputEditText = TextInputEditText(this).apply {
+        id = inputId
+        inputType = InputType.TYPE_CLASS_NUMBER
+        setText(String.format(Locale.ROOT, "%d", value))
+    }
+
+    private fun sizeError(value: Int?): String? =
+        if (value != null && value in VideoFormat.MIN_DIMENSION..VideoFormat.MAX_DIMENSION) {
+            null
+        } else {
+            getString(R.string.custom_format_size_range, VideoFormat.MIN_DIMENSION, VideoFormat.MAX_DIMENSION)
+        }
 
     private fun applyDuration(seconds: Int) {
         require(seconds in VideoDuration.MIN_SECONDS..VideoDuration.MAX_SECONDS)
@@ -1208,7 +1392,7 @@ class MainActivity : AppCompatActivity() {
         home.deleteAllVideosButton.isEnabled = !exporting
         editor.importButton.isEnabled = !exporting && editor.loadingGroup.visibility != View.VISIBLE
         editor.playButton.isEnabled = !exporting && canCreate
-        editor.exportButton.isEnabled = !exporting && canCreate
+        editor.exportButton.isEnabled = !exporting && canCreate && videoFormatSupported
         editor.shareButton.isEnabled = !exporting
         editor.watchVideoButton.isEnabled = !exporting
         editor.createAnotherButton.isEnabled = !exporting
@@ -1227,7 +1411,7 @@ class MainActivity : AppCompatActivity() {
         editor.titleInput.isEnabled = !exporting
         settingsScreen.cameraMovementDropdown.isEnabled = !exporting
         settingsScreen.longTripDropdown.isEnabled = !exporting
-        settingsScreen.videoQualityDropdown.isEnabled = !exporting
+        settingsScreen.videoFormatDropdown.isEnabled = !exporting
         settingsScreen.resetAdvancedSettingsButton.isEnabled = !exporting
         if (exporting) editor.videoReadyGroup.visibility = View.GONE
     }
@@ -1769,6 +1953,15 @@ class MainActivity : AppCompatActivity() {
         private const val RESTORE_GUIDE_URL_JA =
             "https://github.com/mahlernim/google-timeline-visualizer/blob/main/docs/restore-google-maps-timeline.ja.md"
         private const val TAG = "TimelineVisualizer"
+
+        /** Frames whose long edge exceeds this are not offered on memory-constrained devices. */
+        private const val MODEST_MEMORY_MAX_EDGE = 1920
+
+        /** Heap headroom, in MB, needed before the largest frames are worth offering. */
+        private const val LARGE_FRAME_MEMORY_CLASS_MB = 256
+
+        /** Above this long edge an export takes long enough that the user deserves a heads-up. */
+        private const val SLOW_EXPORT_EDGE = 2160
 
         internal fun playbackIntent(context: Context, uri: Uri): Intent =
             Intent(context, MainActivity::class.java).apply {

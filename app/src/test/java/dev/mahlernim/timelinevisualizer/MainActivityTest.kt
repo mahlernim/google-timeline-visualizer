@@ -28,6 +28,9 @@ import dev.mahlernim.timelinevisualizer.export.VideoExportStatus
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
+import dev.mahlernim.timelinevisualizer.render.VideoFormatPreset
+import dev.mahlernim.timelinevisualizer.ui.CameraSettingsPreferences
+import dev.mahlernim.timelinevisualizer.ui.TimelineView
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -275,8 +278,8 @@ class MainActivityTest {
             activity.findViewById<AutoCompleteTextView>(R.id.longTripDropdown).text.toString(),
         )
         assertEquals(
-            activity.getString(R.string.quality_standard),
-            activity.findViewById<AutoCompleteTextView>(R.id.videoQualityDropdown).text.toString(),
+            activity.getString(R.string.format_square_480),
+            activity.findViewById<AutoCompleteTextView>(R.id.videoFormatDropdown).text.toString(),
         )
         assertEquals(
             activity.getString(R.string.location_filter_conservative),
@@ -661,6 +664,128 @@ class MainActivityTest {
         if (view is android.view.ViewGroup) {
             for (index in 0 until view.childCount) assertSingleLineButtons(view.getChildAt(index))
         }
+    }
+
+    @Test
+    fun theFormatDropdownOffersPortraitAndLandscapeAlongsideSquare() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.navigationSettings).performClick()
+        val dropdown = activity.findViewById<AutoCompleteTextView>(R.id.videoFormatDropdown)
+
+        val labels = (0 until dropdown.adapter.count).map { dropdown.adapter.getItem(it).toString() }
+
+        assertTrue(labels.contains(activity.getString(R.string.format_square_480)))
+        assertTrue(labels.contains(activity.getString(R.string.format_portrait_1080)))
+        assertTrue(labels.contains(activity.getString(R.string.format_landscape_1080)))
+        assertTrue(labels.contains(activity.getString(R.string.format_custom)))
+    }
+
+    @Test
+    fun choosingPortraitReshapesThePreviewAndSurvivesLeavingSettings() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.navigationSettings).performClick()
+
+        selectVideoFormat(activity, R.string.format_portrait_1080)
+
+        val preview = activity.findViewById<TimelineView>(R.id.timelineView)
+        assertEquals(1080f / 1920f, preview.previewAspect, 1e-6f)
+        assertEquals(
+            activity.getString(R.string.format_portrait_1080),
+            activity.findViewById<AutoCompleteTextView>(R.id.videoFormatDropdown).text.toString(),
+        )
+        assertEquals(
+            VideoFormatPreset.PORTRAIT_1080,
+            CameraSettingsPreferences(activity).load().videoFormatPreset,
+        )
+    }
+
+    @Test
+    fun restoringDefaultsReturnsToTheSquareFormat() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.navigationSettings).performClick()
+        selectVideoFormat(activity, R.string.format_landscape_1080)
+
+        activity.findViewById<View>(R.id.resetAdvancedSettingsButton).performClick()
+
+        assertEquals(
+            activity.getString(R.string.format_square_480),
+            activity.findViewById<AutoCompleteTextView>(R.id.videoFormatDropdown).text.toString(),
+        )
+        assertEquals(1f, activity.findViewById<TimelineView>(R.id.timelineView).previewAspect, 1e-6f)
+    }
+
+    @Test
+    fun theCustomFormatDialogRejectsSizesAndRatesOutsideTheSupportedRange() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.navigationSettings).performClick()
+
+        openCustomFormatDialog(activity)
+        val dialog = ShadowDialog.getLatestDialog() as AlertDialog
+        dialog.findViewById<TextView>(R.id.customFormatWidthInput)!!.text = "100"
+        dialog.findViewById<TextView>(R.id.customFormatHeightInput)!!.text = "720"
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick()
+
+        assertTrue("A rejected size should keep the dialog open", dialog.isShowing)
+        assertEquals(
+            VideoFormatPreset.SQUARE_480,
+            CameraSettingsPreferences(activity).load().videoFormatPreset,
+        )
+    }
+
+    @Test
+    fun theCustomFormatDialogStoresAnAcceptedSize() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.navigationSettings).performClick()
+
+        openCustomFormatDialog(activity)
+        val dialog = ShadowDialog.getLatestDialog() as AlertDialog
+        dialog.findViewById<TextView>(R.id.customFormatWidthInput)!!.text = "1280"
+        dialog.findViewById<TextView>(R.id.customFormatHeightInput)!!.text = "720"
+        dialog.findViewById<TextView>(R.id.customFormatFrameRateInput)!!.text = "30"
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick()
+
+        val stored = CameraSettingsPreferences(activity).load()
+        assertEquals(VideoFormatPreset.CUSTOM, stored.videoFormatPreset)
+        assertEquals(1280, stored.videoFormat.width)
+        assertEquals(720, stored.videoFormat.height)
+        assertEquals(30, stored.videoFormat.frameRate)
+        assertEquals(
+            1280f / 720f,
+            activity.findViewById<TimelineView>(R.id.timelineView).previewAspect,
+            1e-6f,
+        )
+    }
+
+    @Test
+    fun dismissingTheCustomFormatDialogLeavesTheStoredFormatAlone() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.navigationSettings).performClick()
+        selectVideoFormat(activity, R.string.format_landscape_1080)
+
+        openCustomFormatDialog(activity)
+        (ShadowDialog.getLatestDialog() as AlertDialog)
+            .getButton(android.content.DialogInterface.BUTTON_NEGATIVE).performClick()
+
+        assertEquals(
+            activity.getString(R.string.format_landscape_1080),
+            activity.findViewById<AutoCompleteTextView>(R.id.videoFormatDropdown).text.toString(),
+        )
+        assertEquals(
+            VideoFormatPreset.LANDSCAPE_1080,
+            CameraSettingsPreferences(activity).load().videoFormatPreset,
+        )
+    }
+
+    private fun selectVideoFormat(activity: MainActivity, labelId: Int) {
+        val dropdown = activity.findViewById<AutoCompleteTextView>(R.id.videoFormatDropdown)
+        val label = activity.getString(labelId)
+        val position = (0 until dropdown.adapter.count)
+            .first { dropdown.adapter.getItem(it).toString() == label }
+        dropdown.onItemClickListener?.onItemClick(null, null, position, position.toLong())
+    }
+
+    private fun openCustomFormatDialog(activity: MainActivity) {
+        selectVideoFormat(activity, R.string.format_custom)
     }
 
     private fun openCustomDurationDialog(activity: MainActivity) {

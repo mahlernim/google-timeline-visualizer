@@ -168,12 +168,22 @@ class VideoExportService : Service() {
             Log.e(TAG, "Video export failed", error)
             GeneratedMediaRepository(applicationContext).discard(uri)
             requestStore.clear()
-            finishWithFailure(request, getString(R.string.video_export_failed), startId)
+            finishWithFailure(request, failureMessage(error), startId)
             return
         } finally {
             exportJob = null
             stopSelf(startId)
         }
+    }
+
+    /**
+     * A format this device cannot encode gets a message naming the size, not the generic failure.
+     * A pending export can outlive an upgrade or arrive with restored settings from another phone,
+     * so this path is reachable even though Settings blocks the choice up front.
+     */
+    private fun failureMessage(error: Throwable): String = when (error) {
+        is UnsupportedVideoFormatException -> error.reason.describe(this, error.format)
+        else -> getString(R.string.video_export_failed)
     }
 
     private fun cancelExport(startId: Int) {

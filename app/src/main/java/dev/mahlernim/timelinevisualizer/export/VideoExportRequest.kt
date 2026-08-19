@@ -8,7 +8,8 @@ import dev.mahlernim.timelinevisualizer.render.RenderText
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
-import dev.mahlernim.timelinevisualizer.render.VideoQuality
+import dev.mahlernim.timelinevisualizer.render.VideoFormat
+import dev.mahlernim.timelinevisualizer.render.VideoFormatPreset
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.File
@@ -47,7 +48,12 @@ class VideoExportRequestStore(context: Context) {
             output.writeUTF(request.renderText.attribution)
             output.writeUTF(request.cameraSettings.cameraMovement.name)
             output.writeUTF(request.cameraSettings.longTripCompression.name)
-            output.writeUTF(request.cameraSettings.videoQuality.name)
+            output.writeUTF(request.cameraSettings.videoFormatPreset.name)
+            val format = request.cameraSettings.videoFormat
+            output.writeInt(format.width)
+            output.writeInt(format.height)
+            output.writeInt(format.frameRate)
+            output.writeInt(format.bitrate)
             output.writeInt(request.journey.points.size)
             request.journey.points.forEach { point ->
                 output.writeLong(point.instant.toEpochMilli())
@@ -93,18 +99,13 @@ class VideoExportRequestStore(context: Context) {
                         attribution = input.readUTF(),
                     )
                     cameraSettings = if (version >= 4) {
-                        CameraSettings(
-                            cameraMovement = enumOrDefault(input.readUTF(), CameraMovement.STEADY),
-                            longTripCompression = enumOrDefault(input.readUTF(), LongTripCompression.BALANCED),
-                            videoQuality = enumOrDefault(input.readUTF(), VideoQuality.STANDARD),
-                        )
+                        val movement = enumOrDefault(input.readUTF(), CameraMovement.STEADY)
+                        val compression = enumOrDefault(input.readUTF(), LongTripCompression.BALANCED)
+                        readFormat(input, version, movement, compression)
                     } else if (version == 3) {
                         repeat(4) { input.readUTF() }
-                        CameraSettings(
-                            cameraMovement = CameraMovement.STEADY,
-                            longTripCompression = enumOrDefault(input.readUTF(), LongTripCompression.BALANCED),
-                            videoQuality = enumOrDefault(input.readUTF(), VideoQuality.STANDARD),
-                        )
+                        val compression = enumOrDefault(input.readUTF(), LongTripCompression.BALANCED)
+                        readFormat(input, version, CameraMovement.STEADY, compression)
                     } else {
                         CameraSettings.DEFAULT
                     }
@@ -142,12 +143,43 @@ class VideoExportRequestStore(context: Context) {
     }
 
     companion object {
-        private const val CURRENT_FILE_VERSION = 4
+        private const val CURRENT_FILE_VERSION = 5
         private const val MAX_POINT_COUNT = 2_000_000
         private const val REQUEST_FILE = "pending-video-export.bin"
         private const val TEMPORARY_FILE = "pending-video-export.tmp"
 
         private inline fun <reified T : Enum<T>> enumOrDefault(value: String, fallback: T): T =
             enumValues<T>().firstOrNull { it.name == value } ?: fallback
+
+        /**
+         * Reads the format that follows the camera fields.
+         *
+         * Records written before version 5 carry only a `VideoQuality` name, which
+         * [VideoFormatPreset.fromStoredName] maps onto the matching square preset, so an export
+         * interrupted by an upgrade resumes at the size it started with.
+         */
+        private fun readFormat(
+            input: DataInputStream,
+            version: Int,
+            cameraMovement: CameraMovement,
+            longTripCompression: LongTripCompression,
+        ): CameraSettings {
+            val preset = VideoFormatPreset.fromStoredName(input.readUTF()) ?: VideoFormatPreset.DEFAULT
+            val custom = if (version >= 5) {
+                val width = input.readInt()
+                val height = input.readInt()
+                val frameRate = input.readInt()
+                val bitrate = input.readInt()
+                VideoFormat(width, height, frameRate, bitrate).takeIf { preset.isCustom }
+            } else {
+                null
+            }
+            return CameraSettings(
+                cameraMovement = cameraMovement,
+                longTripCompression = longTripCompression,
+                videoFormatPreset = if (preset.isCustom && custom == null) VideoFormatPreset.DEFAULT else preset,
+                customFormat = custom,
+            )
+        }
     }
 }

@@ -44,36 +44,25 @@ class TimelinePainter {
     private var cachedTimingJourney: Journey? = null
     private var cachedCompression = LongTripCompression.BALANCED
     private var cachedTiming: JourneyTiming? = null
+    private var appliedStrokeScale = 0f
     private val oldTrailPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.rgb(233, 0, 100)
         style = Paint.Style.STROKE
-        strokeWidth = 4f
         strokeCap = Paint.Cap.ROUND
         strokeJoin = Paint.Join.ROUND
         alpha = 55
     }
-    private val middleTrailPaint = Paint(oldTrailPaint).apply {
-        strokeWidth = 6f
-        alpha = 135
-    }
-    private val recentTrailPaint = Paint(oldTrailPaint).apply {
-        strokeWidth = 8f
-        alpha = 255
-    }
-    private val overviewRoutePaint = Paint(oldTrailPaint).apply {
-        strokeWidth = 3.5f
-        alpha = 255
-    }
+    private val middleTrailPaint = Paint(oldTrailPaint).apply { alpha = 135 }
+    private val recentTrailPaint = Paint(oldTrailPaint).apply { alpha = 255 }
+    private val overviewRoutePaint = Paint(oldTrailPaint).apply { alpha = 255 }
     private val overviewCompositePaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val headPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.rgb(36, 25, 29)
         style = Paint.Style.FILL
-        setShadowLayer(8f, 0f, 2f, Color.argb(90, 0, 0, 0))
     }
     private val headRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.rgb(233, 0, 100)
         style = Paint.Style.STROKE
-        strokeWidth = 5f
     }
     private val titlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.rgb(36, 25, 29)
@@ -91,6 +80,35 @@ class TimelinePainter {
     }
     private val cardPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.argb(220, 255, 248, 250)
+    }
+
+    /**
+     * Overlay and stroke sizes follow the short edge, so a 1080x1920 portrait frame and a
+     * 1920x1080 landscape frame get the same visual weight as the 1080x1080 square they share it
+     * with. Square output is unaffected, since both edges are the same.
+     */
+    private fun overlayScale(width: Int, height: Int): Float = min(width, height) / 720f
+
+    /**
+     * The title card, centred and capped so a wide frame gets a proportionate card rather than a
+     * full-width banner. The cap only binds when the frame is wider than it is tall.
+     */
+    internal fun overlayCard(width: Int, height: Int): RectF {
+        val scale = overlayScale(width, height)
+        val cardWidth = min(width - CARD_SIDE_INSET * 2f * scale, MAX_CARD_WIDTH * scale)
+        val left = (width - cardWidth) / 2f
+        return RectF(left, CARD_TOP * scale, left + cardWidth, OVERLAY_BOTTOM * scale)
+    }
+
+    private fun applyStrokeScale(scale: Float) {
+        if (appliedStrokeScale == scale) return
+        oldTrailPaint.strokeWidth = OLD_TRAIL_STROKE * scale
+        middleTrailPaint.strokeWidth = MIDDLE_TRAIL_STROKE * scale
+        recentTrailPaint.strokeWidth = RECENT_TRAIL_STROKE * scale
+        overviewRoutePaint.strokeWidth = OVERVIEW_ROUTE_STROKE * scale
+        headRingPaint.strokeWidth = HEAD_RING_STROKE * scale
+        headPaint.setShadowLayer(HEAD_SHADOW_RADIUS * scale, 0f, 2f * scale, Color.argb(90, 0, 0, 0))
+        appliedStrokeScale = scale
     }
 
     fun viewport(
@@ -340,7 +358,7 @@ class TimelinePainter {
     }
 
     internal fun overviewSafeArea(width: Int, height: Int): RectF {
-        val scale = width / 720f
+        val scale = overlayScale(width, height)
         return RectF(
             OVERVIEW_SIDE_INSET * scale,
             OVERLAY_BOTTOM * scale + OVERVIEW_HEADER_GAP * scale,
@@ -452,6 +470,7 @@ class TimelinePainter {
         tiles: (TileId) -> Bitmap?,
     ) {
         if (journey.points.isEmpty() || width <= 0 || height <= 0) return
+        applyStrokeScale(overlayScale(width, height))
         val viewport = viewport(journey, frame, width, height, cameraSettings)
         val prepared = prepare(journey)
         drawBackground(canvas, width, height)
@@ -503,8 +522,9 @@ class TimelinePainter {
         headPaint.alpha = markerAlpha
         headRingPaint.alpha = markerAlpha
         if (markerAlpha > 0) {
-            canvas.drawCircle(head.first, head.second, width * 0.013f, headPaint)
-            canvas.drawCircle(head.first, head.second, width * 0.017f, headRingPaint)
+            val markerEdge = min(width, height).toFloat()
+            canvas.drawCircle(head.first, head.second, markerEdge * 0.013f, headPaint)
+            canvas.drawCircle(head.first, head.second, markerEdge * 0.017f, headRingPaint)
         }
         headPaint.alpha = previousHeadAlpha
         headRingPaint.alpha = previousRingAlpha
@@ -554,8 +574,8 @@ class TimelinePainter {
         title: String,
         renderText: RenderText,
     ) {
-        val scale = width / 720f
-        val card = RectF(34f * scale, 28f * scale, width - 34f * scale, OVERLAY_BOTTOM * scale)
+        val scale = overlayScale(width, height)
+        val card = overlayCard(width, height)
         canvas.drawRoundRect(card, 24f * scale, 24f * scale, cardPaint)
         titlePaint.textSize = 34f * scale
         bodyPaint.textSize = 20f * scale
@@ -569,14 +589,14 @@ class TimelinePainter {
             val count = titlePaint.breakText(displayTitle, true, availableWidth - titlePaint.measureText("…"), null)
             displayTitle.take(count.coerceAtLeast(1)).trimEnd() + "…"
         }
-        canvas.drawText(fittedTitle, width / 2f, 72f * scale, titlePaint)
+        canvas.drawText(fittedTitle, card.centerX(), 72f * scale, titlePaint)
         val date = DateTimeFormatter.ofPattern(renderText.datePattern, renderText.locale)
             .format(position.point.instant.atZone(ZoneId.systemDefault()))
         val distance = position.distanceKm
         val number = NumberFormat.getNumberInstance(renderText.locale).apply { maximumFractionDigits = 0 }
         canvas.drawText(
             "$date  ·  ${number.format(distance)} ${renderText.distanceUnit}",
-            width / 2f,
+            card.centerX(),
             108f * scale,
             bodyPaint,
         )
@@ -765,6 +785,15 @@ class TimelinePainter {
         private const val OVERVIEW_ROUTE_ALPHA = 190
         private const val OVERVIEW_PADDING = 1.22
         private const val OVERLAY_BOTTOM = 132f
+        private const val CARD_TOP = 28f
+        private const val CARD_SIDE_INSET = 34f
+        private const val MAX_CARD_WIDTH = 720f - CARD_SIDE_INSET * 2f
+        private const val OLD_TRAIL_STROKE = 4f
+        private const val MIDDLE_TRAIL_STROKE = 6f
+        private const val RECENT_TRAIL_STROKE = 8f
+        private const val OVERVIEW_ROUTE_STROKE = 3.5f
+        private const val HEAD_RING_STROKE = 5f
+        private const val HEAD_SHADOW_RADIUS = 8f
         private const val OVERVIEW_SIDE_INSET = 34f
         private const val OVERVIEW_HEADER_GAP = 20f
         private const val OVERVIEW_BOTTOM_INSET = 34f
