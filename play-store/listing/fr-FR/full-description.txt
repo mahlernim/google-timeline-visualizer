@@ -10,7 +10,8 @@ Créez votre histoire
 • Choisissez un mouvement de caméra fixe, stable ou dynamique.
 • Équilibrez les longs trajets avec la compression temporelle des longs trajets en option
 • Exporter en 480p, 720p ou 1080p
-• Choisissez un voyage de 10, 15, 20, 30, 45 ou 60 secondes
+• Choisissez une durée prédéfinie ou personnalisée de 10 à 300 secondes
+• Ignorez prudemment les points GPS aberrants isolés ou désactivez le filtre
 • Terminez avec un zoom arrière fluide et un aperçu complet de l'itinéraire
 • Continuez à créer en arrière-plan avec des notifications de progression et d'achèvement
 • Rouvrez le fichier Timeline le plus récemment utilisé lorsque Android conserve l'accès.

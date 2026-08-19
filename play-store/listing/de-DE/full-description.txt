@@ -10,7 +10,8 @@ Erstelle deine Geschichte
 • Wählen Sie „Feste“, „Stetige“ oder „Dynamische“ Kamerabewegung
 • Balancieren Sie lange Fahrten mit optionaler Timing-Komprimierung für lange Fahrten
 • Exportieren Sie mit 480p, 720p oder 1080p
-• Wählen Sie eine Fahrt von 10, 15, 20, 30, 45 oder 60 Sekunden
+• Wählen Sie eine voreingestellte oder eigene Dauer von 10 bis 300 Sekunden
+• Ignorieren Sie einzelne GPS-Ausreißer vorsichtig oder schalten Sie den Filter aus
 • Beenden Sie die Fahrt mit einem reibungslosen Verkleinern und einer vollständigen Routenübersicht
 • Erstellen Sie weiterhin im Hintergrund mit Fortschritts- und Abschlussbenachrichtigungen
 • Öffnen Sie die zuletzt verwendete Timeline-Datei erneut, wenn Android weiterhin Zugriff hat

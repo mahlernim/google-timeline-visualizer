@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.0
+
+- Prevent system navigation insets from clipping bottom-navigation icons and labels.
+- Add conservative, local GPS outlier filtering with a persistent Off option and an ignored-point count.
+- Keep the original Timeline JSON unchanged and use one filtered Journey for preview, seeking, overview, and export.
+- Add custom whole-number journey durations from 10 through 300 seconds while keeping the existing presets and 30-second default.
+- Warn when a duration over 60 seconds may require more rendering time and storage.
+- Keep all nine supported app languages complete.
+- Set Android version code 15 and version name 2.1.0.
+
 ## 2.0.1
 
 - Parse current Timeline path points that store a minute offset from the segment

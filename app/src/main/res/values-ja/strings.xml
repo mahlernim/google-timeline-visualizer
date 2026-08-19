@@ -37,6 +37,11 @@
     <plurals name="duration_seconds">
         <item quantity="other">%1$d秒</item>
     </plurals>
+    <string name="custom_duration">カスタム…</string>
+    <string name="custom_duration_title">経路の再生時間を指定</string>
+    <string name="custom_duration_hint">秒</string>
+    <string name="custom_duration_range">10から300までの整数を入力してください。</string>
+    <string name="long_duration_warning">長い動画ほど、処理時間と保存容量が多く必要です。</string>
     <string name="reading_timeline">タイムライン ファイルを読み込み中</string>
     <string name="opening_timeline">ファイルを開いています</string>
     <string name="opening_file">ファイルを開いています</string>
@@ -197,6 +202,14 @@
     <string name="settings_summary">プレビューと新しい動画に使用する初期値を設定します。</string>
     <string name="video_defaults">動画の初期設定</string>
     <string name="video_defaults_summary">変更はプレビューと次に作成する動画に適用されます。</string>
+    <string name="timeline_processing">タイムライン処理</string>
+    <string name="location_filter">GPS外れ値フィルター</string>
+    <string name="location_filter_summary">慎重なフィルターで、短時間では不可能な往復移動だけを無視します。タイムライン ファイルは変更されません。</string>
+    <string name="location_filter_conservative">慎重</string>
+    <string name="location_filter_off">オフ</string>
+    <plurals name="location_outliers_ignored">
+        <item quantity="other">疑わしい位置情報を%1$d件無視しました</item>
+    </plurals>
     <string name="about_and_privacy">情報とプライバシー</string>
     <string name="video_playback_failed">Timeline Visualizer内でこの動画を再生できませんでした。</string>
     <string name="open_in_another_app">別のアプリで開く</string>

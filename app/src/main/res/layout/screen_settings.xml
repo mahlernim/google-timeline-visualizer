@@ -19,6 +19,12 @@
         </com.google.android.material.textfield.TextInputLayout>
         <com.google.android.material.button.MaterialButton android:id="@+id/resetAdvancedSettingsButton" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:maxLines="1" android:text="@string/restore_advanced_defaults" />
 
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="@string/timeline_processing" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:layout_marginBottom="10dp" android:text="@string/location_filter_summary" android:textAppearance="?attr/textAppearanceBodySmall" />
+        <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/location_filter">
+            <AutoCompleteTextView android:id="@+id/locationFilterDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+        </com.google.android.material.textfield.TextInputLayout>
+
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="@string/about_and_privacy" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
         <TextView android:id="@+id/privacyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="@string/privacy_summary" android:textAppearance="?attr/textAppearanceBodySmall" />
         <com.google.android.material.button.MaterialButton android:id="@+id/privacyPolicyButton" style="@style/Widget.Material3.Button.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:maxLines="1" android:text="@string/privacy_policy" />

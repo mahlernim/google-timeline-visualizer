@@ -39,6 +39,11 @@
         <item quantity="one">%1$d Sekunde</item>
         <item quantity="other">%1$d Sekunden</item>
     </plurals>
+    <string name="custom_duration">Benutzerdefiniert…</string>
+    <string name="custom_duration_title">Benutzerdefinierte Routenlänge</string>
+    <string name="custom_duration_hint">Sekunden</string>
+    <string name="custom_duration_range">Geben Sie eine ganze Zahl zwischen 10 und 300 ein.</string>
+    <string name="long_duration_warning">Lange Videos benötigen mehr Verarbeitungszeit und Speicherplatz.</string>
     <string name="reading_timeline">Lesen der Timeline-Datei</string>
     <string name="opening_timeline">Datei öffnen</string>
     <string name="opening_file">Datei öffnen</string>
@@ -202,6 +207,15 @@
     <string name="settings_summary">Legen Sie die Standardeinstellungen für Vorschauen und neue Videos fest.</string>
     <string name="video_defaults">Videostandards</string>
     <string name="video_defaults_summary">Änderungen gelten für die Vorschau und das nächste von Ihnen erstellte Video.</string>
+    <string name="timeline_processing">Timeline-Verarbeitung</string>
+    <string name="location_filter">GPS-Ausreißerfilter</string>
+    <string name="location_filter_summary">Die vorsichtige Filterung ignoriert nur kurze, unmögliche Hin- und Rückwege. Ihre Timeline-Datei wird nicht verändert.</string>
+    <string name="location_filter_conservative">Vorsichtig</string>
+    <string name="location_filter_off">Aus</string>
+    <plurals name="location_outliers_ignored">
+        <item quantity="one">%1$d verdächtiger Standort ignoriert</item>
+        <item quantity="other">%1$d verdächtige Standorte ignoriert</item>
+    </plurals>
     <string name="about_and_privacy">Über und Datenschutz</string>
     <string name="video_playback_failed">Dieses Video konnte in Timeline Visualizer nicht abgespielt werden.</string>
     <string name="open_in_another_app">In einer anderen App öffnen</string>

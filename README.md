@@ -18,7 +18,7 @@ exact dates, preview the Journey, and create an MP4 ready to watch or share.
 The app is not yet on Google Play. Install it from this repository's
 [latest release](https://github.com/mahlernim/google-timeline-visualizer/releases/latest):
 
-1. Under **Assets**, download `TimelineVisualizer-v2.0.1.apk` on your phone.
+1. Under **Assets**, download `TimelineVisualizer-v2.1.0.apk` on your phone.
 2. Open the downloaded file.
 3. If Android blocks the installation, select **Settings**, allow your browser or
    file manager to **Install unknown apps**, then return and try again.
@@ -65,9 +65,10 @@ restore it directly.
 1. Open **Create video**, select **Choose file**, and choose your Timeline file.
 2. Choose a month range or use **Exact dates** for a trip lasting only a few days.
    The latest full year is selected by default, and ranges may cross year boundaries.
-3. Confirm the name and title template, then choose a 10, 15, 20, 30, 45, or
-   60-second journey. The template is saved for next time and supports `{year}`
-   and `{name}`.
+3. Confirm the name and title template, then choose a preset or a custom journey
+   duration from 10 through 300 seconds. The template is saved for next time and
+   supports `{year}` and `{name}`. Durations over 60 seconds show a rendering-time
+   and storage reminder.
 4. Select **Preview** to check the animated map. This is an interactive preview.
    The saved video uses the same design with map tiles prepared before rendering.
 5. Select **Create video**. On Android 10 and later, the app saves it automatically
@@ -117,6 +118,11 @@ Dynamic camera follows local movement more actively. Long-trip compression chang
 only animation timing and never route geometry. Video quality offers the original
 480p output plus 720p and 1080p options. Restore defaults returns all video settings
 to the recommended values.
+
+Timeline processing uses Conservative GPS outlier filtering by default. It ignores
+only isolated, implausible out-and-back coordinates, reports the number ignored,
+and keeps the original JSON file unchanged. Set the filter to Off to use every
+location from the selected file.
 
 The app supports English, Korean, Japanese, Simplified Chinese, Traditional Chinese,
 Spanish, French, German, and Brazilian Portuguese.

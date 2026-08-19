@@ -71,6 +71,12 @@ def test_android_locales_have_matching_resources_and_placeholders():
         "en": ROOT / "app/src/main/res/values/strings.xml",
         "ko": ROOT / "app/src/main/res/values-ko/strings.xml",
         "ja": ROOT / "app/src/main/res/values-ja/strings.xml",
+        "zh-CN": ROOT / "app/src/main/res/values-zh-rCN/strings.xml",
+        "zh-TW": ROOT / "app/src/main/res/values-zh-rTW/strings.xml",
+        "es": ROOT / "app/src/main/res/values-es/strings.xml",
+        "fr": ROOT / "app/src/main/res/values-fr/strings.xml",
+        "de": ROOT / "app/src/main/res/values-de/strings.xml",
+        "pt-BR": ROOT / "app/src/main/res/values-pt-rBR/strings.xml",
     }
 
     def resources(path: Path):
@@ -83,8 +89,8 @@ def test_android_locales_have_matching_resources_and_placeholders():
         return result
 
     localized = {locale: resources(path) for locale, path in files.items()}
-    assert localized["ko"] == localized["en"]
-    assert localized["ja"] == localized["en"]
+    for locale, values in localized.items():
+        assert values == localized["en"], locale
 
 
 def test_localized_restoration_guides_are_complete_and_accessible():

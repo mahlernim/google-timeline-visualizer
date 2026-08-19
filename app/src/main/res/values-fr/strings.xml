@@ -40,6 +40,11 @@
         <item quantity="many">%1$d secondes</item>
         <item quantity="other">%1$d secondes</item>
     </plurals>
+    <string name="custom_duration">Personnalisée…</string>
+    <string name="custom_duration_title">Durée personnalisée du trajet</string>
+    <string name="custom_duration_hint">Secondes</string>
+    <string name="custom_duration_range">Saisissez un nombre entier compris entre 10 et 300.</string>
+    <string name="long_duration_warning">Les longues vidéos nécessitent plus de temps de traitement et d’espace de stockage.</string>
     <string name="reading_timeline">Lecture du fichier Timeline</string>
     <string name="opening_timeline">Ouverture du fichier</string>
     <string name="opening_file">Ouverture du fichier</string>
@@ -206,6 +211,16 @@
     <string name="settings_summary">Définissez les valeurs par défaut utilisées pour les aperçus et les nouvelles vidéos.</string>
     <string name="video_defaults">Paramètres vidéo par défaut</string>
     <string name="video_defaults_summary">Les modifications s\'appliquent à l\'aperçu et à la prochaine vidéo que vous créez.</string>
+    <string name="timeline_processing">Traitement de la Timeline</string>
+    <string name="location_filter">Filtrage des valeurs GPS aberrantes</string>
+    <string name="location_filter_summary">Le filtrage prudent ignore uniquement les courts allers-retours impossibles. Votre fichier Timeline n\'est jamais modifié.</string>
+    <string name="location_filter_conservative">Prudent</string>
+    <string name="location_filter_off">Désactivé</string>
+    <plurals name="location_outliers_ignored">
+        <item quantity="one">%1$d position suspecte ignorée</item>
+        <item quantity="many">%1$d positions suspectes ignorées</item>
+        <item quantity="other">%1$d positions suspectes ignorées</item>
+    </plurals>
     <string name="about_and_privacy">À propos et confidentialité</string>
     <string name="video_playback_failed">Cette vidéo n\'a pas pu être lue dans Timeline Visualizer.</string>
     <string name="open_in_another_app">Ouvrir dans une autre application</string>

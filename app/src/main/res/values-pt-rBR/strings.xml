@@ -40,6 +40,11 @@
         <item quantity="many">%1$d segundos</item>
         <item quantity="other">%1$d segundos</item>
     </plurals>
+    <string name="custom_duration">Personalizada…</string>
+    <string name="custom_duration_title">Duração personalizada da rota</string>
+    <string name="custom_duration_hint">Segundos</string>
+    <string name="custom_duration_range">Digite um número inteiro entre 10 e 300.</string>
+    <string name="long_duration_warning">Vídeos longos exigem mais tempo de processamento e armazenamento.</string>
     <string name="reading_timeline">Lendo arquivo Timeline</string>
     <string name="opening_timeline">Abrindo arquivo</string>
     <string name="opening_file">Abrindo arquivo</string>
@@ -206,6 +211,16 @@
     <string name="settings_summary">Defina os padrões usados ​​para visualizações e novos vídeos.</string>
     <string name="video_defaults">Padrões de vídeo</string>
     <string name="video_defaults_summary">As alterações se aplicam à visualização e ao próximo vídeo que você criar.</string>
+    <string name="timeline_processing">Processamento da Timeline</string>
+    <string name="location_filter">Filtro de valores GPS atípicos</string>
+    <string name="location_filter_summary">O filtro conservador ignora apenas viagens curtas de ida e volta impossíveis. O arquivo da Timeline nunca é alterado.</string>
+    <string name="location_filter_conservative">Conservador</string>
+    <string name="location_filter_off">Desativado</string>
+    <plurals name="location_outliers_ignored">
+        <item quantity="one">%1$d local suspeito ignorado</item>
+        <item quantity="many">%1$d locais suspeitos ignorados</item>
+        <item quantity="other">%1$d locais suspeitos ignorados</item>
+    </plurals>
     <string name="about_and_privacy">Sobre e privacidade</string>
     <string name="video_playback_failed">Este vídeo não pôde ser reproduzido dentro do Timeline Visualizer.</string>
     <string name="open_in_another_app">Abrir em outro aplicativo</string>

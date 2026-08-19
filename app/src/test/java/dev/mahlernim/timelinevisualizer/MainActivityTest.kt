@@ -4,10 +4,16 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Looper
+import android.util.TypedValue
 import android.view.View
+import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.AutoCompleteTextView
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
 import androidx.test.core.app.ApplicationProvider
 import dev.mahlernim.timelinevisualizer.videos.VideoRecord
@@ -51,6 +57,7 @@ class MainActivityTest {
         VideoExportCoordinator.resetForTest()
         context.getSharedPreferences("display", Context.MODE_PRIVATE).edit().clear().commit()
         context.getSharedPreferences("camera-settings", Context.MODE_PRIVATE).edit().clear().commit()
+        context.getSharedPreferences("timeline-filter-settings", Context.MODE_PRIVATE).edit().clear().commit()
         timelineSourceStore.clearForTest()
     }
 
@@ -205,7 +212,7 @@ class MainActivityTest {
     }
 
     @Test
-    fun durationMenuOffersOnlyTheSupportedShorterChoices() {
+    fun durationMenuOffersPresetsAndCustomChoice() {
         val activity = launchActivity()
         val dropdown = activity.findViewById<AutoCompleteTextView>(R.id.durationDropdown)
         val values = (0 until dropdown.adapter.count).map { dropdown.adapter.getItem(it).toString() }
@@ -213,8 +220,42 @@ class MainActivityTest {
         assertEquals(
             listOf(10, 15, 20, 30, 45, 60).map {
                 activity.resources.getQuantityString(R.plurals.duration_seconds, it, it)
-            },
+            } + activity.getString(R.string.custom_duration),
             values,
+        )
+    }
+
+    @Test
+    fun customDurationRejectsInvalidInputWithoutClosingAndAcceptsFiveMinutes() {
+        val activity = launchActivity()
+        openCustomDurationDialog(activity)
+        val dialog = ShadowDialog.getLatestDialog() as AlertDialog
+        val input = dialog.findViewById<TextView>(R.id.customDurationInput)!!
+
+        input.text = "301"
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick()
+        assertTrue(dialog.isShowing)
+        assertEquals(30, activity.selectedDurationSeconds())
+
+        input.text = "300"
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick()
+        assertTrue(!dialog.isShowing)
+        assertEquals(300, activity.selectedDurationSeconds())
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.durationWarningText).visibility)
+    }
+
+    @Test
+    fun cancellingCustomDurationRestoresThePreviousValue() {
+        val activity = launchActivity()
+        openCustomDurationDialog(activity)
+        val dialog = ShadowDialog.getLatestDialog() as AlertDialog
+
+        dialog.getButton(android.content.DialogInterface.BUTTON_NEGATIVE).performClick()
+
+        assertEquals(30, activity.selectedDurationSeconds())
+        assertEquals(
+            activity.resources.getQuantityString(R.plurals.duration_seconds, 30, 30),
+            activity.findViewById<AutoCompleteTextView>(R.id.durationDropdown).text.toString(),
         )
     }
 
@@ -235,6 +276,37 @@ class MainActivityTest {
             activity.getString(R.string.quality_standard),
             activity.findViewById<AutoCompleteTextView>(R.id.videoQualityDropdown).text.toString(),
         )
+        assertEquals(
+            activity.getString(R.string.location_filter_conservative),
+            activity.findViewById<AutoCompleteTextView>(R.id.locationFilterDropdown).text.toString(),
+        )
+    }
+
+    @Test
+    fun changingLocationFilterImmediatelyRestoresIgnoredPoints() {
+        acceptPrivacyDisclosure()
+        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/outlier-sample.json"))
+        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
+        waitUntil { activity.findViewById<View>(R.id.editorGroup).visibility == View.VISIBLE }
+
+        val summary = activity.findViewById<TextView>(R.id.periodSummaryText)
+        assertTrue(
+            summary.text.contains(
+                activity.resources.getQuantityString(R.plurals.location_outliers_ignored, 1, 1),
+            ),
+        )
+
+        activity.findViewById<View>(R.id.navigationSettings).performClick()
+        val dropdown = activity.findViewById<AutoCompleteTextView>(R.id.locationFilterDropdown)
+        dropdown.onItemClickListener?.onItemClick(null, null, 1, 1L)
+        activity.findViewById<View>(R.id.navigationCreate).performClick()
+
+        assertTrue(
+            !summary.text.contains(
+                activity.resources.getQuantityString(R.plurals.location_outliers_ignored, 1, 1),
+            ),
+        )
+        assertTrue(summary.text.contains("3"))
     }
 
     @Test
@@ -372,6 +444,98 @@ class MainActivityTest {
     }
 
     @Test
+    fun switchingTabsPreservesCustomDuration() {
+        val activity = launchActivity()
+        openCustomDurationDialog(activity)
+        val dialog = ShadowDialog.getLatestDialog() as AlertDialog
+        dialog.findViewById<TextView>(R.id.customDurationInput)!!.text = "125"
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick()
+
+        activity.findViewById<View>(R.id.navigationSettings).performClick()
+        activity.findViewById<View>(R.id.navigationCreate).performClick()
+
+        assertEquals(125, activity.selectedDurationSeconds())
+    }
+
+    @Test
+    @Config(sdk = [28])
+    fun customDurationPropagatesToTheExportRequest() {
+        acceptPrivacyDisclosure()
+        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/seoul-bohol-sample.json"))
+        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
+        waitUntil { activity.findViewById<View>(R.id.editorGroup).visibility == View.VISIBLE }
+        openCustomDurationDialog(activity)
+        val dialog = ShadowDialog.getLatestDialog() as AlertDialog
+        dialog.findViewById<TextView>(R.id.customDurationInput)!!.text = "125"
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick()
+
+        activity.findViewById<View>(R.id.exportButton).performClick()
+
+        assertEquals(125, activity.pendingExportDurationSeconds())
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "w320dp-h640dp-port-xxhdpi")
+    fun bottomNavigationFitsGestureInsetOnACompactPortraitDisplay() {
+        val activity = launchActivity()
+        val root = activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
+        val density = activity.resources.displayMetrics.density
+        val bottomInset = (24 * density).toInt()
+        val insets = WindowInsetsCompat.Builder()
+            .setInsets(WindowInsetsCompat.Type.systemBars(), Insets.of(0, 0, 0, bottomInset))
+            .build()
+
+        ViewCompat.dispatchApplyWindowInsets(root, insets)
+        measureActivity(activity)
+
+        val navigation = activity.findViewById<ViewGroup>(R.id.bottomNavigation)
+        assertEquals(bottomInset, root.paddingBottom)
+        assertEquals(0, navigation.paddingBottom)
+        assertNavigationItemsInsideBounds(navigation)
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "w320dp-h640dp-port-xxhdpi")
+    fun bottomNavigationFitsLargerLabelsOnACompactDisplay() {
+        val activity = launchActivity()
+        val navigation = activity.findViewById<ViewGroup>(R.id.bottomNavigation)
+        for (itemId in listOf(R.id.navigationVideos, R.id.navigationCreate, R.id.navigationSettings)) {
+            val item = navigation.findViewById<ViewGroup>(itemId)
+            item.findViewById<TextView>(com.google.android.material.R.id.navigation_bar_item_large_label_view)
+                .setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+            item.findViewById<TextView>(com.google.android.material.R.id.navigation_bar_item_small_label_view)
+                .setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+        }
+
+        measureActivity(activity)
+
+        assertNavigationItemsInsideBounds(navigation)
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "w640dp-h360dp-land-xxhdpi")
+    fun bottomNavigationConsumesAThreeButtonInsetOnlyOnce() {
+        val activity = launchActivity()
+        val content = activity.findViewById<ViewGroup>(android.R.id.content)
+        val root = content.getChildAt(0)
+        val density = activity.resources.displayMetrics.density
+        val bottomInset = (48 * density).toInt()
+        val topInset = (24 * density).toInt()
+        val insets = WindowInsetsCompat.Builder()
+            .setInsets(WindowInsetsCompat.Type.systemBars(), Insets.of(0, topInset, 0, bottomInset))
+            .build()
+
+        ViewCompat.dispatchApplyWindowInsets(root, insets)
+        measureActivity(activity)
+
+        val navigation = activity.findViewById<ViewGroup>(R.id.bottomNavigation)
+        assertEquals(bottomInset, root.paddingBottom)
+        assertEquals(0, navigation.paddingBottom)
+        assertTrue(navigation.measuredHeight >= (80 * density).toInt())
+        assertNavigationItemsInsideBounds(navigation)
+    }
+
+    @Test
     fun selectedPeriodStatesUseTheSameJourneyAvailabilityRule() {
         val activity = launchActivity()
         val period = TimelinePeriod.sameYear(2026)
@@ -464,6 +628,23 @@ class MainActivityTest {
         }
         if (view is android.view.ViewGroup) {
             for (index in 0 until view.childCount) assertSingleLineButtons(view.getChildAt(index))
+        }
+    }
+
+    private fun openCustomDurationDialog(activity: MainActivity) {
+        val dropdown = activity.findViewById<AutoCompleteTextView>(R.id.durationDropdown)
+        val position = dropdown.adapter.count - 1
+        dropdown.onItemClickListener?.onItemClick(null, null, position, position.toLong())
+    }
+
+    private fun assertNavigationItemsInsideBounds(navigation: ViewGroup) {
+        for (itemId in listOf(R.id.navigationVideos, R.id.navigationCreate, R.id.navigationSettings)) {
+            val item = navigation.findViewById<ViewGroup>(itemId)
+            val icon = item.findViewById<View>(com.google.android.material.R.id.navigation_bar_item_icon_view)
+            val label = item.findViewById<TextView>(com.google.android.material.R.id.navigation_bar_item_large_label_view)
+            assertTrue(icon.top >= 0 && icon.bottom <= item.height)
+            assertTrue(label.height > 0 && label.top >= 0 && label.bottom <= item.height)
+            assertTrue(item.top >= 0 && item.bottom <= navigation.height)
         }
     }
 

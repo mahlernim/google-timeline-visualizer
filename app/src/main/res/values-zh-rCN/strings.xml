@@ -38,6 +38,11 @@
     <plurals name="duration_seconds">
         <item quantity="other">%1$d秒</item>
     </plurals>
+    <string name="custom_duration">自定义…</string>
+    <string name="custom_duration_title">自定义路线动画时长</string>
+    <string name="custom_duration_hint">秒</string>
+    <string name="custom_duration_range">请输入10到300之间的整数。</string>
+    <string name="long_duration_warning">较长的视频需要更多渲染时间和存储空间。</string>
     <string name="reading_timeline">读取Timeline文件</string>
     <string name="opening_timeline">打开文件</string>
     <string name="opening_file">打开文件</string>
@@ -198,6 +203,14 @@
     <string name="settings_summary">设置用于预览和新视频的默认值。</string>
     <string name="video_defaults">视频默认值</string>
     <string name="video_defaults_summary">更改适用于预览和您创建的下一个视频。</string>
+    <string name="timeline_processing">时间轴处理</string>
+    <string name="location_filter">GPS异常点过滤</string>
+    <string name="location_filter_summary">保守过滤仅忽略短时间内不可能的往返移动。不会更改您的时间轴文件。</string>
+    <string name="location_filter_conservative">保守</string>
+    <string name="location_filter_off">关闭</string>
+    <plurals name="location_outliers_ignored">
+        <item quantity="other">已忽略%1$d个可疑位置</item>
+    </plurals>
     <string name="about_and_privacy">关于和隐私</string>
     <string name="video_playback_failed">该视频无法在Timeline Visualizer内播放。</string>
     <string name="open_in_another_app">在其他应用中打开</string>

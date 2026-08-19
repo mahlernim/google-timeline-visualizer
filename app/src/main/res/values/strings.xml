@@ -38,6 +38,11 @@
         <item quantity="one">%1$d second</item>
         <item quantity="other">%1$d seconds</item>
     </plurals>
+    <string name="custom_duration">Custom…</string>
+    <string name="custom_duration_title">Custom route animation length</string>
+    <string name="custom_duration_hint">Seconds</string>
+    <string name="custom_duration_range">Enter a whole number from 10 through 300.</string>
+    <string name="long_duration_warning">Long videos require more rendering time and storage.</string>
     <string name="reading_timeline">Reading Timeline file</string>
     <string name="opening_timeline">Opening file</string>
     <string name="opening_file">Opening file</string>
@@ -201,6 +206,15 @@
     <string name="settings_summary">Set the defaults used for previews and new videos.</string>
     <string name="video_defaults">Video defaults</string>
     <string name="video_defaults_summary">Changes apply to the preview and the next video you create.</string>
+    <string name="timeline_processing">Timeline processing</string>
+    <string name="location_filter">GPS outlier filtering</string>
+    <string name="location_filter_summary">Conservative filtering ignores only short, impossible round trips. Your Timeline file is never changed.</string>
+    <string name="location_filter_conservative">Conservative</string>
+    <string name="location_filter_off">Off</string>
+    <plurals name="location_outliers_ignored">
+        <item quantity="one">%1$d suspicious location ignored</item>
+        <item quantity="other">%1$d suspicious locations ignored</item>
+    </plurals>
     <string name="about_and_privacy">About and privacy</string>
     <string name="video_playback_failed">This video could not be played inside Timeline Visualizer.</string>
     <string name="open_in_another_app">Open in another app</string>

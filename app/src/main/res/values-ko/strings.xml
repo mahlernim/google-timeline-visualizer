@@ -37,6 +37,11 @@
     <plurals name="duration_seconds">
         <item quantity="other">%1$d초</item>
     </plurals>
+    <string name="custom_duration">사용자 지정…</string>
+    <string name="custom_duration_title">사용자 지정 경로 재생 시간</string>
+    <string name="custom_duration_hint">초</string>
+    <string name="custom_duration_range">10에서 300 사이의 정수를 입력하세요.</string>
+    <string name="long_duration_warning">긴 동영상은 렌더링 시간과 저장 공간이 더 필요합니다.</string>
     <string name="reading_timeline">타임라인 파일 읽는 중</string>
     <string name="opening_timeline">파일 여는 중</string>
     <string name="opening_file">파일 여는 중</string>
@@ -197,6 +202,14 @@
     <string name="settings_summary">미리보기와 새 동영상에 사용할 기본값을 설정합니다.</string>
     <string name="video_defaults">동영상 기본값</string>
     <string name="video_defaults_summary">변경 사항은 미리보기와 다음에 만드는 동영상에 적용됩니다.</string>
+    <string name="timeline_processing">타임라인 처리</string>
+    <string name="location_filter">GPS 이상치 필터링</string>
+    <string name="location_filter_summary">보수적 필터링은 짧고 불가능한 왕복 이동만 무시합니다. 타임라인 파일은 변경되지 않습니다.</string>
+    <string name="location_filter_conservative">보수적</string>
+    <string name="location_filter_off">끄기</string>
+    <plurals name="location_outliers_ignored">
+        <item quantity="other">의심스러운 위치 %1$d개를 무시함</item>
+    </plurals>
     <string name="about_and_privacy">정보 및 개인정보 보호</string>
     <string name="video_playback_failed">Timeline Visualizer에서 이 동영상을 재생할 수 없습니다.</string>
     <string name="open_in_another_app">다른 앱에서 열기</string>

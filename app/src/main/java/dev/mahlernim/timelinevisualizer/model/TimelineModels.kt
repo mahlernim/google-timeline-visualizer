@@ -238,16 +238,6 @@ data class Journey(
             return Journey(period, points, distances)
         }
 
-        private fun haversineKm(a: GeoPoint, b: GeoPoint): Double {
-            val lat1 = Math.toRadians(a.latitude)
-            val lat2 = Math.toRadians(b.latitude)
-            val dLat = lat2 - lat1
-            val dLon = Math.toRadians(b.longitude - a.longitude)
-            val h = sin(dLat / 2) * sin(dLat / 2) +
-                cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2)
-            return 6371.0088 * 2 * asin(min(1.0, sqrt(h)))
-        }
-
         private fun interpolate(a: GeoPoint, b: GeoPoint, fraction: Double): GeoPoint {
             if (fraction <= 0.0) return a
             if (fraction >= 1.0) return b
@@ -296,6 +286,16 @@ data class Journey(
             }
         }
     }
+}
+
+internal fun haversineKm(a: GeoPoint, b: GeoPoint): Double {
+    val lat1 = Math.toRadians(a.latitude)
+    val lat2 = Math.toRadians(b.latitude)
+    val dLat = lat2 - lat1
+    val dLon = Math.toRadians(b.longitude - a.longitude)
+    val h = sin(dLat / 2) * sin(dLat / 2) +
+        cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2)
+    return 6371.0088 * 2 * asin(min(1.0, sqrt(h)))
 }
 
 data class WorldPoint(val x: Double, val y: Double)

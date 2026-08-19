@@ -40,6 +40,11 @@
         <item quantity="many">%1$d segundos</item>
         <item quantity="other">%1$d segundos</item>
     </plurals>
+    <string name="custom_duration">Personalizada…</string>
+    <string name="custom_duration_title">Duración personalizada de la ruta</string>
+    <string name="custom_duration_hint">Segundos</string>
+    <string name="custom_duration_range">Introduce un número entero entre 10 y 300.</string>
+    <string name="long_duration_warning">Los vídeos largos requieren más tiempo de procesamiento y almacenamiento.</string>
     <string name="reading_timeline">Leyendo el archivo Timeline</string>
     <string name="opening_timeline">Abrir archivo</string>
     <string name="opening_file">Abrir archivo</string>
@@ -206,6 +211,16 @@
     <string name="settings_summary">Establezca los valores predeterminados utilizados para vistas previas y videos nuevos.</string>
     <string name="video_defaults">Valores predeterminados de vídeo</string>
     <string name="video_defaults_summary">Los cambios se aplican a la vista previa y al siguiente vídeo que cree.</string>
+    <string name="timeline_processing">Procesamiento de Timeline</string>
+    <string name="location_filter">Filtro de valores GPS atípicos</string>
+    <string name="location_filter_summary">El filtro conservador solo ignora viajes de ida y vuelta breves e imposibles. El archivo de Timeline no se modifica.</string>
+    <string name="location_filter_conservative">Conservador</string>
+    <string name="location_filter_off">Desactivado</string>
+    <plurals name="location_outliers_ignored">
+        <item quantity="one">Se ignoró %1$d ubicación sospechosa</item>
+        <item quantity="many">Se ignoraron %1$d ubicaciones sospechosas</item>
+        <item quantity="other">Se ignoraron %1$d ubicaciones sospechosas</item>
+    </plurals>
     <string name="about_and_privacy">Acerca de y privacidad</string>
     <string name="video_playback_failed">Este vídeo no se pudo reproducir dentro de Timeline Visualizer.</string>
     <string name="open_in_another_app">Abrir en otra aplicación</string>

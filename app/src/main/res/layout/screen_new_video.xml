@@ -177,6 +177,15 @@
                 <AutoCompleteTextView android:id="@+id/durationDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <TextView
+                android:id="@+id/durationWarningText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/long_duration_warning"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:visibility="gone" />
+
             <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:hint="@string/owner_name">
                 <com.google.android.material.textfield.TextInputEditText android:id="@+id/ownerInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLength="30" android:singleLine="true" />
             </com.google.android.material.textfield.TextInputLayout>

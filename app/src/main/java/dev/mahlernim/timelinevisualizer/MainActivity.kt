@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.text.InputType
 import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
@@ -38,6 +39,10 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
+import dev.mahlernim.timelinevisualizer.data.LocationFilterMode
+import dev.mahlernim.timelinevisualizer.data.LocationOutlierFilter
 import dev.mahlernim.timelinevisualizer.data.TimelineParseException
 import dev.mahlernim.timelinevisualizer.data.TimelineParseReason
 import dev.mahlernim.timelinevisualizer.data.TimelineParser
@@ -60,6 +65,7 @@ import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.model.Timeline
 import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
 import dev.mahlernim.timelinevisualizer.model.TitleTemplate
+import dev.mahlernim.timelinevisualizer.model.VideoDuration
 import dev.mahlernim.timelinevisualizer.render.TimelineAnimation
 import dev.mahlernim.timelinevisualizer.render.RenderText
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
@@ -67,6 +73,7 @@ import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 import dev.mahlernim.timelinevisualizer.ui.CameraSettingsPreferences
+import dev.mahlernim.timelinevisualizer.ui.LocationFilterPreferences
 import dev.mahlernim.timelinevisualizer.videos.GeneratedMediaRepository
 import dev.mahlernim.timelinevisualizer.videos.VideoMedia
 import dev.mahlernim.timelinevisualizer.videos.VideoRecord
@@ -97,6 +104,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var settingsScreen: ScreenSettingsBinding
     private lateinit var playerScreen: ScreenPlayerBinding
     private var timeline: Timeline? = null
+    private var renderTimeline: Timeline? = null
     private var journey: Journey? = null
     private var animation: ValueAnimator? = null
     private var pendingExport: VideoExportRequest? = null
@@ -120,7 +128,10 @@ class MainActivity : AppCompatActivity() {
     private val generatedMedia by lazy { GeneratedMediaRepository(applicationContext) }
     private val timelineSourceStore by lazy { TimelineSourceStore(applicationContext) }
     private val cameraSettingsPreferences by lazy { CameraSettingsPreferences(applicationContext) }
+    private val locationFilterPreferences by lazy { LocationFilterPreferences(applicationContext) }
     private var cameraSettings = CameraSettings.DEFAULT
+    private var locationFilterMode = LocationFilterMode.CONSERVATIVE
+    private var routeDurationSeconds = VideoDuration.DEFAULT_SECONDS
     private val applyTitleChanges = Runnable { commitTitlePreferences() }
     private var videoRenderGeneration = 0
     private var videosExpanded = false
@@ -178,7 +189,7 @@ class MainActivity : AppCompatActivity() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
             val bars: Insets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(0, bars.top, 0, bars.bottom)
-            insets
+            WindowInsetsCompat.CONSUMED
         }
 
         binding.bottomNavigation.setOnItemSelectedListener { item ->
@@ -248,20 +259,22 @@ class MainActivity : AppCompatActivity() {
         editor.ownerInput.setOnFocusChangeListener { _, hasFocus -> if (!hasFocus) commitTitlePreferences() }
         editor.titleInput.setOnFocusChangeListener { _, hasFocus -> if (!hasFocus) commitTitlePreferences() }
 
-        val durations = listOf(10, 15, 20, 30, 45, 60).map {
+        val durations = VideoDuration.presets.map {
             resources.getQuantityString(R.plurals.duration_seconds, it, it)
-        }
+        } + getString(R.string.custom_duration)
         editor.durationDropdown.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, durations))
-        editor.durationDropdown.setText(resources.getQuantityString(R.plurals.duration_seconds, 30, 30), false)
-        editor.timelineView.journeyDurationSeconds = 30
+        applyDuration(VideoDuration.DEFAULT_SECONDS)
         editor.timelineView.renderText = currentRenderText()
-        editor.durationDropdown.setOnItemClickListener { _, _, _, _ ->
-            animation?.cancel()
-            editor.timelineView.journeyDurationSeconds = selectedDurationSeconds()
-            showProgress(editor.timelineSeek.progress / 1000f)
+        editor.durationDropdown.setOnItemClickListener { _, _, position, _ ->
+            if (position == VideoDuration.presets.size) {
+                showCustomDurationDialog()
+            } else {
+                applyDuration(VideoDuration.presets[position])
+            }
         }
         makeDropdownOpenReliably(editor.durationDropdown)
         configureAdvancedSettings()
+        configureLocationFiltering()
         configureMonthDropdowns()
         configureExactDates()
         renderVideos()
@@ -467,6 +480,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 editor.loadingStageText.setText(R.string.preparing_trips)
                 timeline = loaded
+                rebuildRenderTimeline(reselect = false)
                 configureYears(loaded)
                 editor.editorGroup.visibility = View.VISIBLE
                 editor.statusText.text = ""
@@ -476,6 +490,7 @@ class MainActivity : AppCompatActivity() {
             } catch (error: TimelineParseException) {
                 Log.e(TAG, "Timeline import failed", error)
                 timeline = null
+                renderTimeline = null
                 if (remembered) {
                     timelineSourceStore.clear()
                     releaseUriAccess(uri)
@@ -488,6 +503,7 @@ class MainActivity : AppCompatActivity() {
             } catch (error: Throwable) {
                 Log.e(TAG, "Timeline import failed", error)
                 timeline = null
+                renderTimeline = null
                 if (remembered) {
                     timelineSourceStore.clear()
                     releaseUriAccess(uri)
@@ -561,28 +577,37 @@ class MainActivity : AppCompatActivity() {
         val selected = if (exactDateRangeEnabled) {
             val start = selectedStartDate ?: return
             val end = selectedEndDate ?: return
-            timeline?.forDateRange(start, end)
+            renderTimeline?.forDateRange(start, end)
+        } else {
+            renderTimeline?.forRange(period)
+        } ?: return
+        val unfiltered = if (exactDateRangeEnabled) {
+            timeline?.forDateRange(selectedStartDate ?: return, selectedEndDate ?: return)
         } else {
             timeline?.forRange(period)
-        } ?: return
+        }
+        val ignoredCount = ((unfiltered?.points?.size ?: selected.points.size) - selected.points.size).coerceAtLeast(0)
         animation?.cancel()
         journey = selected
         editor.timelineView.journey = selected
         editor.timelineSeek.progress = 0
         showProgress(0f)
         editor.videoReadyGroup.visibility = View.GONE
-        editor.periodSummaryText.text = selectedPeriodSummary(selected)
+        editor.periodSummaryText.text = selectedPeriodSummary(selected, ignoredCount)
         val canCreate = canCreateVideo(selected)
         editor.playButton.isEnabled = canCreate
         editor.exportButton.isEnabled = canCreate
     }
 
-    internal fun selectedPeriodSummary(selected: Journey): String {
+    internal fun selectedPeriodSummary(selected: Journey, ignoredCount: Int = 0): String {
         val number = NumberFormat.getNumberInstance().apply { maximumFractionDigits = 0 }
-        if (selected.points.isEmpty()) return getString(R.string.selected_period_empty)
-        if (selected.points.size == 1) return getString(R.string.selected_period_one_point)
+        if (selected.points.isEmpty()) return withOutlierSummary(getString(R.string.selected_period_empty), ignoredCount)
+        if (selected.points.size == 1) return withOutlierSummary(getString(R.string.selected_period_one_point), ignoredCount)
         if (selected.totalDistanceKm <= 0) {
-            return getString(R.string.selected_period_no_movement, number.format(selected.points.size))
+            return withOutlierSummary(
+                getString(R.string.selected_period_no_movement, number.format(selected.points.size)),
+                ignoredCount,
+            )
         }
         val range = selected.period
         val period = if (exactDateRangeEnabled && selectedStartDate != null && selectedEndDate != null) {
@@ -613,11 +638,23 @@ class MainActivity : AppCompatActivity() {
                 range.endYear,
             )
         }
-        return getString(
-            R.string.selected_period_summary,
-            number.format(selected.points.size),
-            number.format(selected.totalDistanceKm),
-            period,
+        return withOutlierSummary(
+            getString(
+                R.string.selected_period_summary,
+                number.format(selected.points.size),
+                number.format(selected.totalDistanceKm),
+                period,
+            ),
+            ignoredCount,
+        )
+    }
+
+    private fun withOutlierSummary(summary: String, ignoredCount: Int): String {
+        if (ignoredCount <= 0) return summary
+        return summary + "\n" + resources.getQuantityString(
+            R.plurals.location_outliers_ignored,
+            ignoredCount,
+            ignoredCount,
         )
     }
 
@@ -839,6 +876,50 @@ class MainActivity : AppCompatActivity() {
         applyAdvancedSettings(cameraSettingsPreferences.load())
     }
 
+    private fun configureLocationFiltering() {
+        val modes = listOf(LocationFilterMode.CONSERVATIVE, LocationFilterMode.OFF)
+        val labels = listOf(
+            getString(R.string.location_filter_conservative),
+            getString(R.string.location_filter_off),
+        )
+        settingsScreen.locationFilterDropdown.setAdapter(
+            ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, labels),
+        )
+        makeDropdownOpenReliably(settingsScreen.locationFilterDropdown)
+        settingsScreen.locationFilterDropdown.setOnItemClickListener { _, _, position, _ ->
+            locationFilterMode = modes[position]
+            locationFilterPreferences.save(locationFilterMode)
+            updateLocationFilterLabel()
+            rebuildRenderTimeline(reselect = true)
+        }
+        locationFilterMode = locationFilterPreferences.load()
+        updateLocationFilterLabel()
+    }
+
+    private fun updateLocationFilterLabel() {
+        settingsScreen.locationFilterDropdown.setText(
+            getString(
+                if (locationFilterMode == LocationFilterMode.CONSERVATIVE) {
+                    R.string.location_filter_conservative
+                } else {
+                    R.string.location_filter_off
+                },
+            ),
+            false,
+        )
+    }
+
+    private fun rebuildRenderTimeline(reselect: Boolean) {
+        val source = timeline
+        if (source == null) {
+            renderTimeline = null
+            return
+        }
+        val result = LocationOutlierFilter.filter(source.points, locationFilterMode)
+        renderTimeline = Timeline(result.points)
+        if (reselect && selectedStartYear != null && selectedEndYear != null) selectRange()
+    }
+
     private fun updateAdvancedSettings(settings: CameraSettings) {
         cameraSettingsPreferences.save(settings)
         applyAdvancedSettings(settings)
@@ -869,6 +950,54 @@ class MainActivity : AppCompatActivity() {
             false,
         )
         showProgress(editor.timelineSeek.progress / 1000f)
+    }
+
+    private fun applyDuration(seconds: Int) {
+        require(seconds in VideoDuration.MIN_SECONDS..VideoDuration.MAX_SECONDS)
+        routeDurationSeconds = seconds
+        editor.durationDropdown.setText(
+            resources.getQuantityString(R.plurals.duration_seconds, seconds, seconds),
+            false,
+        )
+        editor.durationWarningText.visibility =
+            if (seconds > VideoDuration.LONG_DURATION_SECONDS) View.VISIBLE else View.GONE
+        animation?.cancel()
+        editor.timelineView.journeyDurationSeconds = seconds
+        showProgress(editor.timelineSeek.progress / 1000f)
+    }
+
+    private fun showCustomDurationDialog() {
+        val input = TextInputEditText(this).apply {
+            id = R.id.customDurationInput
+            inputType = InputType.TYPE_CLASS_NUMBER
+            setText(String.format(Locale.ROOT, "%d", routeDurationSeconds))
+            selectAll()
+        }
+        val inputLayout = TextInputLayout(this).apply {
+            hint = getString(R.string.custom_duration_hint)
+            helperText = getString(R.string.custom_duration_range)
+            addView(input)
+        }
+        val margin = (24 * resources.displayMetrics.density).toInt()
+        inputLayout.setPadding(margin, 0, margin, 0)
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.custom_duration_title)
+            .setView(inputLayout)
+            .setNegativeButton(R.string.cancel) { _, _ -> applyDuration(routeDurationSeconds) }
+            .setPositiveButton(R.string.done, null)
+            .create()
+        dialog.show()
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).setOnClickListener {
+            val seconds = VideoDuration.parseCustom(input.text)
+            if (seconds == null) {
+                inputLayout.error = getString(R.string.custom_duration_range)
+            } else {
+                inputLayout.error = null
+                applyDuration(seconds)
+                dialog.dismiss()
+            }
+        }
+        dialog.setOnCancelListener { applyDuration(routeDurationSeconds) }
     }
 
     private fun chooseExportDestination() {
@@ -1560,11 +1689,9 @@ class MainActivity : AppCompatActivity() {
         } ?: getString(R.string.traveler)
     }
 
-    private fun selectedDurationSeconds(): Int = Regex("\\d+")
-        .find(editor.durationDropdown.text.toString())
-        ?.value
-        ?.toIntOrNull()
-        ?: 30
+    internal fun selectedDurationSeconds(): Int = routeDurationSeconds
+
+    internal fun pendingExportDurationSeconds(): Int? = pendingExport?.durationSeconds
 
     private fun makeDropdownOpenReliably(dropdown: AutoCompleteTextView) {
         dropdown.threshold = 0

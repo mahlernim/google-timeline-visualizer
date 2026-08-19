@@ -10,7 +10,8 @@ Create your story
 • Choose Fixed, Steady, or Dynamic camera movement
 • Balance long journeys with optional long-trip timing compression
 • Export at 480p, 720p, or 1080p
-• Choose a 10, 15, 20, 30, 45, or 60-second journey
+• Choose a preset or custom journey from 10 through 300 seconds
+• Conservatively ignore isolated GPS outliers, or turn filtering off
 • Finish with a smooth zoom-out and complete-route overview
 • Keep creating in the background with progress and completion notifications
 • Reopen the most recently used Timeline file when Android retains access
