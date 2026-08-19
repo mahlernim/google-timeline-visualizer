@@ -129,7 +129,6 @@
     <string name="project_on_github">Projeto em GitHub</string>
     <string name="update_page_unavailable">Não foi possível abrir a página de atualização</string>
     <string name="web_page_unavailable">Não foi possível abrir a página da web</string>
-    <string name="render_date_pattern">MMMM aaaa</string>
     <string name="distance_unit">km</string>
     <string name="map_attribution">© OpenStreetMap</string>
     <string name="timeline_video">Vídeo Timeline</string>

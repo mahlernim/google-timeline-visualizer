@@ -125,7 +125,6 @@
     <string name="project_on_github">Projekt auf GitHub</string>
     <string name="update_page_unavailable">Die Update-Seite konnte nicht geöffnet werden</string>
     <string name="web_page_unavailable">Die Webseite konnte nicht geöffnet werden</string>
-    <string name="render_date_pattern">MMMM jjjj</string>
     <string name="distance_unit">km</string>
     <string name="map_attribution">© OpenStreetMap © CARTO</string>
     <string name="timeline_video">Timeline-Video</string>

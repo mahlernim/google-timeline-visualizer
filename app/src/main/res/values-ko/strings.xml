@@ -120,7 +120,6 @@
     <string name="project_on_github">GitHub 프로젝트</string>
     <string name="update_page_unavailable">업데이트 페이지를 열 수 없습니다</string>
     <string name="web_page_unavailable">웹페이지를 열 수 없습니다</string>
-    <string name="render_date_pattern">yyyy년 M월</string>
     <string name="distance_unit">km</string>
     <string name="map_attribution">© OpenStreetMap  © CARTO</string>
     <string name="timeline_video">타임라인 영상</string>

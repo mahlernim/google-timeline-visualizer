@@ -121,7 +121,6 @@
     <string name="project_on_github">GitHub 上的项目</string>
     <string name="update_page_unavailable">无法打开更新页面</string>
     <string name="web_page_unavailable">无法打开网页</string>
-    <string name="render_date_pattern">MMMM 年</string>
     <string name="distance_unit">km</string>
     <string name="map_attribution">© OpenStreetMap © CARTO</string>
     <string name="timeline_video">Timeline视频</string>

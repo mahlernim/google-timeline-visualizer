@@ -120,7 +120,6 @@
     <string name="project_on_github">GitHubのプロジェクト</string>
     <string name="update_page_unavailable">更新ページを開けませんでした</string>
     <string name="web_page_unavailable">ウェブページを開けませんでした</string>
-    <string name="render_date_pattern">yyyy年M月</string>
     <string name="distance_unit">km</string>
     <string name="map_attribution">© OpenStreetMap  © CARTO</string>
     <string name="timeline_video">タイムライン動画</string>
