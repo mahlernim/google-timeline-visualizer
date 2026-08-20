@@ -126,24 +126,31 @@
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textStyle="bold" />
 
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:baselineAligned="false" android:orientation="horizontal">
-                <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/start_year">
-                    <AutoCompleteTextView android:id="@+id/startYearDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
-                </com.google.android.material.textfield.TextInputLayout>
-                <Space android:layout_width="10dp" android:layout_height="1dp" />
-                <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/end_year">
-                    <AutoCompleteTextView android:id="@+id/endYearDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
-                </com.google.android.material.textfield.TextInputLayout>
-            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/periodDateControlsGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:baselineAligned="false" android:orientation="horizontal">
-                <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/start_month">
-                    <AutoCompleteTextView android:id="@+id/startMonthDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
-                </com.google.android.material.textfield.TextInputLayout>
-                <Space android:layout_width="10dp" android:layout_height="1dp" />
-                <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/end_month">
-                    <AutoCompleteTextView android:id="@+id/endMonthDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
-                </com.google.android.material.textfield.TextInputLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:baselineAligned="false" android:orientation="horizontal">
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/start_year">
+                        <AutoCompleteTextView android:id="@+id/startYearDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <Space android:layout_width="10dp" android:layout_height="1dp" />
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/end_year">
+                        <AutoCompleteTextView android:id="@+id/endYearDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:baselineAligned="false" android:orientation="horizontal">
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/start_month">
+                        <AutoCompleteTextView android:id="@+id/startMonthDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <Space android:layout_width="10dp" android:layout_height="1dp" />
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/end_month">
+                        <AutoCompleteTextView android:id="@+id/endMonthDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
             </LinearLayout>
 
             <TextView
@@ -170,6 +177,42 @@
                 android:maxLines="1"
                 android:text="@string/choose_exact_dates"
                 android:visibility="gone" />
+
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/rawSignalsSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/use_raw_location_data"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/rawSignalsDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/raw_location_description"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:visibility="gone" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/rawAccuracyLayout"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="@string/raw_accuracy_limit"
+                android:visibility="gone"
+                app:helperText="@string/raw_accuracy_helper">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/rawAccuracyInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal"
+                    android:maxLines="1"
+                    android:text="100" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:maxLines="1" android:text="@string/video_details" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
 

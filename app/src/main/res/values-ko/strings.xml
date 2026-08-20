@@ -24,7 +24,7 @@
     <string name="import_failed_detail">이 파일을 읽을 수 없습니다. 지원되는 Timeline JSON 내보내기 파일을 선택해 주세요.</string>
     <string name="timeline_error_malformed">올바르거나 완전한 JSON 파일이 아닙니다.</string>
     <string name="timeline_error_legacy">이 파일은 이전 Google 테이크아웃 형식입니다. 휴대전화에서 타임라인 데이터를 내보내 주세요.</string>
-    <string name="timeline_error_raw_only">이 내보내기에는 원시 신호만 있고 재구성된 타임라인 이동 경로가 없습니다.</string>
+    <string name="timeline_error_raw_only">이 파일에는 사용할 수 있는 방문, 이동 또는 원시 위치 정보가 없습니다.</string>
     <string name="timeline_error_no_locations">이 타임라인 내보내기에는 위치 데이터가 없습니다. 타임라인이 활성화되지 않아 Google에서 내보낼 데이터가 없었을 수 있습니다.</string>
     <string name="remembered_timeline_unavailable">이전에 사용한 타임라인 파일을 더 이상 열 수 없습니다.</string>
     <string name="choose_timeline_again">Timeline.json 파일을 다시 선택해 주세요.</string>
@@ -193,6 +193,16 @@
     <string name="restore_advanced_defaults">기본값 복원</string>
     <string name="advanced_defaults_restored">고급 설정을 복원했습니다</string>
     <string name="use_exact_dates">정확한 날짜 선택</string>
+    <string name="use_raw_location_data">원시 위치 데이터 사용</string>
+    <string name="raw_location_description">최근의 처리되지 않은 위치 정보를 사용합니다. 노이즈를 줄이지만 경로와 이동 거리가 여전히 부정확할 수 있습니다.</string>
+    <string name="raw_accuracy_limit">정확도 한도(미터)</string>
+    <string name="raw_accuracy_helper">정확도가 낮은 위치는 제외됩니다. 사용 가능한 모든 위치를 포함하려면 비워 두세요.</string>
+    <string name="raw_accuracy_invalid">0 이상의 숫자를 입력하거나 비워 두세요.</string>
+    <string name="raw_location_summary">위치 %1$s개 · 추정 거리 %2$s km · %3$s개 제외</string>
+    <string name="raw_only_title">원시 위치 데이터만 발견됨</string>
+    <string name="raw_only_message">이 파일에는 처리된 방문 및 이동 기록 없이 원시 위치 정보만 포함되어 있습니다. 계속할 수 있지만 경로가 부정확하거나 일부 누락될 수 있으며, 이동 거리는 추정값으로 표시됩니다.\n\n더 정확한 결과를 얻으려면 Google 지도에서 타임라인을 확인하거나 복원하고, 방문 및 이동 기록이 표시되는지 확인하세요. 그런 다음 타임라인을 다시 내보낸 후 이 앱에서 불러오세요.</string>
+    <string name="open_google_maps">Google 지도 열기</string>
+    <string name="continue_with_raw_data">원시 데이터로 계속</string>
     <string name="choose_exact_dates">시작일과 종료일 선택</string>
     <string name="exact_date_range">%1$s – %2$s</string>
     <string name="delete_all_videos">모든 동영상 삭제</string>

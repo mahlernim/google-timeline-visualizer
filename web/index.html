@@ -44,29 +44,41 @@
 
       <section id="settings-card" class="card hidden" aria-labelledby="settings-heading">
         <h2 id="settings-heading">Create your journey</h2>
-        <label class="checkbox-row">
-          <input id="exact-date-toggle" type="checkbox" />
-          <span>Select exact dates</span>
+        <label id="raw-signals-row" class="checkbox-row hidden">
+          <input id="raw-signals-toggle" type="checkbox" />
+          <span>Use raw location data</span>
         </label>
-        <div id="month-range-fields" class="field-grid">
-          <label>
-            From
-            <select id="start-month"></select>
+        <p id="raw-signals-description" class="status hidden">Uses recent unprocessed location estimates. Noise is reduced, but the route and distance may still be inaccurate.</p>
+        <label id="raw-accuracy-field" class="hidden">
+          Accuracy limit (meters)
+          <input id="raw-accuracy-limit" type="number" min="0" step="1" inputmode="decimal" value="100" />
+          <span class="field-help">Less accurate locations are excluded. Leave blank to include every usable location.</span>
+        </label>
+        <div id="period-controls">
+          <label class="checkbox-row">
+            <input id="exact-date-toggle" type="checkbox" />
+            <span>Select exact dates</span>
           </label>
-          <label>
-            To
-            <select id="end-month"></select>
-          </label>
-        </div>
-        <div id="exact-date-fields" class="field-grid hidden">
-          <label>
-            Start date
-            <input id="start-date" type="date" />
-          </label>
-          <label>
-            End date
-            <input id="end-date" type="date" />
-          </label>
+          <div id="month-range-fields" class="field-grid">
+            <label>
+              From
+              <select id="start-month"></select>
+            </label>
+            <label>
+              To
+              <select id="end-month"></select>
+            </label>
+          </div>
+          <div id="exact-date-fields" class="field-grid hidden">
+            <label>
+              Start date
+              <input id="start-date" type="date" />
+            </label>
+            <label>
+              End date
+              <input id="end-date" type="date" />
+            </label>
+          </div>
         </div>
         <label>
           Video title
@@ -130,6 +142,17 @@
         <p><a href="./third-party-notices.txt">Third-party notices</a></p>
       </footer>
     </main>
+    <dialog id="raw-only-dialog" aria-labelledby="raw-only-heading">
+      <form method="dialog" class="dialog-card">
+        <h2 id="raw-only-heading">Only raw location data found</h2>
+        <p>This file contains raw location data but no processed visits or trips. You can continue, but the route may be noisy or incomplete, and its distance will only be an estimate.</p>
+        <p>For better results, open Google Maps, confirm or restore your Timeline, and make sure your visits and trips appear. Then export your Timeline again and load the new file in this app.</p>
+        <div class="dialog-actions">
+          <button id="open-google-maps" type="button">Open Google Maps</button>
+          <button id="continue-raw-data" class="secondary" type="button">Continue with raw data</button>
+        </div>
+      </form>
+    </dialog>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

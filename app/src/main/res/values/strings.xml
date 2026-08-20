@@ -24,7 +24,7 @@
     <string name="import_failed_detail">This file could not be read. Select a supported Timeline JSON export.</string>
     <string name="timeline_error_malformed">This file is not valid or complete JSON.</string>
     <string name="timeline_error_legacy">This is an older Google Takeout format. Export Timeline data from your phone instead.</string>
-    <string name="timeline_error_raw_only">This export contains raw signals but no reconstructed Timeline journeys.</string>
+    <string name="timeline_error_raw_only">This file contains no usable visits, trips, or raw location data.</string>
     <string name="timeline_error_no_locations">This Timeline export contains no location data. Timeline may not have been enabled, so Google had no data to export.</string>
     <string name="remembered_timeline_unavailable">The previously used Timeline is no longer available.</string>
     <string name="choose_timeline_again">Choose the Timeline.json file again.</string>
@@ -203,6 +203,16 @@
     <string name="restore_advanced_defaults">Restore defaults</string>
     <string name="advanced_defaults_restored">Advanced settings restored</string>
     <string name="use_exact_dates">Choose exact dates</string>
+    <string name="use_raw_location_data">Use raw location data</string>
+    <string name="raw_location_description">Uses recent unprocessed location estimates. Noise is reduced, but the route and distance may still be inaccurate.</string>
+    <string name="raw_accuracy_limit">Accuracy limit (meters)</string>
+    <string name="raw_accuracy_helper">Less accurate locations are excluded. Leave blank to include every usable location.</string>
+    <string name="raw_accuracy_invalid">Enter zero or a positive number, or leave this blank.</string>
+    <string name="raw_location_summary">%1$s locations · estimated %2$s km · %3$s ignored</string>
+    <string name="raw_only_title">Only raw location data found</string>
+    <string name="raw_only_message">This file contains raw location data but no processed visits or trips. You can continue, but the route may be noisy or incomplete, and its distance will only be an estimate.\n\nFor better results, open Google Maps, confirm or restore your Timeline, and make sure your visits and trips appear. Then export your Timeline again and load the new file in this app.</string>
+    <string name="open_google_maps">Open Google Maps</string>
+    <string name="continue_with_raw_data">Continue with raw data</string>
     <string name="choose_exact_dates">Select a start and end date</string>
     <string name="exact_date_range">%1$s – %2$s</string>
     <string name="delete_all_videos">Delete all videos</string>

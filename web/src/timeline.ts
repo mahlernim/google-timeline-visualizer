@@ -1,4 +1,5 @@
 import type { GeoPoint, MonthOption } from './types';
+import { haversineKm } from './geo';
 
 export type TimelineParseReason =
   | 'malformed-json'
@@ -69,6 +70,7 @@ interface TimeInterval {
 }
 
 const SEGMENT_DIRECTION_SIGNAL_MS = 36 * 60 * 60 * 1000;
+const DEFAULT_RAW_ACCURACY_METERS = 100;
 
 function parseInstant(value: unknown): ParsedInstant | null {
   if (typeof value !== 'string' || value.trim() === '') return null;
@@ -282,6 +284,110 @@ export function parseTimelineJson(data: unknown): GeoPoint[] {
     );
   }
   return normalized;
+}
+
+export interface RawSignalPoint extends GeoPoint {
+  accuracyMeters: number;
+}
+
+export interface RawSignalProcessingResult {
+  points: GeoPoint[];
+  inputCount: number;
+  rejectedCount: number;
+  discontinuityCount: number;
+}
+
+export function parseRawSignalsJson(data: unknown): RawSignalPoint[] {
+  if (!isObject(data) || !Array.isArray(data.rawSignals)) return [];
+  const unique = new Map<string, RawSignalPoint>();
+  for (const signal of data.rawSignals) {
+    if (!isObject(signal) || !isObject(signal.position)) continue;
+    const position = signal.position;
+    const coordinate = parseCoordinate(position.LatLng ?? position.latLng);
+    const parsedTime = parseInstant(position.timestamp);
+    const accuracy = typeof position.accuracyMeters === 'string'
+      ? Number(position.accuracyMeters)
+      : position.accuracyMeters;
+    if (!coordinate || !parsedTime || typeof accuracy !== 'number' || !Number.isFinite(accuracy) || accuracy < 0) {
+      continue;
+    }
+    const point: RawSignalPoint = {
+      instant: parsedTime.instant,
+      latitude: coordinate[0],
+      longitude: coordinate[1],
+      recordedDate: parsedTime.recordedDate,
+      timeZoneMissing: parsedTime.timeZoneMissing,
+      accuracyMeters: accuracy,
+    };
+    const key = `${point.instant.getTime()}:${point.latitude}:${point.longitude}`;
+    const previous = unique.get(key);
+    if (!previous || point.accuracyMeters < previous.accuracyMeters) unique.set(key, point);
+  }
+  return [...unique.values()].sort((a, b) => a.instant.getTime() - b.instant.getTime());
+}
+
+export function processRawSignals(
+  source: RawSignalPoint[],
+  maximumAccuracyMeters: number | null = DEFAULT_RAW_ACCURACY_METERS,
+): RawSignalProcessingResult {
+  const accuracyFiltered = source.filter((point) => (
+    maximumAccuracyMeters === null || point.accuracyMeters <= maximumAccuracyMeters
+  ));
+  const withoutSpikes: RawSignalPoint[] = [];
+  if (accuracyFiltered.length > 0) withoutSpikes.push(accuracyFiltered[0]);
+  for (let index = 1; index < accuracyFiltered.length - 1; index += 1) {
+    const before = withoutSpikes.at(-1)!;
+    const candidate = accuracyFiltered[index];
+    const after = accuracyFiltered[index + 1];
+    if (!isShortImpossibleRawSpike(before, candidate, after)) withoutSpikes.push(candidate);
+  }
+  if (accuracyFiltered.length > 1) withoutSpikes.push(accuracyFiltered.at(-1)!);
+
+  const stabilized: RawSignalPoint[] = [];
+  for (const candidate of withoutSpikes) {
+    const previous = stabilized.at(-1);
+    if (!previous) {
+      stabilized.push(candidate);
+      continue;
+    }
+    const elapsed = candidate.instant.getTime() - previous.instant.getTime();
+    const uncertaintyKm = Math.max(0.025, (previous.accuracyMeters + candidate.accuracyMeters) / 1000);
+    const overlapsWithinUncertainty = elapsed >= 0 && elapsed <= 10 * 60 * 1000
+      && haversineKm(previous, candidate) <= uncertaintyKm;
+    if (overlapsWithinUncertainty) {
+      if (candidate.accuracyMeters < previous.accuracyMeters) stabilized[stabilized.length - 1] = candidate;
+    } else {
+      stabilized.push(candidate);
+    }
+  }
+  const discontinuityCount = stabilized.slice(1).filter((point, index) => (
+    point.instant.getTime() - stabilized[index].instant.getTime() > 30 * 60 * 1000
+  )).length;
+  return {
+    points: stabilized,
+    inputCount: source.length,
+    rejectedCount: source.length - stabilized.length,
+    discontinuityCount,
+  };
+}
+
+function isShortImpossibleRawSpike(
+  before: RawSignalPoint,
+  candidate: RawSignalPoint,
+  after: RawSignalPoint,
+): boolean {
+  const windowMs = after.instant.getTime() - before.instant.getTime();
+  if (windowMs < 0 || windowMs > 20 * 60 * 1000) return false;
+  const rejoinToleranceKm = Math.max(0.2, (before.accuracyMeters + after.accuracyMeters) * 2 / 1000);
+  if (haversineKm(before, after) > rejoinToleranceKm) return false;
+  const ingressKm = haversineKm(before, candidate);
+  const egressKm = haversineKm(candidate, after);
+  const minimumSpikeKm = Math.max(0.5, candidate.accuracyMeters * 5 / 1000);
+  if (ingressKm < minimumSpikeKm || egressKm < minimumSpikeKm) return false;
+  const ingressHours = (candidate.instant.getTime() - before.instant.getTime()) / 3_600_000;
+  const egressHours = (after.instant.getTime() - candidate.instant.getTime()) / 3_600_000;
+  if (ingressHours <= 0 || egressHours <= 0) return true;
+  return ingressKm / ingressHours > 250 && egressKm / egressHours > 250;
 }
 
 export function monthKey(date: Date): string {

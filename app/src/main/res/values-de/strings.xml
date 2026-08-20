@@ -25,7 +25,7 @@
     <string name="import_failed_detail">Diese Datei konnte nicht gelesen werden. Wählen Sie einen unterstützten Timeline JSON-Export aus.</string>
     <string name="timeline_error_malformed">Diese Datei enthält kein gültiges oder vollständiges JSON.</string>
     <string name="timeline_error_legacy">Dies ist ein älteres Google Takeout-Format. Exportieren Sie die Timeline-Daten stattdessen vom Telefon.</string>
-    <string name="timeline_error_raw_only">Dieser Export enthält Rohsignale, aber keine rekonstruierten Timeline-Reisen.</string>
+    <string name="timeline_error_raw_only">Diese Datei enthält keine verwendbaren Besuche, Wege oder rohen Standortdaten.</string>
     <string name="timeline_error_no_locations">Dieser Timeline-Export enthält keine Standortdaten. Timeline war möglicherweise nicht aktiviert, sodass Google keine Daten exportieren konnte.</string>
     <string name="remembered_timeline_unavailable">Der bisher verwendete Timeline ist nicht mehr verfügbar.</string>
     <string name="choose_timeline_again">Wählen Sie erneut die Datei Timeline.json.</string>
@@ -197,6 +197,16 @@
     <string name="restore_advanced_defaults">Standardeinstellungen wiederherstellen</string>
     <string name="advanced_defaults_restored">Erweiterte Einstellungen wiederhergestellt</string>
     <string name="use_exact_dates">Wählen Sie genaue Daten</string>
+    <string name="use_raw_location_data">Unverarbeitete Standortdaten verwenden</string>
+    <string name="raw_location_description">Verwendet aktuelle unverarbeitete Standortschätzungen. Rauschen wird reduziert, Route und Entfernung können aber ungenau bleiben.</string>
+    <string name="raw_accuracy_limit">Genauigkeitsgrenze (Meter)</string>
+    <string name="raw_accuracy_helper">Ungenauere Standorte werden ausgeschlossen. Leer lassen, um alle verwendbaren Standorte einzubeziehen.</string>
+    <string name="raw_accuracy_invalid">Null oder eine positive Zahl eingeben oder das Feld leer lassen.</string>
+    <string name="raw_location_summary">%1$s Standorte · geschätzt %2$s km · %3$s ausgeschlossen</string>
+    <string name="raw_only_title">Nur unverarbeitete Standortdaten gefunden</string>
+    <string name="raw_only_message">Diese Datei enthält unverarbeitete Standortdaten, aber keine verarbeiteten Besuche oder Wege. Du kannst fortfahren, aber die Route kann ungenau oder unvollständig sein und die Entfernung ist nur eine Schätzung.\n\nÖffne für bessere Ergebnisse Google Maps, prüfe deine Zeitachse oder stelle sie wieder her und vergewissere dich, dass Besuche und Wege angezeigt werden. Exportiere die Zeitachse danach erneut und lade die neue Datei in dieser App.</string>
+    <string name="open_google_maps">Google Maps öffnen</string>
+    <string name="continue_with_raw_data">Mit Rohdaten fortfahren</string>
     <string name="choose_exact_dates">Wählen Sie ein Start- und Enddatum</string>
     <string name="exact_date_range">%1$s – %2$s</string>
     <string name="delete_all_videos">Alle Videos löschen</string>

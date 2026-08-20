@@ -719,6 +719,44 @@ class MainActivityTest {
     }
 
     @Test
+    fun rawOnlyTimelineRequiresWarningBeforeUsingEstimatedRoute() {
+        acceptPrivacyDisclosure()
+        val source = File.createTempFile("raw-only-timeline", ".json", context.cacheDir)
+        source.writeText(
+            """
+            {
+              "rawSignals": [
+                {"position":{"LatLng":"geo:37.5000,127.0000","timestamp":"2026-08-01T00:00:00Z","accuracyMeters":10}},
+                {"position":{"LatLng":"geo:37.5100,127.0100","timestamp":"2026-08-01T00:10:00Z","accuracyMeters":10}}
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        try {
+            val activity = launchActivity(Intent(Intent.ACTION_VIEW, Uri.fromFile(source)))
+            waitUntil {
+                (ShadowDialog.getLatestDialog() as? AlertDialog)?.isShowing == true
+            }
+            val dialog = ShadowDialog.getLatestDialog() as AlertDialog
+            assertEquals(activity.getString(R.string.raw_only_message), dialog.findViewById<TextView>(android.R.id.message)?.text)
+            assertEquals(
+                activity.getString(R.string.continue_with_raw_data),
+                dialog.getButton(android.content.DialogInterface.BUTTON_NEGATIVE).text,
+            )
+
+            dialog.getButton(android.content.DialogInterface.BUTTON_NEGATIVE).performClick()
+            waitUntil { activity.findViewById<View>(R.id.editorGroup).visibility == View.VISIBLE }
+
+            assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.rawSignalsDescription).visibility)
+            assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.rawAccuracyLayout).visibility)
+            assertTrue(activity.findViewById<TextView>(R.id.periodSummaryText).text.contains("2"))
+        } finally {
+            source.delete()
+        }
+    }
+
+    @Test
     fun playbackIntentOpensTheInternalPlayerRoute() {
         val uri = Uri.parse("content://example/video/internal")
         val intent = MainActivity.playbackIntent(context, uri)

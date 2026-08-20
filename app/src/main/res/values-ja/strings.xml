@@ -24,7 +24,7 @@
     <string name="import_failed_detail">このファイルを読み取れませんでした。対応する Timeline JSON の書き出しファイルを選択してください。</string>
     <string name="timeline_error_malformed">有効または完全な JSON ファイルではありません。</string>
     <string name="timeline_error_legacy">以前の Google Takeout 形式です。端末からタイムライン データを書き出してください。</string>
-    <string name="timeline_error_raw_only">この書き出しには生の信号だけがあり、再構成された移動経路がありません。</string>
+    <string name="timeline_error_raw_only">このファイルには使用できる訪問、移動、生の位置情報がありません。</string>
     <string name="timeline_error_no_locations">このタイムラインの書き出しには位置情報がありません。タイムラインが有効になっていなかったため、Google に書き出すデータがなかった可能性があります。</string>
     <string name="remembered_timeline_unavailable">前回使用したタイムラインを開けなくなりました。</string>
     <string name="choose_timeline_again">Timeline.jsonをもう一度選択してください。</string>
@@ -193,6 +193,16 @@
     <string name="restore_advanced_defaults">初期設定に戻す</string>
     <string name="advanced_defaults_restored">詳細設定を初期値に戻しました</string>
     <string name="use_exact_dates">日付を指定</string>
+    <string name="use_raw_location_data">未処理の位置情報を使用</string>
+    <string name="raw_location_description">最近の未処理の位置推定を使用します。ノイズは軽減されますが、経路や距離が不正確な場合があります。</string>
+    <string name="raw_accuracy_limit">精度の上限（メートル）</string>
+    <string name="raw_accuracy_helper">精度の低い位置は除外されます。使用可能な位置をすべて含める場合は空欄にしてください。</string>
+    <string name="raw_accuracy_invalid">0以上の数値を入力するか、空欄にしてください。</string>
+    <string name="raw_location_summary">位置 %1$s件 · 推定 %2$s km · %3$s件除外</string>
+    <string name="raw_only_title">未処理の位置情報のみが見つかりました</string>
+    <string name="raw_only_message">このファイルには未処理の位置情報のみが含まれ、処理済みの訪問や移動はありません。続行できますが、経路が不正確または不完全になり、距離は推定値になります。\n\nより正確な結果を得るには、Google マップを開いてタイムラインを確認または復元し、訪問や移動が表示されることを確認してください。その後、タイムラインを再度エクスポートし、新しいファイルをこのアプリで読み込んでください。</string>
+    <string name="open_google_maps">Google マップを開く</string>
+    <string name="continue_with_raw_data">未処理データで続行</string>
     <string name="choose_exact_dates">開始日と終了日を選択</string>
     <string name="exact_date_range">%1$s – %2$s</string>
     <string name="delete_all_videos">すべての動画を削除</string>

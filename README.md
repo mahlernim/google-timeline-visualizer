@@ -156,6 +156,7 @@ without changing or removing any Timeline points.
 
 - Current Android and iOS direct-array Timeline exports
 - Older `{ "semanticSegments": [...] }` exports
+- Optional raw location fallback with a warning and local noise reduction
 - Timeline paths, activities, and visits
 - String, `latLng`, degree, `geo:`, and E7 coordinates
 - Routes crossing the international date line

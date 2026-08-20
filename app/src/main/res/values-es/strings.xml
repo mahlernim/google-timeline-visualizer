@@ -25,7 +25,7 @@
     <string name="import_failed_detail">Este archivo no se pudo leer. Seleccione una exportación JSON Timeline compatible.</string>
     <string name="timeline_error_malformed">Este archivo no es un JSON válido o completo.</string>
     <string name="timeline_error_legacy">Este es un formato antiguo de Google Takeout. Exporte los datos de Timeline desde su teléfono.</string>
-    <string name="timeline_error_raw_only">Esta exportación contiene señales sin procesar, pero no viajes reconstruidos de Timeline.</string>
+    <string name="timeline_error_raw_only">Este archivo no contiene visitas, trayectos ni ubicaciones sin procesar que se puedan usar.</string>
     <string name="timeline_error_no_locations">Esta exportación de Timeline no contiene datos de ubicación. Es posible que Timeline no estuviera activado y que Google no tuviera datos para exportar.</string>
     <string name="remembered_timeline_unavailable">El modelo Timeline usado anteriormente ya no está disponible.</string>
     <string name="choose_timeline_again">Elija el archivo Timeline.json nuevamente.</string>
@@ -201,6 +201,16 @@
     <string name="restore_advanced_defaults">Restaurar valores predeterminados</string>
     <string name="advanced_defaults_restored">Configuración avanzada restaurada</string>
     <string name="use_exact_dates">Elige fechas exactas</string>
+    <string name="use_raw_location_data">Usar datos de ubicación sin procesar</string>
+    <string name="raw_location_description">Usa estimaciones de ubicación recientes sin procesar. Se reduce el ruido, pero la ruta y la distancia pueden seguir siendo inexactas.</string>
+    <string name="raw_accuracy_limit">Límite de precisión (metros)</string>
+    <string name="raw_accuracy_helper">Se excluyen las ubicaciones menos precisas. Déjalo vacío para incluir todas las ubicaciones utilizables.</string>
+    <string name="raw_accuracy_invalid">Introduce cero o un número positivo, o deja el campo vacío.</string>
+    <string name="raw_location_summary">%1$s ubicaciones · %2$s km estimados · %3$s excluidas</string>
+    <string name="raw_only_title">Solo se encontraron datos de ubicación sin procesar</string>
+    <string name="raw_only_message">Este archivo contiene datos de ubicación sin procesar, pero no visitas ni trayectos procesados. Puedes continuar, pero la ruta puede ser imprecisa o estar incompleta, y la distancia será solo una estimación.\n\nPara obtener mejores resultados, abre Google Maps, confirma o restaura tu cronología y comprueba que aparezcan tus visitas y trayectos. Después, vuelve a exportar la cronología y carga el archivo nuevo en esta aplicación.</string>
+    <string name="open_google_maps">Abrir Google Maps</string>
+    <string name="continue_with_raw_data">Continuar con datos sin procesar</string>
     <string name="choose_exact_dates">Seleccione una fecha de inicio y finalización</string>
     <string name="exact_date_range">%1$s – %2$s</string>
     <string name="delete_all_videos">Eliminar todos los vídeos</string>

@@ -258,6 +258,58 @@ class TimelineParserTest {
         )
     }
 
+    @Test
+    fun exposesRawPositionsWithoutChangingSemanticTimeline() {
+        val parsed = parser.parseWithRawSignals(
+            ByteArrayInputStream(
+                """
+                {
+                  "semanticSegments": [{
+                    "startTime": "2026-01-01T00:00:00Z",
+                    "visit": {"topCandidate": {"placeLocation": "37.0,127.0"}}
+                  }],
+                  "rawSignals": [
+                    {"position": {"LatLng": "37.1,127.1", "timestamp": "2026-02-01T00:00:00Z", "accuracyMeters": 20}},
+                    {"position": {"latLng": "37.2,127.2", "timestamp": "2026-02-01T00:01:00Z", "accuracyMeters": "101"}},
+                    {"activityRecord": {"timestamp": "2026-02-01T00:02:00Z"}}
+                  ]
+                }
+                """.trimIndent().toByteArray(),
+            ),
+        )
+
+        assertEquals(1, parsed.timeline?.points?.size)
+        assertEquals(37.0, parsed.timeline!!.points.single().latitude, 0.00001)
+        assertEquals(2, parsed.rawSignals.size)
+        assertEquals(37.1, parsed.rawSignals.first().point.latitude, 0.00001)
+        assertEquals(20.0, parsed.rawSignals.first().accuracyMeters, 0.00001)
+    }
+
+    @Test
+    fun returnsUsableRawOnlyExportForExplicitFallback() {
+        val parsed = parser.parseWithRawSignals(
+            ByteArrayInputStream(
+                """
+                {"rawSignals": [
+                  {"position": {"LatLng": "37.1,127.1", "timestamp": "2026-02-01T00:00:00Z", "accuracyMeters": 20}},
+                  {"position": {"LatLng": "37.1,127.1", "timestamp": "2026-02-01T00:00:00Z", "accuracyMeters": 10}},
+                  {"wifiScan": {"timestamp": "2026-02-01T00:01:00Z"}}
+                ]}
+                """.trimIndent().toByteArray(),
+            ),
+        )
+
+        assertEquals(null, parsed.timeline)
+        assertEquals(1, parsed.rawSignals.size)
+        assertEquals(10.0, parsed.rawSignals.single().accuracyMeters, 0.00001)
+        assertEquals(
+            TimelineParseReason.RAW_SIGNALS_ONLY,
+            parseFailure(
+                """{"rawSignals":[{"position":{"LatLng":"37.1,127.1","timestamp":"2026-02-01T00:00:00Z","accuracyMeters":10}}]}""",
+            ).reason,
+        )
+    }
+
     @Test(expected = TimelineParseException::class)
     fun rejectsUnsupportedJson() {
         parse("""{"locations": []}""")

@@ -25,7 +25,7 @@
     <string name="import_failed_detail">Ce fichier n\'a pas pu être lu. Sélectionnez une exportation JSON Timeline prise en charge.</string>
     <string name="timeline_error_malformed">Ce fichier ne contient pas de JSON valide ou complet.</string>
     <string name="timeline_error_legacy">Il s\'agit d\'un ancien format Google Takeout. Exportez les données Timeline depuis votre téléphone.</string>
-    <string name="timeline_error_raw_only">Cette exportation contient des signaux bruts, mais aucun trajet Timeline reconstruit.</string>
+    <string name="timeline_error_raw_only">Ce fichier ne contient aucune visite, aucun trajet ni aucune position brute utilisable.</string>
     <string name="timeline_error_no_locations">Cette exportation Timeline ne contient aucune donnée de localisation. Timeline n’était peut-être pas activé, donc Google n’avait aucune donnée à exporter.</string>
     <string name="remembered_timeline_unavailable">Le Timeline précédemment utilisé n’est plus disponible.</string>
     <string name="choose_timeline_again">Choisissez à nouveau le fichier Timeline.json.</string>
@@ -201,6 +201,16 @@
     <string name="restore_advanced_defaults">Restaurer les valeurs par défaut</string>
     <string name="advanced_defaults_restored">Paramètres avancés restaurés</string>
     <string name="use_exact_dates">Choisissez les dates exactes</string>
+    <string name="use_raw_location_data">Utiliser les données de localisation brutes</string>
+    <string name="raw_location_description">Utilise des estimations de localisation récentes non traitées. Le bruit est réduit, mais l’itinéraire et la distance peuvent rester imprécis.</string>
+    <string name="raw_accuracy_limit">Limite de précision (mètres)</string>
+    <string name="raw_accuracy_helper">Les positions moins précises sont exclues. Laissez vide pour inclure toutes les positions utilisables.</string>
+    <string name="raw_accuracy_invalid">Saisissez zéro ou un nombre positif, ou laissez ce champ vide.</string>
+    <string name="raw_location_summary">%1$s positions · %2$s km estimés · %3$s exclues</string>
+    <string name="raw_only_title">Seules des données de localisation brutes ont été trouvées</string>
+    <string name="raw_only_message">Ce fichier contient des données de localisation brutes, mais aucune visite ni aucun trajet traité. Vous pouvez continuer, mais l’itinéraire peut être imprécis ou incomplet, et la distance ne sera qu’une estimation.\n\nPour de meilleurs résultats, ouvrez Google Maps, vérifiez ou restaurez votre chronologie, puis assurez-vous que vos visites et trajets apparaissent. Exportez ensuite de nouveau votre chronologie et chargez le nouveau fichier dans cette application.</string>
+    <string name="open_google_maps">Ouvrir Google Maps</string>
+    <string name="continue_with_raw_data">Continuer avec les données brutes</string>
     <string name="choose_exact_dates">Sélectionnez une date de début et de fin</string>
     <string name="exact_date_range">%1$s – %2$s</string>
     <string name="delete_all_videos">Supprimer toutes les vidéos</string>

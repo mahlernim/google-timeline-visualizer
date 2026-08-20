@@ -25,7 +25,7 @@
     <string name="import_failed_detail">無法讀取該檔案。選擇支援的 Timeline JSON 匯出。</string>
     <string name="timeline_error_malformed">此檔案不是有效或完整的 JSON。</string>
     <string name="timeline_error_legacy">這是舊版 Google Takeout 格式。請改為從手機匯出 Timeline 資料。</string>
-    <string name="timeline_error_raw_only">此匯出僅包含原始訊號，沒有重建的 Timeline 行程。</string>
+    <string name="timeline_error_raw_only">此檔案不包含可用的造訪地點、行程或原始位置資訊。</string>
     <string name="timeline_error_no_locations">此 Timeline 匯出不包含位置資料。Timeline 可能未啟用，因此 Google 沒有可匯出的資料。</string>
     <string name="remembered_timeline_unavailable">之前使用的Timeline不再可用。</string>
     <string name="choose_timeline_again">再次選擇 Timeline.json 檔案。</string>
@@ -194,6 +194,16 @@
     <string name="restore_advanced_defaults">恢復預設設定</string>
     <string name="advanced_defaults_restored">進階設定已恢復</string>
     <string name="use_exact_dates">選擇確切日期</string>
+    <string name="use_raw_location_data">使用原始位置資料</string>
+    <string name="raw_location_description">使用近期未經處理的位置估算。系統會減少雜訊，但路線和距離仍可能不準確。</string>
+    <string name="raw_accuracy_limit">精確度上限（公尺）</string>
+    <string name="raw_accuracy_helper">精確度較低的位置會被排除。留空可包含所有可用位置。</string>
+    <string name="raw_accuracy_invalid">請輸入零或正數，或將此欄留空。</string>
+    <string name="raw_location_summary">%1$s 個位置 · 估算 %2$s 公里 · 已排除 %3$s 個</string>
+    <string name="raw_only_title">僅找到原始位置資料</string>
+    <string name="raw_only_message">此檔案包含原始位置資料，但沒有已處理的造訪記錄或行程。你可以繼續，但路線可能不準確或不完整，距離也只是估算值。\n\n若要獲得更好的結果，請開啟 Google 地圖，確認或還原時間軸，並確定其中顯示造訪記錄和行程。然後再次匯出時間軸，並在此應用程式中載入新檔案。</string>
+    <string name="open_google_maps">開啟 Google 地圖</string>
+    <string name="continue_with_raw_data">使用原始資料繼續</string>
     <string name="choose_exact_dates">選擇開始和結束日期</string>
     <string name="exact_date_range">%1$s – %2$s</string>
     <string name="delete_all_videos">刪除所有影片</string>

@@ -33,7 +33,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="@string/about_and_privacy" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
-        <TextView android:id="@+id/versionText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:gravity="center_horizontal" android:textAppearance="?attr/textAppearanceBodyMedium" tools:text="Version 2.2.2 (21)" />
+        <TextView android:id="@+id/versionText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:gravity="center_horizontal" android:textAppearance="?attr/textAppearanceBodyMedium" tools:text="Version 2.2.3 (22)" />
         <TextView android:id="@+id/privacyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="@string/privacy_summary" android:textAppearance="?attr/textAppearanceBodySmall" />
         <com.google.android.material.button.MaterialButton android:id="@+id/privacyPolicyButton" style="@style/Widget.Material3.Button.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:maxLines="1" android:text="@string/privacy_policy" />
         <com.google.android.material.button.MaterialButton android:id="@+id/checkUpdatesButton" style="@style/Widget.Material3.Button.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:maxLines="1" android:text="@string/check_for_updates" />

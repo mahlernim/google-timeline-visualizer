@@ -96,6 +96,13 @@ input, select {
   font-size: 16px;
 }
 
+.field-help {
+  color: #7b6570;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
 .status { margin: 12px 0 0; font-size: 14px; }
@@ -165,6 +172,22 @@ video {
 progress { width: 100%; height: 8px; margin-top: 14px; accent-color: #e90064; }
 .error { margin: 14px 0 0; color: #a4002f; font-weight: 650; }
 .hidden { display: none !important; }
+
+dialog {
+  width: min(520px, calc(100% - 32px));
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  color: #24191d;
+  background: white;
+  box-shadow: 0 24px 80px rgba(36, 25, 29, 0.24);
+}
+
+dialog::backdrop { background: rgba(36, 25, 29, 0.46); }
+.dialog-card { padding: 24px; }
+.dialog-card p { font-size: 14px; }
+.dialog-actions { display: grid; gap: 10px; margin-top: 20px; }
+.dialog-actions button { width: 100%; }
 
 footer { padding: 12px 8px; text-align: center; }
 footer p { margin-bottom: 5px; font-size: 12px; }

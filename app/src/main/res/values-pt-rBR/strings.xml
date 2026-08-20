@@ -25,7 +25,7 @@
     <string name="import_failed_detail">Este arquivo não pôde ser lido. Selecione uma exportação JSON Timeline compatível.</string>
     <string name="timeline_error_malformed">Este arquivo não contém um JSON válido ou completo.</string>
     <string name="timeline_error_legacy">Este é um formato antigo do Google Takeout. Exporte os dados do Timeline pelo telefone.</string>
-    <string name="timeline_error_raw_only">Esta exportação contém sinais brutos, mas não contém viagens reconstruídas do Timeline.</string>
+    <string name="timeline_error_raw_only">Este arquivo não contém visitas, trajetos nem localizações brutas que possam ser usados.</string>
     <string name="timeline_error_no_locations">Esta exportação do Timeline não contém dados de localização. Talvez o Timeline não estivesse ativado e o Google não tivesse dados para exportar.</string>
     <string name="remembered_timeline_unavailable">O Timeline usado anteriormente não está mais disponível.</string>
     <string name="choose_timeline_again">Escolha o arquivo Timeline.json novamente.</string>
@@ -201,6 +201,16 @@
     <string name="restore_advanced_defaults">Restaurar padrões</string>
     <string name="advanced_defaults_restored">Configurações avançadas restauradas</string>
     <string name="use_exact_dates">Selecionar datas exatas</string>
+    <string name="use_raw_location_data">Usar dados de localização brutos</string>
+    <string name="raw_location_description">Usa estimativas de localização recentes não processadas. O ruído é reduzido, mas a rota e a distância ainda podem ser imprecisas.</string>
+    <string name="raw_accuracy_limit">Limite de precisão (metros)</string>
+    <string name="raw_accuracy_helper">Locais menos precisos são excluídos. Deixe em branco para incluir todos os locais utilizáveis.</string>
+    <string name="raw_accuracy_invalid">Digite zero ou um número positivo, ou deixe em branco.</string>
+    <string name="raw_location_summary">%1$s locais · %2$s km estimados · %3$s excluídos</string>
+    <string name="raw_only_title">Apenas dados de localização brutos encontrados</string>
+    <string name="raw_only_message">Este arquivo contém dados de localização brutos, mas não contém visitas ou trajetos processados. Você pode continuar, mas a rota pode ficar imprecisa ou incompleta, e a distância será apenas uma estimativa.\n\nPara obter resultados melhores, abra o Google Maps, confirme ou restaure sua Linha do tempo e verifique se as visitas e os trajetos aparecem. Depois, exporte a Linha do tempo novamente e carregue o novo arquivo neste app.</string>
+    <string name="open_google_maps">Abrir o Google Maps</string>
+    <string name="continue_with_raw_data">Continuar com dados brutos</string>
     <string name="choose_exact_dates">Selecione uma data de início e término</string>
     <string name="exact_date_range">%1$s – %2$s</string>
     <string name="delete_all_videos">Excluir todos os vídeos</string>

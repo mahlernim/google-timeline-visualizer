@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.2.3
+
+- Recognize raw location records that may accompany or replace processed Timeline visits and trips.
+- Warn before using a raw-only export and offer to open Google Maps so the user can restore or confirm Timeline before exporting again.
+- Keep raw location processing optional when processed visits and trips are available.
+- Reduce raw-data noise with a configurable accuracy limit, stationary uncertainty collapse, and short impossible-jump rejection without averaging coordinates.
+- Mark raw-data distance as an estimate and report excluded raw points.
+- Add the fallback, controls, and warning to Android and the web app.
+- Translate the Android experience in all nine supported app languages.
+- Credit `@PeaShooterR` for the raw location import mode contributed in PR #84.
+- Set Android version code 22 and version name 2.2.3.
+
 ## 2.2.2
 
 - Follow the Android system setting with matching light and dark app interfaces.

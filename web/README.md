@@ -45,7 +45,8 @@ show a visible warning.
 
 The current implementation supports the complete private browser path.
 
-1. Load current direct-array or older `semanticSegments` Timeline JSON.
+1. Load current direct-array or older `semanticSegments` Timeline JSON, with an
+   optional warned fallback for raw-only location exports.
    A built-in fictional journey is available for privacy-safe device testing.
 2. Read absolute path timestamps or current minute offsets from segment start.
    When timezone data is absent, preserve the exported route order and recorded

@@ -3,8 +3,10 @@ import {
   availableMonths,
   localDateKey,
   parseCoordinate,
+  parseRawSignalsJson,
   parseTimelineJson,
   pointDateKey,
+  processRawSignals,
   selectDateRange,
   selectRange,
   TimelineParseError,
@@ -21,6 +23,38 @@ describe('parseCoordinate', () => {
   it('rejects invalid coordinates', () => {
     expect(parseCoordinate('91,127')).toBeNull();
     expect(parseCoordinate('not a coordinate')).toBeNull();
+  });
+});
+
+describe('raw location data', () => {
+  it('parses position records and keeps the most accurate duplicate', () => {
+    const points = parseRawSignalsJson({
+      rawSignals: [
+        { position: { LatLng: '37.1,127.1', timestamp: '2026-02-01T00:00:00Z', accuracyMeters: 20 } },
+        { position: { latLng: '37.1,127.1', timestamp: '2026-02-01T00:00:00Z', accuracyMeters: '10' } },
+        { wifiScan: { timestamp: '2026-02-01T00:01:00Z' } },
+      ],
+    });
+
+    expect(points).toHaveLength(1);
+    expect(points[0].accuracyMeters).toBe(10);
+  });
+
+  it('filters poor accuracy, stationary jitter, and a short impossible spike', () => {
+    const points = parseRawSignalsJson({
+      rawSignals: [
+        { position: { LatLng: '37,127', timestamp: '2026-02-01T00:00:00Z', accuracyMeters: 10 } },
+        { position: { LatLng: '38,128', timestamp: '2026-02-01T00:01:00Z', accuracyMeters: 10 } },
+        { position: { LatLng: '37.0001,127.0001', timestamp: '2026-02-01T00:02:00Z', accuracyMeters: 10 } },
+        { position: { LatLng: '37.01,127.01', timestamp: '2026-02-01T00:04:00Z', accuracyMeters: 150 } },
+        { position: { LatLng: '37.1,127.1', timestamp: '2026-02-01T01:00:00Z', accuracyMeters: 10 } },
+      ],
+    });
+    const result = processRawSignals(points, 100);
+
+    expect(result.points).toHaveLength(2);
+    expect(result.rejectedCount).toBe(3);
+    expect(result.discontinuityCount).toBe(1);
   });
 });
 

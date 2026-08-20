@@ -5,12 +5,15 @@ import { drawFrame, prepareJourney } from './renderer';
 import {
   availableMonths,
   localDateKey,
+  parseRawSignalsJson,
   parseTimelineJson,
   pointDateKey,
+  processRawSignals,
   selectDateRange,
   selectRange,
   TimelineParseError,
 } from './timeline';
+import type { RawSignalPoint, RawSignalProcessingResult } from './timeline';
 import type { CameraMovement, GeoPoint, MonthOption, PreparedJourney } from './types';
 import { canCreateMp4, createJourneyMp4 } from './video';
 
@@ -26,6 +29,12 @@ const fileStatus = element<HTMLParagraphElement>('file-status');
 const compatibilityStatus = element<HTMLParagraphElement>('compatibility-status');
 const settingsCard = element<HTMLElement>('settings-card');
 const exactDateToggle = element<HTMLInputElement>('exact-date-toggle');
+const periodControls = element<HTMLElement>('period-controls');
+const rawSignalsRow = element<HTMLElement>('raw-signals-row');
+const rawSignalsToggle = element<HTMLInputElement>('raw-signals-toggle');
+const rawSignalsDescription = element<HTMLElement>('raw-signals-description');
+const rawAccuracyField = element<HTMLElement>('raw-accuracy-field');
+const rawAccuracyLimit = element<HTMLInputElement>('raw-accuracy-limit');
 const monthRangeFields = element<HTMLElement>('month-range-fields');
 const exactDateFields = element<HTMLElement>('exact-date-fields');
 const startSelect = element<HTMLSelectElement>('start-month');
@@ -50,12 +59,19 @@ const resultVideo = element<HTMLVideoElement>('result-video');
 const resultActions = element<HTMLElement>('result-actions');
 const shareButton = element<HTMLButtonElement>('share-button');
 const downloadLink = element<HTMLAnchorElement>('download-link');
+const rawOnlyDialog = element<HTMLDialogElement>('raw-only-dialog');
+const openGoogleMapsButton = element<HTMLButtonElement>('open-google-maps');
+const continueRawDataButton = element<HTMLButtonElement>('continue-raw-data');
 
 if (import.meta.env.VITE_PREVIEW === 'true') {
   element<HTMLElement>('preview-banner').classList.remove('hidden');
 }
 
 let allPoints: GeoPoint[] = [];
+let semanticPoints: GeoPoint[] = [];
+let rawSignalPoints: RawSignalPoint[] = [];
+let rawSignalProcessing: RawSignalProcessingResult | null = null;
+let pendingRawOnlyImport: { data: unknown; sourceName: string } | null = null;
 let months: MonthOption[] = [];
 let prepared: PreparedJourney | null = null;
 let selectedSignature = '';
@@ -82,11 +98,26 @@ function populateMonths(select: HTMLSelectElement, options: MonthOption[]): void
   select.replaceChildren(...options.map(({ key, label }) => new Option(label, key)));
 }
 
-function currentPoints(): GeoPoint[] {
-  if (exactDateToggle.checked) {
-    return selectDateRange(allPoints, startDateInput.value, endDateInput.value);
+function rebuildRawSignalProcessing(): boolean {
+  const trimmed = rawAccuracyLimit.value.trim();
+  const limit = trimmed === '' ? null : Number(trimmed);
+  if (limit !== null && (!Number.isFinite(limit) || limit < 0)) {
+    setSettingsError('Enter a non-negative accuracy limit, or leave it blank.');
+    rawAccuracyLimit.focus();
+    return false;
   }
-  return selectRange(allPoints, startSelect.value, endSelect.value);
+  rawSignalProcessing = processRawSignals(rawSignalPoints, limit);
+  return true;
+}
+
+function currentPoints(): GeoPoint[] {
+  if (rawSignalsToggle.checked) {
+    return rebuildRawSignalProcessing() ? rawSignalProcessing?.points ?? [] : [];
+  }
+  if (exactDateToggle.checked) {
+    return selectDateRange(semanticPoints, startDateInput.value, endDateInput.value);
+  }
+  return selectRange(semanticPoints, startSelect.value, endSelect.value);
 }
 
 function formatInputDate(value: string): string {
@@ -95,6 +126,7 @@ function formatInputDate(value: string): string {
 }
 
 function currentPeriodLabel(): string {
+  if (rawSignalsToggle.checked) return 'Raw location data';
   if (exactDateToggle.checked) {
     const start = formatInputDate(startDateInput.value);
     const end = formatInputDate(endDateInput.value);
@@ -106,6 +138,7 @@ function currentPeriodLabel(): string {
 }
 
 function currentRangeSignature(): string {
+  if (rawSignalsToggle.checked) return `raw:${rawAccuracyLimit.value.trim()}`;
   return exactDateToggle.checked
     ? `dates:${startDateInput.value}:${endDateInput.value}`
     : `months:${startSelect.value}:${endSelect.value}`;
@@ -132,9 +165,10 @@ function refreshActionAvailability(points = currentPoints()): void {
 
 function updateSelection(): void {
   cancelAnimationFrame(previewAnimation);
-  if (exactDateToggle.checked) {
+  setSettingsError(null);
+  if (!rawSignalsToggle.checked && exactDateToggle.checked) {
     if (startDateInput.value > endDateInput.value) endDateInput.value = startDateInput.value;
-  } else if (startSelect.value > endSelect.value) {
+  } else if (!rawSignalsToggle.checked && startSelect.value > endSelect.value) {
     endSelect.value = startSelect.value;
   }
 
@@ -147,11 +181,14 @@ function updateSelection(): void {
   } else if (distanceKm <= 0) {
     selectionSummary.textContent = `${points.length.toLocaleString()} location points · No movement`;
   } else {
-    selectionSummary.textContent = `${points.length.toLocaleString()} location points · About ${Math.round(distanceKm).toLocaleString()} km`;
+    const estimate = rawSignalsToggle.checked ? 'Estimated ' : 'About ';
+    const ignored = rawSignalsToggle.checked && rawSignalProcessing?.rejectedCount
+      ? ` · ${rawSignalProcessing.rejectedCount.toLocaleString()} noisy or inaccurate points ignored`
+      : '';
+    selectionSummary.textContent = `${points.length.toLocaleString()} location points · ${estimate}${Math.round(distanceKm).toLocaleString()} km${ignored}`;
   }
   prepared = null;
   selectedSignature = '';
-  setSettingsError(null);
   refreshActionAvailability(points);
 }
 
@@ -193,8 +230,14 @@ function parseTimelineText(text: string): unknown {
   }
 }
 
-function applyTimeline(data: unknown, sourceName: string): void {
-  allPoints = parseTimelineJson(data);
+function applyTimeline(data: unknown, sourceName: string, useRawOnly = false): void {
+  rawSignalPoints = parseRawSignalsJson(data);
+  rawSignalProcessing = processRawSignals(rawSignalPoints, Number(rawAccuracyLimit.value));
+  semanticPoints = useRawOnly ? [] : parseTimelineJson(data);
+  allPoints = useRawOnly ? rawSignalProcessing.points : semanticPoints;
+  if (allPoints.length === 0) {
+    throw new TimelineParseError('no-usable-locations', 'This Timeline export contains no usable location points.');
+  }
   months = availableMonths(allPoints);
   populateMonths(startSelect, months);
   populateMonths(endSelect, months);
@@ -210,6 +253,11 @@ function applyTimeline(data: unknown, sourceName: string): void {
   startDateInput.value = firstDate;
   endDateInput.value = lastDate;
   exactDateToggle.checked = false;
+  rawSignalsToggle.checked = useRawOnly;
+  rawSignalsRow.classList.toggle('hidden', useRawOnly || rawSignalPoints.length === 0);
+  rawSignalsDescription.classList.toggle('hidden', !useRawOnly);
+  rawAccuracyField.classList.toggle('hidden', !useRawOnly);
+  periodControls.classList.toggle('hidden', useRawOnly);
   monthRangeFields.classList.remove('hidden');
   exactDateFields.classList.add('hidden');
   mapConsent.checked = false;
@@ -218,7 +266,8 @@ function applyTimeline(data: unknown, sourceName: string): void {
   const timezoneNote = allPoints.some((point) => point.timeZoneMissing)
     ? ' · Timezone missing, preserving exported route order'
     : '';
-  fileStatus.textContent = `${sourceName} · ${allPoints.length.toLocaleString()} valid points from ${months[0].label} to ${months.at(-1)?.label}${timezoneNote}`;
+  const sourceNote = useRawOnly ? ' · Raw location fallback' : '';
+  fileStatus.textContent = `${sourceName} · ${allPoints.length.toLocaleString()} valid points from ${months[0].label} to ${months.at(-1)?.label}${sourceNote}${timezoneNote}`;
   updateSelection();
 }
 
@@ -227,7 +276,18 @@ async function loadTimeline(file: File): Promise<void> {
   setSettingsError(null);
   fileStatus.textContent = `Reading ${file.name}…`;
   const data = parseTimelineText(await file.text());
-  applyTimeline(data, file.name);
+  try {
+    applyTimeline(data, file.name);
+  } catch (error) {
+    const rawPoints = parseRawSignalsJson(data);
+    if (error instanceof TimelineParseError && error.reason === 'raw-signals-only' && rawPoints.length > 0) {
+      pendingRawOnlyImport = { data, sourceName: file.name };
+      fileStatus.textContent = 'Only raw location data found';
+      rawOnlyDialog.showModal();
+      return;
+    }
+    throw error;
+  }
 }
 
 async function requestWakeLock(): Promise<WakeLockSentinel | null> {
@@ -278,8 +338,44 @@ exactDateToggle.addEventListener('change', () => {
   exactDateFields.classList.toggle('hidden', !exactDateToggle.checked);
   updateSelection();
 });
+rawSignalsToggle.addEventListener('change', () => {
+  periodControls.classList.toggle('hidden', rawSignalsToggle.checked);
+  rawSignalsDescription.classList.toggle('hidden', !rawSignalsToggle.checked);
+  rawAccuracyField.classList.toggle('hidden', !rawSignalsToggle.checked);
+  updateSelection();
+});
+rawAccuracyLimit.addEventListener('input', updateSelection);
 mapConsent.addEventListener('change', () => {
   if (mapConsent.checked) setSettingsError(null);
+});
+
+openGoogleMapsButton.addEventListener('click', () => {
+  window.open('https://www.google.com/maps', '_blank', 'noopener');
+  pendingRawOnlyImport = null;
+  rawOnlyDialog.close();
+  settingsCard.classList.add('hidden');
+  fileStatus.textContent = 'Export your Timeline again after visits and trips appear, then load the new file here.';
+});
+
+continueRawDataButton.addEventListener('click', () => {
+  const pending = pendingRawOnlyImport;
+  if (!pending) return;
+  pendingRawOnlyImport = null;
+  rawOnlyDialog.close();
+  try {
+    applyTimeline(pending.data, pending.sourceName, true);
+  } catch (error) {
+    settingsCard.classList.add('hidden');
+    fileStatus.textContent = 'Timeline could not be loaded';
+    setError(error instanceof Error ? error.message : 'The selected file could not be read.');
+    previewCard.classList.remove('hidden');
+  }
+});
+
+rawOnlyDialog.addEventListener('cancel', () => {
+  pendingRawOnlyImport = null;
+  settingsCard.classList.add('hidden');
+  fileStatus.textContent = 'Raw location import cancelled';
 });
 
 previewButton.addEventListener('click', async () => {
