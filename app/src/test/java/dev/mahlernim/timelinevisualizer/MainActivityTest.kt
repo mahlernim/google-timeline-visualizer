@@ -28,6 +28,9 @@ import dev.mahlernim.timelinevisualizer.export.VideoExportStatus
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
+import dev.mahlernim.timelinevisualizer.privacy.PrivacyArea
+import dev.mahlernim.timelinevisualizer.privacy.PrivacyAreaStore
+import dev.mahlernim.timelinevisualizer.ui.PrivacyMapView
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -60,7 +63,57 @@ class MainActivityTest {
         context.getSharedPreferences("display", Context.MODE_PRIVATE).edit().clear().commit()
         context.getSharedPreferences("camera-settings", Context.MODE_PRIVATE).edit().clear().commit()
         context.getSharedPreferences("timeline-filter-settings", Context.MODE_PRIVATE).edit().clear().commit()
+        PrivacyAreaStore(context).save(emptyList())
         timelineSourceStore.clearForTest()
+    }
+
+    @Test
+    fun hiddenLocationEditorUsesAnInteractiveFullTimelineMap() {
+        acceptPrivacyDisclosure()
+        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/seoul-bohol-sample.json"))
+        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
+        waitUntil { activity.findViewById<View>(R.id.editorGroup).visibility == View.VISIBLE }
+
+        activity.findViewById<View>(R.id.managePrivacyAreasButton).performClick()
+
+        val dialog = ShadowDialog.getLatestDialog()
+        assertTrue(dialog.isShowing)
+        assertEquals(
+            activity.getString(R.string.add_hidden_location),
+            dialog.findViewById<TextView>(R.id.privacyEditorTitle).text.toString(),
+        )
+        assertNotNull(dialog.findViewById<PrivacyMapView>(R.id.privacyMap))
+        assertEquals(View.VISIBLE, dialog.findViewById<View>(R.id.privacyZoomInButton).visibility)
+        assertEquals(View.VISIBLE, dialog.findViewById<View>(R.id.privacyFitRouteButton).visibility)
+    }
+
+    @Test
+    fun oneSavedMaskUsesSingularSummaryAndProtectedExportWarning() {
+        PrivacyAreaStore(context).save(
+            listOf(PrivacyArea("remote", "Remote", 0.0, 0.0, 1.0)),
+        )
+        acceptPrivacyDisclosure()
+        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/seoul-bohol-sample.json"))
+        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
+        waitUntil { activity.findViewById<View>(R.id.editorGroup).visibility == View.VISIBLE }
+        waitUntil {
+            drawActivity(activity)
+            activity.findViewById<View>(R.id.exportButton).isEnabled
+        }
+
+        assertEquals(
+            "1 hidden location · 0 Timeline points hidden · 0 route gaps",
+            activity.findViewById<TextView>(R.id.privacyAreasSummaryText).text.toString(),
+        )
+        activity.findViewById<View>(R.id.exportButton).performClick()
+
+        val dialog = ShadowDialog.getLatestDialog() as AlertDialog
+        assertEquals(
+            activity.getString(R.string.create_protected_video_title),
+            dialog.findViewById<TextView>(com.google.android.material.R.id.alertTitle)!!.text.toString(),
+        )
+        assertTrue(dialog.findViewById<TextView>(android.R.id.message)!!.text.contains("Timeline points hidden: 0"))
+        assertTrue(dialog.findViewById<TextView>(android.R.id.message)!!.text.contains("Route gaps: 0"))
     }
 
     @After
@@ -70,6 +123,7 @@ class MainActivityTest {
         VideoExportStateStore(context).clear()
         VideoExportCoordinator.resetForTest()
         timelineSourceStore.clearForTest()
+        PrivacyAreaStore(context).save(emptyList())
     }
 
     @Test

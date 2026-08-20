@@ -80,6 +80,41 @@
         <item quantity="other">%1$d minutes</item>
     </plurals>
     <string name="timeline_preview">Animated map preview of the selected period</string>
+    <string name="privacy_prototype_notice" translatable="false">Experimental prototype. Review the protected preview carefully before sharing.</string>
+    <string name="location_masking" translatable="false">Location masking</string>
+    <string name="hide_private_location" translatable="false">Hide a private location</string>
+    <string name="manage_hidden_locations" translatable="false">Manage hidden locations</string>
+    <string name="no_hidden_locations" translatable="false">No hidden locations. The exported route remains precise.</string>
+    <plurals name="hidden_locations_summary" translatable="false">
+        <item quantity="one">%1$d hidden location · %2$s</item>
+        <item quantity="other">%1$d hidden locations · %2$s</item>
+    </plurals>
+    <plurals name="hidden_route_effect_summary" translatable="false">
+        <item quantity="one">%1$d Timeline points hidden · %2$d route gap</item>
+        <item quantity="other">%1$d Timeline points hidden · %2$d route gaps</item>
+    </plurals>
+    <string name="add_hidden_location" translatable="false">Add hidden location</string>
+    <string name="edit_hidden_location" translatable="false">Edit hidden location</string>
+    <string name="privacy_map_instructions" translatable="false">Move the map under the crosshair. Pinch or use the buttons to zoom. The shaded circle is removed from protected previews and exports.</string>
+    <string name="privacy_map_description" translatable="false">Interactive map for selecting a hidden location. Drag to move and pinch to zoom.</string>
+    <string name="zoom_in" translatable="false">Zoom in</string>
+    <string name="zoom_out" translatable="false">Zoom out</string>
+    <string name="show_entire_timeline" translatable="false">Show entire Timeline</string>
+    <string name="location_name" translatable="false">Name, such as Home or Work</string>
+    <string name="protection_radius" translatable="false">Protection radius</string>
+    <string name="protection_radius_value" translatable="false">Protection radius: %1$.1f km</string>
+    <string name="private_location_default_name" translatable="false">Private location %1$d</string>
+    <string name="hidden_location_item" translatable="false">%1$s · %2$.1f km</string>
+    <string name="remove_all" translatable="false">Remove all</string>
+    <string name="remove_all_hidden_locations_title" translatable="false">Remove all hidden locations?</string>
+    <string name="remove_hidden_location_title" translatable="false">Remove %1$s?</string>
+    <string name="create_protected_video_title" translatable="false">Create protected video?</string>
+    <string name="create_protected_video_message" translatable="false">Selected masks: %2$d\nTimeline points hidden: %1$d\nRoute gaps: %3$d\n\nLocations outside those masks remain precise. Review the preview before sharing.</string>
+    <string name="create_protected_video" translatable="false">Create protected video</string>
+    <string name="review_preview" translatable="false">Review preview</string>
+    <string name="remove" translatable="false">Remove</string>
+    <string name="save" translatable="false">Save</string>
+    <string name="privacy_mask_removed_too_much" translatable="false">The selected areas hide every point in this period. Reduce a radius or remove an area.</string>
     <string name="playback_position">Timeline playback position</string>
     <string name="privacy_summary">Your Timeline file is never uploaded. CARTO receives requests for the map areas shown, which can reveal places. No analytics or account is used.</string>
     <string name="map_privacy_title">Before loading your Timeline</string>

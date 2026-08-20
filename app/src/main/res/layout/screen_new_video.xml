@@ -121,6 +121,15 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@color/prototype_notice_background"
+                android:padding="12dp"
+                android:text="@string/privacy_prototype_notice"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:maxLines="1"
                 android:text="@string/selected_period"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
@@ -198,6 +207,48 @@
 
             <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" app:cardCornerRadius="20dp" app:strokeWidth="0dp">
                 <dev.mahlernim.timelinevisualizer.ui.TimelineView android:id="@+id/timelineView" android:layout_width="match_parent" android:layout_height="360dp" android:background="@color/map_surface" android:contentDescription="@string/timeline_preview" android:minHeight="320dp" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/location_masking"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/privacyAreasSummaryText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:accessibilityLiveRegion="polite"
+                        android:text="@string/no_hidden_locations"
+                        android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/managePrivacyAreasButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:enabled="false"
+                        android:maxLines="1"
+                        android:text="@string/hide_private_location" />
+                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <SeekBar android:id="@+id/timelineSeek" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:contentDescription="@string/playback_position" android:max="1000" />

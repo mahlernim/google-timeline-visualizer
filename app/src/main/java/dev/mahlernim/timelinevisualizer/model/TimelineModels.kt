@@ -21,6 +21,7 @@ data class GeoPoint(
     val instant: Instant,
     val latitude: Double,
     val longitude: Double,
+    val startsNewRouteSegment: Boolean = false,
 ) {
     val year: Int get() = instant.atZone(ZoneId.systemDefault()).year
 }
@@ -159,6 +160,7 @@ data class JourneyPosition(
     val fromIndex: Int,
     val toIndex: Int,
     val segmentFraction: Double,
+    val isHiddenTransition: Boolean = false,
 )
 
 data class RouteSample(
@@ -308,6 +310,7 @@ data class Journey(
             from,
             to,
             fraction,
+            isHiddenTransition = points[to].startsNewRouteSegment,
         )
     }
 

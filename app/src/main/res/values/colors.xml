@@ -6,4 +6,5 @@
     <color name="surface_container">#F7EEF1</color>
     <color name="on_surface">#24191D</color>
     <color name="map_surface">#EEE8EA</color>
+    <color name="prototype_notice_background">#FFF0C2</color>
 </resources>

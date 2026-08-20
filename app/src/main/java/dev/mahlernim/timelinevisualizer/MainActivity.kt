@@ -2,6 +2,7 @@ package dev.mahlernim.timelinevisualizer
 
 import android.animation.ValueAnimator
 import android.Manifest
+import android.app.Dialog
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
@@ -15,6 +16,8 @@ import android.provider.Settings
 import android.text.InputType
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
+import android.view.Window
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.SeekBar
@@ -48,6 +51,7 @@ import dev.mahlernim.timelinevisualizer.data.TimelineParseReason
 import dev.mahlernim.timelinevisualizer.data.TimelineParser
 import dev.mahlernim.timelinevisualizer.data.TimelineSourceStore
 import dev.mahlernim.timelinevisualizer.databinding.ActivityMainBinding
+import dev.mahlernim.timelinevisualizer.databinding.DialogPrivacyAreaEditorBinding
 import dev.mahlernim.timelinevisualizer.databinding.ItemVideoBinding
 import dev.mahlernim.timelinevisualizer.databinding.ScreenNewVideoBinding
 import dev.mahlernim.timelinevisualizer.databinding.ScreenPlayerBinding
@@ -66,6 +70,10 @@ import dev.mahlernim.timelinevisualizer.model.Timeline
 import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
 import dev.mahlernim.timelinevisualizer.model.TitleTemplate
 import dev.mahlernim.timelinevisualizer.model.VideoDuration
+import dev.mahlernim.timelinevisualizer.privacy.PrivacyArea
+import dev.mahlernim.timelinevisualizer.privacy.PrivacyAreaStore
+import dev.mahlernim.timelinevisualizer.privacy.PrivacyMaskResult
+import dev.mahlernim.timelinevisualizer.privacy.TimelinePrivacyMasker
 import dev.mahlernim.timelinevisualizer.render.TimelineAnimation
 import dev.mahlernim.timelinevisualizer.render.RenderText
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
@@ -88,6 +96,7 @@ import java.text.DateFormat
 import java.text.NumberFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 import java.time.YearMonth
 import java.time.Instant
 import java.time.LocalDate
@@ -96,6 +105,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import androidx.core.util.Pair as AndroidPair
 import kotlin.math.ceil
+import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -104,7 +114,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var settingsScreen: ScreenSettingsBinding
     private lateinit var playerScreen: ScreenPlayerBinding
     private var timeline: Timeline? = null
+    private var filteredTimeline: Timeline? = null
     private var renderTimeline: Timeline? = null
+    private var privacyMaskResult = PrivacyMaskResult(emptyList(), 0, 0)
     private var journey: Journey? = null
     private var animation: ValueAnimator? = null
     private var pendingExport: VideoExportRequest? = null
@@ -129,6 +141,8 @@ class MainActivity : AppCompatActivity() {
     private val timelineSourceStore by lazy { TimelineSourceStore(applicationContext) }
     private val cameraSettingsPreferences by lazy { CameraSettingsPreferences(applicationContext) }
     private val locationFilterPreferences by lazy { LocationFilterPreferences(applicationContext) }
+    private val privacyAreaStore by lazy { PrivacyAreaStore(applicationContext) }
+    private var privacyAreas: List<PrivacyArea> = emptyList()
     private var cameraSettings = CameraSettings.DEFAULT
     private var locationFilterMode = LocationFilterMode.CONSERVATIVE
     private var routeDurationSeconds = VideoDuration.DEFAULT_SECONDS
@@ -218,10 +232,11 @@ class MainActivity : AppCompatActivity() {
         }
         editor.saveAsButton.setOnClickListener { lastVideoUri?.let(::chooseVideoCopyDestination) }
         editor.importButton.setOnClickListener { requestTimelineImport() }
+        editor.managePrivacyAreasButton.setOnClickListener { showPrivacyAreas() }
         editor.exportHelpButton.setOnClickListener { showExportHelp() }
         editor.restoreTimelineHelpLink.setOnClickListener { openRestoreGuide() }
         editor.playButton.setOnClickListener { togglePreview() }
-        editor.exportButton.setOnClickListener { chooseExportDestination() }
+        editor.exportButton.setOnClickListener { confirmProtectedExport() }
         editor.cancelExportButton.setOnClickListener { VideoExportService.cancel(applicationContext) }
         editor.shareButton.setOnClickListener { lastVideoUri?.let(::shareVideo) }
         editor.saveOverviewButton.setOnClickListener { lastVideoUri?.let(::chooseOverviewDestination) }
@@ -273,6 +288,8 @@ class MainActivity : AppCompatActivity() {
         editor.durationDropdown.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, durations))
         applyDuration(VideoDuration.DEFAULT_SECONDS)
         editor.timelineView.renderText = currentRenderText()
+        privacyAreas = privacyAreaStore.load()
+        updatePrivacyControls()
         editor.durationDropdown.setOnItemClickListener { _, _, position, _ ->
             if (position == VideoDuration.presets.size) {
                 showCustomDurationDialog()
@@ -510,10 +527,13 @@ class MainActivity : AppCompatActivity() {
                     prepareTimeline(loaded)
                 }
                 timeline = prepared.source
+                filteredTimeline = prepared.filtered
                 renderTimeline = prepared.render
+                privacyMaskResult = prepared.privacyMaskResult
                 pendingImportCompletionUri = uri
                 configureYears(loaded, prepared.initialJourney, prepared.ignoredCount)
                 editor.editorGroup.visibility = View.VISIBLE
+                updatePrivacyControls()
                 updateCameraPreparationUi()
                 if (!remembered) rememberTimelineSource(uri)
             } catch (cancelled: CancellationException) {
@@ -523,7 +543,10 @@ class MainActivity : AppCompatActivity() {
                 timelineSourceStore.completeImport(uri)
                 pendingImportCompletionUri = null
                 timeline = null
+                filteredTimeline = null
                 renderTimeline = null
+                privacyMaskResult = PrivacyMaskResult(emptyList(), 0, 0)
+                updatePrivacyControls()
                 if (remembered) {
                     timelineSourceStore.clear()
                     releaseUriAccess(uri)
@@ -538,7 +561,10 @@ class MainActivity : AppCompatActivity() {
                 timelineSourceStore.completeImport(uri)
                 pendingImportCompletionUri = null
                 timeline = null
+                filteredTimeline = null
                 renderTimeline = null
+                privacyMaskResult = PrivacyMaskResult(emptyList(), 0, 0)
+                updatePrivacyControls()
                 if (remembered) {
                     timelineSourceStore.clear()
                     releaseUriAccess(uri)
@@ -569,6 +595,7 @@ class MainActivity : AppCompatActivity() {
         if (loading) editor.loadingStageText.setText(stage)
         editor.importButton.isEnabled = !loading
         editor.exportHelpButton.isEnabled = !loading
+        editor.managePrivacyAreasButton.isEnabled = !loading && !exportingVideo && timeline != null
     }
 
     private fun rememberTimelineSource(uri: Uri) {
@@ -583,14 +610,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun prepareTimeline(loaded: Timeline): PreparedTimeline {
         val filtered = LocationOutlierFilter.filter(loaded.points, locationFilterMode)
-        val rendered = if (filtered.points === loaded.points) loaded else Timeline(filtered.points)
+        val filteredSource = if (filtered.points === loaded.points) loaded else Timeline(filtered.points)
+        val privacy = TimelinePrivacyMasker.mask(filtered.points, privacyAreas)
+        val rendered = if (privacy.points === filtered.points) filteredSource else Timeline(privacy.points)
         val initialPeriod = TimelinePeriod.sameYear(loaded.years.first())
         val initialJourney = rendered.forRange(initialPeriod)
+        val filteredInitialJourney = filteredSource.forRange(initialPeriod)
         return PreparedTimeline(
             source = loaded,
+            filtered = filteredSource,
             render = rendered,
             initialJourney = initialJourney,
-            ignoredCount = (loaded.countForRange(initialPeriod) - initialJourney.points.size).coerceAtLeast(0),
+            ignoredCount = (loaded.countForRange(initialPeriod) - filteredInitialJourney.points.size).coerceAtLeast(0),
+            privacyMaskResult = privacy,
         )
     }
 
@@ -635,7 +667,13 @@ class MainActivity : AppCompatActivity() {
         } else {
             timeline?.countForRange(period)
         }
-        val ignoredCount = ((unfilteredCount ?: selected.points.size) - selected.points.size).coerceAtLeast(0)
+        val filteredCount = if (exactDateRangeEnabled) {
+            filteredTimeline?.countForDateRange(selectedStartDate ?: return, selectedEndDate ?: return)
+        } else {
+            filteredTimeline?.countForRange(period)
+        }
+        val ignoredCount = ((unfilteredCount ?: filteredCount ?: selected.points.size) -
+            (filteredCount ?: selected.points.size)).coerceAtLeast(0)
         applySelectedJourney(selected, ignoredCount)
     }
 
@@ -647,6 +685,7 @@ class MainActivity : AppCompatActivity() {
         showProgress(0f)
         editor.videoReadyGroup.visibility = View.GONE
         editor.periodSummaryText.text = selectedPeriodSummary(selected, ignoredCount)
+        updatePrivacyControls()
         updateCameraPreparationUi()
     }
 
@@ -993,12 +1032,200 @@ class MainActivity : AppCompatActivity() {
     private fun rebuildRenderTimeline(reselect: Boolean) {
         val source = timeline
         if (source == null) {
+            filteredTimeline = null
             renderTimeline = null
+            privacyMaskResult = PrivacyMaskResult(emptyList(), 0, 0)
+            updatePrivacyControls()
             return
         }
         val result = LocationOutlierFilter.filter(source.points, locationFilterMode)
-        renderTimeline = Timeline(result.points)
+        val filtered = if (result.points === source.points) source else Timeline(result.points)
+        val privacy = TimelinePrivacyMasker.mask(result.points, privacyAreas)
+        filteredTimeline = filtered
+        privacyMaskResult = privacy
+        renderTimeline = if (privacy.points === result.points) filtered else Timeline(privacy.points)
         if (reselect && selectedStartYear != null && selectedEndYear != null) selectRange()
+        updatePrivacyControls()
+    }
+
+    private fun showPrivacyAreas() {
+        if (timeline == null) return
+        if (privacyAreas.isEmpty()) {
+            showPrivacyAreaEditor(null)
+            return
+        }
+        val labels = privacyAreas.map { getString(R.string.hidden_location_item, it.name, it.radiusKm) }.toTypedArray()
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.manage_hidden_locations)
+            .setItems(labels) { dialog, index ->
+                dialog.dismiss()
+                showPrivacyAreaEditor(privacyAreas[index])
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .setNeutralButton(R.string.remove_all) { _, _ -> confirmRemoveAllPrivacyAreas() }
+            .setPositiveButton(R.string.add_hidden_location) { _, _ -> showPrivacyAreaEditor(null) }
+            .show()
+    }
+
+    private fun showPrivacyAreaEditor(existing: PrivacyArea?) {
+        val sourcePoints = filteredTimeline?.points ?: timeline?.points ?: return
+        val areaBinding = DialogPrivacyAreaEditorBinding.inflate(layoutInflater)
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(areaBinding.root)
+        areaBinding.privacyEditorTitle.setText(
+            if (existing == null) R.string.add_hidden_location else R.string.edit_hidden_location,
+        )
+        areaBinding.privacyAreaNameInput.setText(existing?.name.orEmpty())
+        areaBinding.privacyMap.setTimeline(sourcePoints)
+        areaBinding.privacyMap.setPrivacyAreas(privacyAreas.filterNot { it.id == existing?.id })
+
+        var radiusKm = existing?.radiusKm ?: PrivacyArea.DEFAULT_RADIUS_KM
+        fun updateRadius() {
+            areaBinding.privacyRadiusText.text = getString(R.string.protection_radius_value, radiusKm)
+            areaBinding.privacyMap.candidateRadiusKm = radiusKm
+        }
+        areaBinding.privacyRadiusSeek.progress =
+            ((radiusKm - PrivacyArea.MIN_RADIUS_KM) / RADIUS_STEP_KM).roundToInt()
+        areaBinding.privacyRadiusSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                radiusKm = (PrivacyArea.MIN_RADIUS_KM + progress * RADIUS_STEP_KM)
+                    .coerceAtMost(PrivacyArea.MAX_RADIUS_KM)
+                updateRadius()
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+        })
+        updateRadius()
+
+        areaBinding.privacyZoomInButton.setOnClickListener { areaBinding.privacyMap.zoomIn() }
+        areaBinding.privacyZoomOutButton.setOnClickListener { areaBinding.privacyMap.zoomOut() }
+        areaBinding.privacyFitRouteButton.setOnClickListener { areaBinding.privacyMap.fitTimeline() }
+        areaBinding.privacyCancelButton.setOnClickListener { dialog.dismiss() }
+        areaBinding.privacySaveButton.setOnClickListener {
+            val center = areaBinding.privacyMap.selectedPoint()
+            val fallbackIndex = if (existing == null) privacyAreas.size + 1 else privacyAreas.indexOf(existing) + 1
+            val name = areaBinding.privacyAreaNameInput.text?.toString()?.trim().orEmpty()
+                .ifBlank { getString(R.string.private_location_default_name, fallbackIndex.coerceAtLeast(1)) }
+            val saved = PrivacyArea(
+                id = existing?.id ?: UUID.randomUUID().toString(),
+                name = name,
+                latitude = center.latitude,
+                longitude = center.longitude,
+                radiusKm = radiusKm,
+            )
+            val updated = if (existing == null) {
+                privacyAreas + saved
+            } else {
+                privacyAreas.map { if (it.id == existing.id) saved else it }
+            }
+            applyPrivacyAreas(updated)
+            dialog.dismiss()
+        }
+        if (existing != null) {
+            areaBinding.privacyDeleteButton.visibility = View.VISIBLE
+            areaBinding.privacyDeleteButton.setOnClickListener {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle(getString(R.string.remove_hidden_location_title, existing.name))
+                    .setNegativeButton(R.string.cancel, null)
+                    .setPositiveButton(R.string.remove) { _, _ ->
+                        applyPrivacyAreas(privacyAreas.filterNot { it.id == existing.id })
+                        dialog.dismiss()
+                    }
+                    .show()
+            }
+        }
+
+        dialog.setOnShowListener {
+            dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            if (existing != null) areaBinding.privacyMap.post { areaBinding.privacyMap.focusOn(existing) }
+        }
+        dialog.show()
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+    }
+
+    private fun confirmRemoveAllPrivacyAreas() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.remove_all_hidden_locations_title)
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.remove_all) { _, _ -> applyPrivacyAreas(emptyList()) }
+            .show()
+    }
+
+    private fun applyPrivacyAreas(updated: List<PrivacyArea>) {
+        privacyAreas = updated
+        privacyAreaStore.save(updated)
+        rebuildRenderTimeline(reselect = true)
+        val filteredSelected = currentFilteredJourney()
+        if (
+            updated.isNotEmpty() &&
+            filteredSelected != null &&
+            filteredSelected.points.size >= 2 &&
+            (journey?.points?.size ?: 0) < 2
+        ) {
+            Snackbar.make(binding.root, R.string.privacy_mask_removed_too_much, Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    private fun currentFilteredJourney(): Journey? {
+        val filtered = filteredTimeline ?: return null
+        val period = currentPeriod() ?: return null
+        return if (exactDateRangeEnabled) {
+            filtered.forDateRange(selectedStartDate ?: return null, selectedEndDate ?: return null)
+        } else {
+            filtered.forRange(period)
+        }
+    }
+
+    private fun selectedPrivacyMaskResult(): PrivacyMaskResult = currentFilteredJourney()?.let {
+        TimelinePrivacyMasker.mask(it.points, privacyAreas)
+    } ?: privacyMaskResult
+
+    private fun updatePrivacyControls() {
+        editor.managePrivacyAreasButton.isEnabled = timeline != null && !exportingVideo &&
+            editor.loadingGroup.visibility != View.VISIBLE
+        editor.managePrivacyAreasButton.setText(
+            if (privacyAreas.isEmpty()) R.string.hide_private_location else R.string.manage_hidden_locations,
+        )
+        editor.privacyAreasSummaryText.text = if (privacyAreas.isEmpty()) {
+            getString(R.string.no_hidden_locations)
+        } else {
+            val effect = selectedPrivacyMaskResult()
+            val effectSummary = resources.getQuantityString(
+                R.plurals.hidden_route_effect_summary,
+                effect.hiddenIntervalCount,
+                effect.hiddenPointCount,
+                effect.hiddenIntervalCount,
+            )
+            resources.getQuantityString(
+                R.plurals.hidden_locations_summary,
+                privacyAreas.size,
+                privacyAreas.size,
+                effectSummary,
+            )
+        }
+    }
+
+    private fun confirmProtectedExport() {
+        if (privacyAreas.isEmpty()) {
+            chooseExportDestination()
+            return
+        }
+        val effect = selectedPrivacyMaskResult()
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.create_protected_video_title)
+            .setMessage(
+                getString(
+                    R.string.create_protected_video_message,
+                    effect.hiddenPointCount,
+                    privacyAreas.size,
+                    effect.hiddenIntervalCount,
+                ),
+            )
+            .setNegativeButton(R.string.review_preview, null)
+            .setPositiveButton(R.string.create_protected_video) { _, _ -> chooseExportDestination() }
+            .show()
     }
 
     private fun updateAdvancedSettings(settings: CameraSettings) {
@@ -1267,6 +1494,7 @@ class MainActivity : AppCompatActivity() {
         editor.endMonthDropdown.isEnabled = !exporting
         editor.exactDateSwitch.isEnabled = !exporting
         editor.exactDateRangeButton.isEnabled = !exporting
+        editor.managePrivacyAreasButton.isEnabled = !exporting && timeline != null
         editor.ownerInput.isEnabled = !exporting
         editor.titleInput.isEnabled = !exporting
         settingsScreen.cameraMovementDropdown.isEnabled = !exporting
@@ -1785,13 +2013,16 @@ class MainActivity : AppCompatActivity() {
 
     private data class PreparedTimeline(
         val source: Timeline,
+        val filtered: Timeline,
         val render: Timeline,
         val initialJourney: Journey,
         val ignoredCount: Int,
+        val privacyMaskResult: PrivacyMaskResult,
     )
 
     companion object {
         private const val TITLE_UPDATE_DELAY_MS = 450L
+        private const val RADIUS_STEP_KM = 0.5
         private const val COLLAPSED_CREATION_COUNT = 3
         private const val MAP_PRIVACY_ACCEPTED = "map_privacy_accepted_v1"
         private const val NOTIFICATION_PROMPTED = "notification_prompted_v1"

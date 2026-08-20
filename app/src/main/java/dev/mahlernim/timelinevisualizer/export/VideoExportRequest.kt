@@ -53,6 +53,7 @@ class VideoExportRequestStore(context: Context) {
                 output.writeLong(point.instant.toEpochMilli())
                 output.writeDouble(point.latitude)
                 output.writeDouble(point.longitude)
+                output.writeBoolean(point.startsNewRouteSegment)
             }
         }
         if (!temporaryFile.renameTo(requestFile)) {
@@ -115,6 +116,7 @@ class VideoExportRequestStore(context: Context) {
                         instant = Instant.ofEpochMilli(input.readLong()),
                         latitude = input.readDouble(),
                         longitude = input.readDouble(),
+                        startsNewRouteSegment = version >= 5 && input.readBoolean(),
                     )
                 }
                 VideoExportRequest(
@@ -142,7 +144,7 @@ class VideoExportRequestStore(context: Context) {
     }
 
     companion object {
-        private const val CURRENT_FILE_VERSION = 4
+        private const val CURRENT_FILE_VERSION = 5
         private const val MAX_POINT_COUNT = 2_000_000
         private const val REQUEST_FILE = "pending-video-export.bin"
         private const val TEMPORARY_FILE = "pending-video-export.tmp"

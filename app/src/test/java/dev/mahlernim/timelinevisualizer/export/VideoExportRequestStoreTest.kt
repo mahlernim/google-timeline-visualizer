@@ -35,7 +35,12 @@ class VideoExportRequestStoreTest {
     fun restoresEverythingNeededToRestartVideoCreation() {
         val points = listOf(
             GeoPoint(Instant.parse("2026-01-02T03:04:05Z"), 37.5665, 126.9780),
-            GeoPoint(Instant.parse("2026-06-07T08:09:10Z"), 9.6500, 123.8500),
+            GeoPoint(
+                Instant.parse("2026-06-07T08:09:10Z"),
+                9.6500,
+                123.8500,
+                startsNewRouteSegment = true,
+            ),
         )
         val request = VideoExportRequest(
             outputUri = "content://documents/timeline.mp4",

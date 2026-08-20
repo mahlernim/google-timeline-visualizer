@@ -649,7 +649,11 @@ class TimelinePainter {
         }
 
         val head = currentScreen
-        val markerAlpha = (255 * (1f - easeOutCubic(frame.outroProgress))).toInt().coerceIn(0, 255)
+        val markerAlpha = if (current.isHiddenTransition) {
+            0
+        } else {
+            (255 * (1f - easeOutCubic(frame.outroProgress))).toInt().coerceIn(0, 255)
+        }
         val previousHeadAlpha = headPaint.alpha
         val previousRingAlpha = headRingPaint.alpha
         headPaint.alpha = markerAlpha
@@ -761,7 +765,8 @@ class TimelinePainter {
         val firstIndex = prepared.lowerBound(startDistance)
         val lastIndex = prepared.upperBound(endDistance)
         val path = Path()
-        path.moveTo(startScreen.first, startScreen.second)
+        var pathStarted = !start.isHiddenTransition
+        if (pathStarted) path.moveTo(startScreen.first, startScreen.second)
         var lastX = startScreen.first
         var lastY = startScreen.second
         var index = firstIndex
@@ -773,16 +778,30 @@ class TimelinePainter {
                 width,
                 height,
             )
-            val dx = screen.first - lastX
-            val dy = screen.second - lastY
-            if (dx * dx + dy * dy >= MIN_ROUTE_PIXEL_SPACING * MIN_ROUTE_PIXEL_SPACING) {
+            if (prepared.isHiddenTransitionAt(index)) {
+                pathStarted = false
+            } else if (!pathStarted) {
+                path.moveTo(screen.first, screen.second)
+                lastX = screen.first
+                lastY = screen.second
+                pathStarted = true
+            } else {
+                val dx = screen.first - lastX
+                val dy = screen.second - lastY
+                if (dx * dx + dy * dy < MIN_ROUTE_PIXEL_SPACING * MIN_ROUTE_PIXEL_SPACING) {
+                    index++
+                    continue
+                }
                 path.lineTo(screen.first, screen.second)
                 lastX = screen.first
                 lastY = screen.second
             }
             index++
         }
-        path.lineTo(endScreen.first, endScreen.second)
+        if (!end.isHiddenTransition) {
+            if (pathStarted) path.lineTo(endScreen.first, endScreen.second)
+            else path.moveTo(endScreen.first, endScreen.second)
+        }
         val previousAlpha = paint.alpha
         paint.alpha = (previousAlpha * alphaScale / 255f).toInt().coerceIn(0, 255)
         canvas.drawPath(path, paint)
@@ -838,6 +857,12 @@ class TimelinePainter {
             val point = MutableWorldPoint()
             fillWorldPoint(index, point)
             return WorldPoint(point.x, point.y)
+        }
+
+        fun isHiddenTransitionAt(index: Int): Boolean {
+            val location = MutableRenderSampleLocation()
+            return journey.fillRenderSampleLocation(index, location) &&
+                journey.points[location.toPointIndex].startsNewRouteSegment
         }
 
         private fun fillWorldPoint(index: Int, point: MutableWorldPoint) {
