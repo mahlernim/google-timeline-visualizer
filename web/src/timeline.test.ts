@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   availableMonths,
+  filterRawSignalPoints,
   localDateKey,
   parseCoordinate,
+  parseRawSignalsJson,
   parseTimelineJson,
   pointDateKey,
   selectDateRange,
@@ -21,6 +23,23 @@ describe('parseCoordinate', () => {
   it('rejects invalid coordinates', () => {
     expect(parseCoordinate('91,127')).toBeNull();
     expect(parseCoordinate('not a coordinate')).toBeNull();
+  });
+});
+
+describe('parseRawSignalsJson', () => {
+  it('uses accurate positions and ignores non-position signals', () => {
+    const points = parseRawSignalsJson({
+      rawSignals: [
+        { position: { LatLng: '37.1,127.1', timestamp: '2026-02-01T00:00:00Z', accuracyMeters: 20 } },
+        { position: { LatLng: '37.2,127.2', timestamp: '2026-02-01T00:01:00Z', accuracyMeters: 101 } },
+        { activityRecord: { timestamp: '2026-02-01T00:02:00Z' } },
+      ],
+    });
+
+    expect(points).toHaveLength(2);
+    expect(points[0].latitude).toBe(37.1);
+    expect(filterRawSignalPoints(points, 100)).toHaveLength(1);
+    expect(filterRawSignalPoints(points, null)).toHaveLength(2);
   });
 });
 

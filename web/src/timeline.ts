@@ -62,6 +62,14 @@ interface ParsedTimelineSegment {
   points: GeoPoint[];
 }
 
+export interface RawSignalPoint extends GeoPoint {
+  accuracyMeters: number;
+}
+
+export function filterRawSignalPoints(points: RawSignalPoint[], maximumAccuracy: number | null): GeoPoint[] {
+  return points.filter((point) => maximumAccuracy === null || point.accuracyMeters <= maximumAccuracy);
+}
+
 const SEGMENT_DIRECTION_SIGNAL_MS = 36 * 60 * 60 * 1000;
 
 function parseInstant(value: unknown): ParsedInstant | null {
@@ -221,6 +229,30 @@ export function parseTimelineJson(data: unknown): GeoPoint[] {
     );
   }
   return normalized;
+}
+
+export function parseRawSignalsJson(data: unknown): RawSignalPoint[] {
+  if (!isObject(data) || !Array.isArray(data.rawSignals)) return [];
+  const unique = new Map<string, RawSignalPoint>();
+  for (const rawSignal of data.rawSignals) {
+    if (!isObject(rawSignal) || !isObject(rawSignal.position)) continue;
+    const position = rawSignal.position;
+    const accuracy = position.accuracyMeters;
+    if (typeof accuracy !== 'number' || !Number.isFinite(accuracy) || accuracy < 0) continue;
+    const parsedTime = parseInstant(position.timestamp);
+    const coordinate = parseCoordinate(position.LatLng ?? position.latLng);
+    if (!parsedTime || !coordinate) continue;
+    const point: RawSignalPoint = {
+      instant: parsedTime.instant,
+      latitude: coordinate[0],
+      longitude: coordinate[1],
+      recordedDate: parsedTime.recordedDate,
+      timeZoneMissing: parsedTime.timeZoneMissing,
+      accuracyMeters: accuracy,
+    };
+    unique.set(`${point.instant.getTime()}:${point.latitude}:${point.longitude}`, point);
+  }
+  return [...unique.values()].sort((a, b) => a.instant.getTime() - b.instant.getTime());
 }
 
 export function monthKey(date: Date): string {
