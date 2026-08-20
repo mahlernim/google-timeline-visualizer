@@ -192,6 +192,9 @@ class TimelineParser {
                         kept.latitude.toBits() == candidate.latitude.toBits() &&
                         kept.longitude.toBits() == candidate.longitude.toBits()
                     ) {
+                        if (candidate.isFlying && !kept.isFlying) {
+                            points[keptIndex] = kept.copy(isFlying = true)
+                        }
                         duplicate = true
                         break
                     }
@@ -326,6 +329,7 @@ class TimelineParser {
         var visitLocation: String? = null
         var activityStart: String? = null
         var activityEnd: String? = null
+        var isFlying = false
         var hasVisit = false
         var hasActivity = false
         val path = mutableListOf<TimedCoordinate>()
@@ -343,8 +347,9 @@ class TimelineParser {
                 "activity" -> {
                     hasActivity = true
                     val activity = readActivity(reader)
-                    activityStart = activity.first
-                    activityEnd = activity.second
+                    activityStart = activity.start
+                    activityEnd = activity.end
+                    isFlying = activity.type.equals(FLYING_ACTIVITY_TYPE, ignoreCase = true)
                 }
                 else -> reader.skipValue()
             }
@@ -359,14 +364,14 @@ class TimelineParser {
                 ?: parseOffsetInstant(startTime, endTime, timed.offsetMinutes)
             val coordinate = parseCoordinate(timed.coordinate)
             if (instant != null && coordinate != null) {
-                pathPoints += GeoPoint(instant, coordinate.first, coordinate.second)
+                pathPoints += GeoPoint(instant, coordinate.first, coordinate.second, isFlying)
             }
         }
 
         val semanticPoints = ArrayList<GeoPoint>(3)
         addPoint(semanticPoints, startInstant, visitLocation)
-        addPoint(semanticPoints, startInstant, activityStart)
-        addPoint(semanticPoints, endInstant, activityEnd)
+        addPoint(semanticPoints, startInstant, activityStart, isFlying)
+        addPoint(semanticPoints, endInstant, activityEnd, isFlying)
         val hasUsableSemanticRecord = (hasVisit || hasActivity) && semanticPoints.isNotEmpty()
 
         if (hasUsableSemanticRecord) {
@@ -435,23 +440,41 @@ class TimelineParser {
         return location
     }
 
-    private fun readActivity(reader: JsonReader): Pair<String?, String?> {
+    private fun readActivity(reader: JsonReader): ParsedActivity {
         if (reader.peek() != JsonToken.BEGIN_OBJECT) {
             reader.skipValue()
-            return null to null
+            return ParsedActivity()
         }
         var start: String? = null
         var end: String? = null
+        var directType: String? = null
+        var topCandidateType: String? = null
         reader.beginObject()
         while (reader.hasNext()) {
             when (reader.nextName()) {
                 "start" -> start = reader.readCoordinateValue()
                 "end" -> end = reader.readCoordinateValue()
+                "type" -> directType = reader.readStringOrNull()
+                "topCandidate" -> topCandidateType = readActivityType(reader)
                 else -> reader.skipValue()
             }
         }
         reader.endObject()
-        return start to end
+        return ParsedActivity(start, end, topCandidateType ?: directType)
+    }
+
+    private fun readActivityType(reader: JsonReader): String? {
+        if (reader.peek() != JsonToken.BEGIN_OBJECT) {
+            reader.skipValue()
+            return null
+        }
+        var type: String? = null
+        reader.beginObject()
+        while (reader.hasNext()) {
+            if (reader.nextName() == "type") type = reader.readStringOrNull() else reader.skipValue()
+        }
+        reader.endObject()
+        return type
     }
 
     private fun JsonReader.readCoordinateValue(): String? = when (peek()) {
@@ -510,10 +533,15 @@ class TimelineParser {
         }
     }
 
-    private fun addPoint(output: MutableList<GeoPoint>, instant: Instant?, rawCoordinate: String?) {
+    private fun addPoint(
+        output: MutableList<GeoPoint>,
+        instant: Instant?,
+        rawCoordinate: String?,
+        isFlying: Boolean = false,
+    ) {
         val coordinate = parseCoordinate(rawCoordinate)
         if (instant != null && coordinate != null) {
-            output += GeoPoint(instant, coordinate.first, coordinate.second)
+            output += GeoPoint(instant, coordinate.first, coordinate.second, isFlying)
         }
     }
 
@@ -566,6 +594,12 @@ class TimelineParser {
         val offsetMinutes: Long?,
     )
 
+    private data class ParsedActivity(
+        val start: String? = null,
+        val end: String? = null,
+        val type: String? = null,
+    )
+
     private data class TimeInterval(
         val start: Instant,
         val end: Instant,
@@ -582,6 +616,10 @@ class TimelineParser {
         val latitudeBits: Long,
         val longitudeBits: Long,
     )
+
+    private companion object {
+        const val FLYING_ACTIVITY_TYPE = "FLYING"
+    }
 }
 
 data class ParsedTimeline(

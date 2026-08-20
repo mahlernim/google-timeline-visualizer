@@ -128,6 +128,76 @@ class TimelineParserTest {
     }
 
     @Test
+    fun preservesFlyingTypeForActivityAndPathPoints() {
+        val timeline = parse(
+            """
+            [{
+              "startTime": "2025-03-05T01:00:00Z",
+              "endTime": "2025-03-05T08:00:00Z",
+              "timelinePath": [
+                {"point": "10.0,110.0", "time": "2025-03-05T04:00:00Z"}
+              ],
+              "activity": {
+                "start": {"latLng": "1.35,103.98"},
+                "end": {"latLng": "35.76,140.39"},
+                "topCandidate": {"type": "FLYING"}
+              }
+            }]
+            """.trimIndent(),
+        )
+
+        assertEquals(3, timeline.points.size)
+        assertTrue(timeline.points.all { it.isFlying })
+    }
+
+    @Test
+    fun duplicateFlightEndpointRetainsFlyingType() {
+        val timeline = parse(
+            """
+            [{
+              "startTime": "2025-03-05T01:00:00Z",
+              "visit": {"topCandidate": {"placeLocation": "1.35,103.98"}},
+              "activity": {
+                "start": "1.35,103.98",
+                "topCandidate": {"type": "FLYING"}
+              }
+            }]
+            """.trimIndent(),
+        )
+
+        assertEquals(1, timeline.points.size)
+        assertTrue(timeline.points.single().isFlying)
+    }
+
+    @Test
+    fun topCandidateTypeWinsRegardlessOfJsonFieldOrder() {
+        val timelines = listOf(
+            """
+            [{
+              "startTime": "2025-03-05T01:00:00Z",
+              "activity": {
+                "type": "WALKING",
+                "topCandidate": {"type": "FLYING"},
+                "start": "1.35,103.98"
+              }
+            }]
+            """.trimIndent(),
+            """
+            [{
+              "startTime": "2025-03-05T01:00:00Z",
+              "activity": {
+                "topCandidate": {"type": "FLYING"},
+                "type": "WALKING",
+                "start": "1.35,103.98"
+              }
+            }]
+            """.trimIndent(),
+        ).map(::parse)
+
+        assertTrue(timelines.all { it.points.single().isFlying })
+    }
+
+    @Test
     fun acceptsE7CoordinatesAndRemovesDuplicates() {
         val timeline = parse(
             """

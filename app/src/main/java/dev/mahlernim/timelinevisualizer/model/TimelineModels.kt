@@ -21,6 +21,7 @@ data class GeoPoint(
     val instant: Instant,
     val latitude: Double,
     val longitude: Double,
+    val isFlying: Boolean = false,
 ) {
     val year: Int get() = instant.atZone(ZoneId.systemDefault()).year
 }

@@ -33,6 +33,8 @@ import dev.mahlernim.timelinevisualizer.export.VideoExportStatus
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
+import dev.mahlernim.timelinevisualizer.privacy.PrivacyArea
+import dev.mahlernim.timelinevisualizer.privacy.PrivacyAreaStore
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 import dev.mahlernim.timelinevisualizer.render.DistanceUnit
 import dev.mahlernim.timelinevisualizer.render.DistanceUnitPreference
@@ -72,6 +74,7 @@ class MainActivityTest {
         context.getSharedPreferences("camera-settings", Context.MODE_PRIVATE).edit().clear().commit()
         context.getSharedPreferences("timeline-filter-settings", Context.MODE_PRIVATE).edit().clear().commit()
         context.getSharedPreferences("distance-unit-settings", Context.MODE_PRIVATE).edit().clear().commit()
+        context.getSharedPreferences("safe_sharing_areas", Context.MODE_PRIVATE).edit().clear().commit()
         timelineSourceStore.clearForTest()
     }
 
@@ -187,6 +190,44 @@ class MainActivityTest {
     }
 
     @Test
+    fun safeSharingRequiresALoadedTimeline() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.navigationCreate).performClick()
+
+        assertEquals(false, activity.findViewById<View>(R.id.safeSharingSwitch).isEnabled)
+        assertEquals(false, activity.findViewById<View>(R.id.safeSharingSwitch).isShown)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.privateAreaControls).visibility)
+    }
+
+    @Test
+    fun privateAreaButtonOpensMapEditorAndSavesNamedCircle() {
+        acceptPrivacyDisclosure()
+        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/seoul-bohol-sample.json"))
+        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
+        waitUntil {
+            activity.findViewById<View>(R.id.editorGroup).visibility == View.VISIBLE &&
+                activity.findViewById<View>(R.id.loadingGroup).visibility == View.GONE
+        }
+        activity.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(
+            R.id.safeSharingSwitch,
+        ).isChecked = true
+        waitUntil { activity.findViewById<View>(R.id.loadingGroup).visibility == View.GONE }
+
+        activity.findViewById<View>(R.id.privateAreasButton).performClick()
+        val dialog = ShadowDialog.getLatestDialog()
+        assertEquals(View.VISIBLE, dialog.findViewById<View>(R.id.privacyMap)!!.visibility)
+        dialog.findViewById<TextView>(R.id.privacyAreaNameInput)!!.text = "Home"
+        dialog.findViewById<View>(R.id.privacySaveButton)!!.performClick()
+
+        waitUntil { activity.findViewById<View>(R.id.loadingGroup).visibility == View.GONE }
+        assertTrue(activity.findViewById<TextView>(R.id.privateAreasSummaryText).text.contains("Home"))
+        assertEquals(
+            activity.getString(R.string.manage_private_areas),
+            activity.findViewById<MaterialButton>(R.id.privateAreasButton).text,
+        )
+    }
+
+    @Test
     @Config(sdk = [35], qualifiers = "ja-w360dp-h640dp-xxhdpi")
     fun restorationLinkFitsTheSmallestJapaneseLayout() {
         val activity = launchActivity()
@@ -240,6 +281,27 @@ class MainActivityTest {
         controller.pause().stop().destroy()
 
         assertEquals(VideoExportStatus.RUNNING, VideoExportStateStore(context).load().status)
+    }
+
+    @Test
+    fun runningExportDisablesPrivacyAndFilterChanges() {
+        acceptPrivacyDisclosure()
+        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/seoul-bohol-sample.json"))
+        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
+        waitUntil {
+            activity.findViewById<View>(R.id.editorGroup).visibility == View.VISIBLE &&
+                activity.findViewById<View>(R.id.loadingGroup).visibility == View.GONE
+        }
+
+        VideoExportCoordinator.publish(
+            context,
+            VideoExportSnapshot(status = VideoExportStatus.RUNNING, startedAtMillis = 123L),
+        )
+        waitUntil { activity.findViewById<View>(R.id.exportTrayCancelButton).visibility == View.VISIBLE }
+
+        assertEquals(false, activity.findViewById<View>(R.id.safeSharingSwitch).isEnabled)
+        assertEquals(false, activity.findViewById<View>(R.id.privateAreasButton).isEnabled)
+        assertEquals(false, activity.findViewById<View>(R.id.locationFilterDropdown).isEnabled)
     }
 
     @Test
@@ -406,6 +468,10 @@ class MainActivityTest {
         val dropdown = activity.findViewById<AutoCompleteTextView>(R.id.locationFilterDropdown)
         dropdown.onItemClickListener?.onItemClick(null, null, 1, 1L)
         activity.findViewById<View>(R.id.navigationCreate).performClick()
+        waitUntil {
+            activity.findViewById<View>(R.id.loadingGroup).visibility == View.GONE &&
+                summary.text.contains("3")
+        }
 
         assertTrue(
             !summary.text.contains(
@@ -413,6 +479,63 @@ class MainActivityTest {
             ),
         )
         assertTrue(summary.text.contains("3"))
+    }
+
+    @Test
+    fun togglingSafeSharingShowsProgressWhileTimelineRebuilds() {
+        acceptPrivacyDisclosure()
+        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/seoul-bohol-sample.json"))
+        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
+        waitUntil {
+            activity.findViewById<View>(R.id.editorGroup).visibility == View.VISIBLE &&
+                activity.findViewById<View>(R.id.loadingGroup).visibility == View.GONE
+        }
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.privateAreaControls).visibility)
+
+        val safeSharingSwitch = activity.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(
+            R.id.safeSharingSwitch,
+        )
+        assertEquals(true, safeSharingSwitch.isShown)
+        safeSharingSwitch.isChecked = true
+
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.privateAreaControls).visibility)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.loadingGroup).visibility)
+        assertEquals(false, activity.findViewById<View>(R.id.playButton).isEnabled)
+        assertEquals(
+            activity.getString(R.string.preparing_trips),
+            activity.findViewById<TextView>(R.id.loadingStageText).text.toString(),
+        )
+        waitUntil {
+            activity.findViewById<View>(R.id.loadingGroup).visibility == View.GONE &&
+                activity.findViewById<View>(R.id.playButton).isEnabled
+        }
+
+        safeSharingSwitch.isChecked = false
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.privateAreaControls).visibility)
+    }
+
+    @Test
+    fun timelineControlsStayDisabledForSinglePointJourneyAfterRebuild() {
+        acceptPrivacyDisclosure()
+        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/single-point-sample.json"))
+        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
+        waitUntil {
+            activity.findViewById<View>(R.id.editorGroup).visibility == View.VISIBLE &&
+                activity.findViewById<View>(R.id.loadingGroup).visibility == View.GONE
+        }
+
+        val safeSharingSwitch = activity.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(
+            R.id.safeSharingSwitch,
+        )
+        assertEquals(true, safeSharingSwitch.isEnabled)
+        assertEquals(false, activity.findViewById<View>(R.id.playButton).isEnabled)
+        assertEquals(false, activity.findViewById<View>(R.id.exportButton).isEnabled)
+
+        safeSharingSwitch.isChecked = true
+        waitUntil { activity.findViewById<View>(R.id.loadingGroup).visibility == View.GONE }
+
+        assertEquals(false, activity.findViewById<View>(R.id.playButton).isEnabled)
+        assertEquals(false, activity.findViewById<View>(R.id.exportButton).isEnabled)
     }
 
     @Test
@@ -842,6 +965,8 @@ class MainActivityTest {
     @Test
     fun rawOnlyTimelineRequiresWarningBeforeUsingEstimatedRoute() {
         acceptPrivacyDisclosure()
+        val privateArea = PrivacyArea("home", "Home", 37.5050, 127.0050, 5.0)
+        PrivacyAreaStore(context).save(listOf(privateArea))
         val source = File.createTempFile("raw-only-timeline", ".json", context.cacheDir)
         source.writeText(
             """
@@ -872,6 +997,13 @@ class MainActivityTest {
             assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.rawSignalsDescription).visibility)
             assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.rawAccuracyLayout).visibility)
             assertTrue(activity.findViewById<TextView>(R.id.periodSummaryText).text.contains("2"))
+
+            activity.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(
+                R.id.safeSharingSwitch,
+            ).isChecked = true
+            waitUntil { activity.findViewById<View>(R.id.loadingGroup).visibility == View.GONE }
+            val protected = activity.findViewById<TimelineView>(R.id.timelineView).journey!!.points
+            assertTrue(protected.all { it.latitude == privateArea.latitude && it.longitude == privateArea.longitude })
         } finally {
             source.delete()
         }

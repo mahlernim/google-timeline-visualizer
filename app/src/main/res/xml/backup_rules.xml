@@ -7,4 +7,5 @@
     <exclude domain="sharedpref" path="creations.xml" />
     <exclude domain="sharedpref" path="timeline_source.xml" />
     <exclude domain="sharedpref" path="video_export_state.xml" />
+    <exclude domain="sharedpref" path="safe_sharing_areas.xml" />
 </full-backup-content>

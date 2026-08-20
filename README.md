@@ -83,6 +83,8 @@ restore it directly.
 1. Open **Create video**, select **Choose file**, and choose your Timeline file.
 2. Choose a month range or use **Exact dates** for a trip lasting only a few days.
    The latest full year is selected by default, and ranges may cross year boundaries.
+   For public sharing, turn on **Safe sharing mode**, choose **Private areas**, and
+   draw circles around locations to protect before previewing or creating.
 3. Confirm the name and title template, then choose a preset or a custom journey
    duration from 10 through 300 seconds. The template is saved for next time and
    supports `{year}` and `{name}`. Durations over 60 seconds show a rendering-time
@@ -141,6 +143,19 @@ Timeline processing uses Conservative GPS outlier filtering by default. It ignor
 only isolated, implausible out-and-back coordinates, reports the number ignored,
 and keeps the original JSON file unchanged. Set the filter to Off to use every
 location from the selected file.
+
+Safe sharing mode lets each user draw named privacy circles directly on the route,
+with an independent radius from 0.5 to 50 km. Points inside a circle are moved to
+its selected center without removing their timestamps. When sparse data crosses a
+circle without a recorded point inside it, a center point is inserted to preserve
+route continuity. The selected center remains visible, so place it on a location
+that is safe to show rather than on an exact home or workplace address.
+
+Points outside selected areas remain unchanged. Segments identified as `FLYING` by
+the Timeline export are also left unchanged. Circle names, centers, and radii are
+stored only in app-private preferences and excluded from Android backup and device
+transfer. The original Timeline JSON is not changed. Preview the complete route
+before sharing it publicly.
 
 The app supports English, Korean, Japanese, Simplified Chinese, Traditional Chinese,
 Spanish, French, German, and Brazilian Portuguese. Choose any supported language in

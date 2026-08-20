@@ -5,7 +5,10 @@
 *.iml
 *.jks
 *.keystore
+*.apk
+*.aab
 Timeline.json
 *.mp4
 __pycache__/
 .pytest_cache/
+/local-fixtures/
