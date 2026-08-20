@@ -44,11 +44,22 @@
 
       <section id="settings-card" class="card hidden" aria-labelledby="settings-heading">
         <h2 id="settings-heading">Create your journey</h2>
-        <label class="checkbox-row">
-          <input id="exact-date-toggle" type="checkbox" />
-          <span>Select exact dates</span>
+        <label id="raw-signals-row" class="checkbox-row hidden">
+          <input id="raw-signals-toggle" type="checkbox" />
+          <span>Use raw GPS signals from the last month</span>
         </label>
-        <div id="month-range-fields" class="field-grid">
+        <p id="raw-signals-description" class="status hidden">A Timeline export usually includes raw GPS signals from approximately the month before the export date.</p>
+        <label id="raw-accuracy-field" class="hidden">
+          Accuracy limit (meters)
+          <input id="raw-accuracy-limit" type="number" min="0" step="1" inputmode="decimal" value="100" />
+          <span class="field-help">Signals whose accuracy value exceeds this limit are excluded. Leave blank to use all signals.</span>
+        </label>
+        <div id="period-controls">
+          <label class="checkbox-row">
+            <input id="exact-date-toggle" type="checkbox" />
+            <span>Select exact dates</span>
+          </label>
+          <div id="month-range-fields" class="field-grid">
           <label>
             From
             <select id="start-month"></select>
@@ -57,8 +68,8 @@
             To
             <select id="end-month"></select>
           </label>
-        </div>
-        <div id="exact-date-fields" class="field-grid hidden">
+          </div>
+          <div id="exact-date-fields" class="field-grid hidden">
           <label>
             Start date
             <input id="start-date" type="date" />
@@ -67,6 +78,7 @@
             End date
             <input id="end-date" type="date" />
           </label>
+          </div>
         </div>
         <label>
           Video title

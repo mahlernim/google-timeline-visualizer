@@ -193,6 +193,11 @@
     <string name="restore_advanced_defaults">初期設定に戻す</string>
     <string name="advanced_defaults_restored">詳細設定を初期値に戻しました</string>
     <string name="use_exact_dates">日付を指定</string>
+    <string name="use_raw_gps_signals">直近1か月の生のGPS信号を使用</string>
+    <string name="raw_gps_signals_description">タイムラインのエクスポートには通常、エクスポート日より前の約1か月分の生のGPS信号が含まれます。</string>
+    <string name="raw_gps_accuracy_limit">精度の上限（メートル）</string>
+    <string name="raw_gps_accuracy_helper">精度の低い信号は除外されます。すべて使用する場合は空欄にしてください。</string>
+    <string name="raw_signals_summary">位置 %1$s件 · 約%2$s km</string>
     <string name="choose_exact_dates">開始日と終了日を選択</string>
     <string name="exact_date_range">%1$s – %2$s</string>
     <string name="delete_all_videos">すべての動画を削除</string>

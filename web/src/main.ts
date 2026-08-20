@@ -4,14 +4,17 @@ import { cumulativeDistances } from './geo';
 import { drawFrame, prepareJourney } from './renderer';
 import {
   availableMonths,
+  filterRawSignalPoints,
   localDateKey,
   parseTimelineJson,
+  parseRawSignalsJson,
   pointDateKey,
   selectDateRange,
   selectRange,
   TimelineParseError,
 } from './timeline';
 import type { CameraMovement, GeoPoint, MonthOption, PreparedJourney } from './types';
+import type { RawSignalPoint } from './timeline';
 import { canCreateMp4, createJourneyMp4 } from './video';
 
 function element<T extends HTMLElement>(id: string): T {
@@ -26,6 +29,12 @@ const fileStatus = element<HTMLParagraphElement>('file-status');
 const compatibilityStatus = element<HTMLParagraphElement>('compatibility-status');
 const settingsCard = element<HTMLElement>('settings-card');
 const exactDateToggle = element<HTMLInputElement>('exact-date-toggle');
+const periodControls = element<HTMLElement>('period-controls');
+const rawSignalsRow = element<HTMLElement>('raw-signals-row');
+const rawSignalsToggle = element<HTMLInputElement>('raw-signals-toggle');
+const rawSignalsDescription = element<HTMLElement>('raw-signals-description');
+const rawAccuracyField = element<HTMLElement>('raw-accuracy-field');
+const rawAccuracyInput = element<HTMLInputElement>('raw-accuracy-limit');
 const monthRangeFields = element<HTMLElement>('month-range-fields');
 const exactDateFields = element<HTMLElement>('exact-date-fields');
 const startSelect = element<HTMLSelectElement>('start-month');
@@ -56,6 +65,7 @@ if (import.meta.env.VITE_PREVIEW === 'true') {
 }
 
 let allPoints: GeoPoint[] = [];
+let rawSignalPoints: RawSignalPoint[] = [];
 let months: MonthOption[] = [];
 let prepared: PreparedJourney | null = null;
 let selectedSignature = '';
@@ -83,6 +93,11 @@ function populateMonths(select: HTMLSelectElement, options: MonthOption[]): void
 }
 
 function currentPoints(): GeoPoint[] {
+  if (rawSignalsToggle.checked) {
+    const rawLimit = rawAccuracyInput.value.trim();
+    const maximumAccuracy = rawLimit === '' ? null : Number(rawLimit);
+    return filterRawSignalPoints(rawSignalPoints, maximumAccuracy);
+  }
   if (exactDateToggle.checked) {
     return selectDateRange(allPoints, startDateInput.value, endDateInput.value);
   }
@@ -95,6 +110,7 @@ function formatInputDate(value: string): string {
 }
 
 function currentPeriodLabel(): string {
+  if (rawSignalsToggle.checked) return 'Raw GPS signals from the last month';
   if (exactDateToggle.checked) {
     const start = formatInputDate(startDateInput.value);
     const end = formatInputDate(endDateInput.value);
@@ -106,6 +122,7 @@ function currentPeriodLabel(): string {
 }
 
 function currentRangeSignature(): string {
+  if (rawSignalsToggle.checked) return 'raw-signals';
   return exactDateToggle.checked
     ? `dates:${startDateInput.value}:${endDateInput.value}`
     : `months:${startSelect.value}:${endSelect.value}`;
@@ -195,6 +212,7 @@ function parseTimelineText(text: string): unknown {
 
 function applyTimeline(data: unknown, sourceName: string): void {
   allPoints = parseTimelineJson(data);
+  rawSignalPoints = parseRawSignalsJson(data);
   months = availableMonths(allPoints);
   populateMonths(startSelect, months);
   populateMonths(endSelect, months);
@@ -210,6 +228,12 @@ function applyTimeline(data: unknown, sourceName: string): void {
   startDateInput.value = firstDate;
   endDateInput.value = lastDate;
   exactDateToggle.checked = false;
+  rawSignalsToggle.checked = false;
+  rawAccuracyInput.value = '100';
+  rawSignalsRow.classList.toggle('hidden', rawSignalPoints.length === 0);
+  rawSignalsDescription.classList.add('hidden');
+  rawAccuracyField.classList.add('hidden');
+  periodControls.classList.remove('hidden');
   monthRangeFields.classList.remove('hidden');
   exactDateFields.classList.add('hidden');
   mapConsent.checked = false;
@@ -278,6 +302,13 @@ exactDateToggle.addEventListener('change', () => {
   exactDateFields.classList.toggle('hidden', !exactDateToggle.checked);
   updateSelection();
 });
+rawSignalsToggle.addEventListener('change', () => {
+  periodControls.classList.toggle('hidden', rawSignalsToggle.checked);
+  rawSignalsDescription.classList.toggle('hidden', !rawSignalsToggle.checked);
+  rawAccuracyField.classList.toggle('hidden', !rawSignalsToggle.checked);
+  updateSelection();
+});
+rawAccuracyInput.addEventListener('input', updateSelection);
 mapConsent.addEventListener('change', () => {
   if (mapConsent.checked) setSettingsError(null);
 });

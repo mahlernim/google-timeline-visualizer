@@ -96,6 +96,8 @@ input, select {
   font-size: 16px;
 }
 
+.field-help { color: #7b6570; font-size: 13px; font-weight: 400; line-height: 1.4; }
+
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
 .status { margin: 12px 0 0; font-size: 14px; }

@@ -44,6 +44,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import dev.mahlernim.timelinevisualizer.data.LocationFilterMode
 import dev.mahlernim.timelinevisualizer.data.LocationOutlierFilter
+import dev.mahlernim.timelinevisualizer.data.RawSignalPoint
 import dev.mahlernim.timelinevisualizer.data.TimelineParseException
 import dev.mahlernim.timelinevisualizer.data.TimelineParseReason
 import dev.mahlernim.timelinevisualizer.data.TimelineParser
@@ -66,6 +67,7 @@ import dev.mahlernim.timelinevisualizer.export.EncoderSupport
 import dev.mahlernim.timelinevisualizer.export.VideoEncoderSupport
 import dev.mahlernim.timelinevisualizer.export.describe
 import dev.mahlernim.timelinevisualizer.model.Journey
+import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Timeline
 import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
 import dev.mahlernim.timelinevisualizer.model.TitleTemplate
@@ -98,6 +100,7 @@ import java.time.YearMonth
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import androidx.core.util.Pair as AndroidPair
@@ -111,6 +114,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var playerScreen: ScreenPlayerBinding
     private var timeline: Timeline? = null
     private var renderTimeline: Timeline? = null
+    private var rawSignalPoints: List<RawSignalPoint> = emptyList()
+    private var renderRawSignalsTimeline: Timeline? = null
     private var journey: Journey? = null
     private var animation: ValueAnimator? = null
     private var pendingExport: VideoExportRequest? = null
@@ -124,6 +129,7 @@ class MainActivity : AppCompatActivity() {
     private var selectedStartMonth = 1
     private var selectedEndMonth = 12
     private var exactDateRangeEnabled = false
+    private var rawSignalsEnabled = false
     private var selectedStartDate: LocalDate? = null
     private var selectedEndDate: LocalDate? = null
     private val titleHandler = Handler(Looper.getMainLooper())
@@ -494,7 +500,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateResolvedTitle() {
-        val period = currentPeriod() ?: return
+        val period = if (rawSignalsEnabled) journey?.period else currentPeriod()
+        if (period == null) return
         editor.timelineView.videoTitle = resolvedTitle(period)
     }
 
@@ -516,16 +523,19 @@ class MainActivity : AppCompatActivity() {
         importJob = lifecycleScope.launch {
             try {
                 editor.loadingStageText.setText(R.string.reading_timeline)
-                val loaded = withContext(Dispatchers.IO) {
-                    contentResolver.openInputStream(uri)?.use(TimelineParser()::parse)
+                val parsed = withContext(Dispatchers.IO) {
+                    contentResolver.openInputStream(uri)?.use(TimelineParser()::parseWithRawSignals)
                         ?: throw java.io.FileNotFoundException()
                 }
+                val loaded = parsed.timeline
                 editor.loadingStageText.setText(R.string.preparing_trips)
                 val prepared = withContext(Dispatchers.Default) {
                     prepareTimeline(loaded)
                 }
                 timeline = prepared.source
                 renderTimeline = prepared.render
+                rawSignalPoints = parsed.rawSignals
+                rebuildRawSignalsTimeline()
                 pendingImportCompletionUri = uri
                 configureYears(loaded, prepared.initialJourney, prepared.ignoredCount)
                 editor.editorGroup.visibility = View.VISIBLE
@@ -539,6 +549,8 @@ class MainActivity : AppCompatActivity() {
                 pendingImportCompletionUri = null
                 timeline = null
                 renderTimeline = null
+                rawSignalPoints = emptyList()
+                renderRawSignalsTimeline = null
                 if (remembered) {
                     timelineSourceStore.clear()
                     releaseUriAccess(uri)
@@ -554,6 +566,8 @@ class MainActivity : AppCompatActivity() {
                 pendingImportCompletionUri = null
                 timeline = null
                 renderTimeline = null
+                rawSignalPoints = emptyList()
+                renderRawSignalsTimeline = null
                 if (remembered) {
                     timelineSourceStore.clear()
                     releaseUriAccess(uri)
@@ -609,6 +623,11 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    private fun filterTimeline(source: Timeline): Timeline {
+        val filtered = LocationOutlierFilter.filter(source.points, locationFilterMode)
+        return if (filtered.points === source.points) source else Timeline(filtered.points)
+    }
+
     private fun configureYears(loaded: Timeline, initialJourney: Journey, ignoredCount: Int) {
         val years = loaded.years
         val labels = years.map { NumberFormat.getIntegerInstance().apply { isGroupingUsed = false }.format(it) }
@@ -627,16 +646,27 @@ class MainActivity : AppCompatActivity() {
         selectedStartYear = years.first()
         selectedEndYear = years.first()
         exactDateRangeEnabled = false
+        rawSignalsEnabled = false
         selectedStartDate = null
         selectedEndDate = null
         editor.exactDateSwitch.isChecked = false
+        editor.rawSignalsSwitch.isChecked = false
+        editor.rawAccuracyInput.setText(DEFAULT_RAW_ACCURACY_METERS.toString())
+        editor.rawSignalsSwitch.visibility = if (rawSignalPoints.isNotEmpty()) View.VISIBLE else View.GONE
         updateExactDateControls()
+        updateRawSignalsControls()
         updateYearDropdowns()
         updateResolvedTitle()
         applySelectedJourney(initialJourney, ignoredCount)
     }
 
     private fun selectRange() {
+        if (rawSignalsEnabled) {
+            val period = rawSignalsPeriod() ?: return
+            val selected = renderRawSignalsTimeline?.forRange(period) ?: Journey.from(emptyList(), period)
+            applySelectedJourney(selected, 0)
+            return
+        }
         val period = currentPeriod() ?: return
         val selected = if (exactDateRangeEnabled) {
             val start = selectedStartDate ?: return
@@ -673,6 +703,13 @@ class MainActivity : AppCompatActivity() {
             return withOutlierSummary(
                 getString(R.string.selected_period_no_movement, number.format(selected.points.size)),
                 ignoredCount,
+            )
+        }
+        if (rawSignalsEnabled) {
+            return getString(
+                R.string.raw_signals_summary,
+                number.format(selected.points.size),
+                number.format(selected.totalDistanceKm),
             )
         }
         val range = selected.period
@@ -755,7 +792,51 @@ class MainActivity : AppCompatActivity() {
             selectRange()
         }
         editor.exactDateRangeButton.setOnClickListener { showExactDatePicker() }
+        editor.rawSignalsSwitch.setOnCheckedChangeListener { _, checked ->
+            rawSignalsEnabled = checked && rawSignalPoints.isNotEmpty()
+            rebuildRawSignalsTimeline()
+            updateRawSignalsControls()
+            updateResolvedTitle()
+            selectRange()
+        }
+        editor.rawAccuracyInput.doAfterTextChanged {
+            if (rawSignalsEnabled) {
+                rebuildRawSignalsTimeline()
+                selectRange()
+            }
+        }
         updateExactDateControls()
+        updateRawSignalsControls()
+    }
+
+    private fun updateRawSignalsControls() {
+        editor.periodDateControlsGroup.visibility = if (rawSignalsEnabled) View.GONE else View.VISIBLE
+        editor.exactDateSwitch.visibility = if (rawSignalsEnabled) View.GONE else View.VISIBLE
+        editor.exactDateRangeButton.visibility = if (!rawSignalsEnabled && exactDateRangeEnabled) View.VISIBLE else View.GONE
+        editor.rawSignalsDescription.visibility = if (rawSignalsEnabled) View.VISIBLE else View.GONE
+        editor.rawAccuracyLayout.visibility = if (rawSignalsEnabled) View.VISIBLE else View.GONE
+    }
+
+    private fun rebuildRawSignalsTimeline() {
+        val maximumAccuracy = editor.rawAccuracyInput.text?.toString()?.trim().orEmpty()
+            .takeIf(String::isNotEmpty)
+            ?.toDoubleOrNull()
+        val selected = rawSignalPoints.asSequence()
+            .filter { maximumAccuracy == null || it.accuracyMeters <= maximumAccuracy }
+            .map(RawSignalPoint::point)
+            .toList()
+        renderRawSignalsTimeline = selected.takeIf(List<GeoPoint>::isNotEmpty)
+            ?.let(::Timeline)
+            ?.let(::filterTimeline)
+    }
+
+    private fun rawSignalsPeriod(): TimelinePeriod? {
+        if (rawSignalPoints.isEmpty()) return null
+        val zone = ZoneId.systemDefault()
+        return TimelinePeriod(
+            YearMonth.from(rawSignalPoints.first().point.instant.atZone(zone)),
+            YearMonth.from(rawSignalPoints.last().point.instant.atZone(zone)),
+        )
     }
 
     private fun showExactDatePicker() {
@@ -1046,6 +1127,7 @@ class MainActivity : AppCompatActivity() {
         }
         val result = LocationOutlierFilter.filter(source.points, locationFilterMode)
         renderTimeline = Timeline(result.points)
+        rebuildRawSignalsTimeline()
         if (reselect && selectedStartYear != null && selectedEndYear != null) selectRange()
     }
 
@@ -1337,6 +1419,8 @@ class MainActivity : AppCompatActivity() {
         editor.startMonthDropdown.isEnabled = !exporting
         editor.endMonthDropdown.isEnabled = !exporting
         editor.exactDateSwitch.isEnabled = !exporting
+        editor.rawSignalsSwitch.isEnabled = !exporting
+        editor.rawAccuracyInput.isEnabled = !exporting
         editor.exactDateRangeButton.isEnabled = !exporting
         editor.ownerInput.isEnabled = !exporting
         editor.titleInput.isEnabled = !exporting
@@ -1872,6 +1956,7 @@ class MainActivity : AppCompatActivity() {
     )
 
     companion object {
+        private const val DEFAULT_RAW_ACCURACY_METERS = 100
         private const val TITLE_UPDATE_DELAY_MS = 450L
         private const val COLLAPSED_CREATION_COUNT = 3
         private const val MAP_PRIVACY_ACCEPTED = "map_privacy_accepted_v1"

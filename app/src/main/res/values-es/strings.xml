@@ -201,6 +201,11 @@
     <string name="restore_advanced_defaults">Restaurar valores predeterminados</string>
     <string name="advanced_defaults_restored">Configuración avanzada restaurada</string>
     <string name="use_exact_dates">Elige fechas exactas</string>
+    <string name="use_raw_gps_signals">Usar señales GPS sin procesar del último mes</string>
+    <string name="raw_gps_signals_description">Una exportación de Timeline suele incluir las señales GPS sin procesar de aproximadamente el mes anterior a la fecha de exportación.</string>
+    <string name="raw_gps_accuracy_limit">Límite de precisión (metros)</string>
+    <string name="raw_gps_accuracy_helper">Se excluyen las señales menos precisas. Déjalo en blanco para usar todas.</string>
+    <string name="raw_signals_summary">%1$s puntos · aproximadamente %2$s km</string>
     <string name="choose_exact_dates">Seleccione una fecha de inicio y finalización</string>
     <string name="exact_date_range">%1$s – %2$s</string>
     <string name="delete_all_videos">Eliminar todos los vídeos</string>
