@@ -32,7 +32,8 @@ MP4를 만들려면 H.264 인코딩을 지원하는 Safari 16.4 이상이 필요
 아직 Google Play에는 등록되지 않았습니다. 이 저장소의
 [최신 릴리스](https://github.com/mahlernim/google-timeline-visualizer/releases/latest)에서 설치하세요.
 
-1. **Assets**에서 `TimelineVisualizer-v2.2.4.apk`를 휴대전화로 다운로드합니다.
+1. **Assets**에서 최신 `TimelineVisualizer-*.apk` 파일을 휴대전화로 다운로드합니다.
+   `.sha256` 체크섬 파일은 다운로드하지 마세요.
 2. 다운로드한 파일을 엽니다.
 3. 설치가 차단되면 **설정**을 누르고, 사용한 브라우저 또는 파일 앱의
    **출처를 알 수 없는 앱 설치**를 허용한 뒤 다시 설치합니다.
