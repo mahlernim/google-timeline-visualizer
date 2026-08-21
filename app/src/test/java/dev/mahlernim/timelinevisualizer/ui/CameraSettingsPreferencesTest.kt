@@ -36,6 +36,7 @@ class CameraSettingsPreferencesTest {
             cameraMovement = CameraMovement.FIXED,
             longTripCompression = LongTripCompression.STRONG,
             videoQuality = VideoQuality.ULTRA,
+            zoomInMovementReduction = 0.85,
         )
 
         preferences.save(expected)
@@ -49,6 +50,7 @@ class CameraSettingsPreferencesTest {
         assertEquals(CameraMovement.STEADY, preferences.load().cameraMovement)
         assertEquals(LongTripCompression.BALANCED, preferences.load().longTripCompression)
         assertEquals(VideoQuality.STANDARD, preferences.load().videoQuality)
+        assertEquals(0.60, preferences.load().zoomInMovementReduction, 0.0001)
     }
 
     @Test
@@ -58,5 +60,15 @@ class CameraSettingsPreferencesTest {
 
             assertEquals(format, CameraSettingsPreferences(context).load().videoQuality)
         }
+    }
+
+    @Test
+    fun migratesTheEarlyLabFloatPreference() {
+        context.getSharedPreferences("camera-settings", Context.MODE_PRIVATE)
+            .edit()
+            .putFloat("zoom-in-movement-reduction", 0.75f)
+            .apply()
+
+        assertEquals(0.75, CameraSettingsPreferences(context).load().zoomInMovementReduction, 0.0001)
     }
 }

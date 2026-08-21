@@ -1148,6 +1148,7 @@ class MainActivity : AppCompatActivity() {
             R.string.camera_fixed,
             R.string.camera_steady,
             R.string.camera_dynamic,
+            R.string.camera_close_up,
         ).map(::getString)
         val compressionLabels = listOf(
             R.string.compression_off,
@@ -1174,6 +1175,13 @@ class MainActivity : AppCompatActivity() {
 
         settingsScreen.cameraMovementDropdown.setOnItemClickListener { _, _, position, _ ->
             updateAdvancedSettings(cameraSettings.copy(cameraMovement = CameraMovement.values()[position]))
+        }
+        settingsScreen.cameraLabNotice.visibility = if (BuildConfig.IS_CAMERA_LAB) View.VISIBLE else View.GONE
+        settingsScreen.zoomInMovementReductionGroup.visibility = if (BuildConfig.IS_CAMERA_LAB) View.VISIBLE else View.GONE
+        settingsScreen.zoomInMovementReductionSlider.addOnChangeListener { _, value, fromUser ->
+            if (fromUser) {
+                updateAdvancedSettings(cameraSettings.copy(zoomInMovementReduction = value.toDouble() / 100.0))
+            }
         }
         settingsScreen.longTripDropdown.setOnItemClickListener { _, _, position, _ ->
             updateAdvancedSettings(cameraSettings.copy(longTripCompression = LongTripCompression.values()[position]))
@@ -1360,10 +1368,29 @@ class MainActivity : AppCompatActivity() {
         editor.timelineView.cameraSettings = settings
         settingsScreen.cameraMovementDropdown.setText(
             getString(
-                listOf(R.string.camera_fixed, R.string.camera_steady, R.string.camera_dynamic)[settings.cameraMovement.ordinal],
+                listOf(
+                    R.string.camera_fixed,
+                    R.string.camera_steady,
+                    R.string.camera_dynamic,
+                    R.string.camera_close_up,
+                )[settings.cameraMovement.ordinal],
             ),
             false,
         )
+        settingsScreen.cameraMovementHelpText.setText(
+            listOf(
+                R.string.camera_fixed_summary,
+                R.string.camera_steady_summary,
+                R.string.camera_dynamic_summary,
+                R.string.camera_close_up_summary,
+            )[settings.cameraMovement.ordinal],
+        )
+        val reductionPercent = (settings.zoomInMovementReduction.coerceIn(0.0, 1.0) * 100).toInt()
+        settingsScreen.zoomInMovementReductionValue.text = getString(
+            R.string.zoom_in_movement_reduction_value,
+            reductionPercent,
+        )
+        settingsScreen.zoomInMovementReductionSlider.value = reductionPercent.toFloat()
         settingsScreen.longTripDropdown.setText(
             getString(
                 listOf(
@@ -1740,6 +1767,7 @@ class MainActivity : AppCompatActivity() {
         editor.ownerInput.isEnabled = !exporting
         editor.titleInput.isEnabled = !exporting
         settingsScreen.cameraMovementDropdown.isEnabled = !exporting
+        settingsScreen.zoomInMovementReductionSlider.isEnabled = !exporting
         settingsScreen.longTripDropdown.isEnabled = !exporting
         settingsScreen.videoQualityDropdown.isEnabled = !exporting
         settingsScreen.resetAdvancedSettingsButton.isEnabled = !exporting

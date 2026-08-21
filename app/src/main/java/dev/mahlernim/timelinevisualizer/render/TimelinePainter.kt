@@ -371,6 +371,7 @@ class TimelinePainter {
         }
         val frames = ArrayList<CameraFrame>(CAMERA_TRACK_SAMPLES + 1)
         var previous: CameraFrame? = null
+        var previousPanFollow = 1.0
         rawSamples.forEach { sample ->
             val raw = sample.viewport
             val rawCenterX = (raw.minX + raw.maxX) / 2.0
@@ -399,20 +400,34 @@ class TimelinePainter {
                 }
                 val spanX = spanY * aspect
                 val markerX = unwrapNear(marker.x, previous.centerX)
-                var centerX = previous.centerX
-                var centerY = previous.centerY
+                var desiredCenterX = previous.centerX
+                var desiredCenterY = previous.centerY
                 val deadHalfX = spanX * CAMERA_DEAD_ZONE_HALF
                 val deadHalfY = spanY * CAMERA_DEAD_ZONE_HALF
-                centerX = when {
-                    markerX < centerX - deadHalfX -> markerX + deadHalfX
-                    markerX > centerX + deadHalfX -> markerX - deadHalfX
-                    else -> centerX
+                desiredCenterX = when {
+                    markerX < desiredCenterX - deadHalfX -> markerX + deadHalfX
+                    markerX > desiredCenterX + deadHalfX -> markerX - deadHalfX
+                    else -> desiredCenterX
                 }
-                centerY = when {
-                    marker.y < centerY - deadHalfY -> marker.y + deadHalfY
-                    marker.y > centerY + deadHalfY -> marker.y - deadHalfY
-                    else -> centerY
+                desiredCenterY = when {
+                    marker.y < desiredCenterY - deadHalfY -> marker.y + deadHalfY
+                    marker.y > desiredCenterY + deadHalfY -> marker.y - deadHalfY
+                    else -> desiredCenterY
                 }
+                val panFollow = panFollowForZoomStep(
+                    previousSpanY = previous.spanY,
+                    nextSpanY = spanY,
+                    rawTargetSpanY = rawSpanY,
+                    reduction = cameraSettings.zoomInMovementReduction,
+                    previousPanFollow = previousPanFollow,
+                )
+                previousPanFollow = panFollow
+                var centerX = lerp(previous.centerX, desiredCenterX, panFollow)
+                var centerY = lerp(previous.centerY, desiredCenterY, panFollow)
+                val safetyHalfX = spanX * CAMERA_SAFETY_ZONE_HALF
+                val safetyHalfY = spanY * CAMERA_SAFETY_ZONE_HALF
+                centerX = centerX.coerceIn(markerX - safetyHalfX, markerX + safetyHalfX)
+                centerY = centerY.coerceIn(marker.y - safetyHalfY, marker.y + safetyHalfY)
                 centerY = clampCenterY(centerY, spanY)
                 val continuousZoom = log2(width.coerceAtLeast(1) / (256.0 * spanX))
                 val tileZoom = stabilizedTileZoom(previous.zoom, continuousZoom)
@@ -422,6 +437,31 @@ class TimelinePainter {
             previous = frame
         }
         return CameraTrack(frames, aspect)
+    }
+
+    internal fun panFollowForZoomStep(
+        previousSpanY: Double,
+        nextSpanY: Double,
+        rawTargetSpanY: Double,
+        reduction: Double,
+        previousPanFollow: Double,
+    ): Double {
+        if (nextSpanY > previousSpanY + ZOOM_DIRECTION_EPSILON) return 1.0
+        val clampedReduction = reduction.coerceIn(0.0, 1.0)
+        val target = if (nextSpanY < previousSpanY - ZOOM_DIRECTION_EPSILON) {
+            val zoomInIntensity = (
+                ln(previousSpanY / rawTargetSpanY.coerceAtLeast(MIN_VIEWPORT_SPAN)) /
+                    ZOOM_IN_TARGET_LOG_RANGE
+                ).coerceIn(0.0, 1.0)
+            1.0 - clampedReduction * zoomInIntensity
+        } else {
+            1.0
+        }
+        return if (target < previousPanFollow) {
+            target
+        } else {
+            lerp(previousPanFollow, target, PAN_FOLLOW_RECOVERY_ALPHA)
+        }.coerceIn(0.0, 1.0)
     }
 
     private fun tileZoom(width: Int, aspect: Double, spanY: Double): Int =
@@ -1048,7 +1088,7 @@ class TimelinePainter {
     )
 
     internal class CameraTrack(
-        private val frames: List<CameraFrame>,
+        internal val frames: List<CameraFrame>,
         private val aspect: Double,
     ) {
         fun viewportAt(progress: Float): Viewport {
@@ -1100,6 +1140,10 @@ class TimelinePainter {
         private const val CAMERA_PROGRESS_INTERVAL = 32
         private const val ROUTE_BOUNDS_BLOCK_SIZE = 256
         private const val CAMERA_DEAD_ZONE_HALF = 0.20
+        private const val CAMERA_SAFETY_ZONE_HALF = 0.46
+        private const val PAN_FOLLOW_RECOVERY_ALPHA = 0.12
+        private val ZOOM_IN_TARGET_LOG_RANGE = ln(1.5)
+        private const val ZOOM_DIRECTION_EPSILON = 1e-12
         private const val FIXED_ZOOM_PERCENTILE = 0.80
         private const val TILE_ZOOM_HYSTERESIS = 0.15
         private const val MIN_VIEWPORT_SPAN = 0.0003

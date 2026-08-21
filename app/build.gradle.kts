@@ -49,13 +49,23 @@ android {
     productFlavors {
         create("github") {
             dimension = "distribution"
+            buildConfigField("boolean", "IS_CAMERA_LAB", "false")
             buildConfigField("String", "UPDATE_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/latest\"")
             buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/latest\"")
         }
         create("play") {
             dimension = "distribution"
+            buildConfigField("boolean", "IS_CAMERA_LAB", "false")
             buildConfigField("String", "UPDATE_URL", "\"market://details?id=dev.mahlernim.timelinevisualizer\"")
             buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://play.google.com/store/apps/details?id=dev.mahlernim.timelinevisualizer\"")
+        }
+        create("cameraLab") {
+            dimension = "distribution"
+            applicationIdSuffix = ".cameralab"
+            versionNameSuffix = "-camera-lab.1"
+            buildConfigField("boolean", "IS_CAMERA_LAB", "true")
+            buildConfigField("String", "UPDATE_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/tag/camera-lab-1\"")
+            buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/tag/camera-lab-1\"")
         }
     }
 

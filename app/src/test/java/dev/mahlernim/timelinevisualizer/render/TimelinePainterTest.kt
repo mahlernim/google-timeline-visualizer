@@ -9,6 +9,7 @@ import androidx.test.core.app.ApplicationProvider
 import dev.mahlernim.timelinevisualizer.R
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
+import dev.mahlernim.timelinevisualizer.model.WebMercator
 import java.time.Instant
 import java.util.Locale
 import org.junit.Assert.assertTrue
@@ -86,6 +87,74 @@ class TimelinePainterTest {
         }
 
         spans.forEach { assertEquals(spans.first(), it, 1e-12) }
+    }
+
+    @Test
+    fun zoomInMovementReductionIsAsymmetricAndRecoversGradually() {
+        val painter = TimelinePainter()
+
+        val baseline = painter.panFollowForZoomStep(0.10, 0.095, 0.05, 0.0, 1.0)
+        val reducedZoomIn = painter.panFollowForZoomStep(0.10, 0.095, 0.05, 0.75, 1.0)
+        val normalZoomOut = painter.panFollowForZoomStep(0.095, 0.10, 0.20, 0.75, reducedZoomIn)
+        val recovering = painter.panFollowForZoomStep(0.095, 0.095, 0.095, 0.75, reducedZoomIn)
+
+        assertEquals(1.0, baseline, 0.0)
+        assertTrue(reducedZoomIn < 1.0)
+        assertEquals(1.0, normalZoomOut, 0.0)
+        assertTrue(recovering > reducedZoomIn)
+        assertTrue(recovering < 1.0)
+    }
+
+    @Test
+    fun closeUpZoomFramesDenseLocalTravelMoreTightlyThanActiveZoom() {
+        val journey = Journey.from(
+            listOf(
+                point(37.5665, 126.9780),
+                point(37.5700, 126.9900),
+                point(37.5600, 127.0000),
+                point(37.5750, 127.0100),
+            ),
+            2025,
+        )
+        val active = CameraSettings(CameraMovement.DYNAMIC, LongTripCompression.OFF)
+        val closeUp = CameraSettings(CameraMovement.CLOSE_UP, LongTripCompression.OFF)
+
+        val activeSpan = TimelinePainter().viewport(journey, 0.65f, SIZE, SIZE, active).maxY -
+            TimelinePainter().viewport(journey, 0.65f, SIZE, SIZE, active).minY
+        val closeUpViewport = TimelinePainter().viewport(journey, 0.65f, SIZE, SIZE, closeUp)
+        val closeUpSpan = closeUpViewport.maxY - closeUpViewport.minY
+
+        assertTrue("Close-up span $closeUpSpan was not tighter than active span $activeSpan", closeUpSpan < activeSpan)
+    }
+
+    @Test
+    fun strongestZoomInReductionStillKeepsTheMarkerInsideTheSafetyArea() {
+        val journey = Journey.from(
+            listOf(
+                point(37.50, 126.80),
+                point(37.60, 127.20),
+                point(37.52, 126.85),
+                point(37.58, 127.15),
+                point(37.55, 127.00),
+            ),
+            2025,
+        )
+        val settings = CameraSettings(
+            cameraMovement = CameraMovement.CLOSE_UP,
+            longTripCompression = LongTripCompression.OFF,
+            zoomInMovementReduction = 1.0,
+        )
+        val frames = TimelinePainter()
+            .buildCameraTrackForBackground(journey, SIZE, SIZE, settings)
+            .track.frames
+
+        frames.forEachIndexed { index, frame ->
+            val progress = index.toDouble() / frames.lastIndex
+            val marker = WebMercator.project(journey.positionAtDistance(journey.totalDistanceKm * progress).point)
+            val markerX = unwrapNear(marker.x, frame.centerX)
+            assertTrue(kotlin.math.abs(markerX - frame.centerX) <= frame.spanY * 0.46 + 1e-12)
+            assertTrue(kotlin.math.abs(marker.y - frame.centerY) <= frame.spanY * 0.46 + 1e-12)
+        }
     }
 
     @Test

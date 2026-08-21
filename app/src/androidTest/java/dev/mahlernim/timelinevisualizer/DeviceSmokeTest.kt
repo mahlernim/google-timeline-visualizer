@@ -49,7 +49,7 @@ class DeviceSmokeTest {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { it.findViewById<View>(R.id.navigationSettings).performClick() }
             val choices = listOf(
-                R.id.cameraMovementDropdown to 3,
+                R.id.cameraMovementDropdown to 4,
                 R.id.longTripDropdown to 4,
                 R.id.videoQualityDropdown to 5,
                 R.id.locationFilterDropdown to 2,

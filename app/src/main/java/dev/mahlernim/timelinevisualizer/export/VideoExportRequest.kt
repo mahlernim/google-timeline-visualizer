@@ -49,6 +49,7 @@ class VideoExportRequestStore(context: Context) {
             output.writeUTF(request.cameraSettings.cameraMovement.name)
             output.writeUTF(request.cameraSettings.longTripCompression.name)
             output.writeUTF(request.cameraSettings.videoQuality.name)
+            output.writeDouble(request.cameraSettings.zoomInMovementReduction)
             output.writeInt(request.journey.points.size)
             request.journey.points.forEach { point ->
                 output.writeLong(point.instant.toEpochMilli())
@@ -105,6 +106,11 @@ class VideoExportRequestStore(context: Context) {
                             cameraMovement = enumOrDefault(input.readUTF(), CameraMovement.STEADY),
                             longTripCompression = enumOrDefault(input.readUTF(), LongTripCompression.BALANCED),
                             videoQuality = enumOrDefault(input.readUTF(), VideoQuality.STANDARD),
+                            zoomInMovementReduction = if (version >= 6) {
+                                input.readDouble().coerceIn(0.0, 1.0)
+                            } else {
+                                CameraSettings.DEFAULT_ZOOM_IN_MOVEMENT_REDUCTION
+                            },
                         )
                     } else if (version == 3) {
                         repeat(4) { input.readUTF() }
@@ -150,7 +156,7 @@ class VideoExportRequestStore(context: Context) {
     }
 
     companion object {
-        private const val CURRENT_FILE_VERSION = 5
+        private const val CURRENT_FILE_VERSION = 6
         private const val MAX_POINT_COUNT = 2_000_000
         private const val REQUEST_FILE = "pending-video-export.bin"
         private const val TEMPORARY_FILE = "pending-video-export.tmp"
