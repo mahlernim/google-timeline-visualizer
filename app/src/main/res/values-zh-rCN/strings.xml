@@ -133,7 +133,7 @@
     <string name="choose_file">选择文件</string>
     <string name="get_timeline_file">获取Timeline文件</string>
     <string name="safe_sharing_mode">安全分享模式</string>
-    <string name="safe_sharing_summary">私密圆圈内的点会移到圆心。请选择可以安全公开的圆心。其他路线和飞行区段保持不变。</string>
+    <string name="safe_sharing_summary">私密圆圈内的点会移到一个稳定的偏移替代点。所选圆心不会显示。其他路线和飞行区段保持不变。</string>
     <string name="private_areas">私密区域</string>
     <string name="private_areas_none">未选择私密区域</string>
     <string name="private_areas_selected">已保护：%1$s</string>
@@ -142,8 +142,8 @@
     <string name="manage_private_areas">管理私密区域</string>
     <string name="private_area_item">%1$s · %2$.1f km</string>
     <string name="edit_private_area">编辑私密区域</string>
-    <string name="privacy_map_instructions">移动地图，使十字线位于可安全公开的位置。圆圈内的点会在受保护的预览和导出中替换为此圆心。</string>
-    <string name="privacy_map_description">用于选择私密圆圈及其可见替换圆心的交互式地图。拖动可移动，双指可缩放。</string>
+    <string name="privacy_map_instructions">将十字线移到要保护区域的中心。应用会显示一个稳定的偏移替代点，而不是这个精确圆心。</string>
+    <string name="privacy_map_description">用于选择私密圆圈的交互式地图。精确圆心不会显示在受保护的预览或导出中。拖动可移动，双指可缩放。</string>
     <string name="private_area_name">区域名称</string>
     <string name="private_area_default_name">私密区域 %1$d</string>
     <string name="private_area_radius_value_decimal">保护半径：%1$.1f km</string>

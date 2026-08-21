@@ -133,7 +133,7 @@
     <string name="choose_file">選擇文件</string>
     <string name="get_timeline_file">取得Timeline文件</string>
     <string name="safe_sharing_mode">安全分享模式</string>
-    <string name="safe_sharing_summary">私人圓圈內的點會移到圓心。請選擇可安全公開的圓心。其他路線和飛行區段保持不變。</string>
+    <string name="safe_sharing_summary">私人圓圈內的點會移到一個穩定的偏移替代點。所選圓心不會顯示。其他路線和飛行區段保持不變。</string>
     <string name="private_areas">私人區域</string>
     <string name="private_areas_none">未選擇私人區域</string>
     <string name="private_areas_selected">已保護：%1$s</string>
@@ -142,8 +142,8 @@
     <string name="manage_private_areas">管理私人區域</string>
     <string name="private_area_item">%1$s · %2$.1f km</string>
     <string name="edit_private_area">編輯私人區域</string>
-    <string name="privacy_map_instructions">移動地圖，讓十字線位於可安全公開的位置。圓圈內的點會在受保護的預覽和匯出中替換為此圓心。</string>
-    <string name="privacy_map_description">用來選擇私人圓圈及其可見替換圓心的互動式地圖。拖曳可移動，雙指可縮放。</string>
+    <string name="privacy_map_instructions">將十字線移到要保護區域的中心。應用程式會顯示一個穩定的偏移替代點，而不是這個精確圓心。</string>
+    <string name="privacy_map_description">用來選擇私人圓圈的互動式地圖。精確圓心不會顯示在受保護的預覽或匯出中。拖曳可移動，雙指可縮放。</string>
     <string name="private_area_name">區域名稱</string>
     <string name="private_area_default_name">私人區域 %1$d</string>
     <string name="private_area_radius_value_decimal">保護半徑：%1$.1f km</string>

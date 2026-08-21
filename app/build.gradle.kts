@@ -57,6 +57,21 @@ android {
             buildConfigField("String", "UPDATE_URL", "\"market://details?id=dev.mahlernim.timelinevisualizer\"")
             buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://play.google.com/store/apps/details?id=dev.mahlernim.timelinevisualizer\"")
         }
+        create("privacyPrototype") {
+            dimension = "distribution"
+            applicationIdSuffix = ".privacyprototype"
+            versionNameSuffix = "-privacy-prototype.2"
+            buildConfigField(
+                "String",
+                "UPDATE_URL",
+                "\"https://github.com/mahlernim/google-timeline-visualizer/issues/66\"",
+            )
+            buildConfigField(
+                "String",
+                "UPDATE_FALLBACK_URL",
+                "\"https://github.com/mahlernim/google-timeline-visualizer/issues/66\"",
+            )
+        }
     }
 
     compileOptions {

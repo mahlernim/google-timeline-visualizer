@@ -136,7 +136,7 @@
     <string name="choose_file">Datei auswählen</string>
     <string name="get_timeline_file">Holen Sie sich die Timeline-Datei</string>
     <string name="safe_sharing_mode">Sicherer Freigabemodus</string>
-    <string name="safe_sharing_summary">Punkte innerhalb eines privaten Kreises werden in dessen Mittelpunkt verschoben. Wählen Sie einen sicher sichtbaren Mittelpunkt. Andere Routen und Flüge bleiben unverändert.</string>
+    <string name="safe_sharing_summary">Punkte innerhalb eines privaten Kreises werden an einen stabilen, versetzten Ersatzpunkt verschoben. Der gewählte Mittelpunkt wird nicht angezeigt. Andere Routen und Flüge bleiben unverändert.</string>
     <string name="private_areas">Private Bereiche</string>
     <string name="private_areas_none">Keine privaten Bereiche ausgewählt</string>
     <string name="private_areas_selected">Geschützt: %1$s</string>
@@ -145,8 +145,8 @@
     <string name="manage_private_areas">Private Bereiche verwalten</string>
     <string name="private_area_item">%1$s · %2$.1f km</string>
     <string name="edit_private_area">Privaten Bereich bearbeiten</string>
-    <string name="privacy_map_instructions">Verschieben Sie die Karte, bis das Fadenkreuz auf einem sicher sichtbaren Punkt liegt. Punkte im Kreis werden in geschützten Vorschauen und Exporten durch diesen Mittelpunkt ersetzt.</string>
-    <string name="privacy_map_description">Interaktive Karte zur Auswahl eines privaten Kreises und seines sichtbaren Ersatzmittelpunkts. Ziehen zum Verschieben und mit zwei Fingern zoomen.</string>
+    <string name="privacy_map_instructions">Verschieben Sie das Fadenkreuz in die Mitte des zu schützenden Bereichs. Die App zeigt statt dieses exakten Mittelpunkts einen stabilen, versetzten Ersatzpunkt.</string>
+    <string name="privacy_map_description">Interaktive Karte zur Auswahl eines privaten Kreises. Sein exakter Mittelpunkt wird in geschützten Vorschauen und Exporten nicht angezeigt. Ziehen zum Verschieben und mit zwei Fingern zoomen.</string>
     <string name="private_area_name">Bereichsname</string>
     <string name="private_area_default_name">Privater Bereich %1$d</string>
     <string name="private_area_radius_value_decimal">Schutzradius: %1$.1f km</string>

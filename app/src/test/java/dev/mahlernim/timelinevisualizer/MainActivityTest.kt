@@ -23,6 +23,7 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import androidx.test.core.app.ApplicationProvider
 import dev.mahlernim.timelinevisualizer.videos.VideoRecord
 import dev.mahlernim.timelinevisualizer.videos.VideoStore
+import dev.mahlernim.timelinevisualizer.data.TimelineAnonymizer
 import dev.mahlernim.timelinevisualizer.data.TimelineSourceStore
 import dev.mahlernim.timelinevisualizer.export.VideoExportCoordinator
 import dev.mahlernim.timelinevisualizer.export.ExportPhase
@@ -1003,7 +1004,8 @@ class MainActivityTest {
             ).isChecked = true
             waitUntil { activity.findViewById<View>(R.id.loadingGroup).visibility == View.GONE }
             val protected = activity.findViewById<TimelineView>(R.id.timelineView).journey!!.points
-            assertTrue(protected.all { it.latitude == privateArea.latitude && it.longitude == privateArea.longitude })
+            val standIn = TimelineAnonymizer.standInLocation(privateArea)
+            assertTrue(protected.all { it.latitude == standIn.first && it.longitude == standIn.second })
         } finally {
             source.delete()
         }

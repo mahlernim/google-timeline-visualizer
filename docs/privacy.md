@@ -38,11 +38,12 @@ selection replaces this URI. The Timeline contents are not duplicated.
 Safe sharing mode changes only the in-memory route used for preview and video
 rendering. The user draws named privacy circles on an interactive map and chooses
 an independent radius from 0.5 to 50 km for each circle. Coordinates inside a
-circle are replaced with its selected center while retaining their timestamps. If
-sparse route data crosses a circle without a recorded point inside it, the app
-inserts the selected center between the surrounding samples to avoid leaving a
-blank route gap. The selected center remains visible and should be placed on a
-location that is safe to disclose, not an exact private address.
+circle are replaced with a stable stand-in point while retaining their timestamps.
+If sparse route data crosses a circle without a recorded point inside it, the app
+inserts the same stand-in between the surrounding samples to avoid leaving a blank
+route gap. The stand-in is deterministically offset from the selected center by
+35% to 80% of the selected radius. The exact selected center is not placed in
+protected previews or exports.
 
 Route points outside selected areas remain unchanged. Segments identified as
 `FLYING` in the Timeline export remain unchanged, including inside protected
@@ -50,7 +51,8 @@ areas. Circle names, centers, and radii are stored in app-private preferences an
 excluded from Android cloud backup and device transfer. Safe sharing does not
 modify, copy, upload, or export the selected Timeline JSON.
 Locations outside selected private areas remain precise and may reveal sensitive
-visits, so users should review the full preview before sharing.
+visits. Repeated routes and timing can still reveal routines, so safe sharing does
+not guarantee anonymity. Users should review the full preview before sharing.
 
 On Android 13 and newer, the app may request notification permission so it can
 show video progress and a completion alert. Declining this permission does not

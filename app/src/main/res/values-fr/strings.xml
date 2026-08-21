@@ -140,7 +140,7 @@
     <string name="choose_file">Choisir un fichier</string>
     <string name="get_timeline_file">Récupérer le fichier Timeline</string>
     <string name="safe_sharing_mode">Mode de partage sécurisé</string>
-    <string name="safe_sharing_summary">Les points dans chaque cercle privé sont déplacés vers son centre. Choisissez un centre sûr à afficher. Les autres trajets et les vols restent inchangés.</string>
+    <string name="safe_sharing_summary">Les points de chaque cercle privé sont déplacés vers un point de substitution stable et décalé. Le centre sélectionné n’est pas affiché. Les autres trajets et les vols restent inchangés.</string>
     <string name="private_areas">Zones privées</string>
     <string name="private_areas_none">Aucune zone privée sélectionnée</string>
     <string name="private_areas_selected">Protégées : %1$s</string>
@@ -149,8 +149,8 @@
     <string name="manage_private_areas">Gérer les zones privées</string>
     <string name="private_area_item">%1$s · %2$.1f km</string>
     <string name="edit_private_area">Modifier la zone privée</string>
-    <string name="privacy_map_instructions">Déplacez la carte jusqu’à placer le réticule sur un point sûr à afficher. Les points du cercle sont remplacés par ce centre dans les aperçus et les exports protégés.</string>
-    <string name="privacy_map_description">Carte interactive permettant de choisir un cercle privé et son centre de remplacement visible. Faites glisser pour déplacer et pincez pour zoomer.</string>
+    <string name="privacy_map_instructions">Placez le réticule au centre de la zone à protéger. L’application affiche un point de substitution stable et décalé au lieu de ce centre exact.</string>
+    <string name="privacy_map_description">Carte interactive permettant de choisir un cercle privé. Son centre exact n’est pas affiché dans les aperçus ni les exports protégés. Faites glisser pour déplacer et pincez pour zoomer.</string>
     <string name="private_area_name">Nom de la zone</string>
     <string name="private_area_default_name">Zone privée %1$d</string>
     <string name="private_area_radius_value_decimal">Rayon de protection : %1$.1f km</string>

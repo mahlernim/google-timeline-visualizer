@@ -1,0 +1,86 @@
+name: Release privacy prototype 2
+
+on:
+  push:
+    tags:
+      - "privacy-prototype-2"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing privacy prototype tag to rebuild
+        required: true
+        default: privacy-prototype-2
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+    steps:
+      - name: Require the prototype 2 tag
+        run: test "$RELEASE_TAG" = "privacy-prototype-2"
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Restore release signing key
+        env:
+          SIGNING_KEY_BASE64: ${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}
+        run: echo "$SIGNING_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/timeline-visualizer-release.jks"
+      - name: Test, lint, and build signed prototype artifacts
+        env:
+          ANDROID_SIGNING_STORE_FILE: ${{ runner.temp }}/timeline-visualizer-release.jks
+          ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+        run: ./gradlew testPrivacyPrototypeReleaseUnitTest lintPrivacyPrototypeRelease assemblePrivacyPrototypeRelease bundlePrivacyPrototypeRelease --stacktrace
+      - name: Verify prototype identity and signature
+        run: |
+          apk_path="app/build/outputs/apk/privacyPrototype/release/app-privacyPrototype-release.apk"
+          build_tools_dir="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          test -f "$apk_path"
+          test -n "$build_tools_dir"
+          "$build_tools_dir/apksigner" verify --verbose --print-certs "$apk_path"
+
+          package_line="$("$build_tools_dir/aapt" dump badging "$apk_path" | head -n 1)"
+          package_name="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<< "$package_line")"
+          version_code="$(sed -n "s/.*versionCode='\([^']*\)'.*/\1/p" <<< "$package_line")"
+          version_name="$(sed -n "s/.*versionName='\([^']*\)'.*/\1/p" <<< "$package_line")"
+
+          test "$package_name" = "dev.mahlernim.timelinevisualizer.privacyprototype"
+          test "$version_code" = "24"
+          test "$version_name" = "2.2.5-privacy-prototype.2"
+      - name: Save prototype bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: TimelineVisualizer-PrivacyPrototype-2-bundle
+          path: app/build/outputs/bundle/privacyPrototypeRelease/app-privacyPrototype-release.aab
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish prototype prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          apk="TimelineVisualizer-PrivacyPrototype-2.apk"
+          cp app/build/outputs/apk/privacyPrototype/release/app-privacyPrototype-release.apk "$apk"
+          sha256sum "$apk" > "$apk.sha256"
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$apk" "$apk.sha256" --clobber
+          else
+            gh release create "$RELEASE_TAG" \
+              "$apk" \
+              "$apk.sha256" \
+              --title "Timeline Visualizer privacy prototype 2" \
+              --notes-file "docs/release-notes-privacy-prototype-2.md" \
+              --prerelease \
+              --verify-tag
+          fi

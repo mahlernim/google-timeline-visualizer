@@ -140,7 +140,7 @@
     <string name="choose_file">Elige el archivo</string>
     <string name="get_timeline_file">Obtener el archivo Timeline</string>
     <string name="safe_sharing_mode">Modo para compartir de forma segura</string>
-    <string name="safe_sharing_summary">Los puntos dentro de cada círculo privado se mueven a su centro. Elige un centro que sea seguro mostrar. Las demás rutas y los vuelos no cambian.</string>
+    <string name="safe_sharing_summary">Los puntos dentro de cada círculo privado se mueven a un punto de sustitución estable y desplazado. El centro seleccionado no se muestra. Las demás rutas y los vuelos no cambian.</string>
     <string name="private_areas">Áreas privadas</string>
     <string name="private_areas_none">No hay áreas privadas seleccionadas</string>
     <string name="private_areas_selected">Protegidas: %1$s</string>
@@ -149,8 +149,8 @@
     <string name="manage_private_areas">Gestionar áreas privadas</string>
     <string name="private_area_item">%1$s · %2$.1f km</string>
     <string name="edit_private_area">Editar área privada</string>
-    <string name="privacy_map_instructions">Mueve el mapa hasta que la cruz esté sobre un punto seguro para mostrar. Los puntos del círculo se sustituyen por este centro en las vistas previas y exportaciones protegidas.</string>
-    <string name="privacy_map_description">Mapa interactivo para elegir un círculo privado y su centro de sustitución visible. Arrastra para mover y pellizca para ampliar.</string>
+    <string name="privacy_map_instructions">Mueve la cruz al centro del área que deseas proteger. La aplicación muestra un punto de sustitución estable y desplazado en lugar de este centro exacto.</string>
+    <string name="privacy_map_description">Mapa interactivo para elegir un círculo privado. Su centro exacto no se muestra en las vistas previas ni en las exportaciones protegidas. Arrastra para mover y pellizca para ampliar.</string>
     <string name="private_area_name">Nombre del área</string>
     <string name="private_area_default_name">Área privada %1$d</string>
     <string name="private_area_radius_value_decimal">Radio de protección: %1$.1f km</string>

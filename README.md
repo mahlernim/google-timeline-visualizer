@@ -146,16 +146,18 @@ location from the selected file.
 
 Safe sharing mode lets each user draw named privacy circles directly on the route,
 with an independent radius from 0.5 to 50 km. Points inside a circle are moved to
-its selected center without removing their timestamps. When sparse data crosses a
-circle without a recorded point inside it, a center point is inserted to preserve
-route continuity. The selected center remains visible, so place it on a location
-that is safe to show rather than on an exact home or workplace address.
+a stable stand-in point inside the circle without removing their timestamps. When
+sparse data crosses a circle without a recorded point inside it, the same stand-in
+is inserted to preserve route continuity. The stand-in is deterministically offset
+from the selected center by 35% to 80% of the circle radius. The exact selected
+center is not placed in protected previews or exports.
 
 Points outside selected areas remain unchanged. Segments identified as `FLYING` by
 the Timeline export are also left unchanged. Circle names, centers, and radii are
 stored only in app-private preferences and excluded from Android backup and device
 transfer. The original Timeline JSON is not changed. Preview the complete route
-before sharing it publicly.
+before sharing it publicly. This reduces visible precision but does not guarantee
+anonymity.
 
 The app supports English, Korean, Japanese, Simplified Chinese, Traditional Chinese,
 Spanish, French, German, and Brazilian Portuguese. Choose any supported language in

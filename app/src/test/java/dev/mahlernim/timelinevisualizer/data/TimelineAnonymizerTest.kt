@@ -10,7 +10,7 @@ import java.time.Instant
 
 class TimelineAnonymizerTest {
     @Test
-    fun replacesInsidePointsWithAreaCenterWithoutRemovingTimestamps() {
+    fun replacesInsidePointsWithStableOffsetStandInWithoutRemovingTimestamps() {
         val points = listOf(
             point("2026-01-01T00:00:00Z", 37.5660, 126.9780),
             point("2026-01-01T01:00:00Z", 37.5670, 126.9790),
@@ -20,15 +20,17 @@ class TimelineAnonymizerTest {
 
         val result = TimelineAnonymizer.anonymize(points, listOf(home))
 
-        assertEquals(listOf(37.5665, 37.5665, 37.6500), result.points.map(GeoPoint::latitude))
-        assertEquals(listOf(126.9780, 126.9780, 127.1000), result.points.map(GeoPoint::longitude))
+        val standIn = TimelineAnonymizer.standInLocation(home)
+        assertEquals(listOf(standIn.first, standIn.first, 37.6500), result.points.map(GeoPoint::latitude))
+        assertEquals(listOf(standIn.second, standIn.second, 127.1000), result.points.map(GeoPoint::longitude))
+        assertTrue(standIn.first != home.latitude || standIn.second != home.longitude)
         assertEquals(points.map(GeoPoint::instant), result.points.map(GeoPoint::instant))
         assertEquals(2, result.changedCount)
-        assertEquals(0, result.insertedCenterCount)
+        assertEquals(0, result.insertedStandInCount)
     }
 
     @Test
-    fun sparseCrossingInsertsCenterInsteadOfLeavingRouteGap() {
+    fun sparseCrossingInsertsStandInInsteadOfLeavingRouteGap() {
         val start = point("2026-01-01T00:00:00Z", 37.5665, 126.90)
         val end = point("2026-01-01T01:00:00Z", 37.5665, 127.05)
         val home = area("home", 37.5665, 126.9780, 2.0)
@@ -36,12 +38,13 @@ class TimelineAnonymizerTest {
         val result = TimelineAnonymizer.anonymize(listOf(start, end), listOf(home))
 
         assertEquals(3, result.points.size)
-        assertEquals(home.latitude, result.points[1].latitude, 0.00001)
-        assertEquals(home.longitude, result.points[1].longitude, 0.00001)
+        val standIn = TimelineAnonymizer.standInLocation(home)
+        assertEquals(standIn.first, result.points[1].latitude, 0.00001)
+        assertEquals(standIn.second, result.points[1].longitude, 0.00001)
         assertTrue(result.points[1].instant > start.instant)
         assertTrue(result.points[1].instant < end.instant)
         assertEquals(0, result.changedCount)
-        assertEquals(1, result.insertedCenterCount)
+        assertEquals(1, result.insertedStandInCount)
     }
 
     @Test
@@ -53,8 +56,16 @@ class TimelineAnonymizerTest {
 
         val result = TimelineAnonymizer.anonymize(listOf(start, end), listOf(east, west))
 
-        assertEquals(listOf(-1.0, -0.5, 0.5, 1.0), result.points.map(GeoPoint::longitude))
-        assertEquals(2, result.insertedCenterCount)
+        assertEquals(
+            listOf(
+                -1.0,
+                TimelineAnonymizer.standInLocation(west).second,
+                TimelineAnonymizer.standInLocation(east).second,
+                1.0,
+            ),
+            result.points.map(GeoPoint::longitude),
+        )
+        assertEquals(2, result.insertedStandInCount)
         assertTrue(result.points.zipWithNext().all { (before, after) -> before.instant <= after.instant })
     }
 
@@ -70,7 +81,13 @@ class TimelineAnonymizerTest {
         val first = TimelineAnonymizer.anonymize(points, listOf(north, south))
         val second = TimelineAnonymizer.anonymize(points, listOf(south, north))
 
-        assertEquals(listOf(-0.02, 0.02), first.points.subList(1, 3).map(GeoPoint::latitude))
+        assertEquals(
+            listOf(
+                TimelineAnonymizer.standInLocation(south).first,
+                TimelineAnonymizer.standInLocation(north).first,
+            ),
+            first.points.subList(1, 3).map(GeoPoint::latitude),
+        )
         assertEquals(first, second)
     }
 
@@ -86,7 +103,7 @@ class TimelineAnonymizerTest {
 
         assertSame(points, result.points)
         assertEquals(0, result.changedCount)
-        assertEquals(0, result.insertedCenterCount)
+        assertEquals(0, result.insertedStandInCount)
     }
 
     @Test
@@ -102,7 +119,7 @@ class TimelineAnonymizerTest {
 
         assertSame(points, result.points)
         assertEquals(0, result.changedCount)
-        assertEquals(0, result.insertedCenterCount)
+        assertEquals(0, result.insertedStandInCount)
     }
 
     @Test
@@ -115,8 +132,9 @@ class TimelineAnonymizerTest {
         val result = TimelineAnonymizer.anonymize(listOf(nearNarrowArea, nearWideArea), listOf(narrow, wide))
 
         assertEquals(nearNarrowArea, result.points[0])
-        assertEquals(wide.latitude, result.points[1].latitude, 0.00001)
-        assertEquals(wide.longitude, result.points[1].longitude, 0.00001)
+        val standIn = TimelineAnonymizer.standInLocation(wide)
+        assertEquals(standIn.first, result.points[1].latitude, 0.00001)
+        assertEquals(standIn.second, result.points[1].longitude, 0.00001)
     }
 
     @Test
@@ -128,7 +146,7 @@ class TimelineAnonymizerTest {
         val first = TimelineAnonymizer.anonymize(listOf(point), listOf(west, east))
         val second = TimelineAnonymizer.anonymize(listOf(point), listOf(east, west))
 
-        assertEquals(east.longitude, first.points.single().longitude, 0.00001)
+        assertEquals(TimelineAnonymizer.standInLocation(east).second, first.points.single().longitude, 0.00001)
         assertEquals(first, second)
     }
 
@@ -140,6 +158,22 @@ class TimelineAnonymizerTest {
 
         assertSame(points, result.points)
         assertEquals(0, result.changedCount)
+    }
+
+    @Test
+    fun standInIsStableOffsetAndRemainsInsideTheProtectedCircle() {
+        val home = area("random-area-id", 37.5665, 126.9780, 3.0)
+
+        val first = TimelineAnonymizer.standInLocation(home)
+        val second = TimelineAnonymizer.standInLocation(home)
+        val distanceKm = dev.mahlernim.timelinevisualizer.model.haversineKm(
+            point("2026-01-01T00:00:00Z", home.latitude, home.longitude),
+            point("2026-01-01T00:00:00Z", first.first, first.second),
+        )
+
+        assertEquals(first, second)
+        assertTrue(distanceKm >= home.radiusKm * 0.35 - 0.001)
+        assertTrue(distanceKm <= home.radiusKm * 0.80 + 0.001)
     }
 
     private fun point(

@@ -142,7 +142,7 @@
     <string name="choose_file">Choose file</string>
     <string name="get_timeline_file">Get Timeline file</string>
     <string name="safe_sharing_mode">Safe sharing mode</string>
-    <string name="safe_sharing_summary">Points inside each private circle move to its center. Choose a center that is safe to show. Routes elsewhere and flying segments remain unchanged.</string>
+    <string name="safe_sharing_summary">Points inside each private circle move to a stable offset stand-in. The selected center is not shown. Routes elsewhere and flying segments remain unchanged.</string>
     <string name="private_areas">Private areas</string>
     <string name="private_areas_none">No private areas selected</string>
     <string name="private_areas_selected">Protected: %1$s</string>
@@ -151,8 +151,8 @@
     <string name="manage_private_areas">Manage private areas</string>
     <string name="private_area_item">%1$s · %2$.1f km</string>
     <string name="edit_private_area">Edit private area</string>
-    <string name="privacy_map_instructions">Move the map until the crosshair is on a safe point to show. Points inside the circle are replaced by this center in protected previews and exports.</string>
-    <string name="privacy_map_description">Interactive map for choosing a private circle and its visible replacement center. Drag to move and pinch to zoom.</string>
+    <string name="privacy_map_instructions">Move the crosshair to the center of the area to protect. The app shows a stable offset stand-in instead of this exact center.</string>
+    <string name="privacy_map_description">Interactive map for choosing a private circle. Its exact center is not shown in protected previews or exports. Drag to move and pinch to zoom.</string>
     <string name="private_area_name">Area name</string>
     <string name="private_area_default_name">Private area %1$d</string>
     <string name="private_area_radius_value_decimal">Protection radius: %1$.1f km</string>
