@@ -1,0 +1,80 @@
+name: Release Camera Lab
+
+on:
+  push:
+    tags:
+      - "camera-lab-*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+      EXPECTED_PACKAGE: dev.mahlernim.timelinevisualizer.cameralab
+      EXPECTED_VERSION_CODE: "31"
+      EXPECTED_VERSION_NAME: 2.2.12-camera-lab.1
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Restore release signing key
+        env:
+          SIGNING_KEY_BASE64: ${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}
+        run: echo "$SIGNING_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/timeline-visualizer-release.jks"
+      - name: Test, lint, and build signed Camera Lab APK
+        env:
+          ANDROID_SIGNING_STORE_FILE: ${{ runner.temp }}/timeline-visualizer-release.jks
+          ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+        run: ./gradlew test lint assembleCameraLabRelease --stacktrace
+      - name: Verify signed Camera Lab APK
+        run: |
+          apk_path="app/build/outputs/apk/cameraLab/release/app-cameraLab-release.apk"
+          build_tools_dir="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          test -n "$build_tools_dir"
+          "$build_tools_dir/apksigner" verify --verbose --print-certs "$apk_path"
+
+          package_line="$("$build_tools_dir/aapt" dump badging "$apk_path" | head -n 1)"
+          package_name="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<< "$package_line")"
+          version_code="$(sed -n "s/.*versionCode='\([^']*\)'.*/\1/p" <<< "$package_line")"
+          version_name="$(sed -n "s/.*versionName='\([^']*\)'.*/\1/p" <<< "$package_line")"
+
+          test "$package_name" = "$EXPECTED_PACKAGE"
+          test "$version_code" = "$EXPECTED_VERSION_CODE"
+          test "$version_name" = "$EXPECTED_VERSION_NAME"
+          sha256sum "$apk_path"
+      - name: Save Camera Lab APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: timeline-visualizer-${{ env.RELEASE_TAG }}
+          path: app/build/outputs/apk/cameraLab/release/app-cameraLab-release.apk
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish Camera Lab prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          apk="TimelineVisualizer-CameraLab-${RELEASE_TAG}.apk"
+          cp app/build/outputs/apk/cameraLab/release/app-cameraLab-release.apk "$apk"
+          sha256sum "$apk" > "$apk.sha256"
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$apk" "$apk.sha256" --clobber
+          else
+            gh release create "$RELEASE_TAG" \
+              "$apk" \
+              "$apk.sha256" \
+              --title "Timeline Visualizer Camera Lab 1" \
+              --notes-file docs/camera-lab-1.md \
+              --prerelease \
+              --verify-tag
+          fi
