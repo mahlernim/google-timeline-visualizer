@@ -1,15 +1,15 @@
-name: Release privacy prototype 2
+name: Release privacy prototype 2.1
 
 on:
   push:
     tags:
-      - "privacy-prototype-2"
+      - "privacy-prototype-2.1"
   workflow_dispatch:
     inputs:
       tag:
         description: Existing privacy prototype tag to rebuild
         required: true
-        default: privacy-prototype-2
+        default: privacy-prototype-2.1
         type: string
 
 permissions:
@@ -21,8 +21,8 @@ jobs:
     env:
       RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
     steps:
-      - name: Require the prototype 2 tag
-        run: test "$RELEASE_TAG" = "privacy-prototype-2"
+      - name: Require the prototype 2.1 tag
+        run: test "$RELEASE_TAG" = "privacy-prototype-2.1"
       - uses: actions/checkout@v5
         with:
           ref: ${{ env.RELEASE_TAG }}
@@ -42,7 +42,7 @@ jobs:
           ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
           ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
           ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
-        run: ./gradlew testPrivacyPrototypeReleaseUnitTest lintPrivacyPrototypeRelease assemblePrivacyPrototypeRelease bundlePrivacyPrototypeRelease --stacktrace
+        run: ./gradlew testPrivacyPrototypeDebugUnitTest lintPrivacyPrototypeRelease assemblePrivacyPrototypeRelease bundlePrivacyPrototypeRelease --stacktrace
       - name: Verify prototype identity and signature
         run: |
           apk_path="app/build/outputs/apk/privacyPrototype/release/app-privacyPrototype-release.apk"
@@ -58,11 +58,11 @@ jobs:
 
           test "$package_name" = "dev.mahlernim.timelinevisualizer.privacyprototype"
           test "$version_code" = "24"
-          test "$version_name" = "2.2.5-privacy-prototype.2"
+          test "$version_name" = "2.2.5-privacy-prototype.2.1"
       - name: Save prototype bundle
         uses: actions/upload-artifact@v4
         with:
-          name: TimelineVisualizer-PrivacyPrototype-2-bundle
+          name: TimelineVisualizer-PrivacyPrototype-2.1-bundle
           path: app/build/outputs/bundle/privacyPrototypeRelease/app-privacyPrototype-release.aab
           if-no-files-found: error
           retention-days: 30
@@ -70,7 +70,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          apk="TimelineVisualizer-PrivacyPrototype-2.apk"
+          apk="TimelineVisualizer-PrivacyPrototype-2.1.apk"
           cp app/build/outputs/apk/privacyPrototype/release/app-privacyPrototype-release.apk "$apk"
           sha256sum "$apk" > "$apk.sha256"
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
@@ -79,7 +79,7 @@ jobs:
             gh release create "$RELEASE_TAG" \
               "$apk" \
               "$apk.sha256" \
-              --title "Timeline Visualizer privacy prototype 2" \
+              --title "Timeline Visualizer privacy prototype 2.1" \
               --notes-file "docs/release-notes-privacy-prototype-2.md" \
               --prerelease \
               --verify-tag

@@ -1,4 +1,4 @@
-# Timeline Visualizer privacy prototype 2
+# Timeline Visualizer privacy prototype 2.1
 
 This is an experimental side build for issue 66. It installs beside the production
 app as **Timeline Visualizer Privacy** and does not change the main release version.

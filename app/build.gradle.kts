@@ -60,7 +60,7 @@ android {
         create("privacyPrototype") {
             dimension = "distribution"
             applicationIdSuffix = ".privacyprototype"
-            versionNameSuffix = "-privacy-prototype.2"
+            versionNameSuffix = "-privacy-prototype.2.1"
             buildConfigField(
                 "String",
                 "UPDATE_URL",
