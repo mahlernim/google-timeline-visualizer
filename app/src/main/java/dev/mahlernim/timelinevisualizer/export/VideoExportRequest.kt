@@ -49,7 +49,7 @@ class VideoExportRequestStore(context: Context) {
             output.writeUTF(request.cameraSettings.cameraMovement.name)
             output.writeUTF(request.cameraSettings.longTripCompression.name)
             output.writeUTF(request.cameraSettings.videoQuality.name)
-            output.writeDouble(request.cameraSettings.zoomInMovementReduction)
+            output.writeDouble(request.cameraSettings.zoomInTravelSlowdown)
             output.writeInt(request.journey.points.size)
             request.journey.points.forEach { point ->
                 output.writeLong(point.instant.toEpochMilli())
@@ -106,10 +106,10 @@ class VideoExportRequestStore(context: Context) {
                             cameraMovement = enumOrDefault(input.readUTF(), CameraMovement.STEADY),
                             longTripCompression = enumOrDefault(input.readUTF(), LongTripCompression.BALANCED),
                             videoQuality = enumOrDefault(input.readUTF(), VideoQuality.STANDARD),
-                            zoomInMovementReduction = if (version >= 6) {
+                            zoomInTravelSlowdown = if (version >= 6) {
                                 input.readDouble().coerceIn(0.0, 1.0)
                             } else {
-                                CameraSettings.DEFAULT_ZOOM_IN_MOVEMENT_REDUCTION
+                                CameraSettings.DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN
                             },
                         )
                     } else if (version == 3) {

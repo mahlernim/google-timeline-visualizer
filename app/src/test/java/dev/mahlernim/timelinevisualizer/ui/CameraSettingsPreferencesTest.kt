@@ -2,6 +2,7 @@ package dev.mahlernim.timelinevisualizer.ui
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import dev.mahlernim.timelinevisualizer.BuildConfig
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
@@ -36,7 +37,7 @@ class CameraSettingsPreferencesTest {
             cameraMovement = CameraMovement.FIXED,
             longTripCompression = LongTripCompression.STRONG,
             videoQuality = VideoQuality.ULTRA,
-            zoomInMovementReduction = 0.85,
+            zoomInTravelSlowdown = 0.85,
         )
 
         preferences.save(expected)
@@ -50,7 +51,7 @@ class CameraSettingsPreferencesTest {
         assertEquals(CameraMovement.STEADY, preferences.load().cameraMovement)
         assertEquals(LongTripCompression.BALANCED, preferences.load().longTripCompression)
         assertEquals(VideoQuality.STANDARD, preferences.load().videoQuality)
-        assertEquals(0.60, preferences.load().zoomInMovementReduction, 0.0001)
+        assertEquals(BuildConfig.DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN, preferences.load().zoomInTravelSlowdown, 0.0001)
     }
 
     @Test
@@ -69,6 +70,16 @@ class CameraSettingsPreferencesTest {
             .putFloat("zoom-in-movement-reduction", 0.75f)
             .apply()
 
-        assertEquals(0.75, CameraSettingsPreferences(context).load().zoomInMovementReduction, 0.0001)
+        assertEquals(0.75, CameraSettingsPreferences(context).load().zoomInTravelSlowdown, 0.0001)
+    }
+
+    @Test
+    fun migratesTheCameraLabOneIntegerPreference() {
+        context.getSharedPreferences("camera-settings", Context.MODE_PRIVATE)
+            .edit()
+            .putInt("zoom-in-movement-reduction", 80)
+            .apply()
+
+        assertEquals(0.80, CameraSettingsPreferences(context).load().zoomInTravelSlowdown, 0.0001)
     }
 }

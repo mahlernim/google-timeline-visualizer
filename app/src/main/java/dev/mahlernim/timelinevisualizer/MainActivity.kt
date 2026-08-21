@@ -1177,10 +1177,10 @@ class MainActivity : AppCompatActivity() {
             updateAdvancedSettings(cameraSettings.copy(cameraMovement = CameraMovement.values()[position]))
         }
         settingsScreen.cameraLabNotice.visibility = if (BuildConfig.IS_CAMERA_LAB) View.VISIBLE else View.GONE
-        settingsScreen.zoomInMovementReductionGroup.visibility = if (BuildConfig.IS_CAMERA_LAB) View.VISIBLE else View.GONE
-        settingsScreen.zoomInMovementReductionSlider.addOnChangeListener { _, value, fromUser ->
+        settingsScreen.zoomInTravelSlowdownGroup.visibility = if (BuildConfig.IS_CAMERA_LAB) View.VISIBLE else View.GONE
+        settingsScreen.zoomInTravelSlowdownSlider.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
-                updateAdvancedSettings(cameraSettings.copy(zoomInMovementReduction = value.toDouble() / 100.0))
+                updateAdvancedSettings(cameraSettings.copy(zoomInTravelSlowdown = value.toDouble() / 100.0))
             }
         }
         settingsScreen.longTripDropdown.setOnItemClickListener { _, _, position, _ ->
@@ -1385,12 +1385,12 @@ class MainActivity : AppCompatActivity() {
                 R.string.camera_close_up_summary,
             )[settings.cameraMovement.ordinal],
         )
-        val reductionPercent = (settings.zoomInMovementReduction.coerceIn(0.0, 1.0) * 100).toInt()
-        settingsScreen.zoomInMovementReductionValue.text = getString(
-            R.string.zoom_in_movement_reduction_value,
-            reductionPercent,
+        val slowdownPercent = (settings.zoomInTravelSlowdown.coerceIn(0.0, 1.0) * 100).toInt()
+        settingsScreen.zoomInTravelSlowdownValue.text = getString(
+            R.string.zoom_in_travel_slowdown_value,
+            slowdownPercent,
         )
-        settingsScreen.zoomInMovementReductionSlider.value = reductionPercent.toFloat()
+        settingsScreen.zoomInTravelSlowdownSlider.value = slowdownPercent.toFloat()
         settingsScreen.longTripDropdown.setText(
             getString(
                 listOf(
@@ -1767,7 +1767,7 @@ class MainActivity : AppCompatActivity() {
         editor.ownerInput.isEnabled = !exporting
         editor.titleInput.isEnabled = !exporting
         settingsScreen.cameraMovementDropdown.isEnabled = !exporting
-        settingsScreen.zoomInMovementReductionSlider.isEnabled = !exporting
+        settingsScreen.zoomInTravelSlowdownSlider.isEnabled = !exporting
         settingsScreen.longTripDropdown.isEnabled = !exporting
         settingsScreen.videoQualityDropdown.isEnabled = !exporting
         settingsScreen.resetAdvancedSettingsButton.isEnabled = !exporting

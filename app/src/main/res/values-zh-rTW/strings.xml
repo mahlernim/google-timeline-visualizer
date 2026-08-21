@@ -168,9 +168,9 @@
     <string name="camera_dynamic_summary">根據旅程的不同部分更主動地調整縮放。</string>
     <string name="camera_close_up_summary">盡可能貼近您的目前位置。</string>
     <string name="camera_lab_notice">Camera Lab 實驗版 · 與正式版應用程式分開安裝</string>
-    <string name="zoom_in_movement_reduction">放大時減少地圖移動</string>
-    <string name="zoom_in_movement_reduction_value">%1$d%%</string>
-    <string name="zoom_in_movement_reduction_summary">數值越高，放大時地圖移動越慢。縮小時的移動不變。</string>
+    <string name="zoom_in_travel_slowdown">放大時減慢行程</string>
+    <string name="zoom_in_travel_slowdown_value">%1$d%%</string>
+    <string name="zoom_in_travel_slowdown_summary">數值越高，放大時標記移動越慢。縮放仍保持快速，並重新分配節省的時間以維持影片長度。</string>
     <string name="route_context">路線細節</string>
     <string name="route_context_compact">緊湊 · 2%</string>
     <string name="route_context_balanced">平衡 · 5%</string>

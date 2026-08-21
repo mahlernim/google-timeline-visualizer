@@ -90,19 +90,21 @@ class TimelinePainterTest {
     }
 
     @Test
-    fun zoomInMovementReductionIsAsymmetricAndRecoversGradually() {
+    fun zoomInTravelSlowdownPreservesDurationAndRedistributesTravel() {
         val painter = TimelinePainter()
+        val intensity = listOf(0.0, 0.0, 1.0, 1.0, 0.0, 0.0)
 
-        val baseline = painter.panFollowForZoomStep(0.10, 0.095, 0.05, 0.0, 1.0)
-        val reducedZoomIn = painter.panFollowForZoomStep(0.10, 0.095, 0.05, 0.75, 1.0)
-        val normalZoomOut = painter.panFollowForZoomStep(0.095, 0.10, 0.20, 0.75, reducedZoomIn)
-        val recovering = painter.panFollowForZoomStep(0.095, 0.095, 0.095, 0.75, reducedZoomIn)
+        val baseline = painter.durationPreservingTravelProgress(intensity, 0.0)
+        val slowed = painter.durationPreservingTravelProgress(intensity, 0.75)
 
-        assertEquals(1.0, baseline, 0.0)
-        assertTrue(reducedZoomIn < 1.0)
-        assertEquals(1.0, normalZoomOut, 0.0)
-        assertTrue(recovering > reducedZoomIn)
-        assertTrue(recovering < 1.0)
+        assertEquals(0f, slowed.first(), 0f)
+        assertEquals(1f, slowed.last(), 0f)
+        assertTrue(slowed.zipWithNext().all { (from, to) -> to >= from })
+        assertTrue(slowed[2] - slowed[1] < slowed[1] - slowed[0])
+        assertTrue(slowed[4] - slowed[3] > slowed[2] - slowed[1])
+        baseline.forEachIndexed { index, progress ->
+            assertEquals(index.toFloat() / baseline.lastIndex, progress, 1e-6f)
+        }
     }
 
     @Test
@@ -128,7 +130,7 @@ class TimelinePainterTest {
     }
 
     @Test
-    fun strongestZoomInReductionStillKeepsTheMarkerInsideTheSafetyArea() {
+    fun strongestZoomInSlowdownKeepsTheMarkerInTheCenterZone() {
         val journey = Journey.from(
             listOf(
                 point(37.50, 126.80),
@@ -142,19 +144,96 @@ class TimelinePainterTest {
         val settings = CameraSettings(
             cameraMovement = CameraMovement.CLOSE_UP,
             longTripCompression = LongTripCompression.OFF,
-            zoomInMovementReduction = 1.0,
+            zoomInTravelSlowdown = 1.0,
         )
-        val frames = TimelinePainter()
+        val track = TimelinePainter()
             .buildCameraTrackForBackground(journey, SIZE, SIZE, settings)
-            .track.frames
+            .track
+        val frames = track.frames
 
         frames.forEachIndexed { index, frame ->
             val progress = index.toDouble() / frames.lastIndex
-            val marker = WebMercator.project(journey.positionAtDistance(journey.totalDistanceKm * progress).point)
+            val travelProgress = track.travelProgressAt(progress.toFloat())
+            val marker = WebMercator.project(
+                journey.positionAtDistance(journey.totalDistanceKm * travelProgress).point,
+            )
             val markerX = unwrapNear(marker.x, frame.centerX)
-            assertTrue(kotlin.math.abs(markerX - frame.centerX) <= frame.spanY * 0.46 + 1e-12)
-            assertTrue(kotlin.math.abs(marker.y - frame.centerY) <= frame.spanY * 0.46 + 1e-12)
+            val xOffset = kotlin.math.abs(markerX - frame.centerX)
+            val yOffset = kotlin.math.abs(marker.y - frame.centerY)
+            val limit = frame.spanY * 0.20 + 1e-9
+            assertTrue("Frame $index x offset $xOffset exceeded $limit", xOffset <= limit)
+            assertTrue("Frame $index y offset $yOffset exceeded $limit", yOffset <= limit)
         }
+        repeat(frames.lastIndex * 10 + 1) { sample ->
+            val progress = sample.toFloat() / (frames.lastIndex * 10)
+            val viewport = track.viewportAt(progress)
+            val travelProgress = track.travelProgressAt(progress)
+            val marker = WebMercator.project(
+                journey.positionAtDistance(journey.totalDistanceKm * travelProgress).point,
+            )
+            val centerX = (viewport.minX + viewport.maxX) / 2.0
+            val centerY = (viewport.minY + viewport.maxY) / 2.0
+            val markerX = unwrapNear(marker.x, centerX)
+            val spanY = viewport.maxY - viewport.minY
+            val limit = spanY * 0.205 + 1e-9
+            assertTrue(
+                "Interpolated sample $sample x offset exceeded $limit",
+                kotlin.math.abs(markerX - centerX) <= limit,
+            )
+            assertTrue(
+                "Interpolated sample $sample y offset exceeded $limit",
+                kotlin.math.abs(marker.y - centerY) <= limit,
+            )
+        }
+    }
+
+    @Test
+    fun travelSlowdownDoesNotSlowTheZoomTrackOrChangeTheDuration() {
+        val journey = Journey.from(
+            listOf(
+                point(37.50, 126.80),
+                point(37.60, 127.20),
+                point(37.52, 126.85),
+                point(37.58, 127.15),
+            ),
+            2025,
+        )
+        val baseline = TimelinePainter().buildCameraTrackForBackground(
+            journey,
+            SIZE,
+            SIZE,
+            CameraSettings(CameraMovement.CLOSE_UP, LongTripCompression.OFF, zoomInTravelSlowdown = 0.0),
+        ).track
+        val slowed = TimelinePainter().buildCameraTrackForBackground(
+            journey,
+            SIZE,
+            SIZE,
+            CameraSettings(CameraMovement.CLOSE_UP, LongTripCompression.OFF, zoomInTravelSlowdown = 1.0),
+        ).track
+
+        baseline.frames.zip(slowed.frames).forEach { (normal, adjusted) ->
+            assertEquals(normal.spanY, adjusted.spanY, 1e-12)
+            assertEquals(normal.zoom, adjusted.zoom)
+        }
+        val zoomingSteps = slowed.frames.indices.drop(1).filter {
+            slowed.frames[it].zoomInIntensity >= 0.25
+        }
+        val calmSteps = slowed.frames.indices.drop(1).filter {
+            slowed.frames[it].zoomInIntensity == 0.0
+        }
+        assertTrue("The test journey did not produce a zoom-in interval", zoomingSteps.isNotEmpty())
+        assertTrue("The test journey did not produce a calm interval", calmSteps.isNotEmpty())
+        val zoomingTravel = zoomingSteps.map { index ->
+            slowed.travelProgressAt(index.toFloat() / slowed.frames.lastIndex) -
+                slowed.travelProgressAt((index - 1).toFloat() / slowed.frames.lastIndex)
+        }.average()
+        val calmTravel = calmSteps.map { index ->
+            slowed.travelProgressAt(index.toFloat() / slowed.frames.lastIndex) -
+                slowed.travelProgressAt((index - 1).toFloat() / slowed.frames.lastIndex)
+        }.average()
+        assertTrue("Zoom-in travel $zoomingTravel was not slower than calm travel $calmTravel", zoomingTravel < calmTravel)
+        assertEquals(0f, slowed.travelProgressAt(0f), 0f)
+        assertEquals(1f, slowed.travelProgressAt(1f), 0f)
     }
 
     @Test

@@ -175,9 +175,9 @@
     <string name="camera_dynamic_summary">Ajusta el zoom más activamente en cada parte del viaje.</string>
     <string name="camera_close_up_summary">Se mantiene cerca de tu ubicación siempre que sea posible.</string>
     <string name="camera_lab_notice">Experimento Camera Lab · se instala por separado de la aplicación de producción</string>
-    <string name="zoom_in_movement_reduction">Reducción de movimiento al acercar</string>
-    <string name="zoom_in_movement_reduction_value">%1$d%%</string>
-    <string name="zoom_in_movement_reduction_summary">Los valores más altos reducen más el movimiento del mapa al acercar. El movimiento al alejar no cambia.</string>
+    <string name="zoom_in_travel_slowdown">Ralentizar el recorrido al acercar</string>
+    <string name="zoom_in_travel_slowdown_value">%1$d%%</string>
+    <string name="zoom_in_travel_slowdown_summary">Los valores altos ralentizan el marcador al acercar. El zoom sigue siendo rápido y el tiempo ahorrado se redistribuye para conservar la duración del video.</string>
     <string name="route_context">Contexto de ruta</string>
     <string name="route_context_compact">Compacto · 2%</string>
     <string name="route_context_balanced">Equilibrado · 5%</string>

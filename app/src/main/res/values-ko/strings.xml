@@ -167,9 +167,9 @@
     <string name="camera_dynamic_summary">여정의 각 구간에 맞춰 줌을 더 적극적으로 조절합니다.</string>
     <string name="camera_close_up_summary">가능한 한 현재 위치를 가깝게 따라갑니다.</string>
     <string name="camera_lab_notice">Camera Lab 실험판 · 정식 앱과 별도로 설치됩니다</string>
-    <string name="zoom_in_movement_reduction">확대 중 지도 움직임 줄이기</string>
-    <string name="zoom_in_movement_reduction_value">%1$d%%</string>
-    <string name="zoom_in_movement_reduction_summary">값이 높을수록 확대 중 지도 움직임이 더 느려집니다. 축소 중 움직임은 바뀌지 않습니다.</string>
+    <string name="zoom_in_travel_slowdown">확대 중 이동 속도 줄이기</string>
+    <string name="zoom_in_travel_slowdown_value">%1$d%%</string>
+    <string name="zoom_in_travel_slowdown_summary">값이 높을수록 확대 중 마커 이동이 느려집니다. 확대는 빠르게 유지되며 영상 길이를 보존하도록 남은 시간을 재분배합니다.</string>
     <string name="route_context">경로 표시 범위</string>
     <string name="route_context_compact">좁게 · 2%</string>
     <string name="route_context_balanced">균형 · 5%</string>

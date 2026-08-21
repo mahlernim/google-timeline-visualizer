@@ -167,9 +167,9 @@
     <string name="camera_dynamic_summary">旅の各区間に合わせてズームをより積極的に調整します。</string>
     <string name="camera_close_up_summary">可能な限り現在地を近く表示します。</string>
     <string name="camera_lab_notice">Camera Lab 実験版 · 製品版アプリとは別にインストールされます</string>
-    <string name="zoom_in_movement_reduction">ズームイン中の移動を抑える</string>
-    <string name="zoom_in_movement_reduction_value">%1$d%%</string>
-    <string name="zoom_in_movement_reduction_summary">値を大きくすると、ズームイン中の地図移動がより遅くなります。ズームアウト時の移動は変わりません。</string>
+    <string name="zoom_in_travel_slowdown">ズームイン中の移動速度を下げる</string>
+    <string name="zoom_in_travel_slowdown_value">%1$d%%</string>
+    <string name="zoom_in_travel_slowdown_summary">値を大きくすると、ズームイン中のマーカー移動が遅くなります。ズームは素早いままで、動画の長さを保つために余った時間を再配分します。</string>
     <string name="route_context">ルート表示範囲</string>
     <string name="route_context_compact">狭い · 2%</string>
     <string name="route_context_balanced">標準 · 5%</string>

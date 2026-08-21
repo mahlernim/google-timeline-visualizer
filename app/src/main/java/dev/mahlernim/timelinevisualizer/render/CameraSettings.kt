@@ -1,5 +1,7 @@
 package dev.mahlernim.timelinevisualizer.render
 
+import dev.mahlernim.timelinevisualizer.BuildConfig
+
 enum class CameraMovement(
     val contextFraction: Double,
     val minimumContextKm: Double,
@@ -43,10 +45,10 @@ data class CameraSettings(
     val cameraMovement: CameraMovement = CameraMovement.STEADY,
     val longTripCompression: LongTripCompression = LongTripCompression.BALANCED,
     val videoQuality: VideoQuality = VideoQuality.STANDARD,
-    val zoomInMovementReduction: Double = DEFAULT_ZOOM_IN_MOVEMENT_REDUCTION,
+    val zoomInTravelSlowdown: Double = DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN,
 ) {
     companion object {
-        const val DEFAULT_ZOOM_IN_MOVEMENT_REDUCTION = 0.60
+        val DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN = BuildConfig.DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN
         val DEFAULT = CameraSettings()
     }
 }

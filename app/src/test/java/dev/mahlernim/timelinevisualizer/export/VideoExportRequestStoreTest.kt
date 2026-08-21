@@ -2,6 +2,7 @@ package dev.mahlernim.timelinevisualizer.export
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import dev.mahlernim.timelinevisualizer.BuildConfig
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
@@ -194,7 +195,7 @@ class VideoExportRequestStoreTest {
         val restored = store.load()!!
 
         assertEquals(CameraMovement.DYNAMIC, restored.cameraSettings.cameraMovement)
-        assertEquals(0.60, restored.cameraSettings.zoomInMovementReduction, 0.0)
+        assertEquals(BuildConfig.DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN, restored.cameraSettings.zoomInTravelSlowdown, 0.0)
     }
 
     @Test

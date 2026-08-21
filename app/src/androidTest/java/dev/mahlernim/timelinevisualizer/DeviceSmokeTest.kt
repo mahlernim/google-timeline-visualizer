@@ -31,6 +31,12 @@ class DeviceSmokeTest {
 
                 activity.findViewById<View>(R.id.navigationSettings).performClick()
                 assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.settingsScreen).visibility)
+                if (BuildConfig.IS_CAMERA_LAB) {
+                    assertEquals(
+                        View.VISIBLE,
+                        activity.findViewById<View>(R.id.zoomInTravelSlowdownGroup).visibility,
+                    )
+                }
 
                 val navigation = activity.findViewById<ViewGroup>(R.id.bottomNavigation)
                 for (itemId in listOf(R.id.navigationVideos, R.id.navigationCreate, R.id.navigationSettings)) {

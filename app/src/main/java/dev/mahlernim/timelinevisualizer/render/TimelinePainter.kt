@@ -369,9 +369,8 @@ class TimelinePainter {
         } else {
             null
         }
-        val frames = ArrayList<CameraFrame>(CAMERA_TRACK_SAMPLES + 1)
+        val baseFrames = ArrayList<CameraFrame>(CAMERA_TRACK_SAMPLES + 1)
         var previous: CameraFrame? = null
-        var previousPanFollow = 1.0
         rawSamples.forEach { sample ->
             val raw = sample.viewport
             val rawCenterX = (raw.minX + raw.maxX) / 2.0
@@ -385,6 +384,7 @@ class TimelinePainter {
                     clampCenterY(rawCenterY, rawSpanY),
                     rawSpanY,
                     tileZoom(width, aspect, rawSpanY),
+                    0.0,
                 )
             } else {
                 val zoomAlpha = if (rawSpanY > previous.spanY) {
@@ -414,54 +414,110 @@ class TimelinePainter {
                     marker.y > desiredCenterY + deadHalfY -> marker.y - deadHalfY
                     else -> desiredCenterY
                 }
-                val panFollow = panFollowForZoomStep(
-                    previousSpanY = previous.spanY,
-                    nextSpanY = spanY,
-                    rawTargetSpanY = rawSpanY,
-                    reduction = cameraSettings.zoomInMovementReduction,
-                    previousPanFollow = previousPanFollow,
-                )
-                previousPanFollow = panFollow
-                var centerX = lerp(previous.centerX, desiredCenterX, panFollow)
-                var centerY = lerp(previous.centerY, desiredCenterY, panFollow)
-                val safetyHalfX = spanX * CAMERA_SAFETY_ZONE_HALF
-                val safetyHalfY = spanY * CAMERA_SAFETY_ZONE_HALF
+                var centerX = desiredCenterX
+                var centerY = desiredCenterY
+                val safetyHalfX = spanX * CAMERA_CENTER_ZONE_HALF
+                val safetyHalfY = spanY * CAMERA_CENTER_ZONE_HALF
                 centerX = centerX.coerceIn(markerX - safetyHalfX, markerX + safetyHalfX)
                 centerY = centerY.coerceIn(marker.y - safetyHalfY, marker.y + safetyHalfY)
                 centerY = clampCenterY(centerY, spanY)
+                val zoomInIntensity = if (
+                    !movement.fixedZoom && spanY < previous.spanY - ZOOM_DIRECTION_EPSILON
+                ) {
+                    (
+                        ln(previous.spanY / rawSpanY.coerceAtLeast(MIN_VIEWPORT_SPAN)) /
+                            ZOOM_IN_TARGET_LOG_RANGE
+                        ).coerceIn(0.0, 1.0)
+                } else {
+                    0.0
+                }
                 val continuousZoom = log2(width.coerceAtLeast(1) / (256.0 * spanX))
                 val tileZoom = stabilizedTileZoom(previous.zoom, continuousZoom)
-                CameraFrame(centerX, centerY, spanY, tileZoom)
+                CameraFrame(centerX, centerY, spanY, tileZoom, zoomInIntensity)
+            }
+            baseFrames.add(frame)
+            previous = frame
+        }
+        val travelProgress = durationPreservingTravelProgress(
+            baseFrames.map(CameraFrame::zoomInIntensity),
+            cameraSettings.zoomInTravelSlowdown,
+        )
+        val frames = recenterCameraFrames(
+            journey,
+            cameraSettings,
+            baseFrames,
+            travelProgress,
+            aspect,
+        )
+        return CameraTrack(frames, aspect, travelProgress)
+    }
+
+    internal fun durationPreservingTravelProgress(
+        zoomInIntensity: List<Double>,
+        slowdown: Double,
+    ): List<Float> {
+        if (zoomInIntensity.size <= 1) return List(zoomInIntensity.size) { 0f }
+        val clampedSlowdown = slowdown.coerceIn(0.0, 1.0)
+        val weights = (1 until zoomInIntensity.size).map { index ->
+            1.0 - clampedSlowdown * zoomInIntensity[index].coerceIn(0.0, 1.0)
+        }
+        val total = weights.sum()
+        if (total <= ZOOM_DIRECTION_EPSILON) {
+            return List(zoomInIntensity.size) { index -> index.toFloat() / zoomInIntensity.lastIndex }
+        }
+        var cumulative = 0.0
+        return buildList(zoomInIntensity.size) {
+            add(0f)
+            weights.forEachIndexed { index, weight ->
+                cumulative += weight
+                add(if (index == weights.lastIndex) 1f else (cumulative / total).toFloat())
+            }
+        }
+    }
+
+    private fun recenterCameraFrames(
+        journey: Journey,
+        cameraSettings: CameraSettings,
+        baseFrames: List<CameraFrame>,
+        travelProgress: List<Float>,
+        aspect: Double,
+    ): List<CameraFrame> {
+        val frames = ArrayList<CameraFrame>(baseFrames.size)
+        var previous: CameraFrame? = null
+        baseFrames.forEachIndexed { index, base ->
+            val projectedMarker = WebMercator.project(
+                playbackPosition(journey, travelProgress[index], cameraSettings).point,
+            )
+            val marker = if (previous == null) {
+                projectedMarker
+            } else {
+                projectedMarker.copy(x = unwrapNear(projectedMarker.x, previous.centerX))
+            }
+            val frame = if (previous == null) {
+                base.copy(centerX = marker.x, centerY = clampCenterY(marker.y, base.spanY))
+            } else {
+                val markerX = unwrapNear(marker.x, previous.centerX)
+                val spanX = base.spanY * aspect
+                val deadHalfX = spanX * CAMERA_DEAD_ZONE_HALF
+                val deadHalfY = base.spanY * CAMERA_DEAD_ZONE_HALF
+                var centerX = when {
+                    markerX < previous.centerX - deadHalfX -> markerX + deadHalfX
+                    markerX > previous.centerX + deadHalfX -> markerX - deadHalfX
+                    else -> previous.centerX
+                }
+                var centerY = when {
+                    marker.y < previous.centerY - deadHalfY -> marker.y + deadHalfY
+                    marker.y > previous.centerY + deadHalfY -> marker.y - deadHalfY
+                    else -> previous.centerY
+                }
+                centerX = centerX.coerceIn(markerX - deadHalfX, markerX + deadHalfX)
+                centerY = centerY.coerceIn(marker.y - deadHalfY, marker.y + deadHalfY)
+                base.copy(centerX = centerX, centerY = clampCenterY(centerY, base.spanY))
             }
             frames.add(frame)
             previous = frame
         }
-        return CameraTrack(frames, aspect)
-    }
-
-    internal fun panFollowForZoomStep(
-        previousSpanY: Double,
-        nextSpanY: Double,
-        rawTargetSpanY: Double,
-        reduction: Double,
-        previousPanFollow: Double,
-    ): Double {
-        if (nextSpanY > previousSpanY + ZOOM_DIRECTION_EPSILON) return 1.0
-        val clampedReduction = reduction.coerceIn(0.0, 1.0)
-        val target = if (nextSpanY < previousSpanY - ZOOM_DIRECTION_EPSILON) {
-            val zoomInIntensity = (
-                ln(previousSpanY / rawTargetSpanY.coerceAtLeast(MIN_VIEWPORT_SPAN)) /
-                    ZOOM_IN_TARGET_LOG_RANGE
-                ).coerceIn(0.0, 1.0)
-            1.0 - clampedReduction * zoomInIntensity
-        } else {
-            1.0
-        }
-        return if (target < previousPanFollow) {
-            target
-        } else {
-            lerp(previousPanFollow, target, PAN_FOLLOW_RECOVERY_ALPHA)
-        }.coerceIn(0.0, 1.0)
+        return frames
     }
 
     private fun tileZoom(width: Int, aspect: Double, spanY: Double): Int =
@@ -646,10 +702,13 @@ class TimelinePainter {
         drawBackground(canvas, width, height)
         drawTiles(canvas, width, height, viewport, tiles)
 
-        val current = if (!allowCameraTrackBuild && frame.journeyProgress <= 0f) {
+        val travelProgress = cachedCameraTrack(journey, width, height, cameraSettings)
+            ?.travelProgressAt(frame.journeyProgress)
+            ?: frame.journeyProgress
+        val current = if (!allowCameraTrackBuild && travelProgress <= 0f) {
             journey.positionAtDistance(0.0)
         } else {
-            playbackPosition(journey, frame.journeyProgress, cameraSettings)
+            playbackPosition(journey, travelProgress, cameraSettings)
         }
         val currentScreen = if (prepared == null) {
             val projected = WebMercator.project(current.point)
@@ -1037,6 +1096,7 @@ class TimelinePainter {
         val centerY: Double,
         val spanY: Double,
         val zoom: Int,
+        val zoomInIntensity: Double = 0.0,
     )
 
     private data class RawCameraSample(
@@ -1090,6 +1150,7 @@ class TimelinePainter {
     internal class CameraTrack(
         internal val frames: List<CameraFrame>,
         private val aspect: Double,
+        private val travelProgress: List<Float>,
     ) {
         fun viewportAt(progress: Float): Viewport {
             if (frames.size == 1) return frames.first().toViewport(aspect)
@@ -1106,6 +1167,18 @@ class TimelinePainter {
             )
             val zoom = if (fraction < 0.5) from.zoom else to.zoom
             return CameraFrame(centerX, centerY, spanY, zoom).toViewport(aspect)
+        }
+
+        fun travelProgressAt(progress: Float): Float {
+            if (travelProgress.size == 1) return travelProgress.first()
+            val position = progress.coerceIn(0f, 1f) * travelProgress.lastIndex
+            val fromIndex = floor(position).toInt().coerceIn(0, travelProgress.lastIndex)
+            val toIndex = (fromIndex + 1).coerceAtMost(travelProgress.lastIndex)
+            val fraction = position - fromIndex
+            return (
+                travelProgress[fromIndex] +
+                    (travelProgress[toIndex] - travelProgress[fromIndex]) * fraction
+                )
         }
 
         private fun CameraFrame.toViewport(aspect: Double): Viewport {
@@ -1140,8 +1213,7 @@ class TimelinePainter {
         private const val CAMERA_PROGRESS_INTERVAL = 32
         private const val ROUTE_BOUNDS_BLOCK_SIZE = 256
         private const val CAMERA_DEAD_ZONE_HALF = 0.20
-        private const val CAMERA_SAFETY_ZONE_HALF = 0.46
-        private const val PAN_FOLLOW_RECOVERY_ALPHA = 0.12
+        private const val CAMERA_CENTER_ZONE_HALF = 0.20
         private val ZOOM_IN_TARGET_LOG_RANGE = ln(1.5)
         private const val ZOOM_DIRECTION_EPSILON = 1e-12
         private const val FIXED_ZOOM_PERCENTILE = 0.80
