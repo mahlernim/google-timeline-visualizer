@@ -8,6 +8,8 @@ import dev.mahlernim.timelinevisualizer.render.RenderText
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
+import dev.mahlernim.timelinevisualizer.render.LocalFraming
+import dev.mahlernim.timelinevisualizer.render.TripDetection
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 import java.io.DataInputStream
 import java.io.DataOutputStream
@@ -50,6 +52,9 @@ class VideoExportRequestStore(context: Context) {
             output.writeUTF(request.cameraSettings.longTripCompression.name)
             output.writeUTF(request.cameraSettings.videoQuality.name)
             output.writeDouble(request.cameraSettings.zoomInTravelSlowdown)
+            output.writeBoolean(request.cameraSettings.episodeFramingEnabled)
+            output.writeUTF(request.cameraSettings.tripDetection.name)
+            output.writeUTF(request.cameraSettings.localFraming.name)
             output.writeInt(request.journey.points.size)
             request.journey.points.forEach { point ->
                 output.writeLong(point.instant.toEpochMilli())
@@ -83,7 +88,7 @@ class VideoExportRequestStore(context: Context) {
                     endYear = startYear
                     endMonth = input.readInt()
                     renderText = RenderText.ENGLISH
-                    cameraSettings = CameraSettings.DEFAULT
+                    cameraSettings = CameraSettings.DEFAULT.copy(episodeFramingEnabled = false)
                 } else {
                     endYear = input.readInt()
                     endMonth = input.readInt()
@@ -111,6 +116,17 @@ class VideoExportRequestStore(context: Context) {
                             } else {
                                 CameraSettings.DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN
                             },
+                            episodeFramingEnabled = if (version >= 7) input.readBoolean() else false,
+                            tripDetection = if (version >= 7) {
+                                enumOrDefault(input.readUTF(), TripDetection.BALANCED)
+                            } else {
+                                TripDetection.BALANCED
+                            },
+                            localFraming = if (version >= 7) {
+                                enumOrDefault(input.readUTF(), LocalFraming.BALANCED)
+                            } else {
+                                LocalFraming.BALANCED
+                            },
                         )
                     } else if (version == 3) {
                         repeat(4) { input.readUTF() }
@@ -118,9 +134,10 @@ class VideoExportRequestStore(context: Context) {
                             cameraMovement = CameraMovement.STEADY,
                             longTripCompression = enumOrDefault(input.readUTF(), LongTripCompression.BALANCED),
                             videoQuality = enumOrDefault(input.readUTF(), VideoQuality.STANDARD),
+                            episodeFramingEnabled = false,
                         )
                     } else {
-                        CameraSettings.DEFAULT
+                        CameraSettings.DEFAULT.copy(episodeFramingEnabled = false)
                     }
                 }
                 val pointCount = input.readInt().coerceIn(0, MAX_POINT_COUNT)
@@ -156,7 +173,7 @@ class VideoExportRequestStore(context: Context) {
     }
 
     companion object {
-        private const val CURRENT_FILE_VERSION = 6
+        private const val CURRENT_FILE_VERSION = 7
         private const val MAX_POINT_COUNT = 2_000_000
         private const val REQUEST_FILE = "pending-video-export.bin"
         private const val TEMPORARY_FILE = "pending-video-export.tmp"

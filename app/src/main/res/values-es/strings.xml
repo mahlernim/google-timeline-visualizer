@@ -178,6 +178,15 @@
     <string name="zoom_in_travel_slowdown">Ralentizar el recorrido al acercar</string>
     <string name="zoom_in_travel_slowdown_value">%1$d%%</string>
     <string name="zoom_in_travel_slowdown_summary">Los valores altos ralentizan el marcador al acercar. El zoom sigue siendo rápido y el tiempo ahorrado se redistribuye para conservar la duración del video.</string>
+    <string name="episode_framing">Encuadre del viaje local</string>
+    <string name="episode_framing_summary">Encuadra solo el tramo local actual entre traslados largos. Cerca de la salida, la cámara se aleja para el siguiente traslado.</string>
+    <string name="trip_detection">Detección de viajes</string>
+    <string name="trip_detection_conservative">Conservadora</string>
+    <string name="trip_detection_balanced">Equilibrada</string>
+    <string name="trip_detection_sensitive">Sensible</string>
+    <string name="local_framing_wide">Amplio</string>
+    <string name="local_framing_balanced">Equilibrado</string>
+    <string name="local_framing_close">Cercano</string>
     <string name="route_context">Contexto de ruta</string>
     <string name="route_context_compact">Compacto · 2%</string>
     <string name="route_context_balanced">Equilibrado · 5%</string>

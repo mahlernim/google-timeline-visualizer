@@ -88,6 +88,8 @@ import dev.mahlernim.timelinevisualizer.render.DistanceUnit
 import dev.mahlernim.timelinevisualizer.render.DistanceUnitPreference
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
+import dev.mahlernim.timelinevisualizer.render.LocalFraming
+import dev.mahlernim.timelinevisualizer.render.TripDetection
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 import dev.mahlernim.timelinevisualizer.ui.CameraSettingsPreferences
 import dev.mahlernim.timelinevisualizer.ui.DistanceUnitPreferences
@@ -1163,11 +1165,23 @@ class MainActivity : AppCompatActivity() {
             R.string.format_portrait_1080,
             R.string.format_landscape_1080,
         ).map(::getString)
+        val tripDetectionLabels = listOf(
+            R.string.trip_detection_conservative,
+            R.string.trip_detection_balanced,
+            R.string.trip_detection_sensitive,
+        ).map(::getString)
+        val localFramingLabels = listOf(
+            R.string.local_framing_wide,
+            R.string.local_framing_balanced,
+            R.string.local_framing_close,
+        ).map(::getString)
 
         listOf(
             settingsScreen.cameraMovementDropdown to cameraLabels,
             settingsScreen.longTripDropdown to compressionLabels,
             settingsScreen.videoQualityDropdown to qualityLabels,
+            settingsScreen.tripDetectionDropdown to tripDetectionLabels,
+            settingsScreen.localFramingDropdown to localFramingLabels,
         ).forEach { (dropdown, labels) ->
             dropdown.setAdapter(SelectionArrayAdapter(this, labels))
             makeDropdownOpenReliably(dropdown)
@@ -1178,10 +1192,22 @@ class MainActivity : AppCompatActivity() {
         }
         settingsScreen.cameraLabNotice.visibility = if (BuildConfig.IS_CAMERA_LAB) View.VISIBLE else View.GONE
         settingsScreen.zoomInTravelSlowdownGroup.visibility = if (BuildConfig.IS_CAMERA_LAB) View.VISIBLE else View.GONE
+        settingsScreen.episodeFramingGroup.visibility = if (BuildConfig.IS_CAMERA_LAB) View.VISIBLE else View.GONE
         settingsScreen.zoomInTravelSlowdownSlider.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
                 updateAdvancedSettings(cameraSettings.copy(zoomInTravelSlowdown = value.toDouble() / 100.0))
             }
+        }
+        settingsScreen.episodeFramingSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked != cameraSettings.episodeFramingEnabled) {
+                updateAdvancedSettings(cameraSettings.copy(episodeFramingEnabled = isChecked))
+            }
+        }
+        settingsScreen.tripDetectionDropdown.setOnItemClickListener { _, _, position, _ ->
+            updateAdvancedSettings(cameraSettings.copy(tripDetection = TripDetection.entries[position]))
+        }
+        settingsScreen.localFramingDropdown.setOnItemClickListener { _, _, position, _ ->
+            updateAdvancedSettings(cameraSettings.copy(localFraming = LocalFraming.entries[position]))
         }
         settingsScreen.longTripDropdown.setOnItemClickListener { _, _, position, _ ->
             updateAdvancedSettings(cameraSettings.copy(longTripCompression = LongTripCompression.values()[position]))
@@ -1391,6 +1417,29 @@ class MainActivity : AppCompatActivity() {
             slowdownPercent,
         )
         settingsScreen.zoomInTravelSlowdownSlider.value = slowdownPercent.toFloat()
+        settingsScreen.episodeFramingSwitch.isChecked = settings.episodeFramingEnabled
+        settingsScreen.tripDetectionDropdown.setText(
+            getString(
+                listOf(
+                    R.string.trip_detection_conservative,
+                    R.string.trip_detection_balanced,
+                    R.string.trip_detection_sensitive,
+                )[settings.tripDetection.ordinal],
+            ),
+            false,
+        )
+        settingsScreen.localFramingDropdown.setText(
+            getString(
+                listOf(
+                    R.string.local_framing_wide,
+                    R.string.local_framing_balanced,
+                    R.string.local_framing_close,
+                )[settings.localFraming.ordinal],
+            ),
+            false,
+        )
+        settingsScreen.tripDetectionDropdown.isEnabled = settings.episodeFramingEnabled && !exportingVideo
+        settingsScreen.localFramingDropdown.isEnabled = settings.episodeFramingEnabled && !exportingVideo
         settingsScreen.longTripDropdown.setText(
             getString(
                 listOf(
@@ -1768,6 +1817,9 @@ class MainActivity : AppCompatActivity() {
         editor.titleInput.isEnabled = !exporting
         settingsScreen.cameraMovementDropdown.isEnabled = !exporting
         settingsScreen.zoomInTravelSlowdownSlider.isEnabled = !exporting
+        settingsScreen.episodeFramingSwitch.isEnabled = !exporting
+        settingsScreen.tripDetectionDropdown.isEnabled = !exporting && cameraSettings.episodeFramingEnabled
+        settingsScreen.localFramingDropdown.isEnabled = !exporting && cameraSettings.episodeFramingEnabled
         settingsScreen.longTripDropdown.isEnabled = !exporting
         settingsScreen.videoQualityDropdown.isEnabled = !exporting
         settingsScreen.resetAdvancedSettingsButton.isEnabled = !exporting

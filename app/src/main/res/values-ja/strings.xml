@@ -170,6 +170,15 @@
     <string name="zoom_in_travel_slowdown">ズームイン中の移動速度を下げる</string>
     <string name="zoom_in_travel_slowdown_value">%1$d%%</string>
     <string name="zoom_in_travel_slowdown_summary">値を大きくすると、ズームイン中のマーカー移動が遅くなります。ズームは素早いままで、動画の長さを保つために余った時間を再配分します。</string>
+    <string name="episode_framing">現地旅行のフレーミング</string>
+    <string name="episode_framing_summary">長距離移動の間にある現在の現地旅行だけを表示範囲に含めます。出発が近づくと次の移動に合わせて表示を広げます。</string>
+    <string name="trip_detection">旅行区間の検出</string>
+    <string name="trip_detection_conservative">控えめ</string>
+    <string name="trip_detection_balanced">バランス</string>
+    <string name="trip_detection_sensitive">敏感</string>
+    <string name="local_framing_wide">広い</string>
+    <string name="local_framing_balanced">バランス</string>
+    <string name="local_framing_close">近い</string>
     <string name="route_context">ルート表示範囲</string>
     <string name="route_context_compact">狭い · 2%</string>
     <string name="route_context_balanced">標準 · 5%</string>

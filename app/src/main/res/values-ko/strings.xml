@@ -170,6 +170,15 @@
     <string name="zoom_in_travel_slowdown">확대 중 이동 속도 줄이기</string>
     <string name="zoom_in_travel_slowdown_value">%1$d%%</string>
     <string name="zoom_in_travel_slowdown_summary">값이 높을수록 확대 중 마커 이동이 느려집니다. 확대는 빠르게 유지되며 영상 길이를 보존하도록 남은 시간을 재분배합니다.</string>
+    <string name="episode_framing">현지 여행 프레이밍</string>
+    <string name="episode_framing_summary">장거리 이동 사이의 현재 현지 여행만 화면에 맞춥니다. 출발이 가까워지면 다음 장거리 이동에 맞게 화면을 넓힙니다.</string>
+    <string name="trip_detection">여행 구간 감지</string>
+    <string name="trip_detection_conservative">보수적</string>
+    <string name="trip_detection_balanced">균형</string>
+    <string name="trip_detection_sensitive">민감</string>
+    <string name="local_framing_wide">넓게</string>
+    <string name="local_framing_balanced">균형</string>
+    <string name="local_framing_close">가깝게</string>
     <string name="route_context">경로 표시 범위</string>
     <string name="route_context_compact">좁게 · 2%</string>
     <string name="route_context_balanced">균형 · 5%</string>

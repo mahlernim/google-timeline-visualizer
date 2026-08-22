@@ -171,6 +171,15 @@
     <string name="zoom_in_travel_slowdown">放大時減慢行程</string>
     <string name="zoom_in_travel_slowdown_value">%1$d%%</string>
     <string name="zoom_in_travel_slowdown_summary">數值越高，放大時標記移動越慢。縮放仍保持快速，並重新分配節省的時間以維持影片長度。</string>
+    <string name="episode_framing">本地行程取景</string>
+    <string name="episode_framing_summary">只取景兩次長途移動之間的目前本地行程。接近出發時，鏡頭會為下一段長途移動拉遠。</string>
+    <string name="trip_detection">行程偵測</string>
+    <string name="trip_detection_conservative">保守</string>
+    <string name="trip_detection_balanced">平衡</string>
+    <string name="trip_detection_sensitive">敏感</string>
+    <string name="local_framing_wide">寬</string>
+    <string name="local_framing_balanced">平衡</string>
+    <string name="local_framing_close">近</string>
     <string name="route_context">路線細節</string>
     <string name="route_context_compact">緊湊 · 2%</string>
     <string name="route_context_balanced">平衡 · 5%</string>

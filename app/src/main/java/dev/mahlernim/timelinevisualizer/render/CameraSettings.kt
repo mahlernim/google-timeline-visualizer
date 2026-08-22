@@ -26,6 +26,18 @@ enum class LongTripCompression(val exponent: Double) {
     STRONG(0.75),
 }
 
+enum class TripDetection(val thresholdMultiplier: Double) {
+    CONSERVATIVE(1.35),
+    BALANCED(1.00),
+    SENSITIVE(0.70),
+}
+
+enum class LocalFraming(val paddingMultiplier: Double) {
+    WIDE(1.30),
+    BALANCED(1.00),
+    CLOSE(0.78),
+}
+
 enum class VideoQuality(
     val width: Int,
     val height: Int,
@@ -46,9 +58,13 @@ data class CameraSettings(
     val longTripCompression: LongTripCompression = LongTripCompression.BALANCED,
     val videoQuality: VideoQuality = VideoQuality.STANDARD,
     val zoomInTravelSlowdown: Double = DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN,
+    val episodeFramingEnabled: Boolean = DEFAULT_EPISODE_FRAMING,
+    val tripDetection: TripDetection = TripDetection.BALANCED,
+    val localFraming: LocalFraming = LocalFraming.BALANCED,
 ) {
     companion object {
         val DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN = BuildConfig.DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN
+        val DEFAULT_EPISODE_FRAMING = BuildConfig.DEFAULT_EPISODE_FRAMING
         val DEFAULT = CameraSettings()
     }
 }

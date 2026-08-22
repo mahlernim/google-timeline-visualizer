@@ -130,6 +130,112 @@ class TimelinePainterTest {
     }
 
     @Test
+    fun episodeFramingExcludesTheReturnTripWhileTravelingLocally() {
+        val journey = roundTripJourney()
+        val destination = journey.legs[2]
+        val progress = ((destination.startKm + destination.lengthKm * 0.5) / journey.totalDistanceKm).toFloat()
+        val baseline = CameraSettings(
+            cameraMovement = CameraMovement.CLOSE_UP,
+            longTripCompression = LongTripCompression.OFF,
+            episodeFramingEnabled = false,
+        )
+        val experimental = baseline.copy(episodeFramingEnabled = true)
+
+        val baselineViewport = TimelinePainter().rawViewportForTest(
+            journey, progress, SIZE, SIZE, baseline, useRangeIndex = true,
+        )
+        val experimentalViewport = TimelinePainter().rawViewportForTest(
+            journey, progress, SIZE, SIZE, experimental, useRangeIndex = true,
+        )
+        val baselineSpan = baselineViewport.maxY - baselineViewport.minY
+        val experimentalSpan = experimentalViewport.maxY - experimentalViewport.minY
+
+        assertEquals(listOf(false, true, false, true, false), journey.legs.map { it.isTransfer })
+        assertTrue(
+            "Episode span $experimentalSpan was not substantially tighter than baseline $baselineSpan",
+            experimentalSpan < baselineSpan * 0.35,
+        )
+    }
+
+    @Test
+    fun episodeFramingWidensOnlyNearTheNextDeparture() {
+        val journey = roundTripJourney()
+        val destination = journey.legs[2]
+        val settings = CameraSettings(
+            cameraMovement = CameraMovement.CLOSE_UP,
+            longTripCompression = LongTripCompression.OFF,
+            episodeFramingEnabled = true,
+        )
+        fun spanAt(fraction: Double): Double {
+            val distance = destination.startKm + destination.lengthKm * fraction
+            val viewport = TimelinePainter().rawViewportForTest(
+                journey,
+                (distance / journey.totalDistanceKm).toFloat(),
+                SIZE,
+                SIZE,
+                settings,
+                useRangeIndex = true,
+            )
+            return viewport.maxY - viewport.minY
+        }
+
+        val localSpan = spanAt(0.50)
+        val departureSpan = spanAt(0.98)
+
+        assertTrue("Departure span $departureSpan did not widen beyond local span $localSpan", departureSpan > localSpan * 3)
+    }
+
+    @Test
+    fun localFramingPresetsProduceOrderedViewportWidths() {
+        val journey = roundTripJourney()
+        val destination = journey.legs[2]
+        val progress = ((destination.startKm + destination.lengthKm * 0.5) / journey.totalDistanceKm).toFloat()
+        val spans = LocalFraming.entries.map { localFraming ->
+            val viewport = TimelinePainter().rawViewportForTest(
+                journey,
+                progress,
+                SIZE,
+                SIZE,
+                CameraSettings(
+                    cameraMovement = CameraMovement.CLOSE_UP,
+                    longTripCompression = LongTripCompression.OFF,
+                    episodeFramingEnabled = true,
+                    localFraming = localFraming,
+                ),
+                useRangeIndex = true,
+            )
+            viewport.maxY - viewport.minY
+        }
+
+        assertTrue("Expected Wide > Balanced > Close, got $spans", spans[0] > spans[1] && spans[1] > spans[2])
+    }
+
+    @Test
+    fun sensitiveTripDetectionRecognizesShorterRelocations() {
+        val journey = Journey.from(
+            listOf(
+                point(0.0, 0.00),
+                point(0.0, 0.01),
+                point(0.0, 0.02),
+                point(0.0, 0.52),
+                point(0.0, 0.53),
+                point(0.0, 0.54),
+                point(0.0, 0.02),
+            ),
+            2025,
+        )
+        val balancedTransfers = journey.legsForThreshold(
+            journey.transferThresholdKm * TripDetection.BALANCED.thresholdMultiplier,
+        ).count { it.isTransfer }
+        val sensitiveTransfers = journey.legsForThreshold(
+            journey.transferThresholdKm * TripDetection.SENSITIVE.thresholdMultiplier,
+        ).count { it.isTransfer }
+
+        assertEquals(0, balancedTransfers)
+        assertEquals(2, sensitiveTransfers)
+    }
+
+    @Test
     fun strongestZoomInSlowdownKeepsTheMarkerInTheCenterZone() {
         val journey = Journey.from(
             listOf(
@@ -430,6 +536,21 @@ class TimelinePainterTest {
         Instant.parse("2025-06-01T00:00:00Z"),
         latitude,
         longitude,
+    )
+
+    private fun roundTripJourney(): Journey = Journey.from(
+        listOf(
+            point(37.55, 126.95),
+            point(37.57, 126.98),
+            point(37.56, 127.02),
+            point(35.67, 139.65),
+            point(35.69, 139.70),
+            point(35.66, 139.75),
+            point(35.71, 139.80),
+            point(37.56, 127.02),
+            point(37.58, 126.99),
+        ),
+        2025,
     )
 
     private fun tileViewport(width: Int, height: Int): Viewport {

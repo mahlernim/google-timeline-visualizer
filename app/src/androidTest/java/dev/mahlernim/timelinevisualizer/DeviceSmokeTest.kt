@@ -11,6 +11,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,6 +37,20 @@ class DeviceSmokeTest {
                         View.VISIBLE,
                         activity.findViewById<View>(R.id.zoomInTravelSlowdownGroup).visibility,
                     )
+                    assertEquals(
+                        View.VISIBLE,
+                        activity.findViewById<View>(R.id.episodeFramingGroup).visibility,
+                    )
+                    val episodeSwitch = activity.findViewById<android.widget.CompoundButton>(R.id.episodeFramingSwitch)
+                    val tripDetection = activity.findViewById<AutoCompleteTextView>(R.id.tripDetectionDropdown)
+                    val localFraming = activity.findViewById<AutoCompleteTextView>(R.id.localFramingDropdown)
+                    assertTrue(episodeSwitch.isChecked)
+                    assertEquals(activity.getString(R.string.trip_detection_balanced), tripDetection.text.toString())
+                    assertEquals(activity.getString(R.string.local_framing_balanced), localFraming.text.toString())
+                    episodeSwitch.performClick()
+                    assertFalse(tripDetection.isEnabled)
+                    assertFalse(localFraming.isEnabled)
+                    episodeSwitch.performClick()
                 }
 
                 val navigation = activity.findViewById<ViewGroup>(R.id.bottomNavigation)
@@ -54,13 +69,17 @@ class DeviceSmokeTest {
     fun settingsDropdownsKeepEveryChoiceAfterSelectionAndNavigation() {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { it.findViewById<View>(R.id.navigationSettings).performClick() }
-            val choices = listOf(
-                R.id.cameraMovementDropdown to 4,
-                R.id.longTripDropdown to 4,
-                R.id.videoQualityDropdown to 5,
-                R.id.locationFilterDropdown to 2,
-                R.id.languageDropdown to 10,
-            )
+            val choices = buildList {
+                add(R.id.cameraMovementDropdown to 4)
+                add(R.id.longTripDropdown to 4)
+                add(R.id.videoQualityDropdown to 5)
+                add(R.id.locationFilterDropdown to 2)
+                add(R.id.languageDropdown to 10)
+                if (BuildConfig.IS_CAMERA_LAB) {
+                    add(R.id.tripDetectionDropdown to 3)
+                    add(R.id.localFramingDropdown to 3)
+                }
+            }
             choices.forEach { (id, count) -> assertChoicesRemainAvailable(scenario, id, count) }
 
             scenario.onActivity { activity ->

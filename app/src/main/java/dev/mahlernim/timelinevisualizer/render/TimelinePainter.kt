@@ -197,13 +197,40 @@ class TimelinePainter {
         val movement = cameraSettings.cameraMovement
         val proportionalContextKm = (journey.totalDistanceKm * movement.contextFraction)
             .coerceIn(movement.minimumContextKm, movement.maximumContextKm)
-        val leg = journey.legAt(current.distanceKm).takeIf { movement.legAware }
+        val episodeLegs = if (cameraSettings.episodeFramingEnabled && movement.legAware) {
+            journey.legsForThreshold(
+                journey.transferThresholdKm * cameraSettings.tripDetection.thresholdMultiplier,
+            )
+        } else {
+            journey.legs
+        }
+        val leg = journey.legAt(current.distanceKm, episodeLegs).takeIf { movement.legAware }
         val contextKm = if (leg?.isTransfer == true) leg.lengthKm else proportionalContextKm
-        val padding = if (leg?.isTransfer == true) TRANSFER_PADDING else movement.padding
+        val padding = when {
+            leg?.isTransfer == true -> TRANSFER_PADDING
+            cameraSettings.episodeFramingEnabled ->
+                movement.padding * cameraSettings.localFraming.paddingMultiplier
+            else -> movement.padding
+        }
         val rangeStartKm = leg?.startKm ?: 0.0
-        // A local leg may look into the next transfer so the camera can prepare before it begins.
-        // Once inside a transfer, keep the target bounded to that transfer's destination.
-        val lookaheadLimitKm = if (leg?.isTransfer == true) leg.endKm else journey.totalDistanceKm
+        val lookaheadLimitKm = when {
+            leg == null -> journey.totalDistanceKm
+            leg.isTransfer -> leg.endKm
+            !cameraSettings.episodeFramingEnabled -> journey.totalDistanceKm
+            else -> {
+                val legIndex = episodeLegs.indexOf(leg)
+                val nextTransfer = episodeLegs.getOrNull(legIndex + 1)?.takeIf { it.isTransfer }
+                val departureLeadKm = min(
+                    EPISODE_DEPARTURE_LEAD_MAX_KM,
+                    leg.lengthKm * EPISODE_DEPARTURE_LEAD_FRACTION,
+                )
+                if (nextTransfer != null && leg.endKm - current.distanceKm <= departureLeadKm) {
+                    nextTransfer.endKm
+                } else {
+                    leg.endKm
+                }
+            }
+        }
         val tailDistance = max(rangeStartKm, current.distanceKm - contextKm)
         val lookaheadDistance = min(lookaheadLimitKm, current.distanceKm + contextKm)
         val routeReferenceX = prepared.referenceX(current.distanceKm)
@@ -1195,6 +1222,8 @@ class TimelinePainter {
 
     companion object {
         private const val TRANSFER_PADDING = 2.8
+        private const val EPISODE_DEPARTURE_LEAD_FRACTION = 0.15
+        private const val EPISODE_DEPARTURE_LEAD_MAX_KM = 50.0
         private const val DEFAULT_JOURNEY_DURATION_SECONDS = 30
         private const val TRAIL_VISIBLE_SECONDS = 2.5
         private const val MIN_TRAIL_KM = 80.0

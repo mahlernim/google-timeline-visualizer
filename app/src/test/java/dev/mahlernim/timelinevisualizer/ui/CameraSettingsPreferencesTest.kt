@@ -6,6 +6,8 @@ import dev.mahlernim.timelinevisualizer.BuildConfig
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
+import dev.mahlernim.timelinevisualizer.render.LocalFraming
+import dev.mahlernim.timelinevisualizer.render.TripDetection
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -38,6 +40,9 @@ class CameraSettingsPreferencesTest {
             longTripCompression = LongTripCompression.STRONG,
             videoQuality = VideoQuality.ULTRA,
             zoomInTravelSlowdown = 0.85,
+            episodeFramingEnabled = true,
+            tripDetection = TripDetection.SENSITIVE,
+            localFraming = LocalFraming.CLOSE,
         )
 
         preferences.save(expected)
@@ -52,6 +57,9 @@ class CameraSettingsPreferencesTest {
         assertEquals(LongTripCompression.BALANCED, preferences.load().longTripCompression)
         assertEquals(VideoQuality.STANDARD, preferences.load().videoQuality)
         assertEquals(BuildConfig.DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN, preferences.load().zoomInTravelSlowdown, 0.0001)
+        assertEquals(BuildConfig.DEFAULT_EPISODE_FRAMING, preferences.load().episodeFramingEnabled)
+        assertEquals(TripDetection.BALANCED, preferences.load().tripDetection)
+        assertEquals(LocalFraming.BALANCED, preferences.load().localFraming)
     }
 
     @Test
@@ -81,5 +89,20 @@ class CameraSettingsPreferencesTest {
             .apply()
 
         assertEquals(0.80, CameraSettingsPreferences(context).load().zoomInTravelSlowdown, 0.0001)
+    }
+
+    @Test
+    fun cameraLabTwoSlowdownIsRetainedWithCameraLabThreeDefaults() {
+        context.getSharedPreferences("camera-settings", Context.MODE_PRIVATE)
+            .edit()
+            .putInt("zoom-in-travel-slowdown", 75)
+            .apply()
+
+        val restored = CameraSettingsPreferences(context).load()
+
+        assertEquals(0.75, restored.zoomInTravelSlowdown, 0.0001)
+        assertEquals(BuildConfig.DEFAULT_EPISODE_FRAMING, restored.episodeFramingEnabled)
+        assertEquals(TripDetection.BALANCED, restored.tripDetection)
+        assertEquals(LocalFraming.BALANCED, restored.localFraming)
     }
 }

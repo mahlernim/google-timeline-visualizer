@@ -25,6 +25,16 @@
             <com.google.android.material.slider.Slider android:id="@+id/zoomInTravelSlowdownSlider" android:layout_width="match_parent" android:layout_height="wrap_content" android:stepSize="5" android:valueFrom="0" android:valueTo="100" />
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/zoom_in_travel_slowdown_summary" android:textAppearance="?attr/textAppearanceBodySmall" />
         </LinearLayout>
+        <LinearLayout android:id="@+id/episodeFramingGroup" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="vertical" android:visibility="gone" tools:visibility="visible">
+            <com.google.android.material.switchmaterial.SwitchMaterial android:id="@+id/episodeFramingSwitch" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/episode_framing" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/episode_framing_summary" android:textAppearance="?attr/textAppearanceBodySmall" />
+            <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:hint="@string/trip_detection">
+                <AutoCompleteTextView android:id="@+id/tripDetectionDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:hint="@string/local_framing">
+                <AutoCompleteTextView android:id="@+id/localFramingDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
         <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:hint="@string/long_trip_compression">
             <AutoCompleteTextView android:id="@+id/longTripDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
