@@ -25,15 +25,20 @@ object TripDetector {
         nameResolver: DestinationNameResolver = DestinationNameResolver { _, _ -> null },
     ): List<TripSuggestion> {
         val accumulators = sortedMapOf<LocalDate, DayAccumulator>()
-        val stride = ((timeline.points.size + MAX_DETECTION_POINTS - 1) / MAX_DETECTION_POINTS).coerceAtLeast(1)
-        var pointIndex = 0
-        while (pointIndex < timeline.points.size) {
-            val point = timeline.points[pointIndex]
+        val relevantPointCount = if (request == null) timeline.points.size else timeline.points.count { point ->
+            val date = point.instant.atZone(zone).toLocalDate()
+            !date.isBefore(request.startDate) && !date.isAfter(request.endDate)
+        }
+        val stride = ((relevantPointCount + MAX_DETECTION_POINTS - 1) / MAX_DETECTION_POINTS).coerceAtLeast(1)
+        var relevantPointIndex = 0
+        timeline.points.forEach { point ->
             val date = point.instant.atZone(zone).toLocalDate()
             if (request == null || !date.isBefore(request.startDate) && !date.isAfter(request.endDate)) {
-                accumulators.getOrPut(date, ::DayAccumulator).add(point)
+                if (relevantPointIndex % stride == 0) {
+                    accumulators.getOrPut(date, ::DayAccumulator).add(point)
+                }
+                relevantPointIndex += 1
             }
-            pointIndex += stride
         }
         val days = accumulators.mapValues { (_, accumulator) -> accumulator.center() }
         if (days.size < 5) return emptyList()

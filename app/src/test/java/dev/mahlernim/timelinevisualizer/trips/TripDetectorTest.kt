@@ -86,6 +86,34 @@ class TripDetectorTest {
         assertEquals(SuggestionConfidence.POSSIBLE, suggestion.confidence)
     }
 
+    @Test
+    fun largeOutOfRangeHistoryDoesNotUndersampleRequestedRange() {
+        val historical = List(20_000) { index ->
+            GeoPoint(
+                Instant.parse("2020-01-01T00:00:00Z").plusSeconds(index.toLong()),
+                37.56,
+                126.97,
+            )
+        }
+        val requested = listOf(
+            point("2026-01-01", 37.56, 126.97),
+            point("2026-01-02", 37.56, 126.97),
+            point("2026-01-03", 35.68, 139.76),
+            point("2026-01-04", 35.69, 139.75),
+            point("2026-01-05", 35.67, 139.77),
+            point("2026-01-06", 37.56, 126.97),
+            point("2026-01-07", 37.56, 126.97),
+        )
+
+        val suggestions = TripDetector.detect(
+            Timeline(historical + requested),
+            ZoneOffset.UTC,
+            TripDetectionRequest(java.time.LocalDate.parse("2026-01-01"), java.time.LocalDate.parse("2026-01-07")),
+        )
+
+        assertEquals(1, suggestions.size)
+    }
+
     private fun point(date: String, latitude: Double, longitude: Double) = GeoPoint(
         Instant.parse("${date}T12:00:00Z"),
         latitude,
