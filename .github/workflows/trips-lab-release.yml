@@ -14,8 +14,8 @@ jobs:
     env:
       RELEASE_TAG: ${{ github.ref_name }}
       EXPECTED_PACKAGE: dev.mahlernim.timelinevisualizer.tripslab
-      EXPECTED_VERSION_NAME: 2.3.1-trips-lab.1
-      EXPECTED_VERSION_CODE: 1
+      EXPECTED_VERSION_NAME: 2.3.2-trips-lab.2
+      EXPECTED_VERSION_CODE: 2
     steps:
       - uses: actions/checkout@v5
         with:
@@ -54,12 +54,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp app/build/outputs/apk/tripsLab/release/app-tripsLab-release.apk trips-lab-1.apk
-          sha256sum trips-lab-1.apk > trips-lab-1.apk.sha256
+          cp app/build/outputs/apk/tripsLab/release/app-tripsLab-release.apk trips-lab-2.apk
+          sha256sum trips-lab-2.apk > trips-lab-2.apk.sha256
           gh release create "$RELEASE_TAG" \
-            trips-lab-1.apk \
-            trips-lab-1.apk.sha256 \
-            --title "Timeline Visualizer Trips Lab 1" \
-            --notes-file "docs/trips-lab-1.md" \
+            trips-lab-2.apk \
+            trips-lab-2.apk.sha256 \
+            --title "Timeline Visualizer Trips Lab 2" \
+            --notes-file "docs/trips-lab-2.md" \
             --prerelease \
             --verify-tag

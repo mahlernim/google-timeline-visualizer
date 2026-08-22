@@ -76,6 +76,7 @@ class LargeTimelineImportDeviceTest {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         var imported = false
+        var previewOpened = false
         val sourceStore = TimelineSourceStore(context)
         ActivityScenario.launch<MainActivity>(intent).use { scenario ->
             scenario.onActivity { activity ->
@@ -88,8 +89,12 @@ class LargeTimelineImportDeviceTest {
                 scenario.onActivity { activity ->
                     val loading = activity.findViewById<View>(R.id.loadingGroup).visibility == View.VISIBLE
                     if (loading) assertEquals(false, activity.findViewById<View>(R.id.importButton).isEnabled)
-                    imported = activity.findViewById<View>(R.id.editorGroup).visibility == View.VISIBLE &&
-                        !loading && sourceStore.importInProgress() == null &&
+                    if (!loading && sourceStore.importInProgress() == null && !previewOpened) {
+                        activity.findViewById<View>(R.id.wizardContinueButton).performClick()
+                        activity.findViewById<View>(R.id.wizardContinueButton).performClick()
+                        previewOpened = true
+                    }
+                    imported = previewOpened &&
                         activity.findViewById<TimelineView>(R.id.timelineView).isCameraReady &&
                         activity.findViewById<View>(R.id.playButton).isEnabled
                 }

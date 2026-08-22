@@ -22,6 +22,7 @@ import dev.mahlernim.timelinevisualizer.R
 import dev.mahlernim.timelinevisualizer.videos.GeneratedMediaRepository
 import dev.mahlernim.timelinevisualizer.videos.VideoMedia
 import dev.mahlernim.timelinevisualizer.videos.VideoRecord
+import dev.mahlernim.timelinevisualizer.videos.VideoSettingsSnapshot
 import dev.mahlernim.timelinevisualizer.videos.VideoStore
 import dev.mahlernim.timelinevisualizer.data.TileRepository
 import dev.mahlernim.timelinevisualizer.render.TimelineAnimation
@@ -258,6 +259,16 @@ class VideoExportService : Service() {
                 endMonth = request.period.endMonth,
                 projectId = request.projectId,
                 presetName = request.presetName,
+                settingsSnapshot = VideoSettingsSnapshot(
+                    presetName = request.presetName,
+                    requestedDurationSeconds = request.durationSeconds,
+                    aspectRatio = request.cameraSettings.videoQuality.aspectRatioOption,
+                    cameraMovement = request.cameraSettings.cameraMovement,
+                    tripDetection = request.cameraSettings.tripDetection,
+                    localFraming = request.cameraSettings.localFraming,
+                    longTripCompression = request.cameraSettings.longTripCompression,
+                    resolution = request.cameraSettings.videoQuality.resolution,
+                ),
             ),
         )
     }

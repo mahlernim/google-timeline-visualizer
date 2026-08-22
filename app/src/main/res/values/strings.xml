@@ -309,7 +309,7 @@
     <string name="preset_deleted">Preset deleted</string>
     <string name="share_preset">Share preset</string>
     <string name="shared_preset">Shared preset</string>
-    <string name="shared_preset_privacy">The link contains only the five settings shown. It contains no Timeline, location, title, owner, date, or resolution data.</string>
+    <string name="shared_preset_privacy">The link contains only the six settings shown. It contains no Timeline, location, title, owner, date, or resolution data.</string>
     <string name="use_preset">Use preset</string>
     <string name="save_and_use_preset">Save and use</string>
     <string name="preset_link_unsupported_title">Preset link not supported</string>
@@ -347,4 +347,29 @@
     <string name="new_trip" translatable="false">New trip</string>
     <string name="previous_month_recap" translatable="false">Previous month recap</string>
     <string name="year_recap_title" translatable="false">%1$d recap</string>
+    <string name="continue_label" translatable="false">Continue</string>
+    <string name="customize_settings" translatable="false">Customize settings</string>
+    <string name="create_step_project" translatable="false">Step 1 of 3 · Trip or recap</string>
+    <string name="create_step_style" translatable="false">Step 2 of 3 · Video style</string>
+    <string name="create_step_preview" translatable="false">Step 3 of 3 · Preview and create</string>
+    <string name="preset_builtin_summary" translatable="false">Built-in preset · Resolution unchanged</string>
+    <string name="preset_modified" translatable="false">%1$s · Modified</string>
+    <string name="preset_modified_summary" translatable="false">Use once or save as a new preset</string>
+    <string name="preset_already_exists" translatable="false">These settings already match %1$s.</string>
+    <string name="find_trips" translatable="false">Find trips</string>
+    <string name="create_trip_manually" translatable="false">Create trip manually</string>
+    <string name="create_recap" translatable="false">Create recap</string>
+    <string name="detection_range" translatable="false">Detection range</string>
+    <string name="recommend_trips" translatable="false">Recommend trips</string>
+    <string name="detecting_trips" translatable="false">Finding trips…</string>
+    <string name="custom_range" translatable="false">Custom range</string>
+    <string name="trip_suggestion_details" translatable="false">%1$s · %2$d days · Includes travel</string>
+    <string name="route_preview" translatable="false">Outbound and return route preview</string>
+    <string name="settings_details" translatable="false">Settings details</string>
+    <string name="settings_unavailable" translatable="false">Settings were not recorded for this older video.</string>
+    <string name="view_in_trip" translatable="false">View in trip</string>
+    <string name="manage_presets" translatable="false">Manage presets</string>
+    <string name="manage_presets_summary" translatable="false">Built-in presets are read-only. Select a user preset to rename or delete it.</string>
+    <string name="no_user_presets" translatable="false">No user presets saved yet.</string>
+    <string name="geonames_attribution" translatable="false">Offline destination names use GeoNames data under CC BY 4.0.</string>
 </resources>

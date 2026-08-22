@@ -18,13 +18,21 @@ object TripDetector {
     private const val MAX_DESTINATION_RADIUS_KM = 250.0
     private const val MAX_DETECTION_POINTS = 10_000
 
-    fun detect(timeline: Timeline, zone: ZoneId = ZoneId.systemDefault()): List<TripSuggestion> {
+    fun detect(
+        timeline: Timeline,
+        zone: ZoneId = ZoneId.systemDefault(),
+        request: TripDetectionRequest? = null,
+        nameResolver: DestinationNameResolver = DestinationNameResolver { _, _ -> null },
+    ): List<TripSuggestion> {
         val accumulators = sortedMapOf<LocalDate, DayAccumulator>()
         val stride = ((timeline.points.size + MAX_DETECTION_POINTS - 1) / MAX_DETECTION_POINTS).coerceAtLeast(1)
         var pointIndex = 0
         while (pointIndex < timeline.points.size) {
             val point = timeline.points[pointIndex]
-            accumulators.getOrPut(point.instant.atZone(zone).toLocalDate(), ::DayAccumulator).add(point)
+            val date = point.instant.atZone(zone).toLocalDate()
+            if (request == null || !date.isBefore(request.startDate) && !date.isAfter(request.endDate)) {
+                accumulators.getOrPut(date, ::DayAccumulator).add(point)
+            }
             pointIndex += stride
         }
         val days = accumulators.mapValues { (_, accumulator) -> accumulator.center() }
@@ -60,8 +68,10 @@ object TripDetector {
             val maxDistance = episode.maxOf { distanceKm(home, it.value) }
             val bracketed = startIndex > 0 && endIndex < ordered.lastIndex && !away[startIndex - 1] && !away[endIndex + 1]
             if (spanDays >= 2 && radius <= MAX_DESTINATION_RADIUS_KM) {
-                val start = episode.first().key
-                val end = episode.last().key
+                val awayStart = episode.first().key
+                val awayEnd = episode.last().key
+                val start = ordered.getOrNull(startIndex - 1)?.takeIf { !away[startIndex - 1] }?.key ?: awayStart
+                val end = ordered.getOrNull(endIndex + 1)?.takeIf { !away[endIndex + 1] }?.key ?: awayEnd
                 val confidence = if (bracketed && maxDistance >= STRONG_DISTANCE_KM) {
                     SuggestionConfidence.STRONG
                 } else {
@@ -69,9 +79,13 @@ object TripDetector {
                 }
                 results += TripSuggestion(
                     id = stableId(start, end, destination),
-                    title = "Suggested trip",
+                    title = nameResolver.resolve(destination.latitude, destination.longitude) ?: "Suggested trip",
                     startDate = start,
                     endDate = end,
+                    awayStartDate = awayStart,
+                    awayEndDate = awayEnd,
+                    destinationLatitude = destination.latitude,
+                    destinationLongitude = destination.longitude,
                     confidence = confidence,
                     distanceFromHomeKm = maxDistance,
                 )

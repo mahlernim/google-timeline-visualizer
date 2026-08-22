@@ -38,6 +38,39 @@
             android:textAppearance="?attr/textAppearanceLabelMedium"
             android:textColor="?attr/colorPrimary" />
 
+        <LinearLayout
+            android:id="@+id/wizardNavigationGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/wizardBackButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:maxLines="1"
+                android:text="@string/back" />
+
+            <Space android:layout_width="8dp" android:layout_height="1dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/wizardContinueButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:maxLines="1"
+                android:text="@string/continue_label" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/projectStepGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
@@ -79,6 +112,15 @@
                 android:maxLines="1"
                 android:text="@string/save_as_new_trip" />
         </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/styleStepGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
 
         <TextView
             android:layout_width="match_parent"
@@ -152,6 +194,14 @@
                 android:maxLines="1"
                 android:text="@string/more" />
         </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/timelineSourceGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
         <TextView
             android:layout_width="match_parent"
@@ -234,6 +284,8 @@
                 android:text="@string/opening_file" />
         </LinearLayout>
 
+        </LinearLayout>
+
         <LinearLayout
             android:id="@+id/editorGroup"
             android:layout_width="match_parent"
@@ -241,6 +293,12 @@
             android:layout_marginTop="18dp"
             android:orientation="vertical"
             android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/periodStepGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
             <TextView
                 android:layout_width="match_parent"
@@ -338,6 +396,15 @@
                     android:text="100" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/videoDetailsGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:maxLines="1" android:text="@string/video_details" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
 
             <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:hint="@string/duration">
@@ -360,6 +427,30 @@
             <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:hint="@string/video_title_template" app:helperText="@string/title_template_help">
                 <com.google.android.material.textfield.TextInputEditText android:id="@+id/titleInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLength="80" android:singleLine="true" android:text="@string/default_title_template" />
             </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/customizeSettingsButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:maxLines="1"
+                android:text="@string/customize_settings" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/previewStepGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+            <TextView
+                android:id="@+id/previewSettingsSummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodyMedium" />
 
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:maxLines="1" android:text="@string/journey" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
 
@@ -391,10 +482,14 @@
                     <com.google.android.material.button.MaterialButton android:id="@+id/shareOverviewButton" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:maxLines="1" android:text="@string/share_image" />
                 </LinearLayout>
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="horizontal">
+                    <com.google.android.material.button.MaterialButton android:id="@+id/viewInTripButton" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLines="1" android:text="@string/view_in_trip" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="horizontal">
                     <com.google.android.material.button.MaterialButton android:id="@+id/doneButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:maxLines="1" android:text="@string/done" />
                     <Space android:layout_width="8dp" android:layout_height="1dp" />
                     <com.google.android.material.button.MaterialButton android:id="@+id/createAnotherButton" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:maxLines="1" android:text="@string/create_another" />
                 </LinearLayout>
+            </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

@@ -13,6 +13,7 @@ data class PresetValues(
     val tripDetection: TripDetection,
     val localFraming: LocalFraming,
     val longTripCompression: LongTripCompression,
+    val durationSeconds: Int = 30,
 ) {
     fun applyTo(draft: CameraSettings): CameraSettings = draft.copy(
         videoQuality = draft.videoQuality.withAspectRatio(aspectRatio),
@@ -23,12 +24,13 @@ data class PresetValues(
     )
 
     companion object {
-        fun from(settings: CameraSettings): PresetValues = PresetValues(
+        fun from(settings: CameraSettings, durationSeconds: Int = 30): PresetValues = PresetValues(
             aspectRatio = settings.videoQuality.aspectRatioOption,
             cameraMovement = settings.cameraMovement,
             tripDetection = settings.tripDetection,
             localFraming = settings.localFraming,
             longTripCompression = settings.longTripCompression,
+            durationSeconds = durationSeconds,
         )
     }
 }
@@ -37,6 +39,7 @@ data class VideoPreset(
     val id: String,
     val name: String,
     val values: PresetValues,
+    val builtIn: Boolean = false,
 )
 
 sealed interface PresetNameResult {

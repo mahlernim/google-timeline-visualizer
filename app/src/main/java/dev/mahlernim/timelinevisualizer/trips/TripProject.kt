@@ -19,6 +19,19 @@ data class TripSuggestion(
     val title: String,
     val startDate: LocalDate,
     val endDate: LocalDate,
+    val awayStartDate: LocalDate = startDate,
+    val awayEndDate: LocalDate = endDate,
+    val destinationLatitude: Double = 0.0,
+    val destinationLongitude: Double = 0.0,
     val confidence: SuggestionConfidence,
     val distanceFromHomeKm: Double,
 )
+
+data class TripDetectionRequest(
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+)
+
+fun interface DestinationNameResolver {
+    fun resolve(latitude: Double, longitude: Double): String?
+}

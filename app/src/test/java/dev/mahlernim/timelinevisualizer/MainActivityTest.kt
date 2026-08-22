@@ -37,6 +37,7 @@ import dev.mahlernim.timelinevisualizer.export.VideoExportService
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
+import dev.mahlernim.timelinevisualizer.model.VideoDuration
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
@@ -88,6 +89,7 @@ class MainActivityTest {
         context.getSharedPreferences("distance-unit-settings", Context.MODE_PRIVATE).edit().clear().commit()
         timelineSourceStore.clearForTest()
         context.getSharedPreferences("video-presets", Context.MODE_PRIVATE).edit().clear().commit()
+        context.getSharedPreferences("trips_lab", Context.MODE_PRIVATE).edit().clear().commit()
         context.getSystemService(NotificationManager::class.java).deleteNotificationChannel(testNotificationChannel)
     }
 
@@ -109,7 +111,8 @@ class MainActivityTest {
         val activity = launchActivity()
 
         val dropdown = activity.findViewById<AutoCompleteTextView>(R.id.presetDropdown)
-        dropdown.onItemClickListener?.onItemClick(null, null, 1, preset.id.hashCode().toLong())
+        val presetPosition = repository.presets().indexOfFirst { it.id == preset.id } + 1
+        dropdown.onItemClickListener?.onItemClick(null, null, presetPosition, preset.id.hashCode().toLong())
 
         assertEquals("Portrait close", dropdown.text.toString())
         assertEquals(
@@ -142,7 +145,8 @@ class MainActivityTest {
         val preset = repository.add("Balanced", PresetValues.from(CameraSettings.DEFAULT))
         val activity = launchActivity()
         val presetDropdown = activity.findViewById<AutoCompleteTextView>(R.id.presetDropdown)
-        presetDropdown.onItemClickListener?.onItemClick(null, null, 1, preset.id.hashCode().toLong())
+        val presetPosition = repository.presets().indexOfFirst { it.id == preset.id } + 1
+        presetDropdown.onItemClickListener?.onItemClick(null, null, presetPosition, preset.id.hashCode().toLong())
 
         activity.findViewById<AutoCompleteTextView>(R.id.videoQualityDropdown)
             .onItemClickListener?.onItemClick(null, null, 1, 1L)
@@ -151,6 +155,52 @@ class MainActivityTest {
         activity.findViewById<AutoCompleteTextView>(R.id.cameraMovementDropdown)
             .onItemClickListener?.onItemClick(null, null, 2, 2L)
         assertEquals(activity.getString(R.string.preset_custom), presetDropdown.text.toString())
+    }
+
+    @Test
+    fun tripWizardSelectsRecommendedPresetAndRestoresStyleStep() {
+        acceptPrivacyDisclosure()
+        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/seoul-bohol-sample.json"))
+        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
+        waitUntil { timelineSourceStore.importInProgress() == null }
+
+        activity.findViewById<View>(R.id.navigationVideos).performClick()
+        activity.findViewById<View>(R.id.createTripButton).performClick()
+        activity.findViewById<TextView>(R.id.projectTitleInput).text = "Bohol"
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.projectStepGroup).visibility)
+        activity.findViewById<View>(R.id.wizardContinueButton).performClick()
+
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.styleStepGroup).visibility)
+        assertEquals("Bohol", activity.findViewById<TextView>(R.id.titleInput).text.toString())
+        assertEquals("Trip Close-up", activity.findViewById<AutoCompleteTextView>(R.id.presetDropdown).text.toString())
+        assertEquals(
+            activity.resources.getQuantityString(R.plurals.duration_seconds, 20, 20),
+            activity.findViewById<AutoCompleteTextView>(R.id.durationDropdown).text.toString(),
+        )
+
+        controller.recreate()
+        val recreated = controller.get()
+        assertEquals(View.VISIBLE, recreated.findViewById<View>(R.id.styleStepGroup).visibility)
+        assertEquals("Bohol", recreated.findViewById<TextView>(R.id.titleInput).text.toString())
+    }
+
+    @Test
+    fun editedBuiltInIsMarkedModifiedAndCanReturnToExactMatch() {
+        val activity = launchActivity()
+        val preset = activity.findViewById<AutoCompleteTextView>(R.id.presetDropdown)
+        preset.onItemClickListener?.onItemClick(null, null, 1, 1L)
+        val duration = activity.findViewById<AutoCompleteTextView>(R.id.durationDropdown)
+
+        duration.onItemClickListener?.onItemClick(null, null, VideoDuration.presets.indexOf(30), 30L)
+
+        assertEquals(
+            activity.getString(R.string.preset_modified, "Trip Close-up"),
+            preset.text.toString(),
+        )
+        assertTrue(activity.findViewById<View>(R.id.presetSaveButton).isEnabled)
+
+        duration.onItemClickListener?.onItemClick(null, null, VideoDuration.presets.indexOf(20), 20L)
+        assertEquals("Trip Close-up", preset.text.toString())
     }
 
     @Test

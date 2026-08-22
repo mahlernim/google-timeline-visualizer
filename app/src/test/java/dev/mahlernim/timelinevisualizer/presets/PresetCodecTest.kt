@@ -20,6 +20,7 @@ class PresetCodecTest {
         TripDetection.SENSITIVE,
         LocalFraming.CLOSE,
         LongTripCompression.STRONGER,
+        20,
     )
 
     @Test
@@ -28,6 +29,8 @@ class PresetCodecTest {
 
         assertTrue(token.length <= PresetCodec.MAX_TOKEN_LENGTH)
         assertEquals(PresetDecodeResult.Success(values), PresetCodec.decode(token))
+        val longest = values.copy(durationSeconds = 300)
+        assertEquals(PresetDecodeResult.Success(longest), PresetCodec.decode(PresetCodec.encode(longest)))
     }
 
     @Test
@@ -38,7 +41,7 @@ class PresetCodecTest {
 
         assertEquals(VideoAspectRatio.PORTRAIT, applied.videoQuality.aspectRatioOption)
         assertEquals(VideoQuality.PORTRAIT_720, applied.videoQuality)
-        assertEquals(values, PresetValues.from(applied))
+        assertEquals(values.copy(durationSeconds = 30), PresetValues.from(applied))
     }
 
     @Test
@@ -55,8 +58,20 @@ class PresetCodecTest {
     fun invalidAndUnsupportedTokensAreRejectedWithoutGuessing() {
         assertEquals(PresetDecodeResult.Invalid, PresetCodec.decode(""))
         assertEquals(PresetDecodeResult.Invalid, PresetCodec.decode("not+urlsafe"))
-        val unsupported = Base64.getUrlEncoder().withoutPadding().encodeToString(byteArrayOf(0xA2.toByte(), 0, 0))
+        val unsupported = Base64.getUrlEncoder().withoutPadding().encodeToString(byteArrayOf(0xA3.toByte(), 0, 0, 30, 0))
         assertEquals(PresetDecodeResult.Unsupported, PresetCodec.decode(unsupported))
+    }
+
+    @Test
+    fun legacyV1TokenDefaultsToThirtySeconds() {
+        val current = Base64.getUrlDecoder().decode(PresetCodec.encode(values))
+        val legacy = byteArrayOf(0xA1.toByte(), current[1], current[2])
+        val token = Base64.getUrlEncoder().withoutPadding().encodeToString(legacy)
+
+        assertEquals(
+            PresetDecodeResult.Success(values.copy(durationSeconds = 30)),
+            PresetCodec.decode(token),
+        )
     }
 
     @Test

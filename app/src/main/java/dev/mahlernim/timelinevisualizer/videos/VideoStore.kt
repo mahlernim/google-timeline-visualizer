@@ -2,8 +2,26 @@ package dev.mahlernim.timelinevisualizer.videos
 
 import android.content.Context
 import androidx.core.content.edit
+import dev.mahlernim.timelinevisualizer.render.CameraMovement
+import dev.mahlernim.timelinevisualizer.render.LocalFraming
+import dev.mahlernim.timelinevisualizer.render.LongTripCompression
+import dev.mahlernim.timelinevisualizer.render.TripDetection
+import dev.mahlernim.timelinevisualizer.render.VideoAspectRatio
+import dev.mahlernim.timelinevisualizer.render.VideoResolution
+import dev.mahlernim.timelinevisualizer.model.VideoDuration
 import org.json.JSONArray
 import org.json.JSONObject
+
+data class VideoSettingsSnapshot(
+    val presetName: String?,
+    val requestedDurationSeconds: Int,
+    val aspectRatio: VideoAspectRatio,
+    val cameraMovement: CameraMovement,
+    val tripDetection: TripDetection,
+    val localFraming: LocalFraming,
+    val longTripCompression: LongTripCompression,
+    val resolution: VideoResolution,
+)
 
 data class VideoRecord(
     val uri: String,
@@ -17,6 +35,7 @@ data class VideoRecord(
     val endMonth: Int? = null,
     val projectId: String? = null,
     val presetName: String? = null,
+    val settingsSnapshot: VideoSettingsSnapshot? = null,
 )
 
 interface VideoRecordRepository {
@@ -66,6 +85,18 @@ class VideoStore(private val context: Context) : VideoRecordRepository {
                 record.endMonth?.let { put("endMonth", it) }
                 record.projectId?.let { put("projectId", it) }
                 record.presetName?.let { put("presetName", it) }
+                record.settingsSnapshot?.let { snapshot ->
+                    put("settings", JSONObject().apply {
+                        snapshot.presetName?.let { put("presetName", it) }
+                        put("durationSeconds", snapshot.requestedDurationSeconds)
+                        put("aspect", snapshot.aspectRatio.name)
+                        put("camera", snapshot.cameraMovement.name)
+                        put("trip", snapshot.tripDetection.name)
+                        put("framing", snapshot.localFraming.name)
+                        put("pacing", snapshot.longTripCompression.name)
+                        put("resolution", snapshot.resolution.name)
+                    })
+                }
             })
         }
         preferences.edit { putString(KEY_RECORDS, array.toString()) }
@@ -97,6 +128,7 @@ class VideoStore(private val context: Context) : VideoRecordRepository {
                         endMonth = item.optionalPositiveInt("endMonth"),
                         projectId = item.optString("projectId").takeIf(String::isNotBlank),
                         presetName = item.optString("presetName").takeIf(String::isNotBlank),
+                        settingsSnapshot = item.optJSONObject("settings")?.toSettingsSnapshot(),
                     ))
                 }
             }
@@ -106,6 +138,22 @@ class VideoStore(private val context: Context) : VideoRecordRepository {
     private fun JSONObject.optionalPositiveInt(name: String): Int? = if (has(name)) {
         optInt(name).takeIf { it > 0 }
     } else null
+
+    private fun JSONObject.toSettingsSnapshot(): VideoSettingsSnapshot? = runCatching {
+        VideoSettingsSnapshot(
+            presetName = optString("presetName").takeIf(String::isNotBlank),
+            requestedDurationSeconds = optInt("durationSeconds", 30).coerceIn(
+                VideoDuration.MIN_SECONDS,
+                VideoDuration.MAX_SECONDS,
+            ),
+            aspectRatio = VideoAspectRatio.valueOf(getString("aspect")),
+            cameraMovement = CameraMovement.valueOf(getString("camera")),
+            tripDetection = TripDetection.valueOf(getString("trip")),
+            localFraming = LocalFraming.valueOf(getString("framing")),
+            longTripCompression = LongTripCompression.valueOf(getString("pacing")),
+            resolution = VideoResolution.valueOf(getString("resolution")),
+        )
+    }.getOrNull()
 
     companion object {
         private const val PREFERENCES_NAME = "creations"
