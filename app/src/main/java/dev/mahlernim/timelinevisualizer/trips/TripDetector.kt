@@ -16,11 +16,16 @@ object TripDetector {
     private const val AWAY_DISTANCE_KM = 120.0
     private const val STRONG_DISTANCE_KM = 250.0
     private const val MAX_DESTINATION_RADIUS_KM = 250.0
+    private const val MAX_DETECTION_POINTS = 10_000
 
     fun detect(timeline: Timeline, zone: ZoneId = ZoneId.systemDefault()): List<TripSuggestion> {
         val accumulators = sortedMapOf<LocalDate, DayAccumulator>()
-        timeline.points.forEach { point ->
+        val stride = ((timeline.points.size + MAX_DETECTION_POINTS - 1) / MAX_DETECTION_POINTS).coerceAtLeast(1)
+        var pointIndex = 0
+        while (pointIndex < timeline.points.size) {
+            val point = timeline.points[pointIndex]
             accumulators.getOrPut(point.instant.atZone(zone).toLocalDate(), ::DayAccumulator).add(point)
+            pointIndex += stride
         }
         val days = accumulators.mapValues { (_, accumulator) -> accumulator.center() }
         if (days.size < 5) return emptyList()
