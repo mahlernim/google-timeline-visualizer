@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.13
+
+- Fix issue where the video-generation notification remained visible in the system tray after the user clicked Done in the app.
+
 ## 2.2.12
 
 - Render every map tile intersecting portrait and landscape export frames instead of truncating the visible tile grid.

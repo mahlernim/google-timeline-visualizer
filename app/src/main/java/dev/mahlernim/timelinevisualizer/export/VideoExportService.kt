@@ -437,5 +437,9 @@ class VideoExportService : Service() {
                 start(context)
             }
         }
+
+        fun clearNotification(context: Context) {
+            context.getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION_ID)
+        }
     }
 }

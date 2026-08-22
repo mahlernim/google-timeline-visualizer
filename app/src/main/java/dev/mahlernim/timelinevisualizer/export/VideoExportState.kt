@@ -104,6 +104,7 @@ object VideoExportCoordinator {
     fun clear(context: Context) {
         VideoExportStateStore(context.applicationContext).clear()
         mutableState.value = VideoExportSnapshot()
+        VideoExportService.clearNotification(context)
     }
 
     internal fun resetForTest() {
