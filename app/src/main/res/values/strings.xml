@@ -317,6 +317,10 @@
     <string name="preset_limit_reached">Delete a preset before saving another.</string>
     <string name="preset_value_format">%1$s · %2$s</string>
     <string name="trips" translatable="false">Trips</string>
+    <string name="library" translatable="false">Library</string>
+    <string name="create" translatable="false">Create</string>
+    <string name="library_summary" translatable="false">Your saved trips, recaps, and video versions.</string>
+    <string name="library_empty" translatable="false">No saved trips or recaps yet. Start in Create.</string>
     <string name="trips_lab_summary" translatable="false">Turn suggested trips and recaps into a collection of videos.</string>
     <string name="timeline_source" translatable="false">Timeline</string>
     <string name="timeline_source_empty" translatable="false">Import a Timeline file to find trips and create recaps.</string>
@@ -352,6 +356,24 @@
     <string name="create_step_project" translatable="false">Step 1 of 3 · Trip or recap</string>
     <string name="create_step_style" translatable="false">Step 2 of 3 · Video style</string>
     <string name="create_step_preview" translatable="false">Step 3 of 3 · Preview and create</string>
+    <string name="create_step_type" translatable="false">What would you like to make?</string>
+    <string name="create_step_trip_source" translatable="false">Choose a trip</string>
+    <string name="create_step_discovery" translatable="false">Find trips in your Timeline</string>
+    <string name="trip_video" translatable="false">Trip video</string>
+    <string name="trip_video_summary" translatable="false">Use a saved trip, find one in your Timeline, or enter dates manually.</string>
+    <string name="recap_video" translatable="false">Recap video</string>
+    <string name="recap_video_summary" translatable="false">Create a video for a month or calendar year.</string>
+    <string name="saved_trips" translatable="false">Saved trips</string>
+    <string name="saved_trips_empty" translatable="false">No saved trips yet.</string>
+    <string name="use_trip" translatable="false">Use trip</string>
+    <string name="trip_coverage_format" translatable="false">~%1$s %2$s recorded · %3$s points · %4$s active days</string>
+    <string name="trip_coverage_good" translatable="false">Good video coverage</string>
+    <string name="trip_coverage_limited" translatable="false">Limited video coverage</string>
+    <string name="trip_coverage_unavailable" translatable="false">Load the Timeline to check video coverage.</string>
+    <string name="trip_coverage_warning" translatable="false">Only a small amount of movement was recorded. The video may contain very few movements.</string>
+    <string name="customize_video" translatable="false">Customize video</string>
+    <string name="customize_video_summary" translatable="false">These changes apply to the current video draft.</string>
+    <string name="apply" translatable="false">Apply</string>
     <string name="preset_builtin_summary" translatable="false">Built-in preset · Resolution unchanged</string>
     <string name="preset_modified" translatable="false">%1$s · Modified</string>
     <string name="preset_modified_summary" translatable="false">Use once or save as a new preset</string>

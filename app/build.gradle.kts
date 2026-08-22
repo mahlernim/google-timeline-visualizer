@@ -61,11 +61,11 @@ android {
         create("tripsLab") {
             dimension = "distribution"
             applicationId = "dev.mahlernim.timelinevisualizer.tripslab"
-            versionCode = 2
-            versionName = "2.3.2-trips-lab.2"
+            versionCode = 3
+            versionName = "2.3.2-trips-lab.3"
             resValue("string", "app_name", "Timeline Visualizer Trips Lab")
-            buildConfigField("String", "UPDATE_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/tag/trips-lab-2\"")
-            buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/issues/142\"")
+            buildConfigField("String", "UPDATE_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/tag/trips-lab-3\"")
+            buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/issues/147\"")
         }
     }
 

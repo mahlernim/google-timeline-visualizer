@@ -38,12 +38,12 @@
             android:layout_marginTop="3dp"
             android:textAppearance="?attr/textAppearanceBodySmall" />
 
-        <dev.mahlernim.timelinevisualizer.ui.TripRoutePreviewView
-            android:id="@+id/tripRoutePreview"
+        <TextView
+            android:id="@+id/tripCoverage"
             android:layout_width="match_parent"
-            android:layout_height="36dp"
-            android:layout_marginTop="8dp"
-            android:contentDescription="@string/route_preview"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:textAppearance="?attr/textAppearanceBodySmall"
             android:visibility="gone" />
 
         <LinearLayout

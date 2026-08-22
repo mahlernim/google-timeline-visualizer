@@ -90,6 +90,9 @@ class LargeTimelineImportDeviceTest {
                     val loading = activity.findViewById<View>(R.id.loadingGroup).visibility == View.VISIBLE
                     if (loading) assertEquals(false, activity.findViewById<View>(R.id.importButton).isEnabled)
                     if (!loading && sourceStore.importInProgress() == null && !previewOpened) {
+                        activity.findViewById<View>(R.id.navigationCreate).performClick()
+                        activity.findViewById<View>(R.id.tripVideoChoice).performClick()
+                        activity.findViewById<View>(R.id.createTripButton).performClick()
                         activity.findViewById<View>(R.id.wizardContinueButton).performClick()
                         activity.findViewById<View>(R.id.wizardContinueButton).performClick()
                         previewOpened = true

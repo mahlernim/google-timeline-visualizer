@@ -1007,6 +1007,54 @@ class MainActivityTest {
     }
 
     @Test
+    fun createStartsByAskingForTripOrRecap() {
+        val activity = launchActivity()
+
+        activity.findViewById<View>(R.id.navigationCreate).performClick()
+
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.createTypeStepGroup).visibility)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.projectStepGroup).visibility)
+        assertEquals("What would you like to make?", activity.findViewById<TextView>(R.id.createStepText).text.toString())
+    }
+
+    @Test
+    fun tripVideoChoiceOffersSavedDiscoveryAndManualSources() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.navigationCreate).performClick()
+
+        activity.findViewById<View>(R.id.tripVideoChoice).performClick()
+
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.tripSourceStepGroup).visibility)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.findTripsButton).visibility)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.createTripButton).visibility)
+    }
+
+    @Test
+    @Config(sdk = [35])
+    fun customizeCancelReturnsToTheSameTripDraft() {
+        acceptPrivacyDisclosure()
+        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/seoul-bohol-sample.json"))
+        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
+        waitUntil { activity.findViewById<View>(R.id.editorGroup).visibility == View.VISIBLE }
+        activity.findViewById<View>(R.id.tripVideoChoice).performClick()
+        activity.findViewById<View>(R.id.createTripButton).performClick()
+        val title = activity.findViewById<TextView>(R.id.projectTitleInput)
+        title.text = "Bohol test trip"
+        assertTrue(activity.findViewById<TextView>(R.id.projectDateText).text.toString().contains("–"))
+        assertTrue(activity.findViewById<TextView>(R.id.projectCoverageText).text.toString().contains("points"))
+        activity.findViewById<View>(R.id.wizardContinueButton).performClick()
+        activity.findViewById<View>(R.id.customizeSettingsButton).performClick()
+
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.customizeSettingsActions).visibility)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.bottomNavigation).visibility)
+        activity.findViewById<View>(R.id.cancelCustomizeButton).performClick()
+
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.styleStepGroup).visibility)
+        assertEquals("Bohol test trip", activity.findViewById<TextView>(R.id.projectTitleInput).text.toString())
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.bottomNavigation).visibility)
+    }
+
+    @Test
     fun backFromNewVideoReturnsToVideosWithoutCancellingExport() {
         val activity = launchActivity()
         activity.findViewById<View>(R.id.navigationCreate).performClick()
