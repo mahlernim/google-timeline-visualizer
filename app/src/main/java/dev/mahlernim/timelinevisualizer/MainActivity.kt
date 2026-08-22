@@ -630,6 +630,7 @@ class MainActivity : AppCompatActivity() {
 
     internal fun importTimeline(uri: Uri, remembered: Boolean = false) {
         if (importJob?.isActive == true) return
+        if (!remembered && currentScreen == Screen.VIDEOS) showNewVideo(loadRemembered = false)
         if (!remembered) interruptedTimelineRecovered = false
         timelineSourceStore.beginImport(uri)
         pendingImportCompletionUri = null
