@@ -10,8 +10,8 @@ android {
         applicationId = "dev.mahlernim.timelinevisualizer"
         minSdk = 26
         targetSdk = 36
-        versionCode = 32
-        versionName = "2.2.13"
+        versionCode = 33
+        versionName = "2.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -49,27 +49,13 @@ android {
     productFlavors {
         create("github") {
             dimension = "distribution"
-            buildConfigField("boolean", "IS_CAMERA_LAB", "false")
-            buildConfigField("boolean", "DEFAULT_EPISODE_FRAMING", "false")
             buildConfigField("String", "UPDATE_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/latest\"")
             buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/latest\"")
         }
         create("play") {
             dimension = "distribution"
-            buildConfigField("boolean", "IS_CAMERA_LAB", "false")
-            buildConfigField("boolean", "DEFAULT_EPISODE_FRAMING", "false")
             buildConfigField("String", "UPDATE_URL", "\"market://details?id=dev.mahlernim.timelinevisualizer\"")
             buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://play.google.com/store/apps/details?id=dev.mahlernim.timelinevisualizer\"")
-        }
-        create("cameraLab") {
-            dimension = "distribution"
-            applicationIdSuffix = ".cameralab"
-            versionCode = 35
-            versionNameSuffix = "-camera-lab.5"
-            buildConfigField("boolean", "IS_CAMERA_LAB", "true")
-            buildConfigField("boolean", "DEFAULT_EPISODE_FRAMING", "true")
-            buildConfigField("String", "UPDATE_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/tag/camera-lab-5\"")
-            buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/tag/camera-lab-5\"")
         }
     }
 

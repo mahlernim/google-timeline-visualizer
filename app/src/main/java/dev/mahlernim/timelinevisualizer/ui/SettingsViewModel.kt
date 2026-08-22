@@ -33,12 +33,9 @@ class SettingsViewModel(
         mutableState.value = mutableState.value.copy(camera = settings)
     }
 
-    fun resetCameraAndDistance() {
-        val distanceUnit = DistanceUnitPreference.AUTOMATIC
-        distanceUnitPreferences.save(distanceUnit)
+    fun resetVideoDefaults() {
         mutableState.value = mutableState.value.copy(
             camera = cameraPreferences.reset(),
-            distanceUnit = distanceUnit,
         )
     }
 

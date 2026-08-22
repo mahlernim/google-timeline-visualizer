@@ -13,12 +13,14 @@ class CameraSettingsPreferences(context: Context) {
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     fun load(): CameraSettings {
+        val existingProductionSettings = preferences.contains(KEY_CAMERA_MOVEMENT) ||
+            preferences.contains(KEY_LONG_TRIP) || preferences.contains(KEY_VIDEO_QUALITY)
         val settings = CameraSettings(
             cameraMovement = enumValue(KEY_CAMERA_MOVEMENT, CameraMovement.STEADY),
             longTripCompression = enumValue(KEY_LONG_TRIP, LongTripCompression.BALANCED),
             videoQuality = enumValue(KEY_VIDEO_QUALITY, VideoQuality.STANDARD),
             tripDetection = enumValue(KEY_TRIP_DETECTION, TripDetection.BALANCED),
-            localFraming = localFraming(),
+            localFraming = localFraming(existingProductionSettings),
         )
         save(settings)
         return settings
@@ -49,7 +51,7 @@ class CameraSettingsPreferences(context: Context) {
     private inline fun <reified T : Enum<T>> enumValue(key: String, fallback: T): T =
         runCatching { enumValueOf<T>(preferences.getString(key, null) ?: return fallback) }.getOrDefault(fallback)
 
-    private fun localFraming(): LocalFraming {
+    private fun localFraming(existingProductionSettings: Boolean): LocalFraming {
         val stored = preferences.getString(KEY_EPISODE_LOCAL_FRAMING, null)
         if (preferences.contains(KEY_EPISODE_FRAMING_ENABLED)) {
             if (!preferences.getBoolean(KEY_EPISODE_FRAMING_ENABLED, false)) return LocalFraming.OFF
@@ -62,7 +64,7 @@ class CameraSettingsPreferences(context: Context) {
             LocalFraming.CLOSE.name -> LocalFraming.CLOSE
             LocalFraming.OFF.name -> LocalFraming.OFF
             LocalFraming.BALANCED.name -> LocalFraming.BALANCED
-            else -> CameraSettings.DEFAULT_LOCAL_FRAMING
+            else -> if (existingProductionSettings) LocalFraming.OFF else LocalFraming.BALANCED
         }
     }
 

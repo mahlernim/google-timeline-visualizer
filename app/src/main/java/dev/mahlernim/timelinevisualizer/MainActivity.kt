@@ -90,7 +90,9 @@ import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
 import dev.mahlernim.timelinevisualizer.render.LocalFraming
 import dev.mahlernim.timelinevisualizer.render.TripDetection
+import dev.mahlernim.timelinevisualizer.render.VideoAspectRatio
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
+import dev.mahlernim.timelinevisualizer.render.VideoResolution
 import dev.mahlernim.timelinevisualizer.ui.CameraSettingsPreferences
 import dev.mahlernim.timelinevisualizer.ui.DistanceUnitPreferences
 import dev.mahlernim.timelinevisualizer.ui.AppLanguage
@@ -1146,6 +1148,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun configureAdvancedSettings() {
+        val aspectRatioLabels = listOf(
+            R.string.aspect_square,
+            R.string.aspect_portrait,
+            R.string.aspect_landscape,
+        ).map(::getString)
         val cameraLabels = listOf(
             R.string.camera_fixed,
             R.string.camera_steady,
@@ -1158,12 +1165,10 @@ class MainActivity : AppCompatActivity() {
             R.string.compression_strong,
             R.string.compression_stronger,
         ).map(::getString)
-        val qualityLabels = listOf(
-            R.string.format_square_480,
-            R.string.format_square_720,
-            R.string.format_square_1080,
-            R.string.format_portrait_1080,
-            R.string.format_landscape_1080,
+        val resolutionLabels = listOf(
+            R.string.resolution_480,
+            R.string.resolution_720,
+            R.string.resolution_1080,
         ).map(::getString)
         val tripDetectionLabels = listOf(
             R.string.trip_detection_conservative,
@@ -1177,9 +1182,10 @@ class MainActivity : AppCompatActivity() {
         ).map(::getString)
 
         listOf(
+            settingsScreen.aspectRatioDropdown to aspectRatioLabels,
             settingsScreen.cameraMovementDropdown to cameraLabels,
             settingsScreen.longTripDropdown to compressionLabels,
-            settingsScreen.videoQualityDropdown to qualityLabels,
+            settingsScreen.videoQualityDropdown to resolutionLabels,
             settingsScreen.tripDetectionDropdown to tripDetectionLabels,
             settingsScreen.localFramingDropdown to localFramingLabels,
         ).forEach { (dropdown, labels) ->
@@ -1187,11 +1193,16 @@ class MainActivity : AppCompatActivity() {
             makeDropdownOpenReliably(dropdown)
         }
 
+        settingsScreen.aspectRatioDropdown.setOnItemClickListener { _, _, position, _ ->
+            updateAdvancedSettings(
+                cameraSettings.copy(
+                    videoQuality = cameraSettings.videoQuality.withAspectRatio(VideoAspectRatio.entries[position]),
+                ),
+            )
+        }
         settingsScreen.cameraMovementDropdown.setOnItemClickListener { _, _, position, _ ->
             updateAdvancedSettings(cameraSettings.copy(cameraMovement = CameraMovement.values()[position]))
         }
-        settingsScreen.cameraLabNotice.visibility = if (BuildConfig.IS_CAMERA_LAB) View.VISIBLE else View.GONE
-        settingsScreen.episodeFramingGroup.visibility = if (BuildConfig.IS_CAMERA_LAB) View.VISIBLE else View.GONE
         settingsScreen.tripDetectionDropdown.setOnItemClickListener { _, _, position, _ ->
             updateAdvancedSettings(cameraSettings.copy(tripDetection = TripDetection.entries[position]))
         }
@@ -1202,36 +1213,29 @@ class MainActivity : AppCompatActivity() {
             updateAdvancedSettings(cameraSettings.copy(longTripCompression = LongTripCompression.values()[position]))
         }
         settingsScreen.videoQualityDropdown.setOnItemClickListener { _, _, position, _ ->
-            updateAdvancedSettings(cameraSettings.copy(videoQuality = VideoQuality.values()[position]))
+            updateAdvancedSettings(
+                cameraSettings.copy(
+                    videoQuality = cameraSettings.videoQuality.withResolution(VideoResolution.entries[position]),
+                ),
+            )
         }
         settingsScreen.resetAdvancedSettingsButton.setOnClickListener {
-            settingsViewModel.resetCameraAndDistance()
+            settingsViewModel.resetVideoDefaults()
             val state = settingsViewModel.state.value
-            applyDistanceUnitPreference(state.distanceUnit, save = false)
             applyAdvancedSettings(state.camera)
-            Snackbar.make(binding.root, R.string.advanced_defaults_restored, Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(binding.root, R.string.video_defaults_restored, Snackbar.LENGTH_SHORT).show()
         }
         applyAdvancedSettings(settingsViewModel.state.value.camera)
     }
 
     private fun configureLocationFiltering() {
-        val modes = listOf(LocationFilterMode.CONSERVATIVE, LocationFilterMode.OFF)
-        val labels = listOf(
-            getString(R.string.location_filter_conservative),
-            getString(R.string.location_filter_off),
-        )
-        settingsScreen.locationFilterDropdown.setAdapter(
-            SelectionArrayAdapter(this, labels),
-        )
-        makeDropdownOpenReliably(settingsScreen.locationFilterDropdown)
-        settingsScreen.locationFilterDropdown.setOnItemClickListener { _, _, position, _ ->
-            locationFilterMode = modes[position]
+        locationFilterMode = settingsViewModel.state.value.locationFilter
+        settingsScreen.locationFilterSwitch.isChecked = locationFilterMode == LocationFilterMode.CONSERVATIVE
+        settingsScreen.locationFilterSwitch.setOnCheckedChangeListener { _, checked ->
+            locationFilterMode = if (checked) LocationFilterMode.CONSERVATIVE else LocationFilterMode.OFF
             settingsViewModel.updateLocationFilter(locationFilterMode)
-            updateLocationFilterLabel()
             rebuildRenderTimeline(reselect = true)
         }
-        locationFilterMode = settingsViewModel.state.value.locationFilter
-        updateLocationFilterLabel()
     }
 
     private fun configureDistanceUnitSelection() {
@@ -1348,19 +1352,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateLocationFilterLabel() {
-        settingsScreen.locationFilterDropdown.setText(
-            getString(
-                if (locationFilterMode == LocationFilterMode.CONSERVATIVE) {
-                    R.string.location_filter_conservative
-                } else {
-                    R.string.location_filter_off
-                },
-            ),
-            false,
-        )
-    }
-
     private fun rebuildRenderTimeline(reselect: Boolean) {
         val source = timeline
         if (source == null) {
@@ -1381,6 +1372,16 @@ class MainActivity : AppCompatActivity() {
     private fun applyAdvancedSettings(settings: CameraSettings) {
         cameraSettings = settings
         editor.timelineView.cameraSettings = settings
+        settingsScreen.aspectRatioDropdown.setText(
+            getString(
+                listOf(
+                    R.string.aspect_square,
+                    R.string.aspect_portrait,
+                    R.string.aspect_landscape,
+                )[settings.videoQuality.aspectRatioOption.ordinal],
+            ),
+            false,
+        )
         settingsScreen.cameraMovementDropdown.setText(
             getString(
                 listOf(
@@ -1434,7 +1435,13 @@ class MainActivity : AppCompatActivity() {
             false,
         )
         settingsScreen.videoQualityDropdown.setText(
-            videoFormatLabel(settings.videoQuality),
+            getString(
+                listOf(
+                    R.string.resolution_480,
+                    R.string.resolution_720,
+                    R.string.resolution_1080,
+                )[settings.videoQuality.resolution.ordinal],
+            ),
             false,
         )
         val warning = videoFormatWarning(settings.videoQuality)
@@ -1444,16 +1451,6 @@ class MainActivity : AppCompatActivity() {
         updateCameraPreparationUi()
         showProgress(editor.timelineSeek.progress / 1000f)
     }
-
-    private fun videoFormatLabel(format: VideoQuality): String = getString(
-        when (format) {
-            VideoQuality.STANDARD -> R.string.format_square_480
-            VideoQuality.HIGH -> R.string.format_square_720
-            VideoQuality.ULTRA -> R.string.format_square_1080
-            VideoQuality.PORTRAIT -> R.string.format_portrait_1080
-            VideoQuality.LANDSCAPE -> R.string.format_landscape_1080
-        },
-    )
 
     private fun videoFormatWarning(format: VideoQuality): String? {
         if (videoEncoderProfiles.isEmpty()) return null
@@ -1797,12 +1794,14 @@ class MainActivity : AppCompatActivity() {
         editor.exactDateRangeButton.isEnabled = !exporting
         editor.ownerInput.isEnabled = !exporting
         editor.titleInput.isEnabled = !exporting
+        settingsScreen.aspectRatioDropdown.isEnabled = !exporting
         settingsScreen.cameraMovementDropdown.isEnabled = !exporting
         settingsScreen.tripDetectionDropdown.isEnabled = !exporting
         settingsScreen.localFramingDropdown.isEnabled = !exporting
         settingsScreen.longTripDropdown.isEnabled = !exporting
         settingsScreen.videoQualityDropdown.isEnabled = !exporting
         settingsScreen.resetAdvancedSettingsButton.isEnabled = !exporting
+        settingsScreen.locationFilterSwitch.isEnabled = !exporting
         if (exporting) editor.videoReadyGroup.visibility = View.GONE
         if (!exporting) updateCameraPreparationUi()
     }

@@ -24,4 +24,17 @@ class VideoQualityTest {
             assertEquals(30, format.frameRate)
         }
     }
+
+    @Test
+    fun everyAspectSupportsEveryResolutionWithoutChangingTheOtherChoice() {
+        VideoAspectRatio.entries.forEach { aspect ->
+            VideoResolution.entries.forEach { resolution ->
+                val format = VideoQuality.of(aspect, resolution)
+                assertEquals(aspect, format.aspectRatioOption)
+                assertEquals(resolution, format.resolution)
+                assertEquals(resolution, format.withAspectRatio(aspect).resolution)
+                assertEquals(aspect, format.withResolution(resolution).aspectRatioOption)
+            }
+        }
+    }
 }

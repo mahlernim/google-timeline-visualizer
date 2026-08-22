@@ -1,5 +1,6 @@
 package dev.mahlernim.timelinevisualizer
 
+import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -31,19 +32,18 @@ class DeviceSmokeTest {
 
                 activity.findViewById<View>(R.id.navigationSettings).performClick()
                 assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.settingsScreen).visibility)
-                if (BuildConfig.IS_CAMERA_LAB) {
-                    assertEquals(
-                        View.VISIBLE,
-                        activity.findViewById<View>(R.id.episodeFramingGroup).visibility,
-                    )
-                    val tripDetection = activity.findViewById<AutoCompleteTextView>(R.id.tripDetectionDropdown)
-                    val localFraming = activity.findViewById<AutoCompleteTextView>(R.id.localFramingDropdown)
-                    assertEquals(activity.getString(R.string.trip_detection_balanced), tripDetection.text.toString())
-                    assertEquals(activity.getString(R.string.local_framing_balanced), localFraming.text.toString())
-                    localFraming.onItemClickListener?.onItemClick(null, null, 0, 0L)
-                    assertEquals(activity.getString(R.string.local_framing_off), localFraming.text.toString())
-                    assertTrue(tripDetection.isEnabled)
-                }
+                val tripDetection = activity.findViewById<AutoCompleteTextView>(R.id.tripDetectionDropdown)
+                val localFraming = activity.findViewById<AutoCompleteTextView>(R.id.localFramingDropdown)
+                assertEquals(activity.getString(R.string.trip_detection_balanced), tripDetection.text.toString())
+                assertEquals(activity.getString(R.string.local_framing_balanced), localFraming.text.toString())
+                localFraming.onItemClickListener?.onItemClick(null, null, 0, 0L)
+                assertEquals(activity.getString(R.string.local_framing_off), localFraming.text.toString())
+                assertTrue(tripDetection.isEnabled)
+                val settingsBounds = Rect()
+                val defaultsBounds = Rect()
+                activity.findViewById<View>(R.id.settingsScreen).getGlobalVisibleRect(settingsBounds)
+                activity.findViewById<View>(R.id.resetAdvancedSettingsButton).getGlobalVisibleRect(defaultsBounds)
+                assertTrue(defaultsBounds.bottom <= settingsBounds.bottom)
 
                 val navigation = activity.findViewById<ViewGroup>(R.id.bottomNavigation)
                 for (itemId in listOf(R.id.navigationVideos, R.id.navigationCreate, R.id.navigationSettings)) {
@@ -62,15 +62,13 @@ class DeviceSmokeTest {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { it.findViewById<View>(R.id.navigationSettings).performClick() }
             val choices = buildList {
+                add(R.id.aspectRatioDropdown to 3)
                 add(R.id.cameraMovementDropdown to 4)
                 add(R.id.longTripDropdown to 4)
-                add(R.id.videoQualityDropdown to 5)
-                add(R.id.locationFilterDropdown to 2)
+                add(R.id.videoQualityDropdown to 3)
                 add(R.id.languageDropdown to 10)
-                if (BuildConfig.IS_CAMERA_LAB) {
-                    add(R.id.tripDetectionDropdown to 3)
-                    add(R.id.localFramingDropdown to 3)
-                }
+                add(R.id.tripDetectionDropdown to 3)
+                add(R.id.localFramingDropdown to 3)
             }
             choices.forEach { (id, count) -> assertChoicesRemainAvailable(scenario, id, count) }
 

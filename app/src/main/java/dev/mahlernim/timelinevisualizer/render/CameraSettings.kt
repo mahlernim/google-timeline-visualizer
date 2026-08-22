@@ -1,7 +1,5 @@
 package dev.mahlernim.timelinevisualizer.render
 
-import dev.mahlernim.timelinevisualizer.BuildConfig
-
 enum class CameraMovement(
     val contextFraction: Double,
     val minimumContextKm: Double,
@@ -41,19 +39,47 @@ enum class LocalFraming(
     CLOSE(true, 0.78),
 }
 
+enum class VideoAspectRatio {
+    SQUARE,
+    PORTRAIT,
+    LANDSCAPE,
+}
+
+enum class VideoResolution(val shortEdge: Int) {
+    STANDARD(480),
+    HIGH(720),
+    ULTRA(1080),
+}
+
 enum class VideoQuality(
     val width: Int,
     val height: Int,
     val frameRate: Int,
     val bitrate: Int,
+    val aspectRatioOption: VideoAspectRatio,
+    val resolution: VideoResolution,
 ) {
-    STANDARD(480, 480, 24, 2_500_000),
-    HIGH(720, 720, 24, 5_000_000),
-    ULTRA(1080, 1080, 24, 8_000_000),
-    PORTRAIT(1080, 1920, 30, 12_000_000),
-    LANDSCAPE(1920, 1080, 30, 12_000_000);
+    STANDARD(480, 480, 24, 2_500_000, VideoAspectRatio.SQUARE, VideoResolution.STANDARD),
+    HIGH(720, 720, 24, 5_000_000, VideoAspectRatio.SQUARE, VideoResolution.HIGH),
+    ULTRA(1080, 1080, 24, 8_000_000, VideoAspectRatio.SQUARE, VideoResolution.ULTRA),
+    PORTRAIT(1080, 1920, 30, 12_000_000, VideoAspectRatio.PORTRAIT, VideoResolution.ULTRA),
+    LANDSCAPE(1920, 1080, 30, 12_000_000, VideoAspectRatio.LANDSCAPE, VideoResolution.ULTRA),
+    PORTRAIT_480(480, 854, 30, 3_500_000, VideoAspectRatio.PORTRAIT, VideoResolution.STANDARD),
+    PORTRAIT_720(720, 1280, 30, 7_000_000, VideoAspectRatio.PORTRAIT, VideoResolution.HIGH),
+    LANDSCAPE_480(854, 480, 30, 3_500_000, VideoAspectRatio.LANDSCAPE, VideoResolution.STANDARD),
+    LANDSCAPE_720(1280, 720, 30, 7_000_000, VideoAspectRatio.LANDSCAPE, VideoResolution.HIGH);
 
     val aspectRatio: Float get() = width.toFloat() / height
+
+    fun withAspectRatio(aspectRatio: VideoAspectRatio): VideoQuality = of(aspectRatio, resolution)
+
+    fun withResolution(resolution: VideoResolution): VideoQuality = of(aspectRatioOption, resolution)
+
+    companion object {
+        fun of(aspectRatio: VideoAspectRatio, resolution: VideoResolution): VideoQuality = entries.first {
+            it.aspectRatioOption == aspectRatio && it.resolution == resolution
+        }
+    }
 }
 
 data class CameraSettings(
@@ -61,16 +87,11 @@ data class CameraSettings(
     val longTripCompression: LongTripCompression = LongTripCompression.BALANCED,
     val videoQuality: VideoQuality = VideoQuality.STANDARD,
     val tripDetection: TripDetection = TripDetection.BALANCED,
-    val localFraming: LocalFraming = DEFAULT_LOCAL_FRAMING,
+    val localFraming: LocalFraming = LocalFraming.BALANCED,
 ) {
     val episodeFramingEnabled: Boolean get() = localFraming.enabled
 
     companion object {
-        val DEFAULT_LOCAL_FRAMING = if (BuildConfig.DEFAULT_EPISODE_FRAMING) {
-            LocalFraming.BALANCED
-        } else {
-            LocalFraming.OFF
-        }
         val DEFAULT = CameraSettings()
     }
 }

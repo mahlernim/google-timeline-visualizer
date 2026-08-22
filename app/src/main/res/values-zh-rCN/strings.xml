@@ -159,18 +159,14 @@
     <string name="advanced_settings">高级设置</string>
     <string name="advanced_settings_summary">选择缩放方式、长途拍摄时间和导出格式。</string>
     <string name="camera_movement">缩放方式</string>
-    <string name="camera_fixed">固定缩放</string>
-    <string name="camera_steady">平衡缩放</string>
-    <string name="camera_dynamic">主动缩放</string>
-    <string name="camera_close_up">近距离缩放</string>
+    <string name="camera_fixed">固定</string><string name="camera_steady">平衡</string><string name="camera_dynamic">主动</string><string name="camera_close_up">近距离</string>
     <string name="camera_fixed_summary">跟随路线而不改变比例。</string>
     <string name="camera_steady_summary">使用柔和的缩放变化保持画面稳定。</string>
     <string name="camera_dynamic_summary">根据旅程的不同部分更主动地调整缩放。</string>
     <string name="camera_close_up_summary">尽可能贴近您的当前位置。</string>
-    <string name="camera_lab_notice">Camera Lab 5 实验版 · 与正式版应用分开安装</string>
     <string name="episode_framing">本地行程取景</string>
     <string name="episode_framing_summary">只取景两次长途移动之间的当前本地行程。镜头会在抵达前开始拉近，并在下一次出发前再次拉远。</string>
-    <string name="trip_detection">行程检测</string>
+    <string name="trip_detection">长途行程检测</string>
     <string name="trip_detection_conservative">保守</string>
     <string name="trip_detection_balanced">平衡</string>
     <string name="trip_detection_sensitive">敏感</string>
@@ -194,11 +190,7 @@
     <string name="hop_more_sensitive">更敏感</string>
     <string name="hop_automatic">自动的</string>
     <string name="hop_less_sensitive">不太敏感</string>
-    <string name="long_trip_compression">长途行程压缩</string>
-    <string name="compression_off">关 · 1.00</string>
-    <string name="compression_stronger">更强 · 0.65</string>
-    <string name="compression_balanced">均衡 · 0.85</string>
-    <string name="compression_strong">强·0.75</string>
+    <string name="long_trip_compression">长途行程节奏</string><string name="compression_off">自然</string><string name="compression_stronger">最快</string><string name="compression_balanced">均衡</string><string name="compression_strong">更快</string>
     <string name="video_format">视频格式</string>
     <string name="format_square_480">正方形·480p</string>
     <string name="format_square_720">正方形·720p</string>
@@ -230,13 +222,18 @@
     <string name="settings">设置</string>
     <string name="settings_summary">设置用于预览和新视频的默认值。</string>
     <string name="video_defaults">视频默认值</string>
-    <string name="video_defaults_summary">更改适用于预览和您创建的下一个视频。</string>
+    <string name="video_defaults_summary">这些设置共同控制路线的取景和播放节奏。</string>
+    <string name="aspect_ratio">宽高比</string><string name="aspect_square">方形</string><string name="aspect_portrait">竖屏</string><string name="aspect_landscape">横屏</string>
+    <string name="reset_video_defaults">重置视频默认值</string><string name="video_defaults_restored">已重置视频默认值</string>
+    <string name="export_quality">导出质量</string><string name="export_quality_summary">分辨率越高，文件越大，并非所有设备都支持。</string>
+    <string name="resolution">分辨率</string><string name="resolution_480">480p</string><string name="resolution_720">720p</string><string name="resolution_1080">1080p</string><string name="regional_preferences">区域偏好</string>
     <string name="distance_unit_setting">距离单位</string>
     <string name="distance_unit_automatic">自动</string>
     <string name="distance_unit_kilometers">公里</string>
     <string name="distance_unit_miles">英里</string>
     <string name="distance_unit_automatic_resolved">%1$s · %2$s</string>
     <string name="timeline_processing">时间轴处理</string>
+    <string name="timeline_data">时间轴数据</string><string name="remove_impossible_jumps">移除不可能的跳点</string><string name="remove_impossible_jumps_summary">从预览和视频中移除短暂且不可能的跳点。不会更改时间轴文件。</string>
     <string name="location_filter">GPS异常点过滤</string>
     <string name="location_filter_summary">保守过滤仅忽略短时间内不可能的往返移动。不会更改您的时间轴文件。</string>
     <string name="location_filter_conservative">保守</string>

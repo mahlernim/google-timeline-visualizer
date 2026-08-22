@@ -166,18 +166,14 @@
     <string name="advanced_settings">Configurações avançadas</string>
     <string name="advanced_settings_summary">Escolha o estilo de zoom, o tempo da viagem longa e o formato de exportação.</string>
     <string name="camera_movement">Estilo de zoom</string>
-    <string name="camera_fixed">Zoom fixo</string>
-    <string name="camera_steady">Zoom equilibrado</string>
-    <string name="camera_dynamic">Zoom ativo</string>
-    <string name="camera_close_up">Zoom aproximado</string>
+    <string name="camera_fixed">Fixo</string><string name="camera_steady">Equilibrado</string><string name="camera_dynamic">Ativo</string><string name="camera_close_up">Próximo</string>
     <string name="camera_fixed_summary">Segue a rota sem mudar a escala.</string>
     <string name="camera_steady_summary">Usa mudanças suaves de zoom para manter a visualização estável.</string>
     <string name="camera_dynamic_summary">Ajusta o zoom de forma mais ativa em cada parte da viagem.</string>
     <string name="camera_close_up_summary">Fica mais perto da sua localização sempre que possível.</string>
-    <string name="camera_lab_notice">Experimento Camera Lab 5 · instalado separadamente do aplicativo de produção</string>
     <string name="episode_framing">Enquadramento da viagem local</string>
     <string name="episode_framing_summary">Enquadra apenas o trecho local atual entre deslocamentos longos. A câmera começa a aproximar antes da chegada e volta a afastar antes da próxima partida.</string>
-    <string name="trip_detection">Detecção de viagens</string>
+    <string name="trip_detection">Detecção de viagens longas</string>
     <string name="trip_detection_conservative">Conservadora</string>
     <string name="trip_detection_balanced">Equilibrada</string>
     <string name="trip_detection_sensitive">Sensível</string>
@@ -201,11 +197,7 @@
     <string name="hop_more_sensitive">Mais sensível</string>
     <string name="hop_automatic">Automático</string>
     <string name="hop_less_sensitive">Menos sensível</string>
-    <string name="long_trip_compression">Compressão de longa viagem</string>
-    <string name="compression_off">Desligado · 1,00</string>
-    <string name="compression_stronger">Mais forte · 0,65</string>
-    <string name="compression_balanced">Equilibrado · 0,85</string>
-    <string name="compression_strong">Forte · 0,75</string>
+    <string name="long_trip_compression">Ritmo de viagens longas</string><string name="compression_off">Natural</string><string name="compression_stronger">Mais rápido</string><string name="compression_balanced">Equilibrado</string><string name="compression_strong">Rápido</string>
     <string name="video_format">Formato de vídeo</string>
     <string name="format_square_480">Quadrado · 480p</string>
     <string name="format_square_720">Quadrado · 720p</string>
@@ -237,13 +229,18 @@
     <string name="settings">Configurações</string>
     <string name="settings_summary">Defina os padrões usados ​​para visualizações e novos vídeos.</string>
     <string name="video_defaults">Padrões de vídeo</string>
-    <string name="video_defaults_summary">As alterações se aplicam à visualização e ao próximo vídeo que você criar.</string>
+    <string name="video_defaults_summary">Essas configurações controlam juntas o enquadramento e o ritmo da rota.</string>
+    <string name="aspect_ratio">Proporção</string><string name="aspect_square">Quadrado</string><string name="aspect_portrait">Retrato</string><string name="aspect_landscape">Paisagem</string>
+    <string name="reset_video_defaults">Redefinir padrões de vídeo</string><string name="video_defaults_restored">Padrões de vídeo redefinidos</string>
+    <string name="export_quality">Qualidade de exportação</string><string name="export_quality_summary">Resoluções maiores criam arquivos maiores e podem não funcionar em todos os dispositivos.</string>
+    <string name="resolution">Resolução</string><string name="resolution_480">480p</string><string name="resolution_720">720p</string><string name="resolution_1080">1080p</string><string name="regional_preferences">Preferências regionais</string>
     <string name="distance_unit_setting">Unidade de distância</string>
     <string name="distance_unit_automatic">Automático</string>
     <string name="distance_unit_kilometers">Quilômetros</string>
     <string name="distance_unit_miles">Milhas</string>
     <string name="distance_unit_automatic_resolved">%1$s · %2$s</string>
     <string name="timeline_processing">Processamento da Timeline</string>
+    <string name="timeline_data">Dados da Timeline</string><string name="remove_impossible_jumps">Remover saltos impossíveis</string><string name="remove_impossible_jumps_summary">Remove saltos curtos e impossíveis das prévias e dos vídeos. O arquivo da Timeline não é alterado.</string>
     <string name="location_filter">Filtro de valores GPS atípicos</string>
     <string name="location_filter_summary">O filtro conservador ignora apenas viagens curtas de ida e volta impossíveis. O arquivo da Timeline nunca é alterado.</string>
     <string name="location_filter_conservative">Conservador</string>

@@ -21,7 +21,7 @@ jobs:
       - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v5
       - name: Test, lint, and build
-        run: ./gradlew test lint assembleGithubDebug assemblePlayDebug assembleCameraLabDebug --stacktrace
+        run: ./gradlew test lint assembleGithubDebug assemblePlayDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: timeline-visualizer-debug
@@ -63,4 +63,4 @@ jobs:
           api-level: ${{ matrix.api-level }}
           arch: x86_64
           disable-animations: true
-          script: ./gradlew connectedGithubDebugAndroidTest connectedCameraLabDebugAndroidTest --stacktrace
+          script: ./gradlew connectedGithubDebugAndroidTest --stacktrace

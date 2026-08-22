@@ -304,8 +304,12 @@ class MainActivityTest {
             activity.findViewById<AutoCompleteTextView>(R.id.longTripDropdown).text.toString(),
         )
         assertEquals(
-            activity.getString(R.string.format_square_480),
+            activity.getString(R.string.resolution_480),
             activity.findViewById<AutoCompleteTextView>(R.id.videoQualityDropdown).text.toString(),
+        )
+        assertEquals(
+            activity.getString(R.string.aspect_square),
+            activity.findViewById<AutoCompleteTextView>(R.id.aspectRatioDropdown).text.toString(),
         )
         val automaticDistance = DistanceUnit.automatic(
             android.content.res.Resources.getSystem().configuration.locales[0],
@@ -325,9 +329,10 @@ class MainActivityTest {
             ),
             activity.findViewById<AutoCompleteTextView>(R.id.distanceUnitDropdown).text.toString(),
         )
-        assertEquals(
-            activity.getString(R.string.location_filter_conservative),
-            activity.findViewById<AutoCompleteTextView>(R.id.locationFilterDropdown).text.toString(),
+        assertTrue(
+            activity.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(
+                R.id.locationFilterSwitch,
+            ).isChecked,
         )
         assertEquals(
             activity.getString(R.string.language_system_default),
@@ -367,22 +372,22 @@ class MainActivityTest {
 
         activity.findViewById<View>(R.id.resetAdvancedSettingsButton).performClick()
 
-        assertEquals(DistanceUnitPreference.AUTOMATIC, DistanceUnitPreferences(activity).load())
-        assertTrue(dropdown.text.toString().startsWith(activity.getString(R.string.distance_unit_automatic)))
+        assertEquals(DistanceUnitPreference.MILES, DistanceUnitPreferences(activity).load())
+        assertEquals(activity.getString(R.string.distance_unit_miles), dropdown.text.toString())
     }
 
     @Test
     fun portraitFormatUpdatesTheStoredSettingAndPreviewShape() {
         val activity = launchActivity()
         activity.findViewById<View>(R.id.navigationSettings).performClick()
-        val dropdown = activity.findViewById<AutoCompleteTextView>(R.id.videoQualityDropdown)
+        val dropdown = activity.findViewById<AutoCompleteTextView>(R.id.aspectRatioDropdown)
 
-        dropdown.onItemClickListener?.onItemClick(null, null, VideoQuality.PORTRAIT.ordinal, 0L)
+        dropdown.onItemClickListener?.onItemClick(null, null, 1, 0L)
 
-        assertEquals(activity.getString(R.string.format_portrait_1080), dropdown.text.toString())
-        assertEquals(VideoQuality.PORTRAIT, CameraSettingsPreferences(activity).load().videoQuality)
+        assertEquals(activity.getString(R.string.aspect_portrait), dropdown.text.toString())
+        assertEquals(VideoQuality.PORTRAIT_480, CameraSettingsPreferences(activity).load().videoQuality)
         assertEquals(
-            VideoQuality.PORTRAIT.aspectRatio,
+            VideoQuality.PORTRAIT_480.aspectRatio,
             activity.findViewById<TimelineView>(R.id.timelineView).previewAspectRatio,
             0.001f,
         )
@@ -403,8 +408,7 @@ class MainActivityTest {
         )
 
         activity.findViewById<View>(R.id.navigationSettings).performClick()
-        val dropdown = activity.findViewById<AutoCompleteTextView>(R.id.locationFilterDropdown)
-        dropdown.onItemClickListener?.onItemClick(null, null, 1, 1L)
+        activity.findViewById<View>(R.id.locationFilterSwitch).performClick()
         activity.findViewById<View>(R.id.navigationCreate).performClick()
 
         assertTrue(

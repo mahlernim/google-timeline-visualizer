@@ -55,16 +55,16 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun resetPreservesLocationFilterWhileResettingCameraAndDistance() {
+    fun resetPreservesRegionalAndTimelinePreferences() {
         val viewModel = viewModel()
         viewModel.updateCamera(CameraSettings.DEFAULT.copy(videoQuality = VideoQuality.ULTRA))
         viewModel.updateDistanceUnit(DistanceUnitPreference.MILES)
         viewModel.updateLocationFilter(LocationFilterMode.OFF)
 
-        viewModel.resetCameraAndDistance()
+        viewModel.resetVideoDefaults()
 
         assertEquals(CameraSettings.DEFAULT, viewModel.state.value.camera)
-        assertEquals(DistanceUnitPreference.AUTOMATIC, viewModel.state.value.distanceUnit)
+        assertEquals(DistanceUnitPreference.MILES, viewModel.state.value.distanceUnit)
         assertEquals(LocationFilterMode.OFF, viewModel.state.value.locationFilter)
     }
 

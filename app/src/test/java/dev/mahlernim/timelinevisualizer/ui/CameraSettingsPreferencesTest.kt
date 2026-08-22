@@ -54,7 +54,7 @@ class CameraSettingsPreferencesTest {
         assertEquals(LongTripCompression.BALANCED, preferences.load().longTripCompression)
         assertEquals(VideoQuality.STANDARD, preferences.load().videoQuality)
         assertEquals(TripDetection.BALANCED, preferences.load().tripDetection)
-        assertEquals(CameraSettings.DEFAULT_LOCAL_FRAMING, preferences.load().localFraming)
+        assertEquals(LocalFraming.BALANCED, preferences.load().localFraming)
     }
 
     @Test
@@ -118,5 +118,17 @@ class CameraSettingsPreferencesTest {
             .apply()
 
         assertEquals(LongTripCompression.BALANCED, CameraSettingsPreferences(context).load().longTripCompression)
+    }
+
+    @Test
+    fun existingProductionSettingsKeepLocalFramingOffDuringUpgrade() {
+        context.getSharedPreferences("camera-settings", Context.MODE_PRIVATE)
+            .edit()
+            .putString("camera-movement", "STEADY")
+            .putString("long-trip", "BALANCED")
+            .putString("video-quality", "STANDARD")
+            .apply()
+
+        assertEquals(LocalFraming.OFF, CameraSettingsPreferences(context).load().localFraming)
     }
 }

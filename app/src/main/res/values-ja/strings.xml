@@ -158,18 +158,17 @@
     <string name="advanced_settings">詳細設定</string>
     <string name="advanced_settings_summary">ズーム方式、長距離の再生時間、書き出し形式を選択します。</string>
     <string name="camera_movement">ズーム方式</string>
-    <string name="camera_fixed">固定ズーム</string>
-    <string name="camera_steady">バランスズーム</string>
-    <string name="camera_dynamic">アクティブズーム</string>
-    <string name="camera_close_up">クローズアップズーム</string>
+    <string name="camera_fixed">固定</string>
+    <string name="camera_steady">バランス</string>
+    <string name="camera_dynamic">アクティブ</string>
+    <string name="camera_close_up">クローズアップ</string>
     <string name="camera_fixed_summary">縮尺を変えずにルートを追います。</string>
     <string name="camera_steady_summary">穏やかなズーム変化で安定した表示にします。</string>
     <string name="camera_dynamic_summary">旅の各区間に合わせてズームをより積極的に調整します。</string>
     <string name="camera_close_up_summary">可能な限り現在地を近く表示します。</string>
-    <string name="camera_lab_notice">Camera Lab 5 実験版 · 製品版アプリとは別にインストールされます</string>
     <string name="episode_framing">現地旅行のフレーミング</string>
     <string name="episode_framing_summary">長距離移動の間にある現在の現地旅行だけを表示範囲に含めます。到着前からズームインし、次の出発前に再びズームアウトします。</string>
-    <string name="trip_detection">旅行区間の検出</string>
+    <string name="trip_detection">長距離移動の検出</string>
     <string name="trip_detection_conservative">控えめ</string>
     <string name="trip_detection_balanced">バランス</string>
     <string name="trip_detection_sensitive">敏感</string>
@@ -193,11 +192,11 @@
     <string name="hop_more_sensitive">高い</string>
     <string name="hop_automatic">自動</string>
     <string name="hop_less_sensitive">低い</string>
-    <string name="long_trip_compression">長距離の時間圧縮</string>
-    <string name="compression_off">オフ · 1.00</string>
-    <string name="compression_stronger">最強 · 0.65</string>
-    <string name="compression_balanced">標準 · 0.85</string>
-    <string name="compression_strong">強い · 0.75</string>
+    <string name="long_trip_compression">長距離移動のペース</string>
+    <string name="compression_off">自然</string>
+    <string name="compression_stronger">最速</string>
+    <string name="compression_balanced">バランス</string>
+    <string name="compression_strong">高速</string>
     <string name="video_format">動画形式</string>
     <string name="format_square_480">正方形 · 480p</string>
     <string name="format_square_720">正方形 · 720p</string>
@@ -229,13 +228,19 @@
     <string name="settings">設定</string>
     <string name="settings_summary">プレビューと新しい動画に使用する初期値を設定します。</string>
     <string name="video_defaults">動画の初期設定</string>
-    <string name="video_defaults_summary">変更はプレビューと次に作成する動画に適用されます。</string>
+    <string name="video_defaults_summary">ルートの表示範囲と再生ペースをまとめて調整します。</string>
+    <string name="aspect_ratio">縦横比</string><string name="aspect_square">正方形</string><string name="aspect_portrait">縦向き</string><string name="aspect_landscape">横向き</string>
+    <string name="reset_video_defaults">動画設定をリセット</string><string name="video_defaults_restored">動画設定をリセットしました</string>
+    <string name="export_quality">書き出し品質</string><string name="export_quality_summary">高解像度ほどファイルが大きくなり、端末によっては利用できません。</string>
+    <string name="resolution">解像度</string><string name="resolution_480">480p</string><string name="resolution_720">720p</string><string name="resolution_1080">1080p</string>
+    <string name="regional_preferences">地域設定</string>
     <string name="distance_unit_setting">距離の単位</string>
     <string name="distance_unit_automatic">自動</string>
     <string name="distance_unit_kilometers">キロメートル</string>
     <string name="distance_unit_miles">マイル</string>
     <string name="distance_unit_automatic_resolved">%1$s · %2$s</string>
     <string name="timeline_processing">タイムライン処理</string>
+    <string name="timeline_data">タイムラインデータ</string><string name="remove_impossible_jumps">不可能な移動を除去</string><string name="remove_impossible_jumps_summary">プレビューと動画から短い不可能な移動を除去します。タイムラインファイルは変更しません。</string>
     <string name="location_filter">GPS外れ値フィルター</string>
     <string name="location_filter_summary">慎重なフィルターで、短時間では不可能な往復移動だけを無視します。タイムライン ファイルは変更されません。</string>
     <string name="location_filter_conservative">慎重</string>
