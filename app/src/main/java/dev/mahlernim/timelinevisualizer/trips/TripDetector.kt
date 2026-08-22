@@ -18,10 +18,11 @@ object TripDetector {
     private const val MAX_DESTINATION_RADIUS_KM = 250.0
 
     fun detect(timeline: Timeline, zone: ZoneId = ZoneId.systemDefault()): List<TripSuggestion> {
-        val days = timeline.points
-            .groupBy { it.instant.atZone(zone).toLocalDate() }
-            .mapValues { (_, points) -> center(points) }
-            .toSortedMap()
+        val accumulators = sortedMapOf<LocalDate, DayAccumulator>()
+        timeline.points.forEach { point ->
+            accumulators.getOrPut(point.instant.atZone(zone).toLocalDate(), ::DayAccumulator).add(point)
+        }
+        val days = accumulators.mapValues { (_, accumulator) -> accumulator.center() }
         if (days.size < 5) return emptyList()
 
         val homeCell = days.values.groupingBy { point ->
@@ -101,4 +102,23 @@ object TripDetector {
     }
 
     private data class Cell(val latitude: Double, val longitude: Double)
+
+    private class DayAccumulator {
+        private var first: GeoPoint? = null
+        private var latitudeSum = 0.0
+        private var longitudeSum = 0.0
+        private var count = 0
+
+        fun add(point: GeoPoint) {
+            if (first == null) first = point
+            latitudeSum += point.latitude
+            longitudeSum += point.longitude
+            count += 1
+        }
+
+        fun center(): GeoPoint {
+            val point = requireNotNull(first)
+            return GeoPoint(point.instant, latitudeSum / count, longitudeSum / count)
+        }
+    }
 }
