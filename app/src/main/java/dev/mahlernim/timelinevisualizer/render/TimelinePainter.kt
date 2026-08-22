@@ -9,6 +9,7 @@ import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Shader
 import dev.mahlernim.timelinevisualizer.model.Journey
+import dev.mahlernim.timelinevisualizer.model.JourneyLeg
 import dev.mahlernim.timelinevisualizer.model.JourneyPosition
 import dev.mahlernim.timelinevisualizer.model.MutableRenderSampleLocation
 import dev.mahlernim.timelinevisualizer.model.WebMercator
@@ -42,6 +43,7 @@ class TimelinePainter {
     private var cachedCameraTrack: CameraTrack? = null
     private var cachedTimingJourney: Journey? = null
     private var cachedCompression = LongTripCompression.BALANCED
+    private var cachedTripDetection = TripDetection.BALANCED
     private var cachedTiming: JourneyTiming? = null
     internal val cameraRoutePointEvaluations: Long
         get() = cachedPrepared?.pointEvaluations ?: 0L
@@ -191,19 +193,77 @@ class TimelinePainter {
         height: Int,
         cameraSettings: CameraSettings,
         useRangeIndex: Boolean = true,
+        episodeLegsOverride: List<JourneyLeg>? = null,
     ): Viewport {
         val prepared = prepare(journey)
         val current = playbackPosition(journey, progress, cameraSettings)
         val movement = cameraSettings.cameraMovement
         val proportionalContextKm = (journey.totalDistanceKm * movement.contextFraction)
             .coerceIn(movement.minimumContextKm, movement.maximumContextKm)
-        val leg = journey.legAt(current.distanceKm).takeIf { movement.legAware }
-        val contextKm = if (leg?.isTransfer == true) leg.lengthKm else proportionalContextKm
-        val padding = if (leg?.isTransfer == true) TRANSFER_PADDING else movement.padding
+        val episodeLegs = episodeLegsOverride ?: cameraEpisodeLegs(journey, cameraSettings)
+        val leg = journey.legAt(current.distanceKm, episodeLegs).takeIf { movement.legAware }
+        val legIndex = leg?.let(episodeLegs::indexOf) ?: -1
+        val nextLocalLeg = episodeLegs.getOrNull(legIndex + 1)?.takeIf { !it.isTransfer }
+        val transferArrivalBlend = if (
+            cameraSettings.episodeFramingEnabled &&
+            leg?.isTransfer == true &&
+            nextLocalLeg != null &&
+            leg.lengthKm > 0.0
+        ) {
+            smoothstep(
+                ((current.distanceKm - leg.startKm) / leg.lengthKm - EPISODE_ARRIVAL_ZOOM_START_FRACTION) /
+                    (1.0 - EPISODE_ARRIVAL_ZOOM_START_FRACTION),
+            )
+        } else {
+            0.0
+        }
+        val contextKm = if (leg?.isTransfer == true) {
+            if (transferArrivalBlend > 0.0) {
+                val arrivalContextKm = min(
+                    proportionalContextKm,
+                    nextLocalLeg?.lengthKm ?: proportionalContextKm,
+                ).coerceAtLeast(MIN_CONTEXT_KM)
+                kotlin.math.exp(
+                    lerp(
+                        ln(leg.lengthKm.coerceAtLeast(MIN_CONTEXT_KM)),
+                        ln(arrivalContextKm),
+                        transferArrivalBlend,
+                    ),
+                )
+            } else {
+                leg.lengthKm
+            }
+        } else {
+            proportionalContextKm
+        }
+        val padding = when {
+            leg?.isTransfer == true -> lerp(
+                TRANSFER_PADDING,
+                movement.padding * cameraSettings.localFraming.paddingMultiplier,
+                transferArrivalBlend,
+            )
+            cameraSettings.episodeFramingEnabled ->
+                movement.padding * cameraSettings.localFraming.paddingMultiplier
+            else -> movement.padding
+        }
         val rangeStartKm = leg?.startKm ?: 0.0
-        // A local leg may look into the next transfer so the camera can prepare before it begins.
-        // Once inside a transfer, keep the target bounded to that transfer's destination.
-        val lookaheadLimitKm = if (leg?.isTransfer == true) leg.endKm else journey.totalDistanceKm
+        val lookaheadLimitKm = when {
+            leg == null -> journey.totalDistanceKm
+            leg.isTransfer -> nextLocalLeg?.endKm ?: leg.endKm
+            !cameraSettings.episodeFramingEnabled -> journey.totalDistanceKm
+            else -> {
+                val nextTransfer = episodeLegs.getOrNull(legIndex + 1)?.takeIf { it.isTransfer }
+                val departureLeadKm = min(
+                    EPISODE_DEPARTURE_LEAD_MAX_KM,
+                    leg.lengthKm * EPISODE_DEPARTURE_LEAD_FRACTION,
+                )
+                if (nextTransfer != null && leg.endKm - current.distanceKm <= departureLeadKm) {
+                    nextTransfer.endKm
+                } else {
+                    leg.endKm
+                }
+            }
+        }
         val tailDistance = max(rangeStartKm, current.distanceKm - contextKm)
         val lookaheadDistance = min(lookaheadLimitKm, current.distanceKm + contextKm)
         val routeReferenceX = prepared.referenceX(current.distanceKm)
@@ -270,10 +330,19 @@ class TimelinePainter {
         progress: Float,
         cameraSettings: CameraSettings,
     ): JourneyPosition {
-        if (cachedTimingJourney !== journey || cachedCompression != cameraSettings.longTripCompression) {
+        if (
+            cachedTimingJourney !== journey ||
+            cachedCompression != cameraSettings.longTripCompression ||
+            cachedTripDetection != cameraSettings.tripDetection
+        ) {
             cachedTimingJourney = journey
             cachedCompression = cameraSettings.longTripCompression
-            cachedTiming = JourneyTiming.create(journey, cameraSettings.longTripCompression)
+            cachedTripDetection = cameraSettings.tripDetection
+            cachedTiming = JourneyTiming.create(
+                journey,
+                cameraSettings.longTripCompression,
+                cameraSettings.tripDetection,
+            )
         }
         return journey.positionAtDistance(cachedTiming!!.distanceAt(progress))
     }
@@ -349,12 +418,26 @@ class TimelinePainter {
     ): CameraTrack {
         val aspect = width.toDouble() / height.coerceAtLeast(1)
         val movement = cameraSettings.cameraMovement
+        val episodeLegs = cameraEpisodeLegs(journey, cameraSettings)
         val rawSamples = (0..CAMERA_TRACK_SAMPLES).map { sample ->
             val progress = sample.toFloat() / CAMERA_TRACK_SAMPLES
-            val raw = rawViewport(journey, progress, width, height, cameraSettings)
+            val raw = rawViewport(
+                journey,
+                progress,
+                width,
+                height,
+                cameraSettings,
+                episodeLegsOverride = episodeLegs,
+            )
             val result = RawCameraSample(
                 viewport = raw,
                 marker = WebMercator.project(playbackPosition(journey, progress, cameraSettings).point),
+                arrivalZoomIntensity = episodeArrivalZoomIntensity(
+                    journey,
+                    progress,
+                    cameraSettings,
+                    episodeLegs,
+                ),
             )
             val completed = sample + 1
             if (sample == 0 || completed % CAMERA_PROGRESS_INTERVAL == 0 || sample == CAMERA_TRACK_SAMPLES) {
@@ -369,7 +452,7 @@ class TimelinePainter {
         } else {
             null
         }
-        val frames = ArrayList<CameraFrame>(CAMERA_TRACK_SAMPLES + 1)
+        val baseFrames = ArrayList<CameraFrame>(CAMERA_TRACK_SAMPLES + 1)
         var previous: CameraFrame? = null
         rawSamples.forEach { sample ->
             val raw = sample.viewport
@@ -389,7 +472,11 @@ class TimelinePainter {
                 val zoomAlpha = if (rawSpanY > previous.spanY) {
                     movement.zoomOutAlpha
                 } else {
-                    movement.zoomInAlpha
+                    lerp(
+                        movement.zoomInAlpha,
+                        EPISODE_ARRIVAL_ZOOM_ALPHA,
+                        sample.arrivalZoomIntensity,
+                    )
                 }
                 val spanY = if (movement.fixedZoom) {
                     rawSpanY
@@ -399,29 +486,193 @@ class TimelinePainter {
                 }
                 val spanX = spanY * aspect
                 val markerX = unwrapNear(marker.x, previous.centerX)
-                var centerX = previous.centerX
-                var centerY = previous.centerY
+                var desiredCenterX = previous.centerX
+                var desiredCenterY = previous.centerY
                 val deadHalfX = spanX * CAMERA_DEAD_ZONE_HALF
                 val deadHalfY = spanY * CAMERA_DEAD_ZONE_HALF
-                centerX = when {
-                    markerX < centerX - deadHalfX -> markerX + deadHalfX
-                    markerX > centerX + deadHalfX -> markerX - deadHalfX
-                    else -> centerX
+                desiredCenterX = when {
+                    markerX < desiredCenterX - deadHalfX -> markerX + deadHalfX
+                    markerX > desiredCenterX + deadHalfX -> markerX - deadHalfX
+                    else -> desiredCenterX
                 }
-                centerY = when {
-                    marker.y < centerY - deadHalfY -> marker.y + deadHalfY
-                    marker.y > centerY + deadHalfY -> marker.y - deadHalfY
-                    else -> centerY
+                desiredCenterY = when {
+                    marker.y < desiredCenterY - deadHalfY -> marker.y + deadHalfY
+                    marker.y > desiredCenterY + deadHalfY -> marker.y - deadHalfY
+                    else -> desiredCenterY
                 }
+                var centerX = desiredCenterX
+                var centerY = desiredCenterY
+                val safetyHalfX = spanX * CAMERA_CENTER_ZONE_HALF
+                val safetyHalfY = spanY * CAMERA_CENTER_ZONE_HALF
+                centerX = centerX.coerceIn(markerX - safetyHalfX, markerX + safetyHalfX)
+                centerY = centerY.coerceIn(marker.y - safetyHalfY, marker.y + safetyHalfY)
                 centerY = clampCenterY(centerY, spanY)
                 val continuousZoom = log2(width.coerceAtLeast(1) / (256.0 * spanX))
                 val tileZoom = stabilizedTileZoom(previous.zoom, continuousZoom)
                 CameraFrame(centerX, centerY, spanY, tileZoom)
             }
+            baseFrames.add(frame)
+            previous = frame
+        }
+        val frames = recenterCameraFrames(
+            journey,
+            cameraSettings,
+            baseFrames,
+            width,
+            height,
+            aspect,
+            episodeLegs,
+        )
+        return CameraTrack(frames, aspect)
+    }
+
+    private fun episodeArrivalZoomIntensity(
+        journey: Journey,
+        progress: Float,
+        cameraSettings: CameraSettings,
+        episodeLegsOverride: List<JourneyLeg>? = null,
+    ): Double {
+        if (!cameraSettings.episodeFramingEnabled || !cameraSettings.cameraMovement.legAware) return 0.0
+        val currentDistanceKm = playbackPosition(journey, progress, cameraSettings).distanceKm
+        val legs = episodeLegsOverride ?: cameraEpisodeLegs(journey, cameraSettings)
+        val leg = journey.legAt(currentDistanceKm, legs)
+        val legIndex = legs.indexOf(leg)
+        if (leg.isTransfer) {
+            if (legs.getOrNull(legIndex + 1)?.isTransfer != false || leg.lengthKm <= 0.0) return 0.0
+            val fraction = (currentDistanceKm - leg.startKm) / leg.lengthKm
+            return smoothstep(
+                (fraction - EPISODE_ARRIVAL_ZOOM_START_FRACTION) /
+                    (1.0 - EPISODE_ARRIVAL_ZOOM_START_FRACTION),
+            )
+        }
+        if (legs.getOrNull(legIndex - 1)?.isTransfer != true || leg.lengthKm <= 0.0) return 0.0
+        val sampleDistanceKm = journey.totalDistanceKm / CAMERA_TRACK_SAMPLES
+        val holdDistanceKm = min(
+            leg.lengthKm,
+            sampleDistanceKm * EPISODE_ARRIVAL_HOLD_SAMPLES,
+        ).coerceAtLeast(MIN_CONTEXT_KM)
+        val settleDistanceKm = min(
+            leg.lengthKm,
+            max(EPISODE_ARRIVAL_SETTLE_MAX_KM, holdDistanceKm),
+        ).coerceAtLeast(holdDistanceKm)
+        val distanceAfterArrivalKm = currentDistanceKm - leg.startKm
+        if (distanceAfterArrivalKm <= holdDistanceKm || settleDistanceKm <= holdDistanceKm) return 1.0
+        return 1.0 - smoothstep(
+            (distanceAfterArrivalKm - holdDistanceKm) / (settleDistanceKm - holdDistanceKm),
+        )
+    }
+
+    private fun smoothstep(value: Double): Double {
+        val t = value.coerceIn(0.0, 1.0)
+        return t * t * (3.0 - 2.0 * t)
+    }
+
+    private fun recenterCameraFrames(
+        journey: Journey,
+        cameraSettings: CameraSettings,
+        baseFrames: List<CameraFrame>,
+        width: Int,
+        height: Int,
+        aspect: Double,
+        episodeLegs: List<JourneyLeg>,
+    ): List<CameraFrame> {
+        val frames = ArrayList<CameraFrame>(baseFrames.size)
+        var previous: CameraFrame? = null
+        baseFrames.forEachIndexed { index, originalBase ->
+            val actualProgress = index.toFloat() / baseFrames.lastIndex.coerceAtLeast(1)
+            val base = episodeAlignedFrame(
+                journey,
+                cameraSettings,
+                actualProgress,
+                originalBase,
+                width,
+                height,
+                aspect,
+                episodeLegs,
+            )
+            val projectedMarker = WebMercator.project(
+                playbackPosition(journey, actualProgress, cameraSettings).point,
+            )
+            val marker = if (previous == null) {
+                projectedMarker
+            } else {
+                projectedMarker.copy(x = unwrapNear(projectedMarker.x, previous.centerX))
+            }
+            val frame = if (previous == null) {
+                base.copy(centerX = marker.x, centerY = clampCenterY(marker.y, base.spanY))
+            } else {
+                val markerX = unwrapNear(marker.x, previous.centerX)
+                val spanX = base.spanY * aspect
+                val deadHalfX = spanX * CAMERA_DEAD_ZONE_HALF
+                val deadHalfY = base.spanY * CAMERA_DEAD_ZONE_HALF
+                var centerX = when {
+                    markerX < previous.centerX - deadHalfX -> markerX + deadHalfX
+                    markerX > previous.centerX + deadHalfX -> markerX - deadHalfX
+                    else -> previous.centerX
+                }
+                var centerY = when {
+                    marker.y < previous.centerY - deadHalfY -> marker.y + deadHalfY
+                    marker.y > previous.centerY + deadHalfY -> marker.y - deadHalfY
+                    else -> previous.centerY
+                }
+                centerX = centerX.coerceIn(markerX - deadHalfX, markerX + deadHalfX)
+                centerY = centerY.coerceIn(marker.y - deadHalfY, marker.y + deadHalfY)
+                base.copy(centerX = centerX, centerY = clampCenterY(centerY, base.spanY))
+            }
             frames.add(frame)
             previous = frame
         }
-        return CameraTrack(frames, aspect)
+        return frames
+    }
+
+    private fun episodeAlignedFrame(
+        journey: Journey,
+        cameraSettings: CameraSettings,
+        actualProgress: Float,
+        base: CameraFrame,
+        width: Int,
+        height: Int,
+        aspect: Double,
+        episodeLegs: List<JourneyLeg>,
+    ): CameraFrame {
+        if (!cameraSettings.episodeFramingEnabled || !cameraSettings.cameraMovement.legAware) return base
+        val distanceKm = playbackPosition(journey, actualProgress, cameraSettings).distanceKm
+        val leg = journey.legAt(distanceKm, episodeLegs)
+        val alignment = if (leg.isTransfer) {
+            episodeArrivalZoomIntensity(journey, actualProgress, cameraSettings, episodeLegs)
+        } else {
+            1.0
+        }
+        if (alignment <= 0.0) return base
+        val alignedViewport = rawViewport(
+            journey,
+            actualProgress,
+            width,
+            height,
+            cameraSettings,
+            episodeLegsOverride = episodeLegs,
+        )
+        val alignedSpanY = (alignedViewport.maxY - alignedViewport.minY)
+            .coerceAtLeast(cameraSettings.cameraMovement.minimumViewportSpan)
+        if (alignedSpanY >= base.spanY) return base
+        val spanY = kotlin.math.exp(lerp(ln(base.spanY), ln(alignedSpanY), alignment))
+        return base.copy(
+            spanY = spanY,
+            zoom = tileZoom(width, aspect, spanY),
+        )
+    }
+
+    private fun cameraEpisodeLegs(
+        journey: Journey,
+        cameraSettings: CameraSettings,
+    ): List<JourneyLeg> = if (
+        cameraSettings.episodeFramingEnabled && cameraSettings.cameraMovement.legAware
+    ) {
+        journey.legsForThreshold(
+            journey.transferThresholdKm * cameraSettings.tripDetection.thresholdMultiplier,
+        )
+    } else {
+        journey.legs
     }
 
     private fun tileZoom(width: Int, aspect: Double, spanY: Double): Int =
@@ -1002,6 +1253,7 @@ class TimelinePainter {
     private data class RawCameraSample(
         val viewport: Viewport,
         val marker: WorldPoint,
+        val arrivalZoomIntensity: Double,
     )
 
     internal data class RouteBounds(
@@ -1048,7 +1300,7 @@ class TimelinePainter {
     )
 
     internal class CameraTrack(
-        private val frames: List<CameraFrame>,
+        internal val frames: List<CameraFrame>,
         private val aspect: Double,
     ) {
         fun viewportAt(progress: Float): Viewport {
@@ -1082,6 +1334,13 @@ class TimelinePainter {
 
     companion object {
         private const val TRANSFER_PADDING = 2.8
+        private const val EPISODE_DEPARTURE_LEAD_FRACTION = 0.15
+        private const val EPISODE_DEPARTURE_LEAD_MAX_KM = 50.0
+        private const val EPISODE_ARRIVAL_ZOOM_START_FRACTION = 0.75
+        private const val EPISODE_ARRIVAL_ZOOM_ALPHA = 1.00
+        private const val EPISODE_ARRIVAL_HOLD_SAMPLES = 2.0
+        private const val EPISODE_ARRIVAL_SETTLE_MAX_KM = 25.0
+        private const val MIN_CONTEXT_KM = 0.001
         private const val DEFAULT_JOURNEY_DURATION_SECONDS = 30
         private const val TRAIL_VISIBLE_SECONDS = 2.5
         private const val MIN_TRAIL_KM = 80.0
@@ -1100,6 +1359,7 @@ class TimelinePainter {
         private const val CAMERA_PROGRESS_INTERVAL = 32
         private const val ROUTE_BOUNDS_BLOCK_SIZE = 256
         private const val CAMERA_DEAD_ZONE_HALF = 0.20
+        private const val CAMERA_CENTER_ZONE_HALF = 0.20
         private const val FIXED_ZOOM_PERCENTILE = 0.80
         private const val TILE_ZOOM_HYSTERESIS = 0.15
         private const val MIN_VIEWPORT_SPAN = 0.0003

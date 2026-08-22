@@ -8,6 +8,8 @@ import dev.mahlernim.timelinevisualizer.render.RenderText
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
+import dev.mahlernim.timelinevisualizer.render.LocalFraming
+import dev.mahlernim.timelinevisualizer.render.TripDetection
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 import java.io.DataInputStream
 import java.io.DataOutputStream
@@ -49,6 +51,8 @@ class VideoExportRequestStore(context: Context) {
             output.writeUTF(request.cameraSettings.cameraMovement.name)
             output.writeUTF(request.cameraSettings.longTripCompression.name)
             output.writeUTF(request.cameraSettings.videoQuality.name)
+            output.writeUTF(request.cameraSettings.tripDetection.name)
+            output.writeUTF(request.cameraSettings.localFraming.name)
             output.writeInt(request.journey.points.size)
             request.journey.points.forEach { point ->
                 output.writeLong(point.instant.toEpochMilli())
@@ -82,7 +86,7 @@ class VideoExportRequestStore(context: Context) {
                     endYear = startYear
                     endMonth = input.readInt()
                     renderText = RenderText.ENGLISH
-                    cameraSettings = CameraSettings.DEFAULT
+                    cameraSettings = CameraSettings.DEFAULT.copy(localFraming = LocalFraming.OFF)
                 } else {
                     endYear = input.readInt()
                     endMonth = input.readInt()
@@ -101,10 +105,31 @@ class VideoExportRequestStore(context: Context) {
                         distanceScale = distanceScale,
                     )
                     cameraSettings = if (version >= 4) {
+                        val movement = enumOrDefault(input.readUTF(), CameraMovement.STEADY)
+                        val compression = enumOrDefault(input.readUTF(), LongTripCompression.BALANCED)
+                        val quality = enumOrDefault(input.readUTF(), VideoQuality.STANDARD)
+                        if (version in 6..7) input.readDouble()
+                        val legacyFramingEnabled = if (version == 7) input.readBoolean() else false
+                        val tripDetection = if (version >= 7) {
+                            enumOrDefault(input.readUTF(), TripDetection.BALANCED)
+                        } else {
+                            TripDetection.BALANCED
+                        }
+                        val storedLocalFraming = if (version >= 7) {
+                            enumOrDefault(input.readUTF(), LocalFraming.BALANCED)
+                        } else {
+                            LocalFraming.OFF
+                        }
                         CameraSettings(
-                            cameraMovement = enumOrDefault(input.readUTF(), CameraMovement.STEADY),
-                            longTripCompression = enumOrDefault(input.readUTF(), LongTripCompression.BALANCED),
-                            videoQuality = enumOrDefault(input.readUTF(), VideoQuality.STANDARD),
+                            cameraMovement = movement,
+                            longTripCompression = compression,
+                            videoQuality = quality,
+                            tripDetection = tripDetection,
+                            localFraming = if (version >= 8 || legacyFramingEnabled) {
+                                storedLocalFraming
+                            } else {
+                                LocalFraming.OFF
+                            },
                         )
                     } else if (version == 3) {
                         repeat(4) { input.readUTF() }
@@ -112,9 +137,10 @@ class VideoExportRequestStore(context: Context) {
                             cameraMovement = CameraMovement.STEADY,
                             longTripCompression = enumOrDefault(input.readUTF(), LongTripCompression.BALANCED),
                             videoQuality = enumOrDefault(input.readUTF(), VideoQuality.STANDARD),
+                            localFraming = LocalFraming.OFF,
                         )
                     } else {
-                        CameraSettings.DEFAULT
+                        CameraSettings.DEFAULT.copy(localFraming = LocalFraming.OFF)
                     }
                 }
                 val pointCount = input.readInt().coerceIn(0, MAX_POINT_COUNT)
@@ -150,7 +176,7 @@ class VideoExportRequestStore(context: Context) {
     }
 
     companion object {
-        private const val CURRENT_FILE_VERSION = 5
+        private const val CURRENT_FILE_VERSION = 8
         private const val MAX_POINT_COUNT = 2_000_000
         private const val REQUEST_FILE = "pending-video-export.bin"
         private const val TEMPORARY_FILE = "pending-video-export.tmp"

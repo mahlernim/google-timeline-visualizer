@@ -5,6 +5,8 @@ import androidx.test.core.app.ApplicationProvider
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
+import dev.mahlernim.timelinevisualizer.render.LocalFraming
+import dev.mahlernim.timelinevisualizer.render.TripDetection
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -34,8 +36,10 @@ class CameraSettingsPreferencesTest {
     fun savesAndRestoresAllAdvancedSettings() {
         val expected = CameraSettings(
             cameraMovement = CameraMovement.FIXED,
-            longTripCompression = LongTripCompression.STRONG,
+            longTripCompression = LongTripCompression.STRONGER,
             videoQuality = VideoQuality.ULTRA,
+            tripDetection = TripDetection.SENSITIVE,
+            localFraming = LocalFraming.CLOSE,
         )
 
         preferences.save(expected)
@@ -49,6 +53,8 @@ class CameraSettingsPreferencesTest {
         assertEquals(CameraMovement.STEADY, preferences.load().cameraMovement)
         assertEquals(LongTripCompression.BALANCED, preferences.load().longTripCompression)
         assertEquals(VideoQuality.STANDARD, preferences.load().videoQuality)
+        assertEquals(TripDetection.BALANCED, preferences.load().tripDetection)
+        assertEquals(CameraSettings.DEFAULT_LOCAL_FRAMING, preferences.load().localFraming)
     }
 
     @Test
@@ -58,5 +64,59 @@ class CameraSettingsPreferencesTest {
 
             assertEquals(format, CameraSettingsPreferences(context).load().videoQuality)
         }
+    }
+
+    @Test
+    fun removesObsoleteSlowdownPreferencesWhenSaving() {
+        context.getSharedPreferences("camera-settings", Context.MODE_PRIVATE)
+            .edit()
+            .putFloat("zoom-in-movement-reduction", 0.75f)
+            .putInt("zoom-in-travel-slowdown", 90)
+            .apply()
+
+        preferences.save(CameraSettings.DEFAULT)
+
+        val stored = context.getSharedPreferences("camera-settings", Context.MODE_PRIVATE).all
+        assertEquals(false, stored.containsKey("zoom-in-movement-reduction"))
+        assertEquals(false, stored.containsKey("zoom-in-travel-slowdown"))
+    }
+
+    @Test
+    fun migratesDisabledCameraLabFourFramingToOff() {
+        context.getSharedPreferences("camera-settings", Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean("episode-framing-enabled", false)
+            .putString("episode-local-framing", "CLOSE")
+            .apply()
+
+        assertEquals(LocalFraming.OFF, CameraSettingsPreferences(context).load().localFraming)
+    }
+
+    @Test
+    fun migratesEnabledCameraLabFourFramingAndDropsWide() {
+        val raw = context.getSharedPreferences("camera-settings", Context.MODE_PRIVATE)
+        raw.edit()
+            .putBoolean("episode-framing-enabled", true)
+            .putString("episode-local-framing", "CLOSE")
+            .apply()
+
+        assertEquals(LocalFraming.CLOSE, CameraSettingsPreferences(context).load().localFraming)
+
+        raw.edit()
+            .putBoolean("episode-framing-enabled", true)
+            .putString("episode-local-framing", "WIDE")
+            .apply()
+
+        assertEquals(LocalFraming.BALANCED, CameraSettingsPreferences(context).load().localFraming)
+    }
+
+    @Test
+    fun gentleCompressionMigratesToBalanced() {
+        context.getSharedPreferences("camera-settings", Context.MODE_PRIVATE)
+            .edit()
+            .putString("long-trip", "GENTLE")
+            .apply()
+
+        assertEquals(LongTripCompression.BALANCED, CameraSettingsPreferences(context).load().longTripCompression)
     }
 }

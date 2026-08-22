@@ -56,6 +56,34 @@ class JourneyTimingTest {
         assertEquals(speedBefore, speedAfter, maxOf(1.0, speedBefore * 0.02))
     }
 
+    @Test
+    fun consecutiveTransferPointsDoNotLengthenTheFlightEpisode() {
+        val singleHop = Journey.from(
+            listOf(point(0.0), point(0.1), point(10.1), point(10.2)),
+            2026,
+        )
+        val splitHop = Journey.from(
+            listOf(point(0.0), point(0.1), point(3.4), point(6.8), point(10.1), point(10.2)),
+            2026,
+        )
+        val singleTiming = JourneyTiming.create(singleHop, LongTripCompression.STRONG)
+        val splitTiming = JourneyTiming.create(splitHop, LongTripCompression.STRONG)
+        val singleShare = progressAtDistance(singleTiming, singleHop.cumulativeDistanceKm[2]) -
+            progressAtDistance(singleTiming, singleHop.cumulativeDistanceKm[1])
+        val splitShare = progressAtDistance(splitTiming, splitHop.cumulativeDistanceKm[4]) -
+            progressAtDistance(splitTiming, splitHop.cumulativeDistanceKm[1])
+
+        assertEquals(singleShare, splitShare, 0.002f)
+    }
+
+    @Test
+    fun compressionPresetsUseTheAgreedExponents() {
+        assertEquals(
+            listOf(1.00, 0.85, 0.75, 0.65),
+            LongTripCompression.entries.map(LongTripCompression::exponent),
+        )
+    }
+
     private fun progressAtDistance(timing: JourneyTiming, distanceKm: Double): Float {
         var low = 0f
         var high = 1f
