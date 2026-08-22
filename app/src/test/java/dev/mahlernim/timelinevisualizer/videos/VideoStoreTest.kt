@@ -28,6 +28,8 @@ class VideoStoreTest {
                 startMonth = 12,
                 endYear = 2026,
                 endMonth = 1,
+                projectId = "trip-123",
+                presetName = "Cinematic",
             ),
         )
 
@@ -37,6 +39,8 @@ class VideoStoreTest {
         assertEquals(12, restored.first().startMonth)
         assertEquals(2026, restored.first().endYear)
         assertEquals(1, restored.first().endMonth)
+        assertEquals("trip-123", restored.first().projectId)
+        assertEquals("Cinematic", restored.first().presetName)
     }
 
     @Test

@@ -257,6 +257,8 @@ class VideoExportService : Service() {
                 startMonth = request.period.startMonth,
                 endYear = request.period.endYear,
                 endMonth = request.period.endMonth,
+                projectId = request.projectId,
+                presetName = request.presetName,
             ),
         )
     }

@@ -62,6 +62,8 @@ class VideoExportRequestStoreTest {
                 tripDetection = TripDetection.SENSITIVE,
                 localFraming = LocalFraming.CLOSE,
             ),
+            projectId = "trip-123",
+            presetName = "Cinematic",
         )
 
         store.save(request)
@@ -73,6 +75,8 @@ class VideoExportRequestStoreTest {
         assertEquals(request.period, restored.period)
         assertEquals(request.renderText, restored.renderText)
         assertEquals(request.cameraSettings, restored.cameraSettings)
+        assertEquals(request.projectId, restored.projectId)
+        assertEquals(request.presetName, restored.presetName)
         assertEquals(request.journey.points, restored.journey.points)
     }
 

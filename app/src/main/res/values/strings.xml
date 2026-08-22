@@ -314,4 +314,35 @@
     <string name="preset_link_unsupported_message">This link is invalid, incomplete, or uses settings this app does not support. Nothing was changed.</string>
     <string name="preset_limit_reached">Delete a preset before saving another.</string>
     <string name="preset_value_format">%1$s · %2$s</string>
+    <string name="trips" translatable="false">Trips</string>
+    <string name="trips_lab_summary" translatable="false">Turn suggested trips and recaps into a collection of videos.</string>
+    <string name="timeline_source" translatable="false">Timeline</string>
+    <string name="timeline_source_empty" translatable="false">Import a Timeline file to find trips and create recaps.</string>
+    <string name="timeline_source_ready" translatable="false">Timeline loaded locally. Import again when your Timeline changes.</string>
+    <string name="import_or_update" translatable="false">Import or update Timeline</string>
+    <string name="suggested_trips" translatable="false">Suggested trips</string>
+    <string name="suggested_trips_empty" translatable="false">No trip suggestions yet. Confirmed trips are never removed by a new import.</string>
+    <string name="show_all_suggestions" translatable="false">Show all (%1$d)</string>
+    <string name="show_fewer_suggestions" translatable="false">Show fewer</string>
+    <string name="confirmed_trips" translatable="false">Your trips</string>
+    <string name="recaps" translatable="false">Recaps</string>
+    <string name="unassigned_videos" translatable="false">Other videos</string>
+    <string name="strong_match" translatable="false">Strong match</string>
+    <string name="possible_match" translatable="false">Possible match</string>
+    <string name="trip_badge" translatable="false">Trip</string>
+    <string name="monthly_recap_badge" translatable="false">Monthly recap</string>
+    <string name="yearly_recap_badge" translatable="false">Yearly recap</string>
+    <string name="confirm_and_create" translatable="false">Confirm and create</string>
+    <string name="create_video_for_trip" translatable="false">Create video</string>
+    <string name="dismiss_suggestion" translatable="false">Dismiss</string>
+    <string name="videos_count" translatable="false">%1$d videos</string>
+    <string name="create_steps" translatable="false">1  Trip or recap     2  Video style     3  Preview and create</string>
+    <string name="trip_title" translatable="false">Trip or recap title</string>
+    <string name="save_trip" translatable="false">Save changes</string>
+    <string name="save_as_new_trip" translatable="false">Save as new</string>
+    <string name="trip_saved" translatable="false">Trip saved</string>
+    <string name="trip_confirmed" translatable="false">Trip confirmed. Choose a preset and create a video.</string>
+    <string name="new_trip" translatable="false">New trip</string>
+    <string name="previous_month_recap" translatable="false">Previous month recap</string>
+    <string name="year_recap_title" translatable="false">%1$d recap</string>
 </resources>

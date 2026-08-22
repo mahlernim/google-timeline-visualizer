@@ -23,6 +23,8 @@ data class VideoExportRequest(
     val durationSeconds: Int,
     val renderText: RenderText = RenderText.ENGLISH,
     val cameraSettings: CameraSettings = CameraSettings.DEFAULT,
+    val projectId: String? = null,
+    val presetName: String? = null,
 ) {
     val period: TimelinePeriod get() = journey.period
 }
@@ -53,6 +55,10 @@ class VideoExportRequestStore(context: Context) {
             output.writeUTF(request.cameraSettings.videoQuality.name)
             output.writeUTF(request.cameraSettings.tripDetection.name)
             output.writeUTF(request.cameraSettings.localFraming.name)
+            output.writeBoolean(request.projectId != null)
+            request.projectId?.let(output::writeUTF)
+            output.writeBoolean(request.presetName != null)
+            request.presetName?.let(output::writeUTF)
             output.writeInt(request.journey.points.size)
             request.journey.points.forEach { point ->
                 output.writeLong(point.instant.toEpochMilli())
@@ -143,6 +149,8 @@ class VideoExportRequestStore(context: Context) {
                         CameraSettings.DEFAULT.copy(localFraming = LocalFraming.OFF)
                     }
                 }
+                val projectId = if (version >= 9 && input.readBoolean()) input.readUTF() else null
+                val presetName = if (version >= 9 && input.readBoolean()) input.readUTF() else null
                 val pointCount = input.readInt().coerceIn(0, MAX_POINT_COUNT)
                 val points = List(pointCount) {
                     GeoPoint(
@@ -164,6 +172,8 @@ class VideoExportRequestStore(context: Context) {
                     durationSeconds = durationSeconds,
                     renderText = renderText,
                     cameraSettings = cameraSettings,
+                    projectId = projectId,
+                    presetName = presetName,
                 )
             }
         }.getOrNull()
@@ -176,7 +186,7 @@ class VideoExportRequestStore(context: Context) {
     }
 
     companion object {
-        private const val CURRENT_FILE_VERSION = 8
+        private const val CURRENT_FILE_VERSION = 9
         private const val MAX_POINT_COUNT = 2_000_000
         private const val REQUEST_FILE = "pending-video-export.bin"
         private const val TEMPORARY_FILE = "pending-video-export.tmp"

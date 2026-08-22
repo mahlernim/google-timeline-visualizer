@@ -648,12 +648,12 @@ class MainActivityTest {
     fun compactBrazilianPortugueseButtonsRemainSingleLine() = assertCompactButtons()
 
     @Test
-    fun normalLaunchOpensCreateVideoWhenLibraryIsEmpty() {
+    fun normalLaunchOpensTripsWhenLibraryIsEmpty() {
         val activity = launchActivity()
 
-        assertEquals(View.GONE, activity.findViewById<View>(R.id.videosScreen).visibility)
-        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.newVideoScreen).visibility)
-        assertEquals(R.id.navigationCreate, activity.findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNavigation).selectedItemId)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.videosScreen).visibility)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.newVideoScreen).visibility)
+        assertEquals(R.id.navigationVideos, activity.findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNavigation).selectedItemId)
     }
 
     @Test

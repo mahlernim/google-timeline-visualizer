@@ -19,6 +19,7 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+        resValues = true
     }
 
     signingConfigs {
@@ -56,6 +57,15 @@ android {
             dimension = "distribution"
             buildConfigField("String", "UPDATE_URL", "\"market://details?id=dev.mahlernim.timelinevisualizer\"")
             buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://play.google.com/store/apps/details?id=dev.mahlernim.timelinevisualizer\"")
+        }
+        create("tripsLab") {
+            dimension = "distribution"
+            applicationId = "dev.mahlernim.timelinevisualizer.tripslab"
+            versionCode = 1
+            versionName = "2.3.1-trips-lab.1"
+            resValue("string", "app_name", "Timeline Visualizer Trips Lab")
+            buildConfigField("String", "UPDATE_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/tag/trips-lab-1\"")
+            buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/issues/138\"")
         }
     }
 

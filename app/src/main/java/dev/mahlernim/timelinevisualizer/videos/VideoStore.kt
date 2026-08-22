@@ -15,6 +15,8 @@ data class VideoRecord(
     val startMonth: Int? = null,
     val endYear: Int? = null,
     val endMonth: Int? = null,
+    val projectId: String? = null,
+    val presetName: String? = null,
 )
 
 interface VideoRecordRepository {
@@ -62,6 +64,8 @@ class VideoStore(private val context: Context) : VideoRecordRepository {
                 record.startMonth?.let { put("startMonth", it) }
                 record.endYear?.let { put("endYear", it) }
                 record.endMonth?.let { put("endMonth", it) }
+                record.projectId?.let { put("projectId", it) }
+                record.presetName?.let { put("presetName", it) }
             })
         }
         preferences.edit { putString(KEY_RECORDS, array.toString()) }
@@ -91,6 +95,8 @@ class VideoStore(private val context: Context) : VideoRecordRepository {
                             ?: item.optionalPositiveInt("startYear")
                             ?: item.optionalPositiveInt("year"),
                         endMonth = item.optionalPositiveInt("endMonth"),
+                        projectId = item.optString("projectId").takeIf(String::isNotBlank),
+                        presetName = item.optString("presetName").takeIf(String::isNotBlank),
                     ))
                 }
             }
