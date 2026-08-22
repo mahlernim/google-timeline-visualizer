@@ -12,32 +12,28 @@ import dev.mahlernim.timelinevisualizer.render.VideoQuality
 class CameraSettingsPreferences(context: Context) {
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
-    fun load(): CameraSettings = CameraSettings(
-        cameraMovement = enumValue(KEY_CAMERA_MOVEMENT, CameraMovement.STEADY),
-        longTripCompression = enumValue(KEY_LONG_TRIP, LongTripCompression.BALANCED),
-        videoQuality = enumValue(KEY_VIDEO_QUALITY, VideoQuality.STANDARD),
-        zoomInTravelSlowdown = zoomInTravelSlowdown(),
-        episodeFramingEnabled = preferences.getBoolean(
-            KEY_EPISODE_FRAMING_ENABLED,
-            CameraSettings.DEFAULT_EPISODE_FRAMING,
-        ),
-        tripDetection = enumValue(KEY_TRIP_DETECTION, TripDetection.BALANCED),
-        localFraming = enumValue(KEY_EPISODE_LOCAL_FRAMING, LocalFraming.BALANCED),
-    )
+    fun load(): CameraSettings {
+        val settings = CameraSettings(
+            cameraMovement = enumValue(KEY_CAMERA_MOVEMENT, CameraMovement.STEADY),
+            longTripCompression = enumValue(KEY_LONG_TRIP, LongTripCompression.BALANCED),
+            videoQuality = enumValue(KEY_VIDEO_QUALITY, VideoQuality.STANDARD),
+            tripDetection = enumValue(KEY_TRIP_DETECTION, TripDetection.BALANCED),
+            localFraming = localFraming(),
+        )
+        save(settings)
+        return settings
+    }
 
     fun save(settings: CameraSettings) {
         preferences.edit {
             putString(KEY_CAMERA_MOVEMENT, settings.cameraMovement.name)
             putString(KEY_LONG_TRIP, settings.longTripCompression.name)
             putString(KEY_VIDEO_QUALITY, settings.videoQuality.name)
-            putInt(
-                KEY_ZOOM_IN_TRAVEL_SLOWDOWN,
-                (settings.zoomInTravelSlowdown.coerceIn(0.0, 1.0) * 100).toInt(),
-            )
-            putBoolean(KEY_EPISODE_FRAMING_ENABLED, settings.episodeFramingEnabled)
             putString(KEY_TRIP_DETECTION, settings.tripDetection.name)
             putString(KEY_EPISODE_LOCAL_FRAMING, settings.localFraming.name)
+            remove(KEY_ZOOM_IN_TRAVEL_SLOWDOWN)
             remove(KEY_ZOOM_IN_MOVEMENT_REDUCTION)
+            remove(KEY_EPISODE_FRAMING_ENABLED)
             remove(KEY_ROUTE_CONTEXT)
             remove(KEY_LEGACY_LOCAL_FRAMING)
             remove(KEY_ZOOM_IN)
@@ -53,14 +49,22 @@ class CameraSettingsPreferences(context: Context) {
     private inline fun <reified T : Enum<T>> enumValue(key: String, fallback: T): T =
         runCatching { enumValueOf<T>(preferences.getString(key, null) ?: return fallback) }.getOrDefault(fallback)
 
-    private fun zoomInTravelSlowdown(): Double = when (
-        val stored = preferences.all[KEY_ZOOM_IN_TRAVEL_SLOWDOWN]
-            ?: preferences.all[KEY_ZOOM_IN_MOVEMENT_REDUCTION]
-    ) {
-        is Int -> stored / 100.0
-        is Float -> stored.toDouble()
-        else -> CameraSettings.DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN
-    }.coerceIn(0.0, 1.0)
+    private fun localFraming(): LocalFraming {
+        val stored = preferences.getString(KEY_EPISODE_LOCAL_FRAMING, null)
+        if (preferences.contains(KEY_EPISODE_FRAMING_ENABLED)) {
+            if (!preferences.getBoolean(KEY_EPISODE_FRAMING_ENABLED, false)) return LocalFraming.OFF
+            return when (stored) {
+                LocalFraming.CLOSE.name -> LocalFraming.CLOSE
+                else -> LocalFraming.BALANCED
+            }
+        }
+        return when (stored) {
+            LocalFraming.CLOSE.name -> LocalFraming.CLOSE
+            LocalFraming.OFF.name -> LocalFraming.OFF
+            LocalFraming.BALANCED.name -> LocalFraming.BALANCED
+            else -> CameraSettings.DEFAULT_LOCAL_FRAMING
+        }
+    }
 
     private companion object {
         const val PREFERENCES_NAME = "camera-settings"

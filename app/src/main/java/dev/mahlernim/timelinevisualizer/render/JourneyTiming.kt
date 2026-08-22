@@ -30,7 +30,11 @@ class JourneyTiming private constructor(
     }
 
     companion object {
-        fun create(journey: Journey, compression: LongTripCompression): JourneyTiming {
+        fun create(
+            journey: Journey,
+            compression: LongTripCompression,
+            tripDetection: TripDetection = TripDetection.BALANCED,
+        ): JourneyTiming {
             if (compression == LongTripCompression.OFF || journey.points.size < 2) {
                 return JourneyTiming(doubleArrayOf(), doubleArrayOf(), doubleArrayOf(), journey.totalDistanceKm)
             }
@@ -38,13 +42,42 @@ class JourneyTiming private constructor(
             val effective = DoubleArray(journey.cumulativeDistanceKm.size)
             var count = 1
             var effectiveTotal = 0.0
-            for (index in 1..journey.cumulativeDistanceKm.lastIndex) {
-                val segmentKm = journey.cumulativeDistanceKm[index] - journey.cumulativeDistanceKm[index - 1]
-                if (segmentKm <= 0.0) continue
-                effectiveTotal += segmentKm.pow(compression.exponent)
-                distances[count] = journey.cumulativeDistanceKm[index]
-                effective[count] = effectiveTotal
-                count += 1
+            val transferCutoffKm = (
+                journey.transferThresholdKm * tripDetection.thresholdMultiplier
+                ).coerceAtLeast(1.0)
+            var index = 1
+            while (index <= journey.cumulativeDistanceKm.lastIndex) {
+                val segmentKm = segmentDistance(journey, index)
+                if (segmentKm <= 0.0) {
+                    index += 1
+                    continue
+                }
+                if (segmentKm < transferCutoffKm) {
+                    effectiveTotal += segmentKm
+                    distances[count] = journey.cumulativeDistanceKm[index]
+                    effective[count] = effectiveTotal
+                    count += 1
+                    index += 1
+                    continue
+                }
+
+                val transferStart = index
+                var transferKm = 0.0
+                while (
+                    index <= journey.cumulativeDistanceKm.lastIndex &&
+                    segmentDistance(journey, index) >= transferCutoffKm
+                ) {
+                    transferKm += segmentDistance(journey, index)
+                    index += 1
+                }
+                val transferWeight = transferKm.pow(compression.exponent)
+                for (transferIndex in transferStart until index) {
+                    val transferSegmentKm = segmentDistance(journey, transferIndex)
+                    effectiveTotal += transferWeight * transferSegmentKm / transferKm
+                    distances[count] = journey.cumulativeDistanceKm[transferIndex]
+                    effective[count] = effectiveTotal
+                    count += 1
+                }
             }
             if (effectiveTotal <= 0.0 || count < 2) {
                 return JourneyTiming(doubleArrayOf(), doubleArrayOf(), doubleArrayOf(), journey.totalDistanceKm)
@@ -53,6 +86,9 @@ class JourneyTiming private constructor(
             val y = distances.copyOf(count)
             return JourneyTiming(x, y, monotoneSlopes(x, y), null)
         }
+
+        private fun segmentDistance(journey: Journey, toIndex: Int): Double =
+            journey.cumulativeDistanceKm[toIndex] - journey.cumulativeDistanceKm[toIndex - 1]
 
         private fun monotoneSlopes(x: DoubleArray, y: DoubleArray): DoubleArray {
             val segmentCount = x.size - 1

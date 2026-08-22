@@ -91,24 +91,6 @@ class TimelinePainterTest {
     }
 
     @Test
-    fun zoomInTravelSlowdownPreservesDurationAndRedistributesTravel() {
-        val painter = TimelinePainter()
-        val intensity = listOf(0.0, 0.0, 1.0, 1.0, 0.0, 0.0)
-
-        val baseline = painter.durationPreservingTravelProgress(intensity, 0.0)
-        val slowed = painter.durationPreservingTravelProgress(intensity, 0.75)
-
-        assertEquals(0f, slowed.first(), 0f)
-        assertEquals(1f, slowed.last(), 0f)
-        assertTrue(slowed.zipWithNext().all { (from, to) -> to >= from })
-        assertTrue(slowed[2] - slowed[1] < slowed[1] - slowed[0])
-        assertTrue(slowed[4] - slowed[3] > slowed[2] - slowed[1])
-        baseline.forEachIndexed { index, progress ->
-            assertEquals(index.toFloat() / baseline.lastIndex, progress, 1e-6f)
-        }
-    }
-
-    @Test
     fun closeUpZoomFramesDenseLocalTravelMoreTightlyThanActiveZoom() {
         val journey = Journey.from(
             listOf(
@@ -138,9 +120,9 @@ class TimelinePainterTest {
         val baseline = CameraSettings(
             cameraMovement = CameraMovement.CLOSE_UP,
             longTripCompression = LongTripCompression.OFF,
-            episodeFramingEnabled = false,
+            localFraming = LocalFraming.OFF,
         )
-        val experimental = baseline.copy(episodeFramingEnabled = true)
+        val experimental = baseline.copy(localFraming = LocalFraming.BALANCED)
 
         val baselineViewport = TimelinePainter().rawViewportForTest(
             journey, progress, SIZE, SIZE, baseline, useRangeIndex = true,
@@ -165,7 +147,7 @@ class TimelinePainterTest {
         val settings = CameraSettings(
             cameraMovement = CameraMovement.CLOSE_UP,
             longTripCompression = LongTripCompression.OFF,
-            episodeFramingEnabled = true,
+            localFraming = LocalFraming.BALANCED,
         )
         fun spanAt(fraction: Double): Double {
             val distance = destination.startKm + destination.lengthKm * fraction
@@ -194,21 +176,13 @@ class TimelinePainterTest {
         val settings = CameraSettings(
             cameraMovement = CameraMovement.CLOSE_UP,
             longTripCompression = LongTripCompression.OFF,
-            zoomInTravelSlowdown = 0.60,
-            episodeFramingEnabled = true,
+            localFraming = LocalFraming.BALANCED,
         )
         val painter = TimelinePainter()
         val track = painter.buildCameraTrackForBackground(journey, SIZE, SIZE, settings).track
 
         fun trackSpanAt(distanceKm: Double): Double {
-            val targetTravelProgress = (distanceKm / journey.totalDistanceKm).toFloat()
-            var low = 0f
-            var high = 1f
-            repeat(30) {
-                val middle = (low + high) / 2f
-                if (track.travelProgressAt(middle) < targetTravelProgress) low = middle else high = middle
-            }
-            val viewport = track.viewportAt((low + high) / 2f)
+            val viewport = track.viewportAt((distanceKm / journey.totalDistanceKm).toFloat())
             return viewport.maxY - viewport.minY
         }
 
@@ -249,7 +223,6 @@ class TimelinePainterTest {
                 CameraSettings(
                     cameraMovement = CameraMovement.CLOSE_UP,
                     longTripCompression = LongTripCompression.OFF,
-                    episodeFramingEnabled = true,
                     localFraming = localFraming,
                 ),
                 useRangeIndex = true,
@@ -257,7 +230,7 @@ class TimelinePainterTest {
             viewport.maxY - viewport.minY
         }
 
-        assertTrue("Expected Wide > Balanced > Close, got $spans", spans[0] > spans[1] && spans[1] > spans[2])
+        assertTrue("Expected Off > Balanced > Close, got $spans", spans[0] > spans[1] && spans[1] > spans[2])
     }
 
     @Test
@@ -286,7 +259,7 @@ class TimelinePainterTest {
     }
 
     @Test
-    fun strongestZoomInSlowdownKeepsTheMarkerInTheCenterZone() {
+    fun cameraTrackKeepsTheMarkerInTheCenterZoneWithoutTravelRemapping() {
         val journey = Journey.from(
             listOf(
                 point(37.50, 126.80),
@@ -300,7 +273,6 @@ class TimelinePainterTest {
         val settings = CameraSettings(
             cameraMovement = CameraMovement.CLOSE_UP,
             longTripCompression = LongTripCompression.OFF,
-            zoomInTravelSlowdown = 1.0,
         )
         val track = TimelinePainter()
             .buildCameraTrackForBackground(journey, SIZE, SIZE, settings)
@@ -309,9 +281,8 @@ class TimelinePainterTest {
 
         frames.forEachIndexed { index, frame ->
             val progress = index.toDouble() / frames.lastIndex
-            val travelProgress = track.travelProgressAt(progress.toFloat())
             val marker = WebMercator.project(
-                journey.positionAtDistance(journey.totalDistanceKm * travelProgress).point,
+                journey.positionAtDistance(journey.totalDistanceKm * progress).point,
             )
             val markerX = unwrapNear(marker.x, frame.centerX)
             val xOffset = kotlin.math.abs(markerX - frame.centerX)
@@ -323,9 +294,8 @@ class TimelinePainterTest {
         repeat(frames.lastIndex * 10 + 1) { sample ->
             val progress = sample.toFloat() / (frames.lastIndex * 10)
             val viewport = track.viewportAt(progress)
-            val travelProgress = track.travelProgressAt(progress)
             val marker = WebMercator.project(
-                journey.positionAtDistance(journey.totalDistanceKm * travelProgress).point,
+                journey.positionAtDistance(journey.totalDistanceKm * progress).point,
             )
             val centerX = (viewport.minX + viewport.maxX) / 2.0
             val centerY = (viewport.minY + viewport.maxY) / 2.0
@@ -341,65 +311,6 @@ class TimelinePainterTest {
                 kotlin.math.abs(marker.y - centerY) <= limit,
             )
         }
-    }
-
-    @Test
-    fun travelSlowdownDoesNotSlowTheZoomTrackOrChangeTheDuration() {
-        val journey = Journey.from(
-            listOf(
-                point(37.50, 126.80),
-                point(37.60, 127.20),
-                point(37.52, 126.85),
-                point(37.58, 127.15),
-            ),
-            2025,
-        )
-        val baseline = TimelinePainter().buildCameraTrackForBackground(
-            journey,
-            SIZE,
-            SIZE,
-            CameraSettings(
-                CameraMovement.CLOSE_UP,
-                LongTripCompression.OFF,
-                zoomInTravelSlowdown = 0.0,
-                episodeFramingEnabled = false,
-            ),
-        ).track
-        val slowed = TimelinePainter().buildCameraTrackForBackground(
-            journey,
-            SIZE,
-            SIZE,
-            CameraSettings(
-                CameraMovement.CLOSE_UP,
-                LongTripCompression.OFF,
-                zoomInTravelSlowdown = 1.0,
-                episodeFramingEnabled = false,
-            ),
-        ).track
-
-        baseline.frames.zip(slowed.frames).forEach { (normal, adjusted) ->
-            assertEquals(normal.spanY, adjusted.spanY, 1e-12)
-            assertEquals(normal.zoom, adjusted.zoom)
-        }
-        val zoomingSteps = slowed.frames.indices.drop(1).filter {
-            slowed.frames[it].zoomInIntensity >= 0.25
-        }
-        val calmSteps = slowed.frames.indices.drop(1).filter {
-            slowed.frames[it].zoomInIntensity == 0.0
-        }
-        assertTrue("The test journey did not produce a zoom-in interval", zoomingSteps.isNotEmpty())
-        assertTrue("The test journey did not produce a calm interval", calmSteps.isNotEmpty())
-        val zoomingTravel = zoomingSteps.map { index ->
-            slowed.travelProgressAt(index.toFloat() / slowed.frames.lastIndex) -
-                slowed.travelProgressAt((index - 1).toFloat() / slowed.frames.lastIndex)
-        }.average()
-        val calmTravel = calmSteps.map { index ->
-            slowed.travelProgressAt(index.toFloat() / slowed.frames.lastIndex) -
-                slowed.travelProgressAt((index - 1).toFloat() / slowed.frames.lastIndex)
-        }.average()
-        assertTrue("Zoom-in travel $zoomingTravel was not slower than calm travel $calmTravel", zoomingTravel < calmTravel)
-        assertEquals(0f, slowed.travelProgressAt(0f), 0f)
-        assertEquals(1f, slowed.travelProgressAt(1f), 0f)
     }
 
     @Test

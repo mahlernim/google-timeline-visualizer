@@ -14,8 +14,6 @@ jobs:
     env:
       RELEASE_TAG: ${{ github.ref_name }}
       EXPECTED_PACKAGE: dev.mahlernim.timelinevisualizer.cameralab
-      EXPECTED_VERSION_CODE: "34"
-      EXPECTED_VERSION_NAME: 2.2.13-camera-lab.4
     steps:
       - uses: actions/checkout@v5
         with:
@@ -49,9 +47,28 @@ jobs:
           version_code="$(sed -n "s/.*versionCode='\([^']*\)'.*/\1/p" <<< "$package_line")"
           version_name="$(sed -n "s/.*versionName='\([^']*\)'.*/\1/p" <<< "$package_line")"
 
+          release_number="${RELEASE_TAG#camera-lab-}"
+          case "$release_number" in
+            ''|*[!0-9]*) echo "Invalid Camera Lab tag: $RELEASE_TAG" >&2; exit 1 ;;
+          esac
+          expected_version_code="$(awk '
+            /create\("cameraLab"\)/ { in_camera_lab = 1 }
+            in_camera_lab && /versionCode = [0-9]+/ {
+              line = $0
+              sub(/^.*versionCode = /, "", line)
+              sub(/[^0-9].*$/, "", line)
+              print line
+              exit
+            }
+          ' app/build.gradle.kts)"
+          base_version_name="$(sed -nE 's/^[[:space:]]*versionName = "([^"]+)".*$/\1/p' app/build.gradle.kts | head -n 1)"
+          expected_version_name="${base_version_name}-camera-lab.${release_number}"
+
           test "$package_name" = "$EXPECTED_PACKAGE"
-          test "$version_code" = "$EXPECTED_VERSION_CODE"
-          test "$version_name" = "$EXPECTED_VERSION_NAME"
+          test -n "$expected_version_code"
+          test -n "$base_version_name"
+          test "$version_code" = "$expected_version_code"
+          test "$version_name" = "$expected_version_name"
           sha256sum "$apk_path"
       - name: Save Camera Lab APK artifact
         uses: actions/upload-artifact@v4
@@ -70,11 +87,12 @@ jobs:
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" "$apk" "$apk.sha256" --clobber
           else
+            release_number="${RELEASE_TAG#camera-lab-}"
             gh release create "$RELEASE_TAG" \
               "$apk" \
               "$apk.sha256" \
-              --title "Timeline Visualizer Camera Lab 4" \
-              --notes-file docs/camera-lab-4.md \
+              --title "Timeline Visualizer Camera Lab ${release_number}" \
+              --notes-file "docs/${RELEASE_TAG}.md" \
               --prerelease \
               --verify-tag
           fi

@@ -11,7 +11,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,22 +34,15 @@ class DeviceSmokeTest {
                 if (BuildConfig.IS_CAMERA_LAB) {
                     assertEquals(
                         View.VISIBLE,
-                        activity.findViewById<View>(R.id.zoomInTravelSlowdownGroup).visibility,
-                    )
-                    assertEquals(
-                        View.VISIBLE,
                         activity.findViewById<View>(R.id.episodeFramingGroup).visibility,
                     )
-                    val episodeSwitch = activity.findViewById<android.widget.CompoundButton>(R.id.episodeFramingSwitch)
                     val tripDetection = activity.findViewById<AutoCompleteTextView>(R.id.tripDetectionDropdown)
                     val localFraming = activity.findViewById<AutoCompleteTextView>(R.id.localFramingDropdown)
-                    assertTrue(episodeSwitch.isChecked)
                     assertEquals(activity.getString(R.string.trip_detection_balanced), tripDetection.text.toString())
                     assertEquals(activity.getString(R.string.local_framing_balanced), localFraming.text.toString())
-                    episodeSwitch.performClick()
-                    assertFalse(tripDetection.isEnabled)
-                    assertFalse(localFraming.isEnabled)
-                    episodeSwitch.performClick()
+                    localFraming.onItemClickListener?.onItemClick(null, null, 0, 0L)
+                    assertEquals(activity.getString(R.string.local_framing_off), localFraming.text.toString())
+                    assertTrue(tripDetection.isEnabled)
                 }
 
                 val navigation = activity.findViewById<ViewGroup>(R.id.bottomNavigation)

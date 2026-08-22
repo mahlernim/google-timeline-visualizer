@@ -21,9 +21,9 @@ enum class CameraMovement(
 
 enum class LongTripCompression(val exponent: Double) {
     OFF(1.00),
-    GENTLE(0.92),
     BALANCED(0.85),
     STRONG(0.75),
+    STRONGER(0.65),
 }
 
 enum class TripDetection(val thresholdMultiplier: Double) {
@@ -32,10 +32,13 @@ enum class TripDetection(val thresholdMultiplier: Double) {
     SENSITIVE(0.70),
 }
 
-enum class LocalFraming(val paddingMultiplier: Double) {
-    WIDE(1.30),
-    BALANCED(1.00),
-    CLOSE(0.78),
+enum class LocalFraming(
+    val enabled: Boolean,
+    val paddingMultiplier: Double,
+) {
+    OFF(false, 1.00),
+    BALANCED(true, 1.00),
+    CLOSE(true, 0.78),
 }
 
 enum class VideoQuality(
@@ -57,14 +60,17 @@ data class CameraSettings(
     val cameraMovement: CameraMovement = CameraMovement.STEADY,
     val longTripCompression: LongTripCompression = LongTripCompression.BALANCED,
     val videoQuality: VideoQuality = VideoQuality.STANDARD,
-    val zoomInTravelSlowdown: Double = DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN,
-    val episodeFramingEnabled: Boolean = DEFAULT_EPISODE_FRAMING,
     val tripDetection: TripDetection = TripDetection.BALANCED,
-    val localFraming: LocalFraming = LocalFraming.BALANCED,
+    val localFraming: LocalFraming = DEFAULT_LOCAL_FRAMING,
 ) {
+    val episodeFramingEnabled: Boolean get() = localFraming.enabled
+
     companion object {
-        val DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN = BuildConfig.DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN
-        val DEFAULT_EPISODE_FRAMING = BuildConfig.DEFAULT_EPISODE_FRAMING
+        val DEFAULT_LOCAL_FRAMING = if (BuildConfig.DEFAULT_EPISODE_FRAMING) {
+            LocalFraming.BALANCED
+        } else {
+            LocalFraming.OFF
+        }
         val DEFAULT = CameraSettings()
     }
 }

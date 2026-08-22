@@ -50,7 +50,6 @@ android {
         create("github") {
             dimension = "distribution"
             buildConfigField("boolean", "IS_CAMERA_LAB", "false")
-            buildConfigField("double", "DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN", "0.0")
             buildConfigField("boolean", "DEFAULT_EPISODE_FRAMING", "false")
             buildConfigField("String", "UPDATE_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/latest\"")
             buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/latest\"")
@@ -58,7 +57,6 @@ android {
         create("play") {
             dimension = "distribution"
             buildConfigField("boolean", "IS_CAMERA_LAB", "false")
-            buildConfigField("double", "DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN", "0.0")
             buildConfigField("boolean", "DEFAULT_EPISODE_FRAMING", "false")
             buildConfigField("String", "UPDATE_URL", "\"market://details?id=dev.mahlernim.timelinevisualizer\"")
             buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://play.google.com/store/apps/details?id=dev.mahlernim.timelinevisualizer\"")
@@ -66,13 +64,12 @@ android {
         create("cameraLab") {
             dimension = "distribution"
             applicationIdSuffix = ".cameralab"
-            versionCode = 34
-            versionNameSuffix = "-camera-lab.4"
+            versionCode = 35
+            versionNameSuffix = "-camera-lab.5"
             buildConfigField("boolean", "IS_CAMERA_LAB", "true")
-            buildConfigField("double", "DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN", "0.60")
             buildConfigField("boolean", "DEFAULT_EPISODE_FRAMING", "true")
-            buildConfigField("String", "UPDATE_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/tag/camera-lab-4\"")
-            buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/tag/camera-lab-4\"")
+            buildConfigField("String", "UPDATE_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/tag/camera-lab-5\"")
+            buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/tag/camera-lab-5\"")
         }
     }
 

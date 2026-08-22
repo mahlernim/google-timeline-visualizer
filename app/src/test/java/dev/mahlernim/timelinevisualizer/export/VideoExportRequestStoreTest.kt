@@ -2,7 +2,6 @@ package dev.mahlernim.timelinevisualizer.export
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import dev.mahlernim.timelinevisualizer.BuildConfig
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
@@ -58,10 +57,8 @@ class VideoExportRequestStoreTest {
             ),
             cameraSettings = CameraSettings(
                 cameraMovement = CameraMovement.FIXED,
-                longTripCompression = LongTripCompression.STRONG,
+                longTripCompression = LongTripCompression.STRONGER,
                 videoQuality = VideoQuality.ULTRA,
-                zoomInTravelSlowdown = 0.85,
-                episodeFramingEnabled = true,
                 tripDetection = TripDetection.SENSITIVE,
                 localFraming = LocalFraming.CLOSE,
             ),
@@ -133,7 +130,7 @@ class VideoExportRequestStoreTest {
         assertEquals(YearMonth.of(2025, 3), restored.period.start)
         assertEquals(YearMonth.of(2025, 11), restored.period.endInclusive)
         assertEquals(RenderText.ENGLISH, restored.renderText)
-        assertEquals(CameraSettings.DEFAULT.copy(episodeFramingEnabled = false), restored.cameraSettings)
+        assertEquals(CameraSettings.DEFAULT.copy(localFraming = LocalFraming.OFF), restored.cameraSettings)
         assertEquals(1, restored.journey.points.size)
     }
 
@@ -174,7 +171,7 @@ class VideoExportRequestStoreTest {
     }
 
     @Test
-    fun readsVersionFivePendingExportsWithTheDefaultZoomInMovementReduction() {
+    fun readsVersionFivePendingExportsWithLocalFramingOff() {
         val requestFile = File(context.filesDir, "pending-video-export.bin")
         DataOutputStream(requestFile.outputStream().buffered()).use { output ->
             output.writeInt(5)
@@ -203,7 +200,7 @@ class VideoExportRequestStoreTest {
         val restored = store.load()!!
 
         assertEquals(CameraMovement.DYNAMIC, restored.cameraSettings.cameraMovement)
-        assertEquals(BuildConfig.DEFAULT_ZOOM_IN_TRAVEL_SLOWDOWN, restored.cameraSettings.zoomInTravelSlowdown, 0.0)
+        assertEquals(LocalFraming.OFF, restored.cameraSettings.localFraming)
     }
 
     @Test
@@ -236,10 +233,46 @@ class VideoExportRequestStoreTest {
 
         val restored = store.load()!!
 
-        assertEquals(0.75, restored.cameraSettings.zoomInTravelSlowdown, 0.0)
         assertEquals(false, restored.cameraSettings.episodeFramingEnabled)
         assertEquals(TripDetection.BALANCED, restored.cameraSettings.tripDetection)
-        assertEquals(LocalFraming.BALANCED, restored.cameraSettings.localFraming)
+        assertEquals(LocalFraming.OFF, restored.cameraSettings.localFraming)
+    }
+
+    @Test
+    fun migratesVersionSevenFramingAndDiscardsSlowdown() {
+        val requestFile = File(context.filesDir, "pending-video-export.bin")
+        DataOutputStream(requestFile.outputStream().buffered()).use { output ->
+            output.writeInt(7)
+            output.writeUTF("content://documents/version-seven.mp4")
+            output.writeUTF("Version seven")
+            output.writeInt(30)
+            output.writeInt(2026)
+            output.writeInt(1)
+            output.writeInt(2026)
+            output.writeInt(12)
+            output.writeUTF("en-US")
+            output.writeUTF("My Timeline")
+            output.writeUTF("MMMM yyyy")
+            output.writeUTF("km")
+            output.writeUTF("attribution")
+            output.writeDouble(1.0)
+            output.writeUTF(CameraMovement.DYNAMIC.name)
+            output.writeUTF(LongTripCompression.STRONG.name)
+            output.writeUTF(VideoQuality.PORTRAIT.name)
+            output.writeDouble(0.90)
+            output.writeBoolean(true)
+            output.writeUTF(TripDetection.SENSITIVE.name)
+            output.writeUTF(LocalFraming.CLOSE.name)
+            output.writeInt(0)
+        }
+
+        val restored = store.load()!!
+
+        assertEquals(CameraMovement.DYNAMIC, restored.cameraSettings.cameraMovement)
+        assertEquals(LongTripCompression.STRONG, restored.cameraSettings.longTripCompression)
+        assertEquals(VideoQuality.PORTRAIT, restored.cameraSettings.videoQuality)
+        assertEquals(TripDetection.SENSITIVE, restored.cameraSettings.tripDetection)
+        assertEquals(LocalFraming.CLOSE, restored.cameraSettings.localFraming)
     }
 
     @Test
