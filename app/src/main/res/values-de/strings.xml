@@ -175,7 +175,7 @@
     <string name="zoom_in_travel_slowdown_value">%1$d%%</string>
     <string name="zoom_in_travel_slowdown_summary">Höhere Werte bremsen die Markierung beim Hineinzoomen. Der Zoom bleibt schnell, und die eingesparte Zeit wird verteilt, damit die Videolänge gleich bleibt.</string>
     <string name="episode_framing">Lokale Reisekadrierung</string>
-    <string name="episode_framing_summary">Rahmt nur den aktuellen lokalen Abschnitt zwischen langen Transfers ein. Kurz vor der Abreise wird die Ansicht für den nächsten Transfer erweitert.</string>
+    <string name="episode_framing_summary">Rahmt nur den aktuellen lokalen Abschnitt zwischen langen Transfers ein. Die Kamera beginnt vor der Ankunft heranzuzoomen und zoomt vor der nächsten Abfahrt wieder heraus.</string>
     <string name="trip_detection">Reiseerkennung</string>
     <string name="trip_detection_conservative">Konservativ</string>
     <string name="trip_detection_balanced">Ausgewogen</string>

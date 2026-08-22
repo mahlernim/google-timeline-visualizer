@@ -176,12 +176,12 @@
     <string name="camera_steady_summary">Uses gentle zoom changes for a stable view.</string>
     <string name="camera_dynamic_summary">Adjusts zoom more actively for each part of the trip.</string>
     <string name="camera_close_up_summary">Stays closer to your location whenever possible.</string>
-    <string name="camera_lab_notice">Camera Lab 3 experiment · installs separately from the production app</string>
+    <string name="camera_lab_notice">Camera Lab 4 experiment · installs separately from the production app</string>
     <string name="zoom_in_travel_slowdown">Travel slowdown during zoom-in</string>
     <string name="zoom_in_travel_slowdown_value">%1$d%%</string>
     <string name="zoom_in_travel_slowdown_summary">Higher values slow marker travel while zooming in. Zoom stays quick, and saved time is redistributed to preserve video duration.</string>
     <string name="episode_framing">Local trip framing</string>
-    <string name="episode_framing_summary">Frames only the current local episode between long transfers. Near departure, the camera widens for the next transfer.</string>
+    <string name="episode_framing_summary">Frames the current local episode between long transfers. The camera starts closing in near arrival and widens again near the next departure.</string>
     <string name="trip_detection">Trip detection</string>
     <string name="trip_detection_conservative">Conservative</string>
     <string name="trip_detection_balanced">Balanced</string>

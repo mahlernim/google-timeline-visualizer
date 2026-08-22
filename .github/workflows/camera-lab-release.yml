@@ -14,8 +14,8 @@ jobs:
     env:
       RELEASE_TAG: ${{ github.ref_name }}
       EXPECTED_PACKAGE: dev.mahlernim.timelinevisualizer.cameralab
-      EXPECTED_VERSION_CODE: "33"
-      EXPECTED_VERSION_NAME: 2.2.13-camera-lab.3
+      EXPECTED_VERSION_CODE: "34"
+      EXPECTED_VERSION_NAME: 2.2.13-camera-lab.4
     steps:
       - uses: actions/checkout@v5
         with:
@@ -73,8 +73,8 @@ jobs:
             gh release create "$RELEASE_TAG" \
               "$apk" \
               "$apk.sha256" \
-              --title "Timeline Visualizer Camera Lab 3" \
-              --notes-file docs/camera-lab-3.md \
+              --title "Timeline Visualizer Camera Lab 4" \
+              --notes-file docs/camera-lab-4.md \
               --prerelease \
               --verify-tag
           fi

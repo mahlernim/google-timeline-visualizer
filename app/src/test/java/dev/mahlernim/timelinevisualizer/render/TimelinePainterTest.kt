@@ -12,6 +12,7 @@ import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.model.WebMercator
 import java.time.Instant
 import java.util.Locale
+import kotlin.math.min
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -186,6 +187,55 @@ class TimelinePainterTest {
     }
 
     @Test
+    fun episodeArrivalZoomStartsBeforeLandingAndSettlesImmediately() {
+        val journey = roundTripJourney()
+        val inboundTransfer = journey.legs[1]
+        val destination = journey.legs[2]
+        val settings = CameraSettings(
+            cameraMovement = CameraMovement.CLOSE_UP,
+            longTripCompression = LongTripCompression.OFF,
+            zoomInTravelSlowdown = 0.60,
+            episodeFramingEnabled = true,
+        )
+        val painter = TimelinePainter()
+        val track = painter.buildCameraTrackForBackground(journey, SIZE, SIZE, settings).track
+
+        fun trackSpanAt(distanceKm: Double): Double {
+            val targetTravelProgress = (distanceKm / journey.totalDistanceKm).toFloat()
+            var low = 0f
+            var high = 1f
+            repeat(30) {
+                val middle = (low + high) / 2f
+                if (track.travelProgressAt(middle) < targetTravelProgress) low = middle else high = middle
+            }
+            val viewport = track.viewportAt((low + high) / 2f)
+            return viewport.maxY - viewport.minY
+        }
+
+        val earlyFlightSpan = trackSpanAt(inboundTransfer.startKm + inboundTransfer.lengthKm * 0.70)
+        val finalFlightSpan = trackSpanAt(inboundTransfer.startKm + inboundTransfer.lengthKm * 0.95)
+        val justArrivedDistance = destination.startKm + min(1.0, destination.lengthKm * 0.05)
+        val arrivalSpan = trackSpanAt(justArrivedDistance)
+        val arrivalTarget = painter.rawViewportForTest(
+            journey,
+            (justArrivedDistance / journey.totalDistanceKm).toFloat(),
+            SIZE,
+            SIZE,
+            settings,
+            useRangeIndex = true,
+        ).let { it.maxY - it.minY }
+
+        assertTrue(
+            "Final-flight span $finalFlightSpan did not begin closing from $earlyFlightSpan",
+            finalFlightSpan < earlyFlightSpan * 0.70,
+        )
+        assertTrue(
+            "Arrival span $arrivalSpan still lagged behind its local target $arrivalTarget",
+            arrivalSpan <= arrivalTarget * 1.60,
+        )
+    }
+
+    @Test
     fun localFramingPresetsProduceOrderedViewportWidths() {
         val journey = roundTripJourney()
         val destination = journey.legs[2]
@@ -308,13 +358,23 @@ class TimelinePainterTest {
             journey,
             SIZE,
             SIZE,
-            CameraSettings(CameraMovement.CLOSE_UP, LongTripCompression.OFF, zoomInTravelSlowdown = 0.0),
+            CameraSettings(
+                CameraMovement.CLOSE_UP,
+                LongTripCompression.OFF,
+                zoomInTravelSlowdown = 0.0,
+                episodeFramingEnabled = false,
+            ),
         ).track
         val slowed = TimelinePainter().buildCameraTrackForBackground(
             journey,
             SIZE,
             SIZE,
-            CameraSettings(CameraMovement.CLOSE_UP, LongTripCompression.OFF, zoomInTravelSlowdown = 1.0),
+            CameraSettings(
+                CameraMovement.CLOSE_UP,
+                LongTripCompression.OFF,
+                zoomInTravelSlowdown = 1.0,
+                episodeFramingEnabled = false,
+            ),
         ).track
 
         baseline.frames.zip(slowed.frames).forEach { (normal, adjusted) ->
