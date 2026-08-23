@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.2.14 
 
 - Embed the resolved video title in exported MP4 metadata for media players and galleries.
 
