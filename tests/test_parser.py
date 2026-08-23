@@ -1,6 +1,12 @@
+from datetime import date
 import json
 
-from visualizer import extract_timeline_points, parse_coordinate
+from visualizer import (
+    extract_timeline_points,
+    format_distance,
+    parse_coordinate,
+    resolve_title_template,
+)
 
 
 def test_takeout_object_root():
@@ -129,3 +135,41 @@ def test_invalid_offset_path_timestamps_are_ignored():
 
     points = extract_timeline_points(data, 2026)
     assert [(point["lat"], point["lon"]) for point in points] == [(37.3, 127.3)]
+
+
+def test_date_range_filtering():
+    data = [
+        {
+            "startTime": "2024-06-05T10:00:00Z",
+            "visit": {"topCandidate": {"placeLocation": "37.1,127.1"}},
+        },
+        {
+            "startTime": "2024-06-15T10:00:00Z",
+            "visit": {"topCandidate": {"placeLocation": "37.2,127.2"}},
+        },
+        {
+            "startTime": "2024-06-25T10:00:00Z",
+            "visit": {"topCandidate": {"placeLocation": "37.3,127.3"}},
+        },
+        {
+            "startTime": "2024-07-05T10:00:00Z",
+            "visit": {"topCandidate": {"placeLocation": "37.4,127.4"}},
+        },
+    ]
+
+    # Select period from June 10 to June 20
+    points = extract_timeline_points(
+        data, start_date=date(2024, 6, 10), end_date=date(2024, 6, 20)
+    )
+    assert [(p["lat"], p["lon"]) for p in points] == [(37.2, 127.2)]
+
+
+def test_title_template_expansion():
+    assert resolve_title_template("{year} Trips", year_label="2024", name="Alice") == "2024 Trips"
+    assert resolve_title_template("{name}'s {year} Journey", year_label="2024", name="Alice") == "Alice's 2024 Journey"
+    assert resolve_title_template("", fallback="My Trips") == "My Trips"
+
+
+def test_distance_formatting():
+    assert format_distance(100.0, "km") == "100.0 km"
+    assert format_distance(100.0, "mi") == "62.1 mi"

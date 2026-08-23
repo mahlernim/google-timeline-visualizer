@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Embed the resolved video title in exported MP4 metadata for media players and galleries.
+
 ## 2.2.13
 
 - Fix issue where the video-generation notification remained visible in the system tray after the user clicked Done in the app.

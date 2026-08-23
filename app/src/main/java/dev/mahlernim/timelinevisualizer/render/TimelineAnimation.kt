@@ -9,19 +9,20 @@ object TimelineAnimation {
     const val OUTRO_SECONDS = 1.5f
     const val OUTRO_TRANSITION_SECONDS = 1.0f
 
-    fun totalDurationSeconds(journeyDurationSeconds: Int): Float =
-        journeyDurationSeconds.coerceAtLeast(1) + OUTRO_SECONDS
+    fun totalDurationSeconds(selectedDurationSeconds: Int): Float =
+        selectedDurationSeconds.coerceAtLeast(1).toFloat()
 
-    fun frameAtOverallProgress(overallProgress: Float, journeyDurationSeconds: Int): TimelineFrame {
-        val journeySeconds = journeyDurationSeconds.coerceAtLeast(1).toFloat()
-        val elapsedSeconds = overallProgress.coerceIn(0f, 1f) * totalDurationSeconds(journeyDurationSeconds)
-        return frameAtElapsedSeconds(elapsedSeconds, journeyDurationSeconds)
+    fun frameAtOverallProgress(overallProgress: Float, selectedDurationSeconds: Int): TimelineFrame {
+        val elapsedSeconds = overallProgress.coerceIn(0f, 1f) * totalDurationSeconds(selectedDurationSeconds)
+        return frameAtElapsedSeconds(elapsedSeconds, selectedDurationSeconds)
     }
 
-    fun frameAtElapsedSeconds(elapsedSeconds: Float, journeyDurationSeconds: Int): TimelineFrame {
-        val journeySeconds = journeyDurationSeconds.coerceAtLeast(1).toFloat()
+    fun frameAtElapsedSeconds(elapsedSeconds: Float, selectedDurationSeconds: Int): TimelineFrame {
+        val totalSeconds = totalDurationSeconds(selectedDurationSeconds)
+        val journeySeconds = (totalSeconds - OUTRO_SECONDS).coerceAtLeast(0f)
         if (elapsedSeconds <= journeySeconds) {
-            return TimelineFrame((elapsedSeconds / journeySeconds).coerceIn(0f, 1f), 0f)
+            val journeyProgress = if (journeySeconds == 0f) 1f else elapsedSeconds / journeySeconds
+            return TimelineFrame(journeyProgress.coerceIn(0f, 1f), 0f)
         }
         val outroElapsed = elapsedSeconds - journeySeconds
         return TimelineFrame(

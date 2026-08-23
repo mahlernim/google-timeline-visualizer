@@ -21,6 +21,7 @@ class GeneratedMediaRepository(private val context: Context) {
             MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
             ContentValues().apply {
                 put(MediaStore.Video.Media.DISPLAY_NAME, displayName)
+                put(MediaStore.Video.Media.TITLE, title)
                 put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
                 put(MediaStore.Video.Media.RELATIVE_PATH, "${Environment.DIRECTORY_MOVIES}/Timeline Visualizer")
                 put(MediaStore.Video.Media.IS_PENDING, 1)

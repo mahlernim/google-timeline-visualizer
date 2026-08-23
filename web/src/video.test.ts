@@ -313,6 +313,7 @@ describe('createJourneyMp4', () => {
     const blob = await createJourneyMp4(canvas, journey, options);
 
     expect(blob.type).toBe('video/mp4');
+    expect(encoder.add).toHaveBeenCalledTimes(options.durationSeconds * format.frameRate);
     expect(encoder.finalize).toHaveBeenCalledTimes(1);
     expect(encoder.cancel).not.toHaveBeenCalled();
   });

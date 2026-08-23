@@ -3,6 +3,8 @@ from visualizer import (
     build_camera_track,
     build_journey_timing,
     build_legs,
+    ease_in_out_cubic,
+    ease_out_cubic,
     latlon_to_meters,
 )
 
@@ -39,6 +41,16 @@ def test_balanced_compression_reduces_long_segments_share_without_changing_durat
     assert abs(balanced(1.0) - cumulative[-1]) < 1e-6
 
 
+def test_stronger_compression_reduces_share_further():
+    cumulative = [0.0, 10.0, 1010.0, 1020.0]
+    balanced = build_journey_timing(cumulative, 'balanced')
+    stronger = build_journey_timing(cumulative, 'stronger')
+    balanced_share = progress_at_distance(balanced, 1010.0) - progress_at_distance(balanced, 10.0)
+    stronger_share = progress_at_distance(stronger, 1010.0) - progress_at_distance(stronger, 10.0)
+
+    assert stronger_share < balanced_share
+
+
 def test_adaptive_transfer_detection_separates_a_long_hop():
     cumulative = [0.0, 3.0, 8.0, 308.0, 312.0]
     legs = build_legs(cumulative)
@@ -57,3 +69,45 @@ def test_fixed_camera_keeps_one_span():
 
     spans = [frame[2] for frame in track]
     assert max(spans) - min(spans) < 1e-6
+
+
+def test_close_up_camera_builds_valid_track():
+    lats = [37.5, 37.51, 37.52, 37.53]
+    lons = [127.0, 127.01, 127.02, 127.03]
+    cumulative = [0.0, 1.2, 2.4, 3.6]
+    projected = [latlon_to_meters(lat, lon) for lat, lon in zip(lats, lons)]
+    xs = [point[0] for point in projected]
+    ys = [point[1] for point in projected]
+    distance_at = build_journey_timing(cumulative, 'off')
+    track = build_camera_track(cumulative, xs, ys, lats, lons, 'close_up', distance_at)
+    assert len(track) == 481
+    for frame in track:
+        assert frame[2] > 0
+        assert frame[3] > 0
+
+
+def test_portrait_and_landscape_aspect_ratio_scaling():
+    lats = [37.5, 37.6]
+    lons = [127.0, 127.1]
+    cumulative = [0.0, 15.0]
+    projected = [latlon_to_meters(lat, lon) for lat, lon in zip(lats, lons)]
+    xs = [point[0] for point in projected]
+    ys = [point[1] for point in projected]
+    distance_at = build_journey_timing(cumulative, 'off')
+
+    portrait_track = build_camera_track(cumulative, xs, ys, lats, lons, 'steady', distance_at, aspect=9.0 / 16.0)
+    landscape_track = build_camera_track(cumulative, xs, ys, lats, lons, 'steady', distance_at, aspect=16.0 / 9.0)
+
+    # Portrait width span should be 9/16 of height span
+    assert abs(portrait_track[0][2] - portrait_track[0][3] * (9.0 / 16.0)) < 1e-6
+    # Landscape width span should be 16/9 of height span
+    assert abs(landscape_track[0][2] - landscape_track[0][3] * (16.0 / 9.0)) < 1e-6
+
+
+def test_outro_easing_bounds():
+    assert ease_out_cubic(0.0) == 0.0
+    assert ease_out_cubic(1.0) == 1.0
+    assert ease_in_out_cubic(0.0) == 0.0
+    assert ease_in_out_cubic(1.0) == 1.0
+    assert 0.0 < ease_out_cubic(0.5) <= 1.0
+    assert 0.0 < ease_in_out_cubic(0.5) <= 1.0

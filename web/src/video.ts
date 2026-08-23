@@ -172,9 +172,9 @@ export async function createJourneyMp4(
   }
 
   const frameDuration = 1 / fps;
-  const journeyFrameCount = Math.max(1, Math.round(options.durationSeconds * fps));
-  const outroFrameCount = Math.round(OUTRO_SECONDS * fps);
-  const frameCount = journeyFrameCount + outroFrameCount;
+  const frameCount = Math.max(1, Math.round(options.durationSeconds * fps));
+  const outroFrameCount = Math.min(Math.round(OUTRO_SECONDS * fps), frameCount - 1);
+  const journeyFrameCount = frameCount - outroFrameCount;
   const target = new BufferTarget();
   const output = new Output({
     format: new Mp4OutputFormat({ fastStart: 'in-memory' }),
@@ -207,7 +207,7 @@ export async function createJourneyMp4(
           outroProgress: 0,
         }
         : frameAtElapsedSeconds(
-          options.durationSeconds + (frame - journeyFrameCount) / fps,
+          options.durationSeconds - outroFrameCount / fps + (frame - journeyFrameCount) / fps,
           options.durationSeconds,
         );
       drawFrame(canvas, journey, animationFrame, options.overlay);

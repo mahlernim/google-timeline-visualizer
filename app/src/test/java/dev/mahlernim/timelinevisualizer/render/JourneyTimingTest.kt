@@ -31,7 +31,7 @@ class JourneyTimingTest {
         assertEquals(originalPoints, journey.points)
         assertEquals(0.0, balanced.distanceAt(0f), 1e-9)
         assertEquals(journey.totalDistanceKm, balanced.distanceAt(1f), 1e-6)
-        assertEquals(31.5f, TimelineAnimation.totalDurationSeconds(30), 0f)
+        assertEquals(30f, TimelineAnimation.totalDurationSeconds(30), 0f)
     }
 
     @Test

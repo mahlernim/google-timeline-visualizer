@@ -16,6 +16,15 @@ import org.robolectric.annotation.Config
 @Config(sdk = [35])
 class Mp4ExporterTileCoverageTest {
     @Test
+    fun selectedDurationIncludesTheOutroFrames() {
+        val (journeyFrames, outroFrames) = Mp4Exporter.videoFrameCounts(90, 30)
+
+        assertEquals(2_655, journeyFrames)
+        assertEquals(45, outroFrames)
+        assertEquals(2_700, journeyFrames + outroFrames)
+    }
+
+    @Test
     fun preparationIncludesEveryVideoFrameAndTheOverview() {
         val journey = Journey.from(
             listOf(

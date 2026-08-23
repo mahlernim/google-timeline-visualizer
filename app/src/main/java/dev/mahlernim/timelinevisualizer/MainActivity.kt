@@ -900,7 +900,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initializeVideoPlayer() {
         val uri = playerUri ?: return
-        if (videoPlayer != null || !lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) return
+        if (videoPlayer != null) return
         playerScreen.playerErrorGroup.visibility = View.GONE
         videoPlayer = ExoPlayer.Builder(this).build().also { player ->
             playerScreen.playerView.player = player

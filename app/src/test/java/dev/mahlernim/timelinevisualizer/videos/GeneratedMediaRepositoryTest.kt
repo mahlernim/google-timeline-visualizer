@@ -29,6 +29,7 @@ class GeneratedMediaRepositoryTest {
             uri,
             arrayOf(
                 MediaStore.Video.Media.DISPLAY_NAME,
+                MediaStore.Video.Media.TITLE,
                 MediaStore.Video.Media.MIME_TYPE,
                 MediaStore.Video.Media.RELATIVE_PATH,
                 MediaStore.Video.Media.IS_PENDING,
@@ -38,13 +39,14 @@ class GeneratedMediaRepositoryTest {
             null,
         )!!.use { cursor ->
             assertTrue(cursor.moveToFirst())
-            List(4) { cursor.getString(it) }
+            List(5) { cursor.getString(it) }
         }
 
         assertEquals("Mina 서울 東京-2025-01_2026-08.mp4", values[0])
-        assertEquals("video/mp4", values[1])
-        assertEquals("Movies/Timeline Visualizer", values[2].trimEnd('/'))
-        assertEquals("1", values[3])
+        assertEquals("Mina 서울/東京", values[1])
+        assertEquals("video/mp4", values[2])
+        assertEquals("Movies/Timeline Visualizer", values[3].trimEnd('/'))
+        assertEquals("1", values[4])
 
         repository.finalizeVideo(uri)
         val pending = context.contentResolver.query(
