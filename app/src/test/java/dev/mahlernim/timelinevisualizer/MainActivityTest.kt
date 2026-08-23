@@ -68,6 +68,8 @@ import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
 import java.io.File
 import java.time.Instant
+import java.time.LocalDate
+import dev.mahlernim.timelinevisualizer.trips.TripKind
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -608,7 +610,7 @@ class MainActivityTest {
     }
 
     @Test
-    fun deleteAllVideosRequiresConfirmation() {
+    fun deleteAllLibraryContentRequiresConfirmation() {
         store.upsert(
             VideoRecord(
                 uri = "content://example/video",
@@ -627,7 +629,7 @@ class MainActivityTest {
         val dialog = ShadowDialog.getLatestDialog()
         assertTrue(dialog.isShowing)
         assertEquals(
-            activity.getString(R.string.delete_all_videos_title),
+            activity.getString(R.string.delete_all_library_title),
             dialog.findViewById<TextView>(com.google.android.material.R.id.alertTitle).text.toString(),
         )
     }
@@ -1007,14 +1009,68 @@ class MainActivityTest {
     }
 
     @Test
-    fun createStartsByAskingForTripOrRecap() {
+    fun createWithoutTimelineShowsOneTimeSetupGate() {
         val activity = launchActivity()
 
         activity.findViewById<View>(R.id.navigationCreate).performClick()
 
-        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.createTypeStepGroup).visibility)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.createTypeStepGroup).visibility)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.timelineSourceGroup).visibility)
         assertEquals(View.GONE, activity.findViewById<View>(R.id.projectStepGroup).visibility)
         assertEquals("What would you like to make?", activity.findViewById<TextView>(R.id.createStepText).text.toString())
+    }
+
+    @Test
+    fun importedTimelineShowsFourCreationChoicesWithoutFilePicker() {
+        acceptPrivacyDisclosure()
+        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/trips-lab-sample.json"))
+        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
+        waitUntil { activity.findViewById<View>(R.id.createTypeStepGroup).visibility == View.VISIBLE }
+
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.timelineSourceGroup).visibility)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.tripVideoChoice).visibility)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.recapVideoChoice).visibility)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.customRecapChoice).visibility)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.rawDataChoice).visibility)
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "en-rUS")
+    fun recapTitlesDescribeSingleAndMultiPeriodRanges() {
+        val activity = launchActivity()
+
+        assertEquals(
+            "2024–2026 recap",
+            activity.suggestedProjectTitle(
+                TripKind.YEARLY_RECAP,
+                LocalDate.parse("2024-01-01"),
+                LocalDate.parse("2026-12-31"),
+            ),
+        )
+        assertEquals(
+            "November 2025–February 2026 recap",
+            activity.suggestedProjectTitle(
+                TripKind.MONTHLY_RECAP,
+                LocalDate.parse("2025-11-01"),
+                LocalDate.parse("2026-02-28"),
+            ),
+        )
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "ko-rKR")
+    fun recapTitlesUseKoreanResources() {
+        val activity = launchActivity()
+
+        val title = activity.suggestedProjectTitle(
+            TripKind.MONTHLY_RECAP,
+            LocalDate.parse("2025-11-01"),
+            LocalDate.parse("2026-02-28"),
+        )
+
+        assertTrue(title.contains("요약"))
+        assertTrue(title.contains("2025"))
+        assertTrue(title.contains("2026"))
     }
 
     @Test

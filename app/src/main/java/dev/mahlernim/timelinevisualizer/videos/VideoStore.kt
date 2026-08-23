@@ -12,6 +12,8 @@ import dev.mahlernim.timelinevisualizer.model.VideoDuration
 import org.json.JSONArray
 import org.json.JSONObject
 
+enum class VideoDataSource { SEMANTIC, RAW }
+
 data class VideoSettingsSnapshot(
     val presetName: String?,
     val requestedDurationSeconds: Int,
@@ -21,6 +23,7 @@ data class VideoSettingsSnapshot(
     val localFraming: LocalFraming,
     val longTripCompression: LongTripCompression,
     val resolution: VideoResolution,
+    val dataSource: VideoDataSource = VideoDataSource.SEMANTIC,
 )
 
 data class VideoRecord(
@@ -95,6 +98,7 @@ class VideoStore(private val context: Context) : VideoRecordRepository {
                         put("framing", snapshot.localFraming.name)
                         put("pacing", snapshot.longTripCompression.name)
                         put("resolution", snapshot.resolution.name)
+                        put("dataSource", snapshot.dataSource.name)
                     })
                 }
             })
@@ -152,6 +156,9 @@ class VideoStore(private val context: Context) : VideoRecordRepository {
             localFraming = LocalFraming.valueOf(getString("framing")),
             longTripCompression = LongTripCompression.valueOf(getString("pacing")),
             resolution = VideoResolution.valueOf(getString("resolution")),
+            dataSource = runCatching {
+                VideoDataSource.valueOf(optString("dataSource"))
+            }.getOrDefault(VideoDataSource.SEMANTIC),
         )
     }.getOrNull()
 

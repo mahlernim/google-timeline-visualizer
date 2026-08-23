@@ -17,14 +17,29 @@ class TripsStore(context: Context) {
         save(listOf(project) + list().filterNot { it.id == project.id })
     }
 
-    fun create(title: String, start: LocalDate, end: LocalDate, kind: TripKind): TripProject = TripProject(
+    fun create(
+        title: String,
+        start: LocalDate,
+        end: LocalDate,
+        kind: TripKind,
+        titleMode: ProjectTitleMode = ProjectTitleMode.CUSTOM,
+    ): TripProject = TripProject(
         id = UUID.randomUUID().toString(),
         title = title.trim().ifBlank { defaultTitle(kind, start) },
         startDate = start,
         endDate = end,
         kind = kind,
         createdAtMillis = System.currentTimeMillis(),
+        titleMode = titleMode,
     ).also(::upsert)
+
+    fun remove(id: String) {
+        save(list().filterNot { it.id == id })
+    }
+
+    fun removeAll(ids: Set<String>) {
+        save(list().filterNot { it.id in ids })
+    }
 
     fun dismissedSuggestionIds(): Set<String> = preferences.getStringSet(KEY_DISMISSED, emptySet()).orEmpty()
 
@@ -42,6 +57,7 @@ class TripsStore(context: Context) {
                 put("endDate", project.endDate.toString())
                 put("kind", project.kind.name)
                 put("createdAtMillis", project.createdAtMillis)
+                put("titleMode", project.titleMode.name)
             })
         }
         preferences.edit { putString(KEY_PROJECTS, array.toString()) }
@@ -65,6 +81,9 @@ class TripsStore(context: Context) {
                         endDate = end,
                         kind = kind,
                         createdAtMillis = item.optLong("createdAtMillis", 0L),
+                        titleMode = runCatching {
+                            ProjectTitleMode.valueOf(item.optString("titleMode"))
+                        }.getOrDefault(ProjectTitleMode.CUSTOM),
                     ))
                 }
             }
@@ -75,6 +94,8 @@ class TripsStore(context: Context) {
         TripKind.TRIP -> "Trip"
         TripKind.MONTHLY_RECAP -> "${start.month.name.lowercase().replaceFirstChar(Char::uppercase)} ${start.year} recap"
         TripKind.YEARLY_RECAP -> "${start.year} recap"
+        TripKind.CUSTOM_RECAP -> "Recap"
+        TripKind.RAW_DATA -> "Raw data"
     }
 
     companion object {

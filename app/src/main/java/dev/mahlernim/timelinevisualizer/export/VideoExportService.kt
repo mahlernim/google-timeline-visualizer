@@ -268,6 +268,7 @@ class VideoExportService : Service() {
                     localFraming = request.cameraSettings.localFraming,
                     longTripCompression = request.cameraSettings.longTripCompression,
                     resolution = request.cameraSettings.videoQuality.resolution,
+                    dataSource = request.dataSource,
                 ),
             ),
         )

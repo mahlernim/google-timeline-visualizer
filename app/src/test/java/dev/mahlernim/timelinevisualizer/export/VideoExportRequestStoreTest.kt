@@ -23,6 +23,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import dev.mahlernim.timelinevisualizer.videos.VideoDataSource
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -64,6 +65,7 @@ class VideoExportRequestStoreTest {
             ),
             projectId = "trip-123",
             presetName = "Cinematic",
+            dataSource = VideoDataSource.RAW,
         )
 
         store.save(request)
@@ -77,6 +79,7 @@ class VideoExportRequestStoreTest {
         assertEquals(request.cameraSettings, restored.cameraSettings)
         assertEquals(request.projectId, restored.projectId)
         assertEquals(request.presetName, restored.presetName)
+        assertEquals(VideoDataSource.RAW, restored.dataSource)
         assertEquals(request.journey.points, restored.journey.points)
     }
 

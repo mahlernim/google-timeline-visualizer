@@ -75,15 +75,6 @@
             android:textStyle="bold"
             android:visibility="gone" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/addExistingVideoButton"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:maxLines="1"
-            android:text="@string/add_videos" />
-
         <TextView
             android:id="@+id/emptyVideosText"
             android:layout_width="match_parent"
@@ -112,7 +103,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:maxLines="1"
-            android:text="@string/delete_all_videos"
+            android:text="@string/delete_all_library_content"
             android:textColor="?attr/colorError"
             android:visibility="gone" />
     </LinearLayout>

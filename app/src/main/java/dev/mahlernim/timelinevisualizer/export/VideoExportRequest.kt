@@ -15,6 +15,7 @@ import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.File
 import java.time.Instant
+import dev.mahlernim.timelinevisualizer.videos.VideoDataSource
 
 data class VideoExportRequest(
     val outputUri: String,
@@ -25,6 +26,7 @@ data class VideoExportRequest(
     val cameraSettings: CameraSettings = CameraSettings.DEFAULT,
     val projectId: String? = null,
     val presetName: String? = null,
+    val dataSource: VideoDataSource = VideoDataSource.SEMANTIC,
 ) {
     val period: TimelinePeriod get() = journey.period
 }
@@ -59,6 +61,7 @@ class VideoExportRequestStore(context: Context) {
             request.projectId?.let(output::writeUTF)
             output.writeBoolean(request.presetName != null)
             request.presetName?.let(output::writeUTF)
+            output.writeUTF(request.dataSource.name)
             output.writeInt(request.journey.points.size)
             request.journey.points.forEach { point ->
                 output.writeLong(point.instant.toEpochMilli())
@@ -151,6 +154,11 @@ class VideoExportRequestStore(context: Context) {
                 }
                 val projectId = if (version >= 9 && input.readBoolean()) input.readUTF() else null
                 val presetName = if (version >= 9 && input.readBoolean()) input.readUTF() else null
+                val dataSource = if (version >= 10) {
+                    enumOrDefault(input.readUTF(), VideoDataSource.SEMANTIC)
+                } else {
+                    VideoDataSource.SEMANTIC
+                }
                 val pointCount = input.readInt().coerceIn(0, MAX_POINT_COUNT)
                 val points = List(pointCount) {
                     GeoPoint(
@@ -174,6 +182,7 @@ class VideoExportRequestStore(context: Context) {
                     cameraSettings = cameraSettings,
                     projectId = projectId,
                     presetName = presetName,
+                    dataSource = dataSource,
                 )
             }
         }.getOrNull()
@@ -186,7 +195,7 @@ class VideoExportRequestStore(context: Context) {
     }
 
     companion object {
-        private const val CURRENT_FILE_VERSION = 9
+        private const val CURRENT_FILE_VERSION = 10
         private const val MAX_POINT_COUNT = 2_000_000
         private const val REQUEST_FILE = "pending-video-export.bin"
         private const val TEMPORARY_FILE = "pending-video-export.tmp"

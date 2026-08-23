@@ -105,6 +105,51 @@
                     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/recap_video_summary" android:textAppearance="?attr/textAppearanceBodySmall" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/customRecapChoice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardCornerRadius="18dp"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/custom_recap" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/custom_recap_summary" android:textAppearance="?attr/textAppearanceBodySmall" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/rawDataChoice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardCornerRadius="18dp"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/raw_data_video" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
+                    <TextView android:id="@+id/rawDataChoiceSummary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/raw_data_video_summary" android:textAppearance="?attr/textAppearanceBodySmall" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/semanticUnavailableText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/semantic_data_unavailable"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:visibility="gone" />
         </LinearLayout>
 
         <LinearLayout
@@ -115,11 +160,7 @@
             android:orientation="vertical"
             android:visibility="gone">
 
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/timeline_source" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
-            <TextView android:id="@+id/timelineSourceText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/timeline_source_empty" android:textAppearance="?attr/textAppearanceBodySmall" />
-            <com.google.android.material.button.MaterialButton android:id="@+id/importTimelineButton" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:maxLines="1" android:text="@string/import_or_update" />
-
-            <com.google.android.material.button.MaterialButton android:id="@+id/findTripsButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:maxLines="1" android:text="@string/find_trips" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/findTripsButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:maxLines="1" android:text="@string/find_trips" />
             <com.google.android.material.button.MaterialButton android:id="@+id/createTripButton" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:maxLines="1" android:text="@string/create_trip_manually" />
 
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="@string/saved_trips" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
@@ -176,6 +217,7 @@
             android:visibility="gone" />
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/projectTitleLayout"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -189,6 +231,15 @@
                 android:maxLength="80"
                 android:singleLine="true" />
         </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/resetSuggestedTitleButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="@string/reset_suggested_title"
+            android:visibility="gone" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -305,16 +356,24 @@
             android:id="@+id/timelineSourceGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:visibility="gone">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:maxLines="1"
-            android:text="@string/timeline_file"
+            android:text="@string/timeline_setup_title"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/timeline_setup_summary"
+            android:textAppearance="?attr/textAppearanceBodySmall" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -418,22 +477,30 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/addEndPeriodButton"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:text="@string/add_end_period" />
+
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:baselineAligned="false" android:orientation="horizontal">
-                    <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/start_year">
+                    <com.google.android.material.textfield.TextInputLayout android:id="@+id/startYearLayout" style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/start_year">
                         <AutoCompleteTextView android:id="@+id/startYearDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
                     </com.google.android.material.textfield.TextInputLayout>
                     <Space android:layout_width="10dp" android:layout_height="1dp" />
-                    <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/end_year">
+                    <com.google.android.material.textfield.TextInputLayout android:id="@+id/endYearLayout" style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/end_year">
                         <AutoCompleteTextView android:id="@+id/endYearDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
 
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:baselineAligned="false" android:orientation="horizontal">
-                    <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/start_month">
+                    <com.google.android.material.textfield.TextInputLayout android:id="@+id/startMonthLayout" style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/start_month">
                         <AutoCompleteTextView android:id="@+id/startMonthDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
                     </com.google.android.material.textfield.TextInputLayout>
                     <Space android:layout_width="10dp" android:layout_height="1dp" />
-                    <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/end_month">
+                    <com.google.android.material.textfield.TextInputLayout android:id="@+id/endMonthLayout" style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/end_month">
                         <AutoCompleteTextView android:id="@+id/endMonthDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
