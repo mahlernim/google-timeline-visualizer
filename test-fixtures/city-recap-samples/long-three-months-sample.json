@@ -1,0 +1,136 @@
+{
+  "semanticSegments": [
+    {
+      "startTime": "2026-05-01T08:00:00Z",
+      "endTime": "2026-05-08T08:00:00Z",
+      "visit": {
+        "topCandidate": {
+          "placeLocation": {
+            "latLng": "48.8566, 2.3522"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2026-05-09T08:00:00Z",
+      "endTime": "2026-05-16T08:00:00Z",
+      "visit": {
+        "topCandidate": {
+          "placeLocation": {
+            "latLng": "41.9028, 12.4964"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2026-05-17T08:00:00Z",
+      "endTime": "2026-05-24T08:00:00Z",
+      "visit": {
+        "topCandidate": {
+          "placeLocation": {
+            "latLng": "52.52, 13.405"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2026-05-25T08:00:00Z",
+      "endTime": "2026-06-01T08:00:00Z",
+      "visit": {
+        "topCandidate": {
+          "placeLocation": {
+            "latLng": "51.5074, -0.1278"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2026-06-02T08:00:00Z",
+      "endTime": "2026-06-09T08:00:00Z",
+      "visit": {
+        "topCandidate": {
+          "placeLocation": {
+            "latLng": "48.8566, 2.3522"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2026-06-10T08:00:00Z",
+      "endTime": "2026-06-17T08:00:00Z",
+      "visit": {
+        "topCandidate": {
+          "placeLocation": {
+            "latLng": "41.9028, 12.4964"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2026-06-18T08:00:00Z",
+      "endTime": "2026-06-25T08:00:00Z",
+      "visit": {
+        "topCandidate": {
+          "placeLocation": {
+            "latLng": "52.52, 13.405"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2026-06-26T08:00:00Z",
+      "endTime": "2026-07-03T08:00:00Z",
+      "visit": {
+        "topCandidate": {
+          "placeLocation": {
+            "latLng": "51.5074, -0.1278"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2026-07-04T08:00:00Z",
+      "endTime": "2026-07-11T08:00:00Z",
+      "visit": {
+        "topCandidate": {
+          "placeLocation": {
+            "latLng": "48.8566, 2.3522"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2026-07-12T08:00:00Z",
+      "endTime": "2026-07-19T08:00:00Z",
+      "visit": {
+        "topCandidate": {
+          "placeLocation": {
+            "latLng": "41.9028, 12.4964"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2026-07-20T08:00:00Z",
+      "endTime": "2026-07-27T08:00:00Z",
+      "visit": {
+        "topCandidate": {
+          "placeLocation": {
+            "latLng": "52.52, 13.405"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2026-07-28T08:00:00Z",
+      "endTime": "2026-08-04T08:00:00Z",
+      "visit": {
+        "topCandidate": {
+          "placeLocation": {
+            "latLng": "51.5074, -0.1278"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "semanticSegments": [
+    {
+      "startTime": "2024-01-01T08:00:00Z",
+      "endTime": "2024-01-03T08:00:00Z",
+      "visit": {
+        "hierarchyLevel": 0,
+        "probability": 85.0,
+        "topCandidate": {
+          "placeId": "ChIJ7cv00DwsDogRAMDACa2m4K8",
+          "semanticType": "INFERRED_HOME",
+          "placeLocation": {
+            "latLng": "41.8781, -87.6298"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2024-01-04T08:00:00Z",
+      "endTime": "2024-01-06T08:00:00Z",
+      "visit": {
+        "hierarchyLevel": 0,
+        "probability": 72.0,
+        "topCandidate": {
+          "placeId": "ChIJ7cv00DwsDogRAMDACa2m4K8",
+          "semanticType": "INFERRED_HOME",
+          "placeLocation": {
+            "latLng": "41.8781, -87.6298"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2024-01-06T08:00:00Z",
+      "endTime": "2024-01-06T13:00:00Z",
+      "activity": {
+        "activityType": "FLYING",
+        "probability": 99.0,
+        "start": {
+          "latLng": "41.8781, -87.6298"
+        },
+        "end": {
+          "latLng": "25.7617, -80.1918"
+        }
+      }
+    },
+    {
+      "startTime": "2024-01-06T13:00:00Z",
+      "endTime": "2024-01-06T14:29:39Z",
+      "visit": {
+        "hierarchyLevel": 1,
+        "probability": 45.611979838098804,
+        "topCandidate": {
+          "placeId": "ChIJ_ERRATIC_DRIFT_0",
+          "placeLocation": {
+            "latLng": "25.76441, -80.29818"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2024-01-06T14:44:39Z",
+      "endTime": "2024-01-06T16:21:59Z",
+      "visit": {
+        "hierarchyLevel": 1,
+        "probability": 34.62956222310744,
+        "topCandidate": {
+          "placeId": "ChIJ_ERRATIC_DRIFT_1",
+          "placeLocation": {
+            "latLng": "25.74734, -80.21326"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2024-01-06T16:36:59Z",
+      "endTime": "2024-01-06T17:51:13Z",
+      "visit": {
+        "hierarchyLevel": 1,
+        "probability": 43.754958948005545,
+        "topCandidate": {
+          "placeId": "ChIJ_ERRATIC_DRIFT_2",
+          "placeLocation": {
+            "latLng": "25.61362, -80.32095"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2024-01-06T18:06:13Z",
+      "endTime": "2024-01-06T20:53:53Z",
+      "visit": {
+        "hierarchyLevel": 1,
+        "probability": 50.87675103043629,
+        "topCandidate": {
+          "placeId": "ChIJ_ERRATIC_DRIFT_3",
+          "placeLocation": {
+            "latLng": "25.89246, -80.30964"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2024-01-06T21:08:53Z",
+      "endTime": "2024-01-06T23:08:12Z",
+      "visit": {
+        "hierarchyLevel": 1,
+        "probability": 44.92046743745007,
+        "topCandidate": {
+          "placeId": "ChIJ_ERRATIC_DRIFT_4",
+          "placeLocation": {
+            "latLng": "25.81369, -80.04712"
+          }
+        }
+      }
+    }
+  ]
+}

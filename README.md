@@ -102,6 +102,8 @@ and reopens it when New video opens and the storage provider retains access. It 
 not copy the Timeline data. If the file was moved or permission was lost, the app
 returns to the normal loading flow.
 
+Select **City Recap** below the selected period to generate a text summary of the cities and areas visited during the journey. The app detects meaningful stops, filters out brief stops or GPS drift, and resolves locations into city names. Consecutive visits to the same city on the same day are grouped together. The recap can be copied directly to the clipboard for travel history surveys.
+
 Older travel fades behind the moving marker so long, detailed Timelines remain
 clear and efficient to render. After the selected journey duration, the video adds
 a 1.5-second ending that zooms out, reveals the complete route, and holds the final

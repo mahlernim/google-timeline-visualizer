@@ -1,0 +1,128 @@
+{
+  "semanticSegments": [
+    {
+      "startTime": "2026-08-20T09:15:32Z",
+      "endTime": "2026-08-20T11:45:10Z",
+      "visit": {
+        "hierarchyLevel": 0,
+        "probability": 96.5,
+        "topCandidate": {
+          "placeId": "ChIJb_f1R3eHhYAR_n_E2vQJ3h8",
+          "semanticType": "INFERRED_HOME",
+          "probability": 96.5,
+          "placeLocation": {
+            "latLng": "37.7749, -122.4194"
+          }
+        },
+        "visitConfidence": 100
+      }
+    },
+    {
+      "startTime": "2026-08-20T11:45:10Z",
+      "endTime": "2026-08-20T12:30:25Z",
+      "activity": {
+        "activityType": "IN_PASSENGER_VEHICLE",
+        "probability": 99.1,
+        "distanceMeters": 15230.5,
+        "start": {
+          "latLng": "37.7749, -122.4194"
+        },
+        "end": {
+          "latLng": "37.4220, -122.0841"
+        }
+      },
+      "timelinePath": [
+        {
+          "point": "37.7749, -122.4194",
+          "time": "2026-08-20T11:46:00Z"
+        },
+        {
+          "point": "37.6000, -122.3000",
+          "time": "2026-08-20T12:05:00Z"
+        },
+        {
+          "point": "37.5000, -122.2000",
+          "time": "2026-08-20T12:15:00Z"
+        },
+        {
+          "point": "37.4220, -122.0841",
+          "time": "2026-08-20T12:29:00Z"
+        }
+      ]
+    },
+    {
+      "startTime": "2026-08-20T12:30:25Z",
+      "endTime": "2026-08-20T17:00:00Z",
+      "visit": {
+        "hierarchyLevel": 0,
+        "probability": 85.2,
+        "topCandidate": {
+          "placeId": "ChIJj61dQgK6j4AR4GeTYWZsKWw",
+          "semanticType": "INFERRED_WORK",
+          "probability": 85.2,
+          "placeLocation": {
+            "latLng": "37.4220, -122.0841"
+          },
+          "name": "Googleplex"
+        },
+        "visitConfidence": 99
+      }
+    },
+    {
+      "startTime": "2026-08-20T17:00:00Z",
+      "endTime": "2026-08-20T17:15:00Z",
+      "activity": {
+        "activityType": "WALKING",
+        "probability": 92.0,
+        "distanceMeters": 1200.0,
+        "start": {
+          "latLng": "37.4220, -122.0841"
+        },
+        "end": {
+          "latLng": "37.4280, -122.0710"
+        }
+      },
+      "timelinePath": [
+        {
+          "point": "37.4220, -122.0841",
+          "durationMinutesOffsetFromStartTime": 0
+        },
+        {
+          "point": "37.4250, -122.0780",
+          "durationMinutesOffsetFromStartTime": 7
+        },
+        {
+          "point": "37.4280, -122.0710",
+          "durationMinutesOffsetFromStartTime": 14
+        }
+      ]
+    },
+    {
+      "startTime": "2026-08-20T17:15:00Z",
+      "endTime": "2026-08-20T18:45:00Z",
+      "visit": {
+        "hierarchyLevel": 1,
+        "probability": 70.5,
+        "topCandidate": {
+          "placeId": "ChIJ____TEST_RESTAURANT",
+          "probability": 70.5,
+          "placeLocation": {
+            "latLng": "37.4280, -122.0710"
+          },
+          "name": "Local Restaurant"
+        },
+        "otherCandidates": [
+          {
+            "placeId": "ChIJ____TEST_CAFE",
+            "probability": 25.0,
+            "placeLocation": {
+              "latLng": "37.4281, -122.0712"
+            },
+            "name": "Coffee Shop"
+          }
+        ],
+        "visitConfidence": 85
+      }
+    }
+  ]
+}

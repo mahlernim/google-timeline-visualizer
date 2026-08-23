@@ -4,6 +4,7 @@ import android.animation.ValueAnimator
 import android.Manifest
 import android.app.LocaleManager
 import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -21,6 +22,7 @@ import android.util.Log
 import android.view.View
 import android.widget.AutoCompleteTextView
 import android.widget.SeekBar
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.addCallback
 import androidx.activity.viewModels
@@ -52,6 +54,7 @@ import com.google.android.material.textfield.TextInputLayout
 import dev.mahlernim.timelinevisualizer.data.CachedTimelineLoader
 import dev.mahlernim.timelinevisualizer.data.LocationFilterMode
 import dev.mahlernim.timelinevisualizer.data.LocationOutlierFilter
+import dev.mahlernim.timelinevisualizer.data.CityRecapGenerator
 import dev.mahlernim.timelinevisualizer.data.RawSignalPoint
 import dev.mahlernim.timelinevisualizer.data.RawSignalProcessingResult
 import dev.mahlernim.timelinevisualizer.data.RawSignalProcessor
@@ -301,6 +304,7 @@ class MainActivity : AppCompatActivity() {
         }
         editor.saveAsButton.setOnClickListener { lastVideoUri?.let(::chooseVideoCopyDestination) }
         editor.importButton.setOnClickListener { requestTimelineImport() }
+        editor.cityRecapButton.setOnClickListener { showCityRecap() }
         editor.exportHelpButton.setOnClickListener { showExportHelp() }
         editor.restoreTimelineHelpLink.setOnClickListener { openRestoreGuide() }
         editor.playButton.setOnClickListener { togglePreview() }
@@ -1546,6 +1550,66 @@ class MainActivity : AppCompatActivity() {
         editor.timelineView.renderText = currentRenderText()
         journey?.let { editor.periodSummaryText.text = selectedPeriodSummary(it, selectedIgnoredCount) }
         showProgress(editor.timelineSeek.progress / 1000f)
+    }
+
+    private fun showCityRecap() {
+        val currentJourney = journey
+        if (currentJourney == null) {
+            Snackbar.make(binding.root, "No timeline selected", Snackbar.LENGTH_SHORT).show()
+            return
+        }
+
+        editor.loadingGroup.visibility = View.VISIBLE
+        editor.loadingStageText.setText("Analyzing visits...")
+        
+        lifecycleScope.launch {
+            val generator = CityRecapGenerator(this@MainActivity)
+            val recap = generator.generateRecap(currentJourney)
+            
+            editor.loadingGroup.visibility = View.GONE
+            
+            val dialogView = layoutInflater.inflate(R.layout.dialog_city_recap, null)
+            val contentText = dialogView.findViewById<TextView>(R.id.recapContentText)
+            val closeButton = dialogView.findViewById<View>(R.id.recapCloseButton)
+            val copyButton = dialogView.findViewById<View>(R.id.recapCopyButton)
+            
+            val sb = java.lang.StringBuilder("City Visited Recap\n\n")
+            
+            if (recap.isEmpty()) {
+                sb.append("No cities could be identified.\n\n")
+                sb.append("This can happen if:\n")
+                sb.append("1. The timeline is extremely sparse and lacks dwell points.\n")
+                sb.append("2. Your device's Geocoder failed to resolve addresses (e.g., missing Google Play Services or no internet connection).")
+            } else {
+                var lastDate = ""
+                for (city in recap) {
+                    if (city.date != lastDate) {
+                        if (lastDate.isNotEmpty()) sb.append("\n")
+                        sb.append(city.date).append("\n")
+                        lastDate = city.date
+                    }
+                    sb.append(city.primaryArea).append("\n")
+                    for (subArea in city.subAreas) {
+                        sb.append("  - ").append(subArea).append("\n")
+                    }
+                }
+            }
+            
+            val recapString = sb.toString()
+            contentText.text = recapString
+            
+            val dialog = MaterialAlertDialogBuilder(this@MainActivity)
+                .setView(dialogView)
+                .show()
+                
+            closeButton.setOnClickListener { dialog.dismiss() }
+            copyButton.setOnClickListener {
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = ClipData.newPlainText("City Recap", recapString)
+                clipboard.setPrimaryClip(clip)
+                Snackbar.make(binding.root, "Recap copied to clipboard", Snackbar.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun updateDistanceUnitLabel() {

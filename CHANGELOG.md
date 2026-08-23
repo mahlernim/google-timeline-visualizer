@@ -1,5 +1,15 @@
 # Changelog
 
+# 2.3.3
+
+- Add a City Visited Recap feature to the New Video screen.
+- Detect meaningful stops from Timeline data while filtering out brief stops and GPS drift.
+- Resolve detected stops into city and area names using the native Android Geocoder.
+- Group consecutive visits to the same city on the same day to avoid duplicate recap entries.
+- Fall back to the country name when a more specific location cannot be resolved, and skip locations that cannot be resolved at all.
+- Add realistic Timeline fixtures covering sparse data, repeated visits, and GPS drift, with regression coverage for stop detection (#149).
+- Set Android version code 36 and version name 2.3.3.
+
 ## 2.2.14 
 
 - Embed the resolved video title in exported MP4 metadata for media players and galleries.

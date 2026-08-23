@@ -235,6 +235,15 @@
                 android:text="@string/selected_period_empty"
                 android:textAppearance="?attr/textAppearanceBodyMedium" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cityRecapButton"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:maxLines="1"
+                android:text="City Recap" />
+
             <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/exactDateSwitch"
                 android:layout_width="match_parent"

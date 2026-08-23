@@ -1,0 +1,36 @@
+{
+  "semanticSegments": [
+    {
+      "startTime": "2026-08-01T09:00:00Z",
+      "endTime": "2026-08-01T12:00:00Z",
+      "visit": {
+        "topCandidate": {
+          "placeLocation": {
+            "latLng": "37.5665, 126.978"
+          }
+        }
+      }
+    },
+    {
+      "startTime": "2026-08-01T12:00:00Z",
+      "endTime": "2026-08-01T15:00:00Z",
+      "timelinePath": [
+        {
+          "point": "37.0665, 127.478",
+          "time": "2026-08-01T13:00:00Z"
+        }
+      ]
+    },
+    {
+      "startTime": "2026-08-01T15:00:00Z",
+      "endTime": "2026-08-01T19:00:00Z",
+      "visit": {
+        "topCandidate": {
+          "placeLocation": {
+            "latLng": "35.1796, 129.0756"
+          }
+        }
+      }
+    }
+  ]
+}
