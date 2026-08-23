@@ -243,6 +243,15 @@
     <string name="resolution_480">480p</string>
     <string name="resolution_720">720p</string>
     <string name="resolution_1080">1080p</string>
+    <string name="resolution_custom">사용자 지정…</string>
+    <string name="custom_resolution_title">사용자 지정 동영상 형식</string>
+    <string name="custom_resolution_hint">픽셀 수(짧은 변)</string>
+    <string name="custom_resolution_range">480에서 2160 사이의 정수를 입력하세요.</string>
+    <string name="custom_frame_rate_hint">프레임 속도</string>
+    <string name="custom_frame_rate_range">15에서 60 사이의 정수를 입력하세요.</string>
+    <string name="format_risky_warning">이 해상도 또는 프레임 속도는 이 기기에서 느리게 처리되거나 메모리를 많이 사용할 수 있습니다.</string>
+    <string name="risky_format_dialog_title">이 형식은 느릴 수 있습니다</string>
+    <string name="risky_format_dialog_message">이 해상도 또는 프레임 속도는 이 기기에서 테스트되지 않았습니다. 생성 시간이 오래 걸리거나 중간에 실패할 수 있습니다.</string>
     <string name="regional_preferences">지역 설정</string>
     <string name="distance_unit_setting">거리 단위</string>
     <string name="distance_unit_automatic">자동</string>

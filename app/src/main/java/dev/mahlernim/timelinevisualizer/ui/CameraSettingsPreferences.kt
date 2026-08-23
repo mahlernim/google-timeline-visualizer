@@ -4,9 +4,11 @@ import android.content.Context
 import androidx.core.content.edit
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
+import dev.mahlernim.timelinevisualizer.render.CustomVideoFormat
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
 import dev.mahlernim.timelinevisualizer.render.LocalFraming
 import dev.mahlernim.timelinevisualizer.render.TripDetection
+import dev.mahlernim.timelinevisualizer.render.VideoAspectRatio
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 
 class CameraSettingsPreferences(context: Context) {
@@ -19,6 +21,7 @@ class CameraSettingsPreferences(context: Context) {
             cameraMovement = enumValue(KEY_CAMERA_MOVEMENT, CameraMovement.STEADY),
             longTripCompression = enumValue(KEY_LONG_TRIP, LongTripCompression.BALANCED),
             videoQuality = enumValue(KEY_VIDEO_QUALITY, VideoQuality.STANDARD),
+            customVideoFormat = customVideoFormat(),
             tripDetection = enumValue(KEY_TRIP_DETECTION, TripDetection.BALANCED),
             localFraming = localFraming(existingProductionSettings),
         )
@@ -33,6 +36,16 @@ class CameraSettingsPreferences(context: Context) {
             putString(KEY_VIDEO_QUALITY, settings.videoQuality.name)
             putString(KEY_TRIP_DETECTION, settings.tripDetection.name)
             putString(KEY_EPISODE_LOCAL_FRAMING, settings.localFraming.name)
+            val custom = settings.customVideoFormat
+            if (custom != null) {
+                putString(KEY_CUSTOM_ASPECT, custom.aspectRatioOption.name)
+                putInt(KEY_CUSTOM_SHORT_EDGE, custom.shortEdge)
+                putInt(KEY_CUSTOM_FRAME_RATE, custom.frameRate)
+            } else {
+                remove(KEY_CUSTOM_ASPECT)
+                remove(KEY_CUSTOM_SHORT_EDGE)
+                remove(KEY_CUSTOM_FRAME_RATE)
+            }
             remove(KEY_ZOOM_IN_TRAVEL_SLOWDOWN)
             remove(KEY_ZOOM_IN_MOVEMENT_REDUCTION)
             remove(KEY_EPISODE_FRAMING_ENABLED)
@@ -41,6 +54,18 @@ class CameraSettingsPreferences(context: Context) {
             remove(KEY_ZOOM_IN)
             remove(KEY_LONG_HOP)
         }
+    }
+
+    private fun customVideoFormat(): CustomVideoFormat? {
+        val aspect = preferences.getString(KEY_CUSTOM_ASPECT, null)
+            ?.let { stored -> VideoAspectRatio.entries.firstOrNull { it.name == stored } }
+            ?: return null
+        if (!preferences.contains(KEY_CUSTOM_SHORT_EDGE) || !preferences.contains(KEY_CUSTOM_FRAME_RATE)) return null
+        val shortEdge = preferences.getInt(KEY_CUSTOM_SHORT_EDGE, -1)
+            .takeIf { it in CustomVideoFormat.MIN_SHORT_EDGE..CustomVideoFormat.MAX_SHORT_EDGE } ?: return null
+        val frameRate = preferences.getInt(KEY_CUSTOM_FRAME_RATE, -1)
+            .takeIf { it in CustomVideoFormat.MIN_FRAME_RATE..CustomVideoFormat.MAX_FRAME_RATE } ?: return null
+        return CustomVideoFormat(aspect, shortEdge, frameRate)
     }
 
     fun reset(): CameraSettings {
@@ -77,6 +102,9 @@ class CameraSettingsPreferences(context: Context) {
         const val KEY_LONG_HOP = "long-hop"
         const val KEY_LONG_TRIP = "long-trip"
         const val KEY_VIDEO_QUALITY = "video-quality"
+        const val KEY_CUSTOM_ASPECT = "custom-video-aspect"
+        const val KEY_CUSTOM_SHORT_EDGE = "custom-video-short-edge"
+        const val KEY_CUSTOM_FRAME_RATE = "custom-video-frame-rate"
         const val KEY_ZOOM_IN_TRAVEL_SLOWDOWN = "zoom-in-travel-slowdown"
         const val KEY_ZOOM_IN_MOVEMENT_REDUCTION = "zoom-in-movement-reduction"
         const val KEY_EPISODE_FRAMING_ENABLED = "episode-framing-enabled"

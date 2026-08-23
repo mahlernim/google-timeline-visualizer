@@ -16,6 +16,7 @@ data class PresetValues(
 ) {
     fun applyTo(draft: CameraSettings): CameraSettings = draft.copy(
         videoQuality = draft.videoQuality.withAspectRatio(aspectRatio),
+        customVideoFormat = draft.customVideoFormat?.copy(aspectRatioOption = aspectRatio),
         cameraMovement = cameraMovement,
         tripDetection = tripDetection,
         localFraming = localFraming,

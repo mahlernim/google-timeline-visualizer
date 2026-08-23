@@ -20,6 +20,7 @@ import android.text.InputType
 import android.util.Log
 import android.view.View
 import android.widget.AutoCompleteTextView
+import android.widget.LinearLayout
 import android.widget.SeekBar
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.addCallback
@@ -93,6 +94,7 @@ import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.DistanceUnit
 import dev.mahlernim.timelinevisualizer.render.DistanceUnitPreference
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
+import dev.mahlernim.timelinevisualizer.render.CustomVideoFormat
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
 import dev.mahlernim.timelinevisualizer.render.LocalFraming
 import dev.mahlernim.timelinevisualizer.render.TripDetection
@@ -429,6 +431,11 @@ class MainActivity : AppCompatActivity() {
         outState.putString(STATE_DRAFT_QUALITY, cameraSettings.videoQuality.name)
         outState.putString(STATE_DRAFT_TRIP_DETECTION, cameraSettings.tripDetection.name)
         outState.putString(STATE_DRAFT_LOCAL_FRAMING, cameraSettings.localFraming.name)
+        cameraSettings.customVideoFormat?.let { custom ->
+            outState.putString(STATE_DRAFT_CUSTOM_ASPECT, custom.aspectRatioOption.name)
+            outState.putInt(STATE_DRAFT_CUSTOM_SHORT_EDGE, custom.shortEdge)
+            outState.putInt(STATE_DRAFT_CUSTOM_FRAME_RATE, custom.frameRate)
+        }
         outState.putString(STATE_ACTIVE_PRESET_ID, activePresetId)
         super.onSaveInstanceState(outState)
     }
@@ -1208,7 +1215,7 @@ class MainActivity : AppCompatActivity() {
             R.string.resolution_480,
             R.string.resolution_720,
             R.string.resolution_1080,
-        ).map(::getString)
+        ).map(::getString) + getString(R.string.resolution_custom)
         val tripDetectionLabels = listOf(
             R.string.trip_detection_conservative,
             R.string.trip_detection_balanced,
@@ -1233,9 +1240,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         settingsScreen.aspectRatioDropdown.setOnItemClickListener { _, _, position, _ ->
+            val aspect = VideoAspectRatio.entries[position]
             updateAdvancedSettings(
                 cameraSettings.copy(
-                    videoQuality = cameraSettings.videoQuality.withAspectRatio(VideoAspectRatio.entries[position]),
+                    videoQuality = cameraSettings.videoQuality.withAspectRatio(aspect),
+                    customVideoFormat = cameraSettings.customVideoFormat?.copy(aspectRatioOption = aspect),
                 ),
             )
         }
@@ -1252,12 +1261,17 @@ class MainActivity : AppCompatActivity() {
             updateAdvancedSettings(cameraSettings.copy(longTripCompression = LongTripCompression.values()[position]))
         }
         settingsScreen.videoQualityDropdown.setOnItemClickListener { _, _, position, _ ->
-            updateAdvancedSettings(
-                cameraSettings.copy(
-                    videoQuality = cameraSettings.videoQuality.withResolution(VideoResolution.entries[position]),
-                ),
-                presetRelevantChange = false,
-            )
+            if (position == VideoResolution.entries.size) {
+                showCustomFormatDialog()
+            } else {
+                updateAdvancedSettings(
+                    cameraSettings.copy(
+                        videoQuality = cameraSettings.videoQuality.withResolution(VideoResolution.entries[position]),
+                        customVideoFormat = null,
+                    ),
+                    presetRelevantChange = false,
+                )
+            }
         }
         settingsScreen.resetAdvancedSettingsButton.setOnClickListener {
             markPresetCustom(clearDefault = true)
@@ -1289,6 +1303,16 @@ class MainActivity : AppCompatActivity() {
         renderPresetSelection()
     }
 
+    private fun restoredCustomVideoFormat(savedState: Bundle): CustomVideoFormat? = runCatching {
+        CustomVideoFormat(
+            aspectRatioOption = VideoAspectRatio.valueOf(savedState.getString(STATE_DRAFT_CUSTOM_ASPECT)!!),
+            shortEdge = savedState.getInt(STATE_DRAFT_CUSTOM_SHORT_EDGE)
+                .takeIf { it in CustomVideoFormat.MIN_SHORT_EDGE..CustomVideoFormat.MAX_SHORT_EDGE }!!,
+            frameRate = savedState.getInt(STATE_DRAFT_CUSTOM_FRAME_RATE)
+                .takeIf { it in CustomVideoFormat.MIN_FRAME_RATE..CustomVideoFormat.MAX_FRAME_RATE }!!,
+        )
+    }.getOrNull()
+
     private fun restoreDraftSettings(savedState: Bundle?) {
         savedState ?: return
         val restored = runCatching {
@@ -1298,7 +1322,7 @@ class MainActivity : AppCompatActivity() {
                 videoQuality = VideoQuality.valueOf(savedState.getString(STATE_DRAFT_QUALITY)!!),
                 tripDetection = TripDetection.valueOf(savedState.getString(STATE_DRAFT_TRIP_DETECTION)!!),
                 localFraming = LocalFraming.valueOf(savedState.getString(STATE_DRAFT_LOCAL_FRAMING)!!),
-            )
+            ).copy(customVideoFormat = restoredCustomVideoFormat(savedState))
         }.getOrNull() ?: return
         val restoredPresetId = savedState.getString(STATE_ACTIVE_PRESET_ID)
         activePresetId = presetRepository.presets().firstOrNull {
@@ -1729,28 +1753,41 @@ class MainActivity : AppCompatActivity() {
             false,
         )
         settingsScreen.videoQualityDropdown.setText(
-            getString(
-                listOf(
-                    R.string.resolution_480,
-                    R.string.resolution_720,
-                    R.string.resolution_1080,
-                )[settings.videoQuality.resolution.ordinal],
-            ),
+            if (settings.customVideoFormat != null) {
+                getString(R.string.resolution_custom)
+            } else {
+                getString(
+                    listOf(
+                        R.string.resolution_480,
+                        R.string.resolution_720,
+                        R.string.resolution_1080,
+                    )[settings.videoQuality.resolution.ordinal],
+                )
+            },
             false,
         )
-        val warning = videoFormatWarning(settings.videoQuality)
-        videoFormatSupported = warning == null
-        settingsScreen.videoFormatWarningText.text = warning
+        val warning = videoFormatWarning(settings)
+        videoFormatSupported = warning?.blocking != true
+        settingsScreen.videoFormatWarningText.text = warning?.message
         settingsScreen.videoFormatWarningText.visibility = if (warning == null) View.GONE else View.VISIBLE
         updateCameraPreparationUi()
         showProgress(editor.timelineSeek.progress / 1000f)
     }
 
-    private fun videoFormatWarning(format: VideoQuality): String? {
+    private class FormatWarning(val message: String, val blocking: Boolean)
+
+    private fun videoFormatWarning(settings: CameraSettings): FormatWarning? {
         if (videoEncoderProfiles.isEmpty()) return null
+        val format = settings.activeVideoFormat
         return when (val support = VideoEncoderSupport.select(format, videoEncoderProfiles)) {
-            is EncoderSupport.Supported -> null
-            is EncoderSupport.Unsupported -> support.reason.describe(this, format)
+            is EncoderSupport.Unsupported -> FormatWarning(support.reason.describe(this, format), blocking = true)
+            is EncoderSupport.Supported -> if (
+                settings.customVideoFormat != null && VideoEncoderSupport.isRisky(format)
+            ) {
+                FormatWarning(getString(R.string.format_risky_warning), blocking = false)
+            } else {
+                null
+            }
         }
     }
 
@@ -1802,7 +1839,93 @@ class MainActivity : AppCompatActivity() {
         dialog.setOnCancelListener { applyDuration(routeDurationSeconds) }
     }
 
+    private fun showCustomFormatDialog() {
+        val existing = cameraSettings.customVideoFormat
+        val margin = (24 * resources.displayMetrics.density).toInt()
+        val resolutionInput = TextInputEditText(this).apply {
+            id = R.id.customResolutionInput
+            inputType = InputType.TYPE_CLASS_NUMBER
+            setText(String.format(Locale.ROOT, "%d", existing?.shortEdge ?: CustomVideoFormat.DEFAULT_SHORT_EDGE))
+            selectAll()
+        }
+        val resolutionLayout = TextInputLayout(this).apply {
+            hint = getString(R.string.custom_resolution_hint)
+            helperText = getString(R.string.custom_resolution_range)
+            addView(resolutionInput)
+        }
+        val frameRateInput = TextInputEditText(this).apply {
+            id = R.id.customFrameRateInput
+            inputType = InputType.TYPE_CLASS_NUMBER
+            setText(String.format(Locale.ROOT, "%d", existing?.frameRate ?: CustomVideoFormat.DEFAULT_FRAME_RATE))
+        }
+        val frameRateLayout = TextInputLayout(this).apply {
+            hint = getString(R.string.custom_frame_rate_hint)
+            helperText = getString(R.string.custom_frame_rate_range)
+            addView(frameRateInput)
+            setPadding(0, margin, 0, 0)
+        }
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(margin, 0, margin, 0)
+            addView(resolutionLayout)
+            addView(frameRateLayout)
+        }
+        val restoreOnCancel = {
+            if (existing == null) {
+                updateAdvancedSettings(cameraSettings.copy(customVideoFormat = null), presetRelevantChange = false)
+            } else {
+                applyAdvancedSettings(cameraSettings)
+            }
+        }
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.custom_resolution_title)
+            .setView(container)
+            .setNegativeButton(R.string.cancel) { _, _ -> restoreOnCancel() }
+            .setPositiveButton(R.string.done, null)
+            .create()
+        dialog.show()
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).setOnClickListener {
+            val shortEdge = CustomVideoFormat.parseShortEdge(resolutionInput.text)
+            val frameRate = CustomVideoFormat.parseFrameRate(frameRateInput.text)
+            if (shortEdge == null) {
+                resolutionLayout.error = getString(R.string.custom_resolution_range)
+            } else if (frameRate == null) {
+                resolutionLayout.error = null
+                frameRateLayout.error = getString(R.string.custom_frame_rate_range)
+            } else {
+                resolutionLayout.error = null
+                frameRateLayout.error = null
+                updateAdvancedSettings(
+                    cameraSettings.copy(
+                        customVideoFormat = CustomVideoFormat(
+                            aspectRatioOption = cameraSettings.videoQuality.aspectRatioOption,
+                            shortEdge = shortEdge,
+                            frameRate = frameRate,
+                        ),
+                    ),
+                    presetRelevantChange = false,
+                )
+                dialog.dismiss()
+            }
+        }
+        dialog.setOnCancelListener { restoreOnCancel() }
+    }
+
     private fun chooseExportDestination() {
+        val customFormat = cameraSettings.customVideoFormat
+        if (customFormat != null && VideoEncoderSupport.isRisky(customFormat.format)) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.risky_format_dialog_title)
+                .setMessage(R.string.risky_format_dialog_message)
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.continue_action) { _, _ -> proceedToExportDestination() }
+                .show()
+            return
+        }
+        proceedToExportDestination()
+    }
+
+    private fun proceedToExportDestination() {
         if (
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
@@ -2663,6 +2786,9 @@ class MainActivity : AppCompatActivity() {
         private const val STATE_DRAFT_QUALITY = "draft_quality_v1"
         private const val STATE_DRAFT_TRIP_DETECTION = "draft_trip_detection_v1"
         private const val STATE_DRAFT_LOCAL_FRAMING = "draft_local_framing_v1"
+        private const val STATE_DRAFT_CUSTOM_ASPECT = "draft_custom_aspect_v1"
+        private const val STATE_DRAFT_CUSTOM_SHORT_EDGE = "draft_custom_short_edge_v1"
+        private const val STATE_DRAFT_CUSTOM_FRAME_RATE = "draft_custom_frame_rate_v1"
         private const val STATE_ACTIVE_PRESET_ID = "active_preset_id_v1"
         internal const val ACTION_WATCH_VIDEO = "dev.mahlernim.timelinevisualizer.action.WATCH_VIDEO"
         internal const val ACTION_SHARE_VIDEO = "dev.mahlernim.timelinevisualizer.action.SHARE_VIDEO"

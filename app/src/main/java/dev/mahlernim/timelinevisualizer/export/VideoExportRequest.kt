@@ -7,9 +7,11 @@ import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
 import dev.mahlernim.timelinevisualizer.render.RenderText
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
+import dev.mahlernim.timelinevisualizer.render.CustomVideoFormat
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
 import dev.mahlernim.timelinevisualizer.render.LocalFraming
 import dev.mahlernim.timelinevisualizer.render.TripDetection
+import dev.mahlernim.timelinevisualizer.render.VideoAspectRatio
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 import java.io.DataInputStream
 import java.io.DataOutputStream
@@ -53,6 +55,13 @@ class VideoExportRequestStore(context: Context) {
             output.writeUTF(request.cameraSettings.videoQuality.name)
             output.writeUTF(request.cameraSettings.tripDetection.name)
             output.writeUTF(request.cameraSettings.localFraming.name)
+            val customFormat = request.cameraSettings.customVideoFormat
+            output.writeBoolean(customFormat != null)
+            if (customFormat != null) {
+                output.writeUTF(customFormat.aspectRatioOption.name)
+                output.writeInt(customFormat.shortEdge)
+                output.writeInt(customFormat.frameRate)
+            }
             output.writeInt(request.journey.points.size)
             request.journey.points.forEach { point ->
                 output.writeLong(point.instant.toEpochMilli())
@@ -120,10 +129,21 @@ class VideoExportRequestStore(context: Context) {
                         } else {
                             LocalFraming.OFF
                         }
+                        val customVideoFormat = if (version >= 9 && input.readBoolean()) {
+                            val aspect = enumOrDefault(input.readUTF(), VideoAspectRatio.SQUARE)
+                            val shortEdge = input.readInt()
+                                .coerceIn(CustomVideoFormat.MIN_SHORT_EDGE, CustomVideoFormat.MAX_SHORT_EDGE)
+                            val frameRate = input.readInt()
+                                .coerceIn(CustomVideoFormat.MIN_FRAME_RATE, CustomVideoFormat.MAX_FRAME_RATE)
+                            CustomVideoFormat(aspect, shortEdge, frameRate)
+                        } else {
+                            null
+                        }
                         CameraSettings(
                             cameraMovement = movement,
                             longTripCompression = compression,
                             videoQuality = quality,
+                            customVideoFormat = customVideoFormat,
                             tripDetection = tripDetection,
                             localFraming = if (version >= 8 || legacyFramingEnabled) {
                                 storedLocalFraming
@@ -176,7 +196,7 @@ class VideoExportRequestStore(context: Context) {
     }
 
     companion object {
-        private const val CURRENT_FILE_VERSION = 8
+        private const val CURRENT_FILE_VERSION = 9
         private const val MAX_POINT_COUNT = 2_000_000
         private const val REQUEST_FILE = "pending-video-export.bin"
         private const val TEMPORARY_FILE = "pending-video-export.tmp"

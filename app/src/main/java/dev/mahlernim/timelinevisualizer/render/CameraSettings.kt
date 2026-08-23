@@ -71,6 +71,8 @@ enum class VideoQuality(
 
     val aspectRatio: Float get() = width.toFloat() / height
 
+    val format: VideoFormat get() = VideoFormat(width, height, frameRate, bitrate)
+
     fun withAspectRatio(aspectRatio: VideoAspectRatio): VideoQuality = of(aspectRatio, resolution)
 
     fun withResolution(resolution: VideoResolution): VideoQuality = of(aspectRatioOption, resolution)
@@ -82,14 +84,75 @@ enum class VideoQuality(
     }
 }
 
+data class VideoFormat(
+    val width: Int,
+    val height: Int,
+    val frameRate: Int,
+    val bitrate: Int,
+) {
+    val aspectRatio: Float get() = width.toFloat() / height
+}
+
+data class CustomVideoFormat(
+    val aspectRatioOption: VideoAspectRatio,
+    val shortEdge: Int,
+    val frameRate: Int,
+) {
+    val format: VideoFormat
+        get() {
+            val longEdge = ((shortEdge * LONG_EDGE_RATIO_NUMERATOR / LONG_EDGE_RATIO_DENOMINATOR) / 2) * 2
+            val (width, height) = when (aspectRatioOption) {
+                VideoAspectRatio.SQUARE -> shortEdge to shortEdge
+                VideoAspectRatio.PORTRAIT -> shortEdge to longEdge
+                VideoAspectRatio.LANDSCAPE -> longEdge to shortEdge
+            }
+            val pixelsPerFrame = width.toLong() * height.toLong()
+            val bitrate = (pixelsPerFrame * frameRate * BITS_PER_PIXEL_PER_FRAME).toLong()
+                .coerceIn(MIN_BITRATE.toLong(), MAX_BITRATE.toLong())
+                .toInt()
+            return VideoFormat(width, height, frameRate, bitrate)
+        }
+
+    companion object {
+        const val MIN_SHORT_EDGE = 480
+        const val MAX_SHORT_EDGE = 2160
+        const val MIN_FRAME_RATE = 15
+        const val MAX_FRAME_RATE = 60
+        const val DEFAULT_SHORT_EDGE = 1080
+        const val DEFAULT_FRAME_RATE = 30
+
+        private const val LONG_EDGE_RATIO_NUMERATOR = 16
+        private const val LONG_EDGE_RATIO_DENOMINATOR = 9
+
+        // Matches the bits-per-pixel-per-frame implied by the shipped LANDSCAPE/PORTRAIT presets
+        // (12 Mbps at 1920x1080@30), so a custom format near preset size gets a similar bitrate.
+        private const val BITS_PER_PIXEL_PER_FRAME = 0.19
+        private const val MIN_BITRATE = 1_500_000
+        private const val MAX_BITRATE = 40_000_000
+
+        fun parseShortEdge(raw: CharSequence?): Int? = parseBoundedInt(raw, MIN_SHORT_EDGE, MAX_SHORT_EDGE)
+
+        fun parseFrameRate(raw: CharSequence?): Int? = parseBoundedInt(raw, MIN_FRAME_RATE, MAX_FRAME_RATE)
+
+        private fun parseBoundedInt(raw: CharSequence?, min: Int, max: Int): Int? {
+            val text = raw?.toString()?.trim().orEmpty()
+            if (!text.matches(Regex("[0-9]+"))) return null
+            return text.toIntOrNull()?.takeIf { it in min..max }
+        }
+    }
+}
+
 data class CameraSettings(
     val cameraMovement: CameraMovement = CameraMovement.STEADY,
     val longTripCompression: LongTripCompression = LongTripCompression.BALANCED,
     val videoQuality: VideoQuality = VideoQuality.STANDARD,
+    val customVideoFormat: CustomVideoFormat? = null,
     val tripDetection: TripDetection = TripDetection.BALANCED,
     val localFraming: LocalFraming = LocalFraming.BALANCED,
 ) {
     val episodeFramingEnabled: Boolean get() = localFraming.enabled
+
+    val activeVideoFormat: VideoFormat get() = customVideoFormat?.format ?: videoQuality.format
 
     companion object {
         val DEFAULT = CameraSettings()

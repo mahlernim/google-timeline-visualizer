@@ -53,7 +53,7 @@ class Mp4Exporter(
         onProgress: (ExportProgress) -> Unit,
     ): Bitmap = withContext(Dispatchers.Default) {
         require(journey.points.size >= 2) { "At least two location points are needed" }
-        val videoFormat = cameraSettings.videoQuality
+        val videoFormat = cameraSettings.activeVideoFormat
         val encoder = when (val support = VideoEncoderSupport.evaluate(videoFormat)) {
             is EncoderSupport.Supported -> support
             is EncoderSupport.Unsupported -> throw UnsupportedVideoFormatException(support.reason, videoFormat)
@@ -306,14 +306,14 @@ class Mp4Exporter(
         private const val JOURNEY_PROGRESS_WEIGHT = 0.80f
         private const val FINISHING_PROGRESS_WEIGHT = 0.10f
 
-        internal fun overviewWidth(format: dev.mahlernim.timelinevisualizer.render.VideoQuality): Int =
+        internal fun overviewWidth(format: dev.mahlernim.timelinevisualizer.render.VideoFormat): Int =
             if (format.width >= format.height) {
                 OVERVIEW_MAX_EDGE
             } else {
                 (OVERVIEW_MAX_EDGE * format.aspectRatio).toInt().coerceAtLeast(1).toEven()
             }
 
-        internal fun overviewHeight(format: dev.mahlernim.timelinevisualizer.render.VideoQuality): Int =
+        internal fun overviewHeight(format: dev.mahlernim.timelinevisualizer.render.VideoFormat): Int =
             if (format.height >= format.width) {
                 OVERVIEW_MAX_EDGE
             } else {

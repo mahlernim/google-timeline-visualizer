@@ -4,11 +4,14 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
+import dev.mahlernim.timelinevisualizer.render.CustomVideoFormat
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
 import dev.mahlernim.timelinevisualizer.render.LocalFraming
 import dev.mahlernim.timelinevisualizer.render.TripDetection
+import dev.mahlernim.timelinevisualizer.render.VideoAspectRatio
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.After
 import org.junit.Test
@@ -64,6 +67,32 @@ class CameraSettingsPreferencesTest {
 
             assertEquals(format, CameraSettingsPreferences(context).load().videoQuality)
         }
+    }
+
+    @Test
+    fun savesAndRestoresACustomVideoFormat() {
+        val expected = CameraSettings(
+            videoQuality = VideoQuality.LANDSCAPE,
+            customVideoFormat = CustomVideoFormat(VideoAspectRatio.LANDSCAPE, 1440, 60),
+        )
+
+        preferences.save(expected)
+
+        assertEquals(expected, CameraSettingsPreferences(context).load())
+    }
+
+    @Test
+    fun clearingACustomVideoFormatFallsBackToThePreset() {
+        preferences.save(
+            CameraSettings(
+                videoQuality = VideoQuality.LANDSCAPE,
+                customVideoFormat = CustomVideoFormat(VideoAspectRatio.LANDSCAPE, 1440, 60),
+            ),
+        )
+
+        preferences.save(CameraSettings(videoQuality = VideoQuality.LANDSCAPE, customVideoFormat = null))
+
+        assertNull(CameraSettingsPreferences(context).load().customVideoFormat)
     }
 
     @Test

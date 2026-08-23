@@ -1,4 +1,6 @@
 <resources>
     <item name="presetNameInput" type="id" />
     <item name="customDurationInput" type="id" />
+    <item name="customResolutionInput" type="id" />
+    <item name="customFrameRateInput" type="id" />
 </resources>

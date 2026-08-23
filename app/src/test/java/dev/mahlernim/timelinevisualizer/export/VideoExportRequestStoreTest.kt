@@ -8,9 +8,11 @@ import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
 import dev.mahlernim.timelinevisualizer.render.RenderText
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
+import dev.mahlernim.timelinevisualizer.render.CustomVideoFormat
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
 import dev.mahlernim.timelinevisualizer.render.LocalFraming
 import dev.mahlernim.timelinevisualizer.render.TripDetection
+import dev.mahlernim.timelinevisualizer.render.VideoAspectRatio
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 import java.time.Instant
 import java.time.YearMonth
@@ -106,6 +108,56 @@ class VideoExportRequestStoreTest {
 
             assertEquals(format, store.load()!!.cameraSettings.videoQuality)
         }
+    }
+
+    @Test
+    fun restoresCustomVideoFormatPendingExports() {
+        val request = VideoExportRequest(
+            outputUri = "content://documents/custom.mp4",
+            journey = Journey.from(emptyList(), 2026),
+            title = "Custom format",
+            durationSeconds = 30,
+            cameraSettings = CameraSettings(
+                videoQuality = VideoQuality.LANDSCAPE,
+                customVideoFormat = CustomVideoFormat(VideoAspectRatio.LANDSCAPE, 1440, 60),
+            ),
+        )
+
+        store.save(request)
+
+        assertEquals(request.cameraSettings, store.load()!!.cameraSettings)
+    }
+
+    @Test
+    fun readsVersionEightPendingExportsWithoutACustomFormat() {
+        val requestFile = File(context.filesDir, "pending-video-export.bin")
+        DataOutputStream(requestFile.outputStream().buffered()).use { output ->
+            output.writeInt(8)
+            output.writeUTF("content://documents/version-eight.mp4")
+            output.writeUTF("Version eight")
+            output.writeInt(30)
+            output.writeInt(2026)
+            output.writeInt(1)
+            output.writeInt(2026)
+            output.writeInt(12)
+            output.writeUTF("en-US")
+            output.writeUTF("My Timeline")
+            output.writeUTF("MMMM yyyy")
+            output.writeUTF("km")
+            output.writeUTF("attribution")
+            output.writeDouble(1.0)
+            output.writeUTF(CameraMovement.STEADY.name)
+            output.writeUTF(LongTripCompression.BALANCED.name)
+            output.writeUTF(VideoQuality.LANDSCAPE.name)
+            output.writeUTF(TripDetection.BALANCED.name)
+            output.writeUTF(LocalFraming.BALANCED.name)
+            output.writeInt(0)
+        }
+
+        val restored = store.load()!!
+
+        assertEquals(VideoQuality.LANDSCAPE, restored.cameraSettings.videoQuality)
+        assertNull(restored.cameraSettings.customVideoFormat)
     }
 
     @Test

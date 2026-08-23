@@ -1,8 +1,12 @@
 package dev.mahlernim.timelinevisualizer.export
 
 import android.media.MediaCodecInfo
+import dev.mahlernim.timelinevisualizer.render.CustomVideoFormat
+import dev.mahlernim.timelinevisualizer.render.VideoAspectRatio
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
+import dev.mahlernim.timelinevisualizer.render.VideoResolution
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -12,8 +16,11 @@ class VideoEncoderSupportTest {
     fun acceptsSquarePortraitAndLandscapeWhenTheEncoderSupportsThem() {
         val profile = profile()
 
-        VideoQuality.values().forEach { format ->
-            assertTrue(format.name, VideoEncoderSupport.select(format, listOf(profile)) is EncoderSupport.Supported)
+        VideoQuality.values().forEach { quality ->
+            assertTrue(
+                quality.name,
+                VideoEncoderSupport.select(quality.format, listOf(profile)) is EncoderSupport.Supported,
+            )
         }
     }
 
@@ -21,7 +28,7 @@ class VideoEncoderSupportTest {
     fun reportsUnsupportedFrameRateWithoutSubstitution() {
         val profile = profile(maxFrameRate = 24.0)
 
-        val result = VideoEncoderSupport.select(VideoQuality.PORTRAIT, listOf(profile))
+        val result = VideoEncoderSupport.select(VideoQuality.PORTRAIT.format, listOf(profile))
 
         assertEquals(
             EncoderSupport.Unsupported(EncoderSupport.Reason.FRAME_RATE),
@@ -32,15 +39,39 @@ class VideoEncoderSupportTest {
     @Test
     fun rejectsMissingColorLayoutAndEmptyEncoderLists() {
         val missingColor = VideoEncoderSupport.select(
-            VideoQuality.LANDSCAPE,
+            VideoQuality.LANDSCAPE.format,
             listOf(profile(colorFormats = emptySet())),
         )
 
         assertEquals(EncoderSupport.Unsupported(EncoderSupport.Reason.COLOR_FORMAT), missingColor)
         assertEquals(
             EncoderSupport.Unsupported(EncoderSupport.Reason.NO_ENCODER),
-            VideoEncoderSupport.select(VideoQuality.STANDARD, emptyList()),
+            VideoEncoderSupport.select(VideoQuality.STANDARD.format, emptyList()),
         )
+    }
+
+    @Test
+    fun acceptsCustomFormatShapedLikeAPresetWhenTheEncoderSupportsIt() {
+        val profile = profile()
+        val custom = CustomVideoFormat(VideoAspectRatio.LANDSCAPE, VideoResolution.HIGH.shortEdge, 30).format
+
+        assertTrue(VideoEncoderSupport.select(custom, listOf(profile)) is EncoderSupport.Supported)
+    }
+
+    @Test
+    fun presetsAreNeverRisky() {
+        VideoQuality.values().forEach { quality ->
+            assertFalse(quality.name, VideoEncoderSupport.isRisky(quality.format))
+        }
+    }
+
+    @Test
+    fun formatsBeyondTheLargestPresetAreRisky() {
+        val higherResolution = CustomVideoFormat(VideoAspectRatio.LANDSCAPE, CustomVideoFormat.MAX_SHORT_EDGE, 30)
+        val higherFrameRate = CustomVideoFormat(VideoAspectRatio.SQUARE, VideoResolution.STANDARD.shortEdge, 60)
+
+        assertTrue(VideoEncoderSupport.isRisky(higherResolution.format))
+        assertTrue(VideoEncoderSupport.isRisky(higherFrameRate.format))
     }
 
     private fun profile(

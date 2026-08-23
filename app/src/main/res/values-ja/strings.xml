@@ -235,6 +235,15 @@
     <string name="reset_video_defaults">動画設定をリセット</string><string name="video_defaults_restored">動画設定をリセットしました</string>
     <string name="export_quality">書き出し品質</string><string name="export_quality_summary">高解像度ほどファイルが大きくなり、端末によっては利用できません。</string>
     <string name="resolution">解像度</string><string name="resolution_480">480p</string><string name="resolution_720">720p</string><string name="resolution_1080">1080p</string>
+    <string name="resolution_custom">カスタム…</string>
+    <string name="custom_resolution_title">カスタム動画フォーマット</string>
+    <string name="custom_resolution_hint">ピクセル数(短辺)</string>
+    <string name="custom_resolution_range">480から2160までの整数を入力してください。</string>
+    <string name="custom_frame_rate_hint">フレームレート</string>
+    <string name="custom_frame_rate_range">15から60までの整数を入力してください。</string>
+    <string name="format_risky_warning">この解像度やフレームレートは、この端末では処理が遅くなったり、メモリを多く使用したりする可能性があります。</string>
+    <string name="risky_format_dialog_title">この形式は処理が遅くなる可能性があります</string>
+    <string name="risky_format_dialog_message">この解像度やフレームレートはこの端末でテストされていません。作成に時間がかかったり、途中で失敗したりする場合があります。</string>
     <string name="regional_preferences">地域設定</string>
     <string name="distance_unit_setting">距離の単位</string>
     <string name="distance_unit_automatic">自動</string>

@@ -228,7 +228,7 @@
     <string name="aspect_ratio">宽高比</string><string name="aspect_square">方形</string><string name="aspect_portrait">竖屏</string><string name="aspect_landscape">横屏</string>
     <string name="reset_video_defaults">重置视频默认值</string><string name="video_defaults_restored">已重置视频默认值</string>
     <string name="export_quality">导出质量</string><string name="export_quality_summary">分辨率越高，文件越大，并非所有设备都支持。</string>
-    <string name="resolution">分辨率</string><string name="resolution_480">480p</string><string name="resolution_720">720p</string><string name="resolution_1080">1080p</string><string name="regional_preferences">区域偏好</string>
+    <string name="resolution">分辨率</string><string name="resolution_480">480p</string><string name="resolution_720">720p</string><string name="resolution_1080">1080p</string><string name="resolution_custom">自定义…</string><string name="custom_resolution_title">自定义视频格式</string><string name="custom_resolution_hint">像素(短边)</string><string name="custom_resolution_range">请输入480到2160之间的整数。</string><string name="custom_frame_rate_hint">帧率</string><string name="custom_frame_rate_range">请输入15到60之间的整数。</string><string name="format_risky_warning">此分辨率或帧率在该设备上可能渲染缓慢或占用大量内存。</string><string name="risky_format_dialog_title">此格式可能较慢</string><string name="risky_format_dialog_message">此分辨率或帧率尚未在该设备上测试过。创建可能需要更长时间或中途失败。</string><string name="regional_preferences">区域偏好</string>
     <string name="distance_unit_setting">距离单位</string>
     <string name="distance_unit_automatic">自动</string>
     <string name="distance_unit_kilometers">公里</string>

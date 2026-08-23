@@ -253,6 +253,15 @@
     <string name="resolution_480">480p</string>
     <string name="resolution_720">720p</string>
     <string name="resolution_1080">1080p</string>
+    <string name="resolution_custom">Custom…</string>
+    <string name="custom_resolution_title">Custom video format</string>
+    <string name="custom_resolution_hint">Pixels (short edge)</string>
+    <string name="custom_resolution_range">Enter a whole number from 480 through 2160.</string>
+    <string name="custom_frame_rate_hint">Frame rate</string>
+    <string name="custom_frame_rate_range">Enter a whole number from 15 through 60.</string>
+    <string name="format_risky_warning">This resolution or frame rate may render slowly or use a lot of memory on this device.</string>
+    <string name="risky_format_dialog_title">This format may be slow</string>
+    <string name="risky_format_dialog_message">This resolution or frame rate has not been tested on this device. Export may take longer or fail partway through.</string>
     <string name="regional_preferences">Regional preferences</string>
     <string name="distance_unit_setting">Distance unit</string>
     <string name="distance_unit_automatic">Automatic</string>

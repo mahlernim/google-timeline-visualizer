@@ -6,6 +6,7 @@ import android.media.MediaCodecList
 import android.media.MediaFormat
 import android.os.Build
 import dev.mahlernim.timelinevisualizer.R
+import dev.mahlernim.timelinevisualizer.render.VideoFormat
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 
 internal data class EncoderProfile(
@@ -28,12 +29,12 @@ internal sealed interface EncoderSupport {
     enum class Reason { NO_ENCODER, SIZE, ALIGNMENT, FRAME_RATE, BITRATE, COLOR_FORMAT }
 }
 
-internal fun EncoderSupport.Reason.describe(context: Context, format: VideoQuality): String =
+internal fun EncoderSupport.Reason.describe(context: Context, format: VideoFormat): String =
     context.getString(R.string.format_not_supported, format.width, format.height)
 
 internal class UnsupportedVideoFormatException(
     val reason: EncoderSupport.Reason,
-    val format: VideoQuality,
+    val format: VideoFormat,
 ) : RuntimeException(
     "No H.264 encoder accepts ${format.width}x${format.height}@${format.frameRate} ($reason)",
 )
@@ -46,9 +47,18 @@ internal object VideoEncoderSupport {
         MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar,
     )
 
-    fun evaluate(format: VideoQuality): EncoderSupport = select(format, deviceProfiles())
+    fun evaluate(format: VideoFormat): EncoderSupport = select(format, deviceProfiles())
 
-    fun select(format: VideoQuality, profiles: List<EncoderProfile>): EncoderSupport {
+    // A custom format outside the envelope of the largest shipped preset hasn't been exercised
+    // by VideoFormatDeviceTest on real hardware, so treat it as a "may be slow or crash" risk
+    // even when the device claims to support it.
+    fun isRisky(format: VideoFormat): Boolean {
+        val largestPreset = VideoQuality.LANDSCAPE
+        return format.width.coerceAtLeast(format.height) > largestPreset.width.coerceAtLeast(largestPreset.height) ||
+            format.frameRate > largestPreset.frameRate
+    }
+
+    fun select(format: VideoFormat, profiles: List<EncoderProfile>): EncoderSupport {
         if (profiles.isEmpty()) return EncoderSupport.Unsupported(EncoderSupport.Reason.NO_ENCODER)
         var closest = EncoderSupport.Reason.NO_ENCODER
         profiles.sortedByDescending { it.hardwareAccelerated }.forEach { profile ->
@@ -67,7 +77,7 @@ internal object VideoEncoderSupport {
             .getOrDefault(emptyList())
             .mapNotNull(::toProfile)
 
-    private fun evaluate(format: VideoQuality, profile: EncoderProfile): EncoderSupport {
+    private fun evaluate(format: VideoFormat, profile: EncoderProfile): EncoderSupport {
         if (format.width !in profile.widthRange || format.height !in profile.heightRange) {
             return EncoderSupport.Unsupported(EncoderSupport.Reason.SIZE)
         }

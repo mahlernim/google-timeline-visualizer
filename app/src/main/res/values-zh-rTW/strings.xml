@@ -228,7 +228,7 @@
     <string name="aspect_ratio">長寬比</string><string name="aspect_square">正方形</string><string name="aspect_portrait">直向</string><string name="aspect_landscape">橫向</string>
     <string name="reset_video_defaults">重設影片預設值</string><string name="video_defaults_restored">已重設影片預設值</string>
     <string name="export_quality">匯出品質</string><string name="export_quality_summary">解析度越高，檔案越大，且並非所有裝置都支援。</string>
-    <string name="resolution">解析度</string><string name="resolution_480">480p</string><string name="resolution_720">720p</string><string name="resolution_1080">1080p</string><string name="regional_preferences">地區偏好</string>
+    <string name="resolution">解析度</string><string name="resolution_480">480p</string><string name="resolution_720">720p</string><string name="resolution_1080">1080p</string><string name="resolution_custom">自訂…</string><string name="custom_resolution_title">自訂影片格式</string><string name="custom_resolution_hint">像素(短邊)</string><string name="custom_resolution_range">請輸入480到2160之間的整數。</string><string name="custom_frame_rate_hint">影格速率</string><string name="custom_frame_rate_range">請輸入15到60之間的整數。</string><string name="format_risky_warning">此解析度或影格速率在此裝置上可能會處理緩慢或使用大量記憶體。</string><string name="risky_format_dialog_title">此格式可能較慢</string><string name="risky_format_dialog_message">此解析度或影格速率尚未在此裝置上測試過。建立可能需要更長時間或中途失敗。</string><string name="regional_preferences">地區偏好</string>
     <string name="distance_unit_setting">距離單位</string>
     <string name="distance_unit_automatic">自動</string>
     <string name="distance_unit_kilometers">公里</string>
