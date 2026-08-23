@@ -288,4 +288,32 @@
     <string name="preset_link_unsupported_message">Ce lien est non valide, incomplet ou utilise des réglages non compatibles. Rien n’a été modifié.</string>
     <string name="preset_limit_reached">Supprimez un préréglage avant d’en enregistrer un autre.</string>
     <string name="preset_value_format">%1$s · %2$s</string>
+    <string name="recommend_trips">Détecter les voyages</string>
+    <string name="customize_settings">Paramètres avancés</string>
+    <string name="trip_defaults">Réglages voyage</string>
+    <string name="recap_defaults">Réglages récapitulatif</string>
+    <string name="trip_to_destination">Voyage à %1$s</string>
+    <string name="suggested_trip_title">Voyage suggéré</string>
+    <string name="create_step_details_label">Détails</string>
+    <string name="create_step_style_label">Style</string>
+    <string name="create_step_create_label">Créer</string>
+    <string name="step_status_completed">terminée</string>
+    <string name="step_status_current">actuelle</string>
+    <string name="step_status_upcoming">à venir</string>
+    <string name="step_accessibility">Étape %1$d sur %2$d, %3$s, %4$s</string>
+    <string name="advanced_video_settings">Paramètres vidéo avancés</string>
+    <string name="advanced_video_settings_summary">Ces choix s’appliquent uniquement au brouillon actuel.</string>
+    <string name="apply_to_video">Appliquer à cette vidéo</string>
+    <string name="timeline_file_name_size">%1$s · %2$s</string>
+    <string name="backup_restore_timeline">Sauvegarder et restaurer Timeline</string>
+    <string name="raw_data_retention_explanation">Seules les données les plus récentes, généralement jusqu’à 30 jours, restent sous forme brute avant que l’activité plus ancienne soit représentée au format Timeline.</string>
+    <string name="raw_data_available_range">Données brutes disponibles du %1$s au %2$s</string>
+    <string name="raw_data_range_conflict">Ce projet utilise des dates hors des données brutes disponibles. Choisissez une plage valide.</string>
+    <string name="use_available_range">Utiliser la plage disponible</string>
+    <string name="save_preset_choice_title">Enregistrer les modifications</string>
+    <string name="overwrite_preset">Écraser %1$s</string>
+    <string name="save_as_new_preset">Enregistrer comme nouveau</string>
+    <string name="preset_overwritten">Préréglage mis à jour</string>
+    <string name="view_in_library">Voir dans la bibliothèque</string>
+    <plurals name="recent_day_recap"><item quantity="one">Récapitulatif du dernier %d jour</item><item quantity="other">Récapitulatif des %d derniers jours</item></plurals>
 </resources>

@@ -2,6 +2,7 @@ package dev.mahlernim.timelinevisualizer.presets
 
 import android.content.Context
 import androidx.core.content.edit
+import dev.mahlernim.timelinevisualizer.R
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.LocalFraming
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
@@ -13,10 +14,18 @@ import org.json.JSONObject
 import java.util.Locale
 import java.util.UUID
 
-class PresetRepository(context: Context) {
+class PresetRepository(private val context: Context) {
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
-    fun presets(): List<VideoPreset> = BUILT_IN_PRESETS + userPresets()
+    fun presets(): List<VideoPreset> = localizedBuiltIns() + userPresets()
+
+    private fun localizedBuiltIns(): List<VideoPreset> = BUILT_IN_PRESETS.map { preset ->
+        preset.copy(
+            name = context.getString(
+                if (preset.id == TRIP_CLOSE_UP_ID) R.string.trip_defaults else R.string.recap_defaults,
+            ),
+        )
+    }
 
     private fun userPresets(): List<VideoPreset> {
         val raw = preferences.getString(KEY_PRESETS, null) ?: return emptyList()
@@ -68,6 +77,16 @@ class PresetRepository(context: Context) {
         return renamed
     }
 
+    fun replace(id: String, values: PresetValues): VideoPreset? {
+        if (isBuiltIn(id)) return null
+        var replaced: VideoPreset? = null
+        val updated = userPresets().map { preset ->
+            if (preset.id == id) preset.copy(values = values).also { replaced = it } else preset
+        }
+        if (replaced != null) write(updated)
+        return replaced
+    }
+
     fun delete(id: String): Boolean {
         if (isBuiltIn(id)) return false
         val current = userPresets()
@@ -80,7 +99,7 @@ class PresetRepository(context: Context) {
 
     fun exactMatch(values: PresetValues): VideoPreset? = presets().firstOrNull { it.values == values }
 
-    fun isBuiltIn(id: String): Boolean = BUILT_IN_PRESETS.any { it.id == id }
+    fun isBuiltIn(id: String): Boolean = id == TRIP_CLOSE_UP_ID || id == RECAP_PORTRAIT_ID
 
     private fun write(presets: List<VideoPreset>) {
         val array = JSONArray()
@@ -138,9 +157,9 @@ class PresetRepository(context: Context) {
         val BUILT_IN_PRESETS = listOf(
             VideoPreset(
                 id = TRIP_CLOSE_UP_ID,
-                name = "Trip Close-up",
+                name = "Trip defaults",
                 values = PresetValues(
-                    aspectRatio = VideoAspectRatio.SQUARE,
+                    aspectRatio = VideoAspectRatio.PORTRAIT,
                     cameraMovement = CameraMovement.CLOSE_UP,
                     tripDetection = TripDetection.SENSITIVE,
                     localFraming = LocalFraming.CLOSE,
@@ -151,7 +170,7 @@ class PresetRepository(context: Context) {
             ),
             VideoPreset(
                 id = RECAP_PORTRAIT_ID,
-                name = "Recap Portrait",
+                name = "Recap defaults",
                 values = PresetValues(
                     aspectRatio = VideoAspectRatio.PORTRAIT,
                     cameraMovement = CameraMovement.STEADY,

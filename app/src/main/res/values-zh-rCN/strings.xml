@@ -279,4 +279,32 @@
     <string name="preset_link_unsupported_message">链接无效、不完整或使用了此应用不支持的设置。未更改任何设置。</string>
     <string name="preset_limit_reached">请先删除一个预设再保存新预设。</string>
     <string name="preset_value_format">%1$s · %2$s</string>
+    <string name="recommend_trips">检测旅行</string>
+    <string name="customize_settings">高级设置</string>
+    <string name="trip_defaults">旅行默认设置</string>
+    <string name="recap_defaults">回顾默认设置</string>
+    <string name="trip_to_destination">前往%1$s的旅行</string>
+    <string name="suggested_trip_title">建议的旅行</string>
+    <string name="create_step_details_label">详情</string>
+    <string name="create_step_style_label">样式</string>
+    <string name="create_step_create_label">创建</string>
+    <string name="step_status_completed">已完成</string>
+    <string name="step_status_current">当前</string>
+    <string name="step_status_upcoming">即将进行</string>
+    <string name="step_accessibility">第%1$d步，共%2$d步，%3$s，%4$s</string>
+    <string name="advanced_video_settings">高级视频设置</string>
+    <string name="advanced_video_settings_summary">这些选项仅应用于当前视频草稿。</string>
+    <string name="apply_to_video">应用到此视频</string>
+    <string name="timeline_file_name_size">%1$s · %2$s</string>
+    <string name="backup_restore_timeline">备份和恢复时间轴</string>
+    <string name="raw_data_retention_explanation">通常只有最近最多30天保留为原始位置数据，更早的活动会以时间轴格式表示。</string>
+    <string name="raw_data_available_range">原始数据可用范围：%1$s至%2$s</string>
+    <string name="raw_data_range_conflict">此项目使用的日期超出当前原始数据范围。请选择有效范围。</string>
+    <string name="use_available_range">使用可用范围</string>
+    <string name="save_preset_choice_title">保存预设更改</string>
+    <string name="overwrite_preset">覆盖%1$s</string>
+    <string name="save_as_new_preset">另存为新预设</string>
+    <string name="preset_overwritten">预设已更新</string>
+    <string name="view_in_library">在媒体库中查看</string>
+    <plurals name="recent_day_recap"><item quantity="other">最近%d天回顾</item></plurals>
 </resources>

@@ -1,0 +1,28 @@
+{
+  "semanticSegments": [
+    {
+      "startTime": "2026-01-01T00:00:00Z",
+      "endTime": "2026-01-03T00:00:00Z",
+      "activity": {
+        "start": "geo:37.5665,126.9780",
+        "end": "geo:37.5700,126.9800"
+      }
+    }
+  ],
+  "rawSignals": [
+    {
+      "position": {
+        "LatLng": "geo:37.5000,127.0000",
+        "timestamp": "2026-02-01T00:00:00Z",
+        "accuracyMeters": 10
+      }
+    },
+    {
+      "position": {
+        "LatLng": "geo:37.5100,127.0100",
+        "timestamp": "2026-02-05T00:10:00Z",
+        "accuracyMeters": 10
+      }
+    }
+  ]
+}

@@ -352,7 +352,7 @@
     <string name="previous_month_recap" translatable="false">Previous month recap</string>
     <string name="year_recap_title" translatable="false">%1$d recap</string>
     <string name="continue_label" translatable="false">Continue</string>
-    <string name="customize_settings" translatable="false">Customize settings</string>
+    <string name="customize_settings">Advanced settings</string>
     <string name="create_step_project" translatable="false">Step 1 of 3 · Trip or recap</string>
     <string name="create_step_style" translatable="false">Step 2 of 3 · Video style</string>
     <string name="create_step_preview" translatable="false">Step 3 of 3 · Preview and create</string>
@@ -382,7 +382,7 @@
     <string name="create_trip_manually" translatable="false">Create trip manually</string>
     <string name="create_recap" translatable="false">Create recap</string>
     <string name="detection_range" translatable="false">Detection range</string>
-    <string name="recommend_trips" translatable="false">Recommend trips</string>
+    <string name="recommend_trips">Detect trips</string>
     <string name="detecting_trips" translatable="false">Finding trips…</string>
     <string name="custom_range" translatable="false">Custom range</string>
     <string name="trip_suggestion_details" translatable="false">%1$s · %2$d days · Includes travel</string>
@@ -439,5 +439,34 @@
     <string name="month_recap_cross_year_title" translatable="false">%1$s %2$d–%3$s %4$d recap</string>
     <string name="custom_recap_title" translatable="false">%1$s–%2$s recap</string>
     <string name="raw_data_title" translatable="false">Raw data · %1$s–%2$s</string>
+    <string name="trip_defaults">Trip defaults</string>
+    <string name="recap_defaults">Recap defaults</string>
+    <string name="trip_to_destination">Trip to %1$s</string>
+    <string name="suggested_trip_title">Suggested trip</string>
+    <string name="create_step_details_label">Details</string>
+    <string name="create_step_style_label">Style</string>
+    <string name="create_step_create_label">Create</string>
+    <string name="step_status_completed">completed</string>
+    <string name="step_status_current">current</string>
+    <string name="step_status_upcoming">upcoming</string>
+    <string name="step_accessibility">Step %1$d of %2$d, %3$s, %4$s</string>
+    <string name="advanced_video_settings">Advanced video settings</string>
+    <string name="advanced_video_settings_summary">These choices apply only to the current video draft.</string>
+    <string name="apply_to_video">Apply to this video</string>
+    <string name="timeline_file_name_size">%1$s · %2$s</string>
+    <string name="backup_restore_timeline">Backup and restore Timeline</string>
+    <string name="raw_data_retention_explanation">Only the most recent, usually up to 30 days, remain as raw location data before older activity is represented in Timeline format.</string>
+    <string name="raw_data_available_range">Raw data available from %1$s to %2$s</string>
+    <string name="raw_data_range_conflict">This project uses dates outside the raw data currently available. Choose a valid range to continue.</string>
+    <string name="use_available_range">Use available range</string>
+    <string name="save_preset_choice_title">Save preset changes</string>
+    <string name="overwrite_preset">Overwrite %1$s</string>
+    <string name="save_as_new_preset">Save as new</string>
+    <string name="preset_overwritten">Preset updated</string>
+    <string name="view_in_library">View in Library</string>
+    <plurals name="recent_day_recap">
+        <item quantity="one">Recent %d-day recap</item>
+        <item quantity="other">Recent %d-day recap</item>
+    </plurals>
     <string name="project_changes_saved" translatable="false">Changes saved</string>
 </resources>

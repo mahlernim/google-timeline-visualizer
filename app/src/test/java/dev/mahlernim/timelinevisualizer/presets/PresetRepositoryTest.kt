@@ -3,6 +3,7 @@ package dev.mahlernim.timelinevisualizer.presets
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
+import dev.mahlernim.timelinevisualizer.render.VideoAspectRatio
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -64,9 +65,24 @@ class PresetRepositoryTest {
         val trip = repository.presets().first { it.id == PresetRepository.TRIP_CLOSE_UP_ID }
 
         assertTrue(trip.builtIn)
+        assertEquals("Trip defaults", trip.name)
+        assertEquals(VideoAspectRatio.PORTRAIT, trip.values.aspectRatio)
         assertNull(repository.rename(trip.id, "Renamed"))
+        assertNull(repository.replace(trip.id, values))
         assertTrue(!repository.delete(trip.id))
         assertEquals(trip, repository.exactMatch(trip.values))
+    }
+
+    @Test
+    fun replacingUserPresetPreservesIdentityAndName() {
+        val saved = repository.add("My trip", values)
+        val changed = values.copy(aspectRatio = VideoAspectRatio.PORTRAIT)
+
+        val replaced = repository.replace(saved.id, changed)
+
+        assertEquals(saved.id, replaced?.id)
+        assertEquals(saved.name, replaced?.name)
+        assertEquals(changed, PresetRepository(context).presets().first { it.id == saved.id }.values)
     }
 
     @Test

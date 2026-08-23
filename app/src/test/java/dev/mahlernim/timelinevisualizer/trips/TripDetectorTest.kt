@@ -62,9 +62,10 @@ class TripDetectorTest {
             DestinationNameResolver { _, _ -> "Tokyo, Japan" },
         ).single()
 
-        assertEquals("Tokyo, Japan", suggestion.title)
+        assertEquals("Tokyo, Japan", suggestion.destinationName)
         assertEquals("2026-01-01", suggestion.startDate.toString())
         assertEquals("2026-01-04", suggestion.endDate.toString())
+        assertEquals(4, suggestion.usablePointCount)
     }
 
     @Test
@@ -112,6 +113,28 @@ class TripDetectorTest {
         )
 
         assertEquals(1, suggestions.size)
+    }
+
+    @Test
+    fun ranksStrongMatchesByUsablePointsBeforeRecency() {
+        val points = buildList {
+            add(point("2026-01-01", 37.56, 126.97))
+            add(point("2026-01-02", 37.56, 126.97))
+            repeat(4) { add(point("2026-01-03", 35.68 + it * 0.001, 139.76)) }
+            repeat(4) { add(point("2026-01-04", 35.68 + it * 0.001, 139.76)) }
+            add(point("2026-01-05", 37.56, 126.97))
+            add(point("2026-01-06", 37.56, 126.97))
+            add(point("2026-01-07", 48.85, 2.35))
+            add(point("2026-01-08", 48.86, 2.34))
+            add(point("2026-01-09", 37.56, 126.97))
+            add(point("2026-01-10", 37.56, 126.97))
+        }
+
+        val suggestions = TripDetector.detect(Timeline(points), ZoneOffset.UTC)
+
+        assertEquals(2, suggestions.size)
+        assertTrue(suggestions[0].usablePointCount > suggestions[1].usablePointCount)
+        assertTrue(suggestions[0].startDate.isBefore(suggestions[1].startDate))
     }
 
     private fun point(date: String, latitude: Double, longitude: Double) = GeoPoint(

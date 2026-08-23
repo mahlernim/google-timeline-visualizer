@@ -66,6 +66,7 @@ class TimelineSourceStoreTest {
             semanticEnd = LocalDate.parse("2026-08-23"),
             rawStart = LocalDate.parse("2026-08-01"),
             rawEnd = LocalDate.parse("2026-08-23"),
+            fileSizeBytes = 58L * 1024L * 1024L,
         )
         store.replace(Uri.parse("content://example/timeline.json"))
         store.updateMetadata(metadata)
@@ -74,5 +75,22 @@ class TimelineSourceStoreTest {
 
         store.clear()
         assertNull(store.metadata())
+    }
+
+    @Test
+    fun olderMetadataWithoutFileSizeRemainsReadable() {
+        val metadata = TimelineSourceMetadata(
+            fileName = "Timeline.json",
+            importedAtMillis = 1234L,
+            semanticStart = null,
+            semanticEnd = null,
+            rawStart = null,
+            rawEnd = null,
+        )
+
+        store.updateMetadata(metadata)
+
+        assertEquals(metadata, store.metadata())
+        assertNull(store.metadata()?.fileSizeBytes)
     }
 }

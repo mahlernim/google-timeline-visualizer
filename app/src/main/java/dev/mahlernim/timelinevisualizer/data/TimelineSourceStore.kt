@@ -12,6 +12,7 @@ data class TimelineSourceMetadata(
     val semanticEnd: LocalDate?,
     val rawStart: LocalDate?,
     val rawEnd: LocalDate?,
+    val fileSizeBytes: Long? = null,
 )
 
 class TimelineSourceStore(context: Context) {
@@ -33,6 +34,7 @@ class TimelineSourceStore(context: Context) {
             semanticEnd = preferences.localDate(KEY_SEMANTIC_END),
             rawStart = preferences.localDate(KEY_RAW_START),
             rawEnd = preferences.localDate(KEY_RAW_END),
+            fileSizeBytes = preferences.getLong(KEY_FILE_SIZE, -1L).takeIf { it >= 0L },
         )
     }
 
@@ -44,6 +46,8 @@ class TimelineSourceStore(context: Context) {
             putOptionalDate(KEY_SEMANTIC_END, metadata.semanticEnd)
             putOptionalDate(KEY_RAW_START, metadata.rawStart)
             putOptionalDate(KEY_RAW_END, metadata.rawEnd)
+            if (metadata.fileSizeBytes == null) remove(KEY_FILE_SIZE)
+            else putLong(KEY_FILE_SIZE, metadata.fileSizeBytes)
         }
     }
 
@@ -71,6 +75,7 @@ class TimelineSourceStore(context: Context) {
                 remove(KEY_SEMANTIC_END)
                 remove(KEY_RAW_START)
                 remove(KEY_RAW_END)
+                remove(KEY_FILE_SIZE)
             }
         }.commit()
         return interruptedRemembered
@@ -87,6 +92,7 @@ class TimelineSourceStore(context: Context) {
             remove(KEY_SEMANTIC_END)
             remove(KEY_RAW_START)
             remove(KEY_RAW_END)
+            remove(KEY_FILE_SIZE)
         }
         return previous
     }
@@ -115,5 +121,6 @@ class TimelineSourceStore(context: Context) {
         private const val KEY_SEMANTIC_END = "semantic_end_v1"
         private const val KEY_RAW_START = "raw_start_v1"
         private const val KEY_RAW_END = "raw_end_v1"
+        private const val KEY_FILE_SIZE = "file_size_v2"
     }
 }

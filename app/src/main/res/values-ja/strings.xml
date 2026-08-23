@@ -286,4 +286,32 @@
     <string name="preset_link_unsupported_message">リンクが無効、不完全、または未対応の設定を使用しています。設定は変更されていません。</string>
     <string name="preset_limit_reached">別のプリセットを保存する前に既存のプリセットを削除してください。</string>
     <string name="preset_value_format">%1$s · %2$s</string>
+    <string name="recommend_trips">旅行を検出</string>
+    <string name="customize_settings">詳細設定</string>
+    <string name="trip_defaults">旅行のデフォルト</string>
+    <string name="recap_defaults">まとめのデフォルト</string>
+    <string name="trip_to_destination">%1$sへの旅行</string>
+    <string name="suggested_trip_title">旅行候補</string>
+    <string name="create_step_details_label">詳細</string>
+    <string name="create_step_style_label">スタイル</string>
+    <string name="create_step_create_label">作成</string>
+    <string name="step_status_completed">完了</string>
+    <string name="step_status_current">現在</string>
+    <string name="step_status_upcoming">次</string>
+    <string name="step_accessibility">%2$dステップ中%1$d、%3$s、%4$s</string>
+    <string name="advanced_video_settings">動画の詳細設定</string>
+    <string name="advanced_video_settings_summary">この選択は現在の動画下書きにのみ適用されます。</string>
+    <string name="apply_to_video">この動画に適用</string>
+    <string name="timeline_file_name_size">%1$s · %2$s</string>
+    <string name="backup_restore_timeline">タイムラインのバックアップと復元</string>
+    <string name="raw_data_retention_explanation">通常、直近最大30日分だけが未処理の位置情報として残り、それ以前の活動はタイムライン形式で表されます。</string>
+    <string name="raw_data_available_range">未処理データの期間 %1$s〜%2$s</string>
+    <string name="raw_data_range_conflict">このプロジェクトの日付は現在利用できる未処理データの範囲外です。有効な期間を選択してください。</string>
+    <string name="use_available_range">利用可能な期間を使用</string>
+    <string name="save_preset_choice_title">プリセットの変更を保存</string>
+    <string name="overwrite_preset">%1$sを上書き</string>
+    <string name="save_as_new_preset">新規保存</string>
+    <string name="preset_overwritten">プリセットを更新しました</string>
+    <string name="view_in_library">ライブラリで表示</string>
+    <plurals name="recent_day_recap"><item quantity="other">直近%d日間のまとめ</item></plurals>
 </resources>

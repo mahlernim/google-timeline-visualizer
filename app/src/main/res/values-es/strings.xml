@@ -288,4 +288,32 @@
     <string name="preset_link_unsupported_message">El enlace no es válido, está incompleto o usa ajustes no compatibles. No se cambió nada.</string>
     <string name="preset_limit_reached">Elimina un ajuste antes de guardar otro.</string>
     <string name="preset_value_format">%1$s · %2$s</string>
+    <string name="recommend_trips">Detectar viajes</string>
+    <string name="customize_settings">Ajustes avanzados</string>
+    <string name="trip_defaults">Valores de viaje</string>
+    <string name="recap_defaults">Valores de resumen</string>
+    <string name="trip_to_destination">Viaje a %1$s</string>
+    <string name="suggested_trip_title">Viaje sugerido</string>
+    <string name="create_step_details_label">Detalles</string>
+    <string name="create_step_style_label">Estilo</string>
+    <string name="create_step_create_label">Crear</string>
+    <string name="step_status_completed">completado</string>
+    <string name="step_status_current">actual</string>
+    <string name="step_status_upcoming">próximo</string>
+    <string name="step_accessibility">Paso %1$d de %2$d, %3$s, %4$s</string>
+    <string name="advanced_video_settings">Ajustes avanzados de vídeo</string>
+    <string name="advanced_video_settings_summary">Estas opciones solo se aplican al borrador actual.</string>
+    <string name="apply_to_video">Aplicar a este vídeo</string>
+    <string name="timeline_file_name_size">%1$s · %2$s</string>
+    <string name="backup_restore_timeline">Copia de seguridad y restauración de Timeline</string>
+    <string name="raw_data_retention_explanation">Solo los datos más recientes, normalmente hasta 30 días, permanecen como ubicaciones sin procesar antes de que la actividad anterior se represente en formato Timeline.</string>
+    <string name="raw_data_available_range">Datos sin procesar disponibles del %1$s al %2$s</string>
+    <string name="raw_data_range_conflict">Este proyecto usa fechas fuera de los datos sin procesar disponibles. Elige un intervalo válido.</string>
+    <string name="use_available_range">Usar intervalo disponible</string>
+    <string name="save_preset_choice_title">Guardar cambios del ajuste</string>
+    <string name="overwrite_preset">Sobrescribir %1$s</string>
+    <string name="save_as_new_preset">Guardar como nuevo</string>
+    <string name="preset_overwritten">Ajuste actualizado</string>
+    <string name="view_in_library">Ver en la biblioteca</string>
+    <plurals name="recent_day_recap"><item quantity="one">Resumen del último %d día</item><item quantity="other">Resumen de los últimos %d días</item></plurals>
 </resources>

@@ -29,14 +29,28 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/createStepperGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView android:id="@+id/createStepDetails" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:maxLines="1" android:padding="8dp" android:text="1 Details" android:textAppearance="?attr/textAppearanceLabelMedium" />
+            <View android:layout_width="8dp" android:layout_height="1dp" android:background="?attr/colorOutlineVariant" />
+            <TextView android:id="@+id/createStepStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:maxLines="1" android:padding="8dp" android:text="2 Style" android:textAppearance="?attr/textAppearanceLabelMedium" />
+            <View android:layout_width="8dp" android:layout_height="1dp" android:background="?attr/colorOutlineVariant" />
+            <TextView android:id="@+id/createStepCreate" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:maxLines="1" android:padding="8dp" android:text="3 Create" android:textAppearance="?attr/textAppearanceLabelMedium" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/createStepText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="@string/create_steps"
-            android:textAppearance="?attr/textAppearanceLabelMedium"
-            android:textColor="?attr/colorPrimary" />
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textStyle="bold" />
 
         <LinearLayout
             android:id="@+id/wizardNavigationGroup"
@@ -238,6 +252,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
+            android:maxLines="1"
             android:text="@string/reset_suggested_title"
             android:visibility="gone" />
 
@@ -483,6 +498,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="end"
+                    android:maxLines="1"
                     android:text="@string/add_end_period" />
 
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:baselineAligned="false" android:orientation="horizontal">
@@ -530,6 +546,22 @@
                 android:maxLines="1"
                 android:text="@string/choose_exact_dates"
                 android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/rawDataAvailabilityGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView android:id="@+id/rawDataAvailabilityText" android:layout_width="match_parent" android:layout_height="wrap_content" android:textAppearance="?attr/textAppearanceBodyMedium" android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/raw_data_retention_explanation" android:textAppearance="?attr/textAppearanceBodySmall" />
+                <LinearLayout android:id="@+id/rawDataRangeConflictGroup" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="vertical" android:visibility="gone">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/raw_data_range_conflict" android:textAppearance="?attr/textAppearanceBodySmall" android:textColor="?attr/colorError" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/useAvailableRawRangeButton" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:maxLines="1" android:text="@string/use_available_range" />
+                </LinearLayout>
+            </LinearLayout>
 
             <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/rawSignalsSwitch"
@@ -653,13 +685,11 @@
                     <com.google.android.material.button.MaterialButton android:id="@+id/shareOverviewButton" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:maxLines="1" android:text="@string/share_image" />
                 </LinearLayout>
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="horizontal">
-                    <com.google.android.material.button.MaterialButton android:id="@+id/viewInTripButton" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLines="1" android:text="@string/view_in_trip" />
-                </LinearLayout>
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="horizontal">
-                    <com.google.android.material.button.MaterialButton android:id="@+id/doneButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:maxLines="1" android:text="@string/done" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/createAnotherButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:maxLines="1" android:text="@string/create_another" />
                     <Space android:layout_width="8dp" android:layout_height="1dp" />
-                    <com.google.android.material.button.MaterialButton android:id="@+id/createAnotherButton" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:maxLines="1" android:text="@string/create_another" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/viewInTripButton" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:maxLines="1" android:text="@string/view_in_library" />
                 </LinearLayout>
+                <com.google.android.material.button.MaterialButton android:id="@+id/doneButton" android:layout_width="1dp" android:layout_height="1dp" android:maxLines="1" android:visibility="gone" />
             </LinearLayout>
             </LinearLayout>
         </LinearLayout>

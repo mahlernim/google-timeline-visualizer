@@ -340,4 +340,32 @@
     <string name="custom_recap_title">%1$s–%2$s 요약</string>
     <string name="raw_data_title">원시 데이터 · %1$s–%2$s</string>
     <string name="project_changes_saved">변경 사항을 저장했습니다</string>
+    <string name="recommend_trips">여행 감지</string>
+    <string name="customize_settings">고급 설정</string>
+    <string name="trip_defaults">여행 기본값</string>
+    <string name="recap_defaults">리캡 기본값</string>
+    <string name="trip_to_destination">%1$s 여행</string>
+    <string name="suggested_trip_title">추천 여행</string>
+    <string name="create_step_details_label">세부 정보</string>
+    <string name="create_step_style_label">스타일</string>
+    <string name="create_step_create_label">만들기</string>
+    <string name="step_status_completed">완료</string>
+    <string name="step_status_current">현재</string>
+    <string name="step_status_upcoming">예정</string>
+    <string name="step_accessibility">전체 %2$d단계 중 %1$d단계, %3$s, %4$s</string>
+    <string name="advanced_video_settings">고급 동영상 설정</string>
+    <string name="advanced_video_settings_summary">이 선택은 현재 동영상 초안에만 적용됩니다.</string>
+    <string name="apply_to_video">이 동영상에 적용</string>
+    <string name="timeline_file_name_size">%1$s · %2$s</string>
+    <string name="backup_restore_timeline">타임라인 백업 및 복원</string>
+    <string name="raw_data_retention_explanation">일반적으로 최근 최대 30일만 원시 위치 데이터로 남고 이전 활동은 타임라인 형식으로 표시됩니다.</string>
+    <string name="raw_data_available_range">원시 데이터 사용 가능 기간 %1$s~%2$s</string>
+    <string name="raw_data_range_conflict">이 프로젝트의 날짜가 현재 사용 가능한 원시 데이터 범위를 벗어납니다. 유효한 기간을 선택하세요.</string>
+    <string name="use_available_range">사용 가능한 기간 적용</string>
+    <string name="save_preset_choice_title">프리셋 변경 저장</string>
+    <string name="overwrite_preset">%1$s 덮어쓰기</string>
+    <string name="save_as_new_preset">새로 저장</string>
+    <string name="preset_overwritten">프리셋을 업데이트했습니다</string>
+    <string name="view_in_library">라이브러리에서 보기</string>
+    <plurals name="recent_day_recap"><item quantity="other">최근 %d일 리캡</item></plurals>
 </resources>

@@ -25,6 +25,7 @@ object TripDetector {
         nameResolver: DestinationNameResolver = DestinationNameResolver { _, _ -> null },
     ): List<TripSuggestion> {
         val accumulators = sortedMapOf<LocalDate, DayAccumulator>()
+        val usablePointsByDate = mutableMapOf<LocalDate, Int>()
         val relevantPointCount = if (request == null) timeline.points.size else timeline.points.count { point ->
             val date = point.instant.atZone(zone).toLocalDate()
             !date.isBefore(request.startDate) && !date.isAfter(request.endDate)
@@ -34,6 +35,7 @@ object TripDetector {
         timeline.points.forEach { point ->
             val date = point.instant.atZone(zone).toLocalDate()
             if (request == null || !date.isBefore(request.startDate) && !date.isAfter(request.endDate)) {
+                usablePointsByDate[date] = usablePointsByDate.getOrDefault(date, 0) + 1
                 if (relevantPointIndex % stride == 0) {
                     accumulators.getOrPut(date, ::DayAccumulator).add(point)
                 }
@@ -84,7 +86,7 @@ object TripDetector {
                 }
                 results += TripSuggestion(
                     id = stableId(start, end, destination),
-                    title = nameResolver.resolve(destination.latitude, destination.longitude) ?: "Suggested trip",
+                    destinationName = nameResolver.resolve(destination.latitude, destination.longitude),
                     startDate = start,
                     endDate = end,
                     awayStartDate = awayStart,
@@ -93,12 +95,20 @@ object TripDetector {
                     destinationLongitude = destination.longitude,
                     confidence = confidence,
                     distanceFromHomeKm = maxDistance,
+                    usablePointCount = usablePointsByDate
+                        .filterKeys { !it.isBefore(start) && !it.isAfter(end) }
+                        .values
+                        .sum(),
                 )
             }
             index += 1
         }
-        return results.sortedWith(compareByDescending<TripSuggestion> { it.confidence == SuggestionConfidence.STRONG }
-            .thenByDescending { it.startDate })
+        return results.sortedWith(
+            compareByDescending<TripSuggestion> { it.confidence == SuggestionConfidence.STRONG }
+                .thenByDescending(TripSuggestion::usablePointCount)
+                .thenByDescending(TripSuggestion::startDate)
+                .thenBy(TripSuggestion::id),
+        )
     }
 
     private fun center(points: List<GeoPoint>): GeoPoint {

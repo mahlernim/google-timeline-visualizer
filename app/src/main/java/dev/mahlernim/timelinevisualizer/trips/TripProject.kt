@@ -19,7 +19,7 @@ data class TripProject(
 )
 data class TripSuggestion(
     val id: String,
-    val title: String,
+    val destinationName: String?,
     val startDate: LocalDate,
     val endDate: LocalDate,
     val awayStartDate: LocalDate = startDate,
@@ -28,6 +28,7 @@ data class TripSuggestion(
     val destinationLongitude: Double = 0.0,
     val confidence: SuggestionConfidence,
     val distanceFromHomeKm: Double,
+    val usablePointCount: Int = 0,
 )
 
 data class TripDetectionRequest(

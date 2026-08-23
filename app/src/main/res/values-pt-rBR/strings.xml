@@ -288,4 +288,32 @@
     <string name="preset_link_unsupported_message">O link é inválido, está incompleto ou usa configurações incompatíveis. Nada foi alterado.</string>
     <string name="preset_limit_reached">Exclua uma predefinição antes de salvar outra.</string>
     <string name="preset_value_format">%1$s · %2$s</string>
+    <string name="recommend_trips">Detectar viagens</string>
+    <string name="customize_settings">Configurações avançadas</string>
+    <string name="trip_defaults">Padrões de viagem</string>
+    <string name="recap_defaults">Padrões de retrospectiva</string>
+    <string name="trip_to_destination">Viagem para %1$s</string>
+    <string name="suggested_trip_title">Viagem sugerida</string>
+    <string name="create_step_details_label">Detalhes</string>
+    <string name="create_step_style_label">Estilo</string>
+    <string name="create_step_create_label">Criar</string>
+    <string name="step_status_completed">concluída</string>
+    <string name="step_status_current">atual</string>
+    <string name="step_status_upcoming">próxima</string>
+    <string name="step_accessibility">Etapa %1$d de %2$d, %3$s, %4$s</string>
+    <string name="advanced_video_settings">Configurações avançadas de vídeo</string>
+    <string name="advanced_video_settings_summary">Estas opções se aplicam apenas ao rascunho atual.</string>
+    <string name="apply_to_video">Aplicar a este vídeo</string>
+    <string name="timeline_file_name_size">%1$s · %2$s</string>
+    <string name="backup_restore_timeline">Fazer backup e restaurar a Linha do tempo</string>
+    <string name="raw_data_retention_explanation">Somente os dados mais recentes, normalmente até 30 dias, permanecem como localização bruta antes que a atividade anterior seja representada no formato da Linha do tempo.</string>
+    <string name="raw_data_available_range">Dados brutos disponíveis de %1$s a %2$s</string>
+    <string name="raw_data_range_conflict">Este projeto usa datas fora dos dados brutos disponíveis. Escolha um período válido.</string>
+    <string name="use_available_range">Usar período disponível</string>
+    <string name="save_preset_choice_title">Salvar alterações da predefinição</string>
+    <string name="overwrite_preset">Substituir %1$s</string>
+    <string name="save_as_new_preset">Salvar como nova</string>
+    <string name="preset_overwritten">Predefinição atualizada</string>
+    <string name="view_in_library">Ver na biblioteca</string>
+    <plurals name="recent_day_recap"><item quantity="one">Retrospectiva do último %d dia</item><item quantity="other">Retrospectiva dos últimos %d dias</item></plurals>
 </resources>
