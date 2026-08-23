@@ -1241,6 +1241,7 @@ class MainActivityTest {
 
         activity.findViewById<View>(R.id.rawDataChoice).performClick()
 
+        waitUntil { activity.findViewById<View>(R.id.rawDataAvailabilityGroup).visibility == View.VISIBLE }
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.rawDataAvailabilityGroup).visibility)
         assertTrue(activity.findViewById<TextView>(R.id.rawDataAvailabilityText).text.toString().contains("Feb"))
         assertEquals("Recent 5-day recap", activity.findViewById<TextView>(R.id.projectTitleInput).text.toString())
