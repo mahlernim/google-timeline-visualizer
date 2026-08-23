@@ -16,6 +16,14 @@ class RecapPeriodRulesTest {
             LocalDate.parse("2026-01-01") to LocalDate.parse("2026-12-31"),
             RecapPeriodRules.yearly(2026, 2024),
         )
+        assertEquals(
+            YearMonth.of(2026, 1),
+            RecapPeriodRules.yearlyTimelinePeriod(2026).start,
+        )
+        assertEquals(
+            YearMonth.of(2026, 12),
+            RecapPeriodRules.yearlyTimelinePeriod(2026).endInclusive,
+        )
     }
 
     @Test

@@ -165,14 +165,14 @@ class MainActivityTest {
     }
 
     @Test
-    fun videoSettingsSummaryLabelsAdvancedValues() {
+    fun videoSettingsSummaryStaysCompactAndKeepsAdvancedValuesInDetails() {
         val activity = launchActivity()
         val summary = activity.currentVideoSettingsSummary()
 
-        assertTrue(summary.contains(activity.getString(R.string.camera_movement)))
-        assertTrue(summary.contains(activity.getString(R.string.trip_detection)))
-        assertTrue(summary.contains(activity.getString(R.string.episode_framing)))
-        assertTrue(summary.contains(activity.getString(R.string.long_trip_compression)))
+        assertTrue(summary.contains(activity.getString(R.string.aspect_square)))
+        assertTrue(summary.contains(activity.resources.getQuantityString(R.plurals.duration_seconds, 30, 30)))
+        assertTrue(!summary.contains(activity.getString(R.string.camera_movement)))
+        assertTrue(!summary.contains("\n"))
     }
 
     @Test
@@ -1135,7 +1135,7 @@ class MainActivityTest {
             ),
         )
         assertEquals(
-            "November 2025–February 2026 recap",
+            "Nov 2025–Feb 2026 recap",
             activity.suggestedProjectTitle(
                 TripKind.MONTHLY_RECAP,
                 LocalDate.parse("2025-11-01"),
@@ -1158,6 +1158,26 @@ class MainActivityTest {
         assertTrue(title.contains("요약"))
         assertTrue(title.contains("2025"))
         assertTrue(title.contains("2026"))
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "en-rUS")
+    fun exportTitleResolvesOptionalNameBeforeGeneration() {
+        val activity = launchActivity()
+        activity.findViewById<TextView>(R.id.ownerInput).text = "Mina"
+        activity.findViewById<TextView>(R.id.titleInput).text = "{name}'s Feb–Jun 2026 recap"
+
+        assertEquals(
+            "Mina's Feb–Jun 2026 recap",
+            activity.resolvedTitle(TimelinePeriod.sameYear(2026, 2, 6)),
+        )
+
+        activity.findViewById<TextView>(R.id.ownerInput).text = ""
+        activity.findViewById<TextView>(R.id.titleInput).text = "Feb–Jun 2026 recap"
+        assertEquals(
+            "Feb–Jun 2026 recap",
+            activity.resolvedTitle(TimelinePeriod.sameYear(2026, 2, 6)),
+        )
     }
 
     @Test
@@ -1224,6 +1244,10 @@ class MainActivityTest {
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.rawDataAvailabilityGroup).visibility)
         assertTrue(activity.findViewById<TextView>(R.id.rawDataAvailabilityText).text.toString().contains("Feb"))
         assertEquals("Recent 5-day recap", activity.findViewById<TextView>(R.id.projectTitleInput).text.toString())
+        assertEquals("Recent 5-day recap", activity.findViewById<TextView>(R.id.titleInput).text.toString())
+        activity.findViewById<TextView>(R.id.ownerInput).text = "Mina"
+        assertEquals("Mina's Recent 5-day recap", activity.findViewById<TextView>(R.id.titleInput).text.toString())
+        assertEquals("Mina's Recent 5-day recap", activity.resolvedTitle(TimelinePeriod.sameYear(2026, 2, 2)))
         assertTrue(activity.applyExactDateRange(LocalDate.parse("2026-02-02"), LocalDate.parse("2026-02-04")))
         assertEquals("Recent 3-day recap", activity.findViewById<TextView>(R.id.projectTitleInput).text.toString())
         assertTrue(!activity.applyExactDateRange(LocalDate.parse("2026-01-30"), LocalDate.parse("2026-02-04")))
@@ -1521,7 +1545,6 @@ class MainActivityTest {
             waitUntil { activity.findViewById<View>(R.id.editorGroup).visibility == View.VISIBLE }
 
             assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.rawSignalsDescription).visibility)
-            assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.rawAccuracyLayout).visibility)
             assertTrue(activity.findViewById<TextView>(R.id.periodSummaryText).text.contains("2"))
         } finally {
             source.delete()

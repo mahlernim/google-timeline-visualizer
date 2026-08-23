@@ -580,25 +580,6 @@
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:visibility="gone" />
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/rawAccuracyLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:hint="@string/raw_accuracy_limit"
-                android:visibility="gone"
-                app:helperText="@string/raw_accuracy_helper">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/rawAccuracyInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="numberDecimal"
-                    android:maxLines="1"
-                    android:text="100" />
-            </com.google.android.material.textfield.TextInputLayout>
-
             </LinearLayout>
 
             <LinearLayout

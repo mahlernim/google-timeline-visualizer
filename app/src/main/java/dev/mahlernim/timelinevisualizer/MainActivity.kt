@@ -195,6 +195,7 @@ class MainActivity : AppCompatActivity() {
     private var selectedEndDate: LocalDate? = null
     private val titleHandler = Handler(Looper.getMainLooper())
     private val monthNames by lazy { DateFormatSymbols.getInstance().months.take(12) }
+    private val shortMonthNames by lazy { DateFormatSymbols.getInstance().shortMonths.take(12) }
     private val preferences by lazy { getSharedPreferences("display", MODE_PRIVATE) }
     private val videoMedia by lazy { VideoMedia(applicationContext) }
     private val generatedMedia by lazy { GeneratedMediaRepository(applicationContext) }
@@ -462,11 +463,16 @@ class MainActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
         })
 
-        editor.ownerInput.setText(preferences.getString("owner_name", null) ?: deviceName())
+        editor.ownerInput.setText(preferences.getString("owner_name", null).orEmpty())
         editor.titleInput.setText(
             preferences.getString("title_template", null) ?: getString(R.string.default_title_template),
         )
-        editor.ownerInput.doAfterTextChanged { scheduleTitleUpdate() }
+        editor.ownerInput.doAfterTextChanged {
+            if (!videoTitleUserEdited) {
+                setAutomaticVideoTitle(editor.projectTitleInput.text?.toString().orEmpty())
+            }
+            scheduleTitleUpdate()
+        }
         editor.titleInput.doAfterTextChanged {
             if (!updatingVideoTitle) videoTitleUserEdited = true
             scheduleTitleUpdate()
@@ -1002,8 +1008,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setAutomaticVideoTitle(value: String) {
+        val projectTitle = value.trim()
+        val owner = editor.ownerInput.text?.toString()?.trim().orEmpty()
+        val automaticTitle = if (activeProjectKind != TripKind.TRIP && owner.isNotEmpty() && projectTitle.isNotEmpty()) {
+            getString(R.string.named_video_title, projectTitle).replace("{name}", owner, ignoreCase = true)
+        } else {
+            projectTitle
+        }
         updatingVideoTitle = true
-        editor.titleInput.setText(value.trim())
+        editor.titleInput.setText(automaticTitle)
         updatingVideoTitle = false
     }
 
@@ -1114,16 +1127,11 @@ class MainActivity : AppCompatActivity() {
         editor.timelineView.videoTitle = resolvedTitle(period)
     }
 
-    private fun resolvedTitle(period: TimelinePeriod): String {
-        if (activeProjectKind == TripKind.TRIP && activeProjectId != null) {
-            return editor.titleInput.text?.toString()?.trim().orEmpty()
-                .ifBlank { editor.projectTitleInput.text?.toString()?.trim().orEmpty() }
-                .ifBlank { getString(R.string.default_title) }
-        }
+    internal fun resolvedTitle(period: TimelinePeriod): String {
         return TitleTemplate.resolve(
             template = editor.titleInput.text?.toString().orEmpty(),
             yearLabel = period.yearLabel,
-            name = editor.ownerInput.text?.toString().orEmpty().ifBlank { getString(R.string.traveler) },
+            name = editor.ownerInput.text?.toString().orEmpty(),
             fallback = getString(R.string.default_title),
         )
     }
@@ -1156,7 +1164,6 @@ class MainActivity : AppCompatActivity() {
                 renderTimeline = prepared.render
                 rawSignalPoints = parsed.rawSignals
                 rawOnlyImport = false
-                editor.rawAccuracyInput.setText(RawSignalProcessor.DEFAULT_MAXIMUM_ACCURACY_METERS.toInt().toString())
                 rebuildRawSignalsTimeline()
                 pendingImportCompletionUri = uri
                 configureYears(loaded, prepared.initialJourney, prepared.ignoredCount)
@@ -1239,7 +1246,6 @@ class MainActivity : AppCompatActivity() {
                 rawSignalPoints = points
                 rawOnlyImport = true
                 rawSignalsEnabled = true
-                editor.rawAccuracyInput.setText(RawSignalProcessor.DEFAULT_MAXIMUM_ACCURACY_METERS.toInt().toString())
                 val result = withContext(Dispatchers.Default) {
                     RawSignalProcessor.process(points)
                 }
@@ -1613,12 +1619,6 @@ class MainActivity : AppCompatActivity() {
             selectRange()
             updateResolvedTitle()
         }
-        editor.rawAccuracyInput.doAfterTextChanged {
-            if (rawSignalsEnabled) {
-                rebuildRawSignalsTimeline()
-                selectRange()
-            }
-        }
         updateExactDateControls()
         updateRawSignalsControls()
     }
@@ -1628,24 +1628,13 @@ class MainActivity : AppCompatActivity() {
         editor.exactDateSwitch.visibility = if (rawSignalsEnabled) View.GONE else View.VISIBLE
         editor.exactDateRangeButton.visibility = if (!rawSignalsEnabled && exactDateRangeEnabled) View.VISIBLE else View.GONE
         editor.rawSignalsDescription.visibility = if (rawSignalsEnabled) View.VISIBLE else View.GONE
-        editor.rawAccuracyLayout.visibility = if (rawSignalsEnabled) View.VISIBLE else View.GONE
     }
 
     private fun rebuildRawSignalsTimeline(): RawSignalProcessingResult? {
-        val rawLimit = editor.rawAccuracyInput.text?.toString()?.trim().orEmpty()
-        val maximumAccuracy = if (rawLimit.isEmpty()) {
-            null
-        } else {
-            rawLimit.toDoubleOrNull()?.takeIf { it.isFinite() && it >= 0.0 }
-        }
-        if (rawLimit.isNotEmpty() && maximumAccuracy == null) {
-            editor.rawAccuracyLayout.error = getString(R.string.raw_accuracy_invalid)
-            rawSignalProcessing = null
-            renderRawSignalsTimeline = null
-            return null
-        }
-        editor.rawAccuracyLayout.error = null
-        val result = RawSignalProcessor.process(rawSignalPoints, maximumAccuracy)
+        val result = RawSignalProcessor.process(
+            rawSignalPoints,
+            RawSignalProcessor.DEFAULT_MAXIMUM_ACCURACY_METERS,
+        )
         rawSignalProcessing = result
         renderRawSignalsTimeline = result.points.takeIf { it.isNotEmpty() }?.let(::Timeline)
         if (activeProjectKind == TripKind.RAW_DATA) {
@@ -1776,7 +1765,12 @@ class MainActivity : AppCompatActivity() {
         val end = YearMonth.of(endYear, selectedEndMonth)
         if (!endPeriodEnabled && activeProjectKind in setOf(TripKind.MONTHLY_RECAP, TripKind.YEARLY_RECAP)) {
             selectedEndYear = start.year
-            selectedEndMonth = start.monthValue
+            if (activeProjectKind == TripKind.YEARLY_RECAP) {
+                selectedStartMonth = 1
+                selectedEndMonth = 12
+            } else {
+                selectedEndMonth = start.monthValue
+            }
         } else if (start > end) {
             if (changedStart) {
                 selectedEndYear = start.year
@@ -1807,6 +1801,9 @@ class MainActivity : AppCompatActivity() {
     private fun currentPeriod(): TimelinePeriod? {
         val startYear = selectedStartYear ?: return null
         val endYear = selectedEndYear ?: return null
+        if (activeProjectKind == TripKind.YEARLY_RECAP) {
+            return RecapPeriodRules.yearlyTimelinePeriod(startYear, endYear)
+        }
         return TimelinePeriod(
             start = YearMonth.of(startYear, selectedStartMonth),
             endInclusive = YearMonth.of(endYear, selectedEndMonth),
@@ -3085,7 +3082,6 @@ class MainActivity : AppCompatActivity() {
         editor.endMonthDropdown.isEnabled = !exporting
         editor.exactDateSwitch.isEnabled = !exporting
         editor.rawSignalsSwitch.isEnabled = !exporting
-        editor.rawAccuracyInput.isEnabled = !exporting
         editor.exactDateRangeButton.isEnabled = !exporting
         editor.ownerInput.isEnabled = !exporting
         editor.titleInput.isEnabled = !exporting
@@ -3454,7 +3450,7 @@ class MainActivity : AppCompatActivity() {
         val monthlyHasData = loaded.forRange(TimelinePeriod(latestMonth, latestMonth)).points.isNotEmpty()
         if (monthlyHasData && projects.none { it.kind == TripKind.MONTHLY_RECAP && it.startDate == monthlyStart }) {
             addRecapCandidate(
-                title = "${monthNames[latestMonth.monthValue - 1]} ${latestMonth.year} recap",
+                title = suggestedProjectTitle(TripKind.MONTHLY_RECAP, monthlyStart, monthlyEnd),
                 start = monthlyStart,
                 end = monthlyEnd,
                 kind = TripKind.MONTHLY_RECAP,
@@ -3631,18 +3627,18 @@ class MainActivity : AppCompatActivity() {
         }
         TripKind.MONTHLY_RECAP -> when {
             YearMonth.from(start) == YearMonth.from(end) ->
-                getString(R.string.month_recap_title, monthNames[start.monthValue - 1], start.year)
+                getString(R.string.month_recap_title, shortMonthNames[start.monthValue - 1], start.year)
             start.year == end.year -> getString(
                 R.string.month_recap_same_year_title,
-                monthNames[start.monthValue - 1],
-                monthNames[end.monthValue - 1],
+                shortMonthNames[start.monthValue - 1],
+                shortMonthNames[end.monthValue - 1],
                 start.year,
             )
             else -> getString(
                 R.string.month_recap_cross_year_title,
-                monthNames[start.monthValue - 1],
+                shortMonthNames[start.monthValue - 1],
                 start.year,
-                monthNames[end.monthValue - 1],
+                shortMonthNames[end.monthValue - 1],
                 end.year,
             )
         }
@@ -3704,7 +3700,6 @@ class MainActivity : AppCompatActivity() {
         editor.exactDateRangeButton.visibility = if (!periodBased) View.VISIBLE else View.GONE
         editor.rawSignalsSwitch.visibility = View.GONE
         editor.rawSignalsDescription.visibility = if (activeProjectKind == TripKind.RAW_DATA) View.VISIBLE else View.GONE
-        editor.rawAccuracyLayout.visibility = if (activeProjectKind == TripKind.RAW_DATA) View.VISIBLE else View.GONE
         updateExactDateControls()
         if (periodBased) editor.exactDateRangeButton.visibility = View.GONE
         updateRawDataAvailability()
@@ -3971,13 +3966,7 @@ class MainActivity : AppCompatActivity() {
                 snapshot.requestedDurationSeconds,
             ),
         ).joinToString(" · ")
-        val secondLine = listOf(
-            getString(R.string.preset_value_format, getString(R.string.camera_movement), cameraMovementLabel(snapshot.cameraMovement)),
-            getString(R.string.preset_value_format, getString(R.string.trip_detection), tripDetectionLabel(snapshot.tripDetection)),
-            getString(R.string.preset_value_format, getString(R.string.episode_framing), localFramingLabel(snapshot.localFraming)),
-            getString(R.string.preset_value_format, getString(R.string.long_trip_compression), compressionLabel(snapshot.longTripCompression)),
-        ).joinToString(" · ")
-        return "$firstLine\n$secondLine"
+        return firstLine
     }
 
     private fun showVideoSettingsDetails(record: VideoRecord) {
@@ -4418,19 +4407,6 @@ class MainActivity : AppCompatActivity() {
                     }
             }
             .show()
-    }
-
-    private fun deviceName(): String {
-        val name = Settings.Global.getString(contentResolver, Settings.Global.DEVICE_NAME)
-            ?.replace('_', ' ')
-            ?.replace(Regex("\\s+"), " ")
-            ?.trim()
-            ?.takeIf { it.isNotEmpty() }
-        return name?.takeUnless {
-            it.startsWith("sdk ", ignoreCase = true) ||
-                it.startsWith("generic", ignoreCase = true) ||
-                it.equals("Android", ignoreCase = true)
-        } ?: getString(R.string.traveler)
     }
 
     internal fun selectedDurationSeconds(): Int = routeDurationSeconds
