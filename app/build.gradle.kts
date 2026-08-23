@@ -10,8 +10,8 @@ android {
         applicationId = "dev.mahlernim.timelinevisualizer"
         minSdk = 26
         targetSdk = 36
-        versionCode = 37
-        versionName = "2.3.4"
+        versionCode = 38
+        versionName = "2.3.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -62,7 +62,7 @@ android {
             dimension = "distribution"
             applicationId = "dev.mahlernim.timelinevisualizer.tripslab"
             versionCode = 5
-            versionName = "2.3.4-trips-lab.5"
+            versionName = "2.3.5-trips-lab.5"
             resValue("string", "app_name", "Timeline Visualizer Trips Lab")
             buildConfigField("String", "UPDATE_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/tag/trips-lab-5\"")
             buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/issues/147\"")

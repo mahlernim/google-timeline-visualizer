@@ -307,4 +307,11 @@
     <string name="preset_overwritten">預設組合已更新</string>
     <string name="view_in_library">在媒體庫中查看</string>
     <plurals name="recent_day_recap"><item quantity="other">最近%d天回顧</item></plurals>
+    <string name="format_not_supported_with_rate">此裝置無法製作 %1$d × %2$d、%3$d fps 的影片。請選擇較低的解析度或影格率。</string>
+    <string name="resolution_1440">1440p</string><string name="resolution_2160">2160p</string>
+    <string name="frame_rate">影格率</string><string name="frame_rate_value">%1$d fps</string><string name="custom_action">自訂…</string>
+    <string name="preset_resolution_selected">%1$dp · %2$d × %3$d</string><string name="custom_resolution_selected">自訂 · %1$d × %2$d</string><string name="custom_frame_rate_selected">自訂 · %1$d fps</string>
+    <string name="custom_resolution_title">自訂解析度</string><string name="custom_resolution_short_edge">短邊像素數</string><string name="custom_resolution_range">請輸入 %1$d 到 %2$d 之間的整數。</string><string name="output_dimensions">輸出 · %1$d × %2$d</string>
+    <string name="custom_frame_rate_title">自訂影格率</string><string name="custom_frame_rate_range">請輸入 %1$d 到 %2$d 之間的整數。</string>
+    <string name="demanding_format_title">此格式可能對裝置要求較高</string><string name="demanding_format_message">即將製作 %1$d × %2$d、%3$d fps 的影片。匯出可能需要更長時間、使用更多記憶體，或在完成前失敗。較高解析度可能顯示更多位置細節，請在分享前檢查影片。</string><string name="export_anyway">仍要匯出</string>
 </resources>

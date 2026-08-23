@@ -127,7 +127,7 @@ class MainActivityTest {
             activity.findViewById<AutoCompleteTextView>(R.id.aspectRatioDropdown).text.toString(),
         )
         assertEquals(
-            activity.getString(R.string.resolution_720),
+            activity.getString(R.string.preset_resolution_selected, 720, 720, 1280),
             activity.findViewById<AutoCompleteTextView>(R.id.videoQualityDropdown).text.toString(),
         )
         assertEquals(defaults, CameraSettingsPreferences(context).load())
@@ -140,7 +140,7 @@ class MainActivityTest {
             recreated.findViewById<AutoCompleteTextView>(R.id.aspectRatioDropdown).text.toString(),
         )
         assertEquals(
-            recreated.getString(R.string.resolution_720),
+            recreated.getString(R.string.preset_resolution_selected, 720, 720, 1280),
             recreated.findViewById<AutoCompleteTextView>(R.id.videoQualityDropdown).text.toString(),
         )
         assertEquals(defaults, CameraSettingsPreferences(context).load())
@@ -548,8 +548,12 @@ class MainActivityTest {
             activity.findViewById<AutoCompleteTextView>(R.id.longTripDropdown).text.toString(),
         )
         assertEquals(
-            activity.getString(R.string.resolution_480),
+            activity.getString(R.string.preset_resolution_selected, 480, 480, 480),
             activity.findViewById<AutoCompleteTextView>(R.id.videoQualityDropdown).text.toString(),
+        )
+        assertEquals(
+            activity.getString(R.string.frame_rate_value, 30),
+            activity.findViewById<AutoCompleteTextView>(R.id.frameRateDropdown).text.toString(),
         )
         assertEquals(
             activity.getString(R.string.aspect_square),
@@ -587,6 +591,25 @@ class MainActivityTest {
             activity.getString(R.string.app_version, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),
             activity.findViewById<TextView>(R.id.versionText).text.toString(),
         )
+    }
+
+    @Test
+    fun settingsSelect2160pAnd60FramesPerSecondWithoutChangingAspect() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.navigationSettings).performClick()
+        val resolution = activity.findViewById<AutoCompleteTextView>(R.id.videoQualityDropdown)
+        val frameRate = activity.findViewById<AutoCompleteTextView>(R.id.frameRateDropdown)
+
+        resolution.onItemClickListener?.onItemClick(null, null, 4, 4)
+        frameRate.onItemClickListener?.onItemClick(null, null, 2, 2)
+
+        assertEquals(
+            activity.getString(R.string.preset_resolution_selected, 2160, 2160, 2160),
+            resolution.text.toString(),
+        )
+        assertEquals(activity.getString(R.string.frame_rate_value, 60), frameRate.text.toString())
+        assertEquals(2160, CameraSettingsPreferences(context).load().activeVideoFormat.width)
+        assertEquals(60, CameraSettingsPreferences(context).load().activeVideoFormat.frameRate)
     }
 
     @Test

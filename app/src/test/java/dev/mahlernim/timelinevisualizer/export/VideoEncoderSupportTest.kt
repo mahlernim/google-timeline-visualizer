@@ -43,6 +43,22 @@ class VideoEncoderSupportTest {
         )
     }
 
+    @Test
+    fun retriesTheNextCompatibleEncoderWhenThePreferredOneFails() {
+        val candidates = listOf(
+            EncoderSupport.Supported("hardware.encoder", MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar),
+            EncoderSupport.Supported("software.encoder", MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar),
+        )
+
+        val selected = VideoEncoderSupport.firstUsable(candidates) { candidate ->
+            if (candidate.name == "hardware.encoder") error("configuration failed")
+            "configured"
+        }
+
+        assertEquals("configured", selected?.first)
+        assertEquals("software.encoder", selected?.second?.name)
+    }
+
     private fun profile(
         maxFrameRate: Double = 60.0,
         colorFormats: Set<Int> = setOf(MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar),

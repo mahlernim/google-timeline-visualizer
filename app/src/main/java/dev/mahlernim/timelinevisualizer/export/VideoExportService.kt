@@ -269,6 +269,8 @@ class VideoExportService : Service() {
                     longTripCompression = request.cameraSettings.longTripCompression,
                     resolution = request.cameraSettings.videoQuality.resolution,
                     dataSource = request.dataSource,
+                    exportShortEdge = request.cameraSettings.effectiveExportFormat.shortEdge,
+                    exportFrameRate = request.cameraSettings.effectiveExportFormat.frameRate,
                 ),
             ),
         )

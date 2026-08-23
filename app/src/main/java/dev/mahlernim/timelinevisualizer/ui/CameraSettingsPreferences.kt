@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.core.content.edit
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
+import dev.mahlernim.timelinevisualizer.render.ExportFormatSettings
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
 import dev.mahlernim.timelinevisualizer.render.LocalFraming
 import dev.mahlernim.timelinevisualizer.render.TripDetection
@@ -15,10 +16,28 @@ class CameraSettingsPreferences(context: Context) {
     fun load(): CameraSettings {
         val existingProductionSettings = preferences.contains(KEY_CAMERA_MOVEMENT) ||
             preferences.contains(KEY_LONG_TRIP) || preferences.contains(KEY_VIDEO_QUALITY)
+        val quality = enumValue(KEY_VIDEO_QUALITY, VideoQuality.STANDARD)
+        val exportFormat = when {
+            preferences.contains(KEY_EXPORT_FORMAT_PRESENT) &&
+                !preferences.getBoolean(KEY_EXPORT_FORMAT_PRESENT, false) -> null
+            preferences.contains(KEY_EXPORT_SHORT_EDGE) && preferences.contains(KEY_EXPORT_FRAME_RATE) -> {
+                runCatching {
+                    ExportFormatSettings(
+                        shortEdge = preferences.getInt(KEY_EXPORT_SHORT_EDGE, ExportFormatSettings.DEFAULT_SHORT_EDGE),
+                        frameRate = preferences.getInt(KEY_EXPORT_FRAME_RATE, ExportFormatSettings.DEFAULT_FRAME_RATE),
+                        customResolution = preferences.getBoolean(KEY_EXPORT_CUSTOM_RESOLUTION, false),
+                        customFrameRate = preferences.getBoolean(KEY_EXPORT_CUSTOM_FRAME_RATE, false),
+                    )
+                }.getOrNull()
+            }
+            existingProductionSettings -> ExportFormatSettings.fromLegacy(quality)
+            else -> CameraSettings.DEFAULT.exportFormat
+        }
         val settings = CameraSettings(
             cameraMovement = enumValue(KEY_CAMERA_MOVEMENT, CameraMovement.STEADY),
             longTripCompression = enumValue(KEY_LONG_TRIP, LongTripCompression.BALANCED),
-            videoQuality = enumValue(KEY_VIDEO_QUALITY, VideoQuality.STANDARD),
+            videoQuality = quality,
+            exportFormat = exportFormat,
             tripDetection = enumValue(KEY_TRIP_DETECTION, TripDetection.BALANCED),
             localFraming = localFraming(existingProductionSettings),
         )
@@ -31,6 +50,18 @@ class CameraSettingsPreferences(context: Context) {
             putString(KEY_CAMERA_MOVEMENT, settings.cameraMovement.name)
             putString(KEY_LONG_TRIP, settings.longTripCompression.name)
             putString(KEY_VIDEO_QUALITY, settings.videoQuality.name)
+            putBoolean(KEY_EXPORT_FORMAT_PRESENT, settings.exportFormat != null)
+            settings.exportFormat?.let { format ->
+                putInt(KEY_EXPORT_SHORT_EDGE, format.shortEdge)
+                putInt(KEY_EXPORT_FRAME_RATE, format.frameRate)
+                putBoolean(KEY_EXPORT_CUSTOM_RESOLUTION, format.customResolution)
+                putBoolean(KEY_EXPORT_CUSTOM_FRAME_RATE, format.customFrameRate)
+            } ?: run {
+                remove(KEY_EXPORT_SHORT_EDGE)
+                remove(KEY_EXPORT_FRAME_RATE)
+                remove(KEY_EXPORT_CUSTOM_RESOLUTION)
+                remove(KEY_EXPORT_CUSTOM_FRAME_RATE)
+            }
             putString(KEY_TRIP_DETECTION, settings.tripDetection.name)
             putString(KEY_EPISODE_LOCAL_FRAMING, settings.localFraming.name)
             remove(KEY_ZOOM_IN_TRAVEL_SLOWDOWN)
@@ -77,6 +108,11 @@ class CameraSettingsPreferences(context: Context) {
         const val KEY_LONG_HOP = "long-hop"
         const val KEY_LONG_TRIP = "long-trip"
         const val KEY_VIDEO_QUALITY = "video-quality"
+        const val KEY_EXPORT_SHORT_EDGE = "export-short-edge-v1"
+        const val KEY_EXPORT_FORMAT_PRESENT = "export-format-present-v1"
+        const val KEY_EXPORT_FRAME_RATE = "export-frame-rate-v1"
+        const val KEY_EXPORT_CUSTOM_RESOLUTION = "export-custom-resolution-v1"
+        const val KEY_EXPORT_CUSTOM_FRAME_RATE = "export-custom-frame-rate-v1"
         const val KEY_ZOOM_IN_TRAVEL_SLOWDOWN = "zoom-in-travel-slowdown"
         const val KEY_ZOOM_IN_MOVEMENT_REDUCTION = "zoom-in-movement-reduction"
         const val KEY_EPISODE_FRAMING_ENABLED = "episode-framing-enabled"

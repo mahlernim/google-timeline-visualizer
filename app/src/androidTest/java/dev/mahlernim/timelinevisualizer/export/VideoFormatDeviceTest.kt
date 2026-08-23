@@ -5,6 +5,10 @@ import android.media.MediaFormat
 import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
+import dev.mahlernim.timelinevisualizer.render.CameraSettings
+import dev.mahlernim.timelinevisualizer.render.ExportFormatSettings
+import dev.mahlernim.timelinevisualizer.render.VideoAspectRatio
+import dev.mahlernim.timelinevisualizer.render.VideoFormat
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,10 +20,15 @@ class VideoFormatDeviceTest {
         val profiles = VideoEncoderSupport.deviceProfiles()
         assertTrue("The device exposed no H.264 encoder", profiles.isNotEmpty())
 
-        VideoQuality.values().forEach { preset ->
-            val support = VideoEncoderSupport.select(preset, profiles)
-            Log.i(TAG, "${preset.name}: $support")
-            if (support is EncoderSupport.Supported) configure(preset, support)
+        val formats = VideoQuality.values().map(VideoQuality::format) + listOf(
+            CameraSettings.DEFAULT.activeVideoFormat,
+            ExportFormatSettings(1440, 30).format(VideoAspectRatio.LANDSCAPE),
+            ExportFormatSettings(2160, 60).format(VideoAspectRatio.LANDSCAPE),
+        )
+        formats.forEach { format ->
+            val support = VideoEncoderSupport.select(format, profiles)
+            Log.i(TAG, "${format.width}x${format.height}@${format.frameRate}: $support")
+            if (support is EncoderSupport.Supported) configure(format, support)
         }
 
         assertTrue(
@@ -28,7 +37,7 @@ class VideoFormatDeviceTest {
         )
     }
 
-    private fun configure(preset: VideoQuality, support: EncoderSupport.Supported) {
+    private fun configure(preset: VideoFormat, support: EncoderSupport.Supported) {
         val format = MediaFormat.createVideoFormat(
             MediaFormat.MIMETYPE_VIDEO_AVC,
             preset.width,

@@ -57,6 +57,9 @@
         <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/resolution">
             <AutoCompleteTextView android:id="@+id/videoQualityDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:hint="@string/frame_rate">
+            <AutoCompleteTextView android:id="@+id/frameRateDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+        </com.google.android.material.textfield.TextInputLayout>
         <TextView android:id="@+id/videoFormatWarningText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textAppearance="?attr/textAppearanceBodySmall" android:visibility="gone" tools:visibility="visible" />
 
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="@string/regional_preferences" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />

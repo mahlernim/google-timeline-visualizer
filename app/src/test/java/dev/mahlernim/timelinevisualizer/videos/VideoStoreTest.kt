@@ -100,6 +100,8 @@ class VideoStoreTest {
             localFraming = LocalFraming.CLOSE,
             longTripCompression = LongTripCompression.STRONGER,
             resolution = VideoResolution.HIGH,
+            exportShortEdge = 1440,
+            exportFrameRate = 60,
         )
         store.upsert(record("content://trip", "Tokyo", 300L).copy(settingsSnapshot = snapshot))
 

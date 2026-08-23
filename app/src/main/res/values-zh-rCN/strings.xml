@@ -307,4 +307,11 @@
     <string name="preset_overwritten">预设已更新</string>
     <string name="view_in_library">在媒体库中查看</string>
     <plurals name="recent_day_recap"><item quantity="other">最近%d天回顾</item></plurals>
+    <string name="format_not_supported_with_rate">此设备无法制作 %1$d × %2$d、%3$d fps 的视频。请选择较低的分辨率或帧率。</string>
+    <string name="resolution_1440">1440p</string><string name="resolution_2160">2160p</string>
+    <string name="frame_rate">帧率</string><string name="frame_rate_value">%1$d fps</string><string name="custom_action">自定义…</string>
+    <string name="preset_resolution_selected">%1$dp · %2$d × %3$d</string><string name="custom_resolution_selected">自定义 · %1$d × %2$d</string><string name="custom_frame_rate_selected">自定义 · %1$d fps</string>
+    <string name="custom_resolution_title">自定义分辨率</string><string name="custom_resolution_short_edge">短边像素数</string><string name="custom_resolution_range">请输入 %1$d 到 %2$d 之间的整数。</string><string name="output_dimensions">输出 · %1$d × %2$d</string>
+    <string name="custom_frame_rate_title">自定义帧率</string><string name="custom_frame_rate_range">请输入 %1$d 到 %2$d 之间的整数。</string>
+    <string name="demanding_format_title">此格式可能对设备要求较高</string><string name="demanding_format_message">即将制作 %1$d × %2$d、%3$d fps 的视频。导出可能需要更长时间、占用更多内存，或在完成前失败。较高分辨率可能显示更多位置细节，请在分享前检查视频。</string><string name="export_anyway">仍然导出</string>
 </resources>

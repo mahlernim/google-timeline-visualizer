@@ -23,6 +23,8 @@ import dev.mahlernim.timelinevisualizer.render.TimelineAnimation
 import dev.mahlernim.timelinevisualizer.render.TimelineFrame
 import dev.mahlernim.timelinevisualizer.render.TimelinePainter
 import dev.mahlernim.timelinevisualizer.render.TileId
+import dev.mahlernim.timelinevisualizer.render.VideoFormat
+import dev.mahlernim.timelinevisualizer.render.VideoQuality
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -53,10 +55,12 @@ class Mp4Exporter(
         onProgress: (ExportProgress) -> Unit,
     ): Bitmap = withContext(Dispatchers.Default) {
         require(journey.points.size >= 2) { "At least two location points are needed" }
-        val videoFormat = cameraSettings.videoQuality
-        val encoder = when (val support = VideoEncoderSupport.evaluate(videoFormat)) {
-            is EncoderSupport.Supported -> support
-            is EncoderSupport.Unsupported -> throw UnsupportedVideoFormatException(support.reason, videoFormat)
+        val videoFormat = cameraSettings.activeVideoFormat
+        val encoderProfiles = VideoEncoderSupport.deviceProfiles()
+        val encoderCandidates = VideoEncoderSupport.candidates(videoFormat, encoderProfiles)
+        if (encoderCandidates.isEmpty()) {
+            val support = VideoEncoderSupport.select(videoFormat, encoderProfiles) as EncoderSupport.Unsupported
+            throw UnsupportedVideoFormatException(support.reason, videoFormat)
         }
         val width = videoFormat.width
         val height = videoFormat.height
@@ -98,20 +102,19 @@ class Mp4Exporter(
                 ?: throw MapTilePreparationException(listOf(tile), requiredTiles.size)
         }
 
-        val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, width, height).apply {
-            setInteger(MediaFormat.KEY_COLOR_FORMAT, encoder.colorFormat)
-            setInteger(MediaFormat.KEY_BIT_RATE, videoFormat.bitrate)
-            setInteger(MediaFormat.KEY_FRAME_RATE, fps)
-            setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
+        val (codec, encoder) = configureEncoder(videoFormat, encoderCandidates)
+        val descriptor = contentResolver.openFileDescriptor(destination, "rwt") ?: run {
+            runCatching { codec.stop() }
+            runCatching { codec.release() }
+            error("Could not open the selected output file")
         }
-        val codec = MediaCodec.createByCodecName(encoder.name)
-        val descriptor = contentResolver.openFileDescriptor(destination, "rwt")
-            ?: error("Could not open the selected output file")
         val outputStream = ParcelFileDescriptor.AutoCloseOutputStream(descriptor)
         val muxer = try {
             Mp4Muxer.Builder(SeekableMuxerOutput.of(outputStream)).build()
         } catch (error: Throwable) {
             runCatching { outputStream.close() }.onFailure(error::addSuppressed)
+            runCatching { codec.stop() }.onFailure(error::addSuppressed)
+            runCatching { codec.release() }.onFailure(error::addSuppressed)
             throw error
         }
         muxer.addMetadataEntry(
@@ -163,8 +166,6 @@ class Mp4Exporter(
 
         var exportFailure: Throwable? = null
         try {
-            codec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-            codec.start()
             for (frame in 0 until frameCount) {
                 coroutineContext.ensureActive()
                 val animationFrame = animationFrame(frame, journeyFrameCount, fps)
@@ -268,6 +269,34 @@ class Mp4Exporter(
         }
     }
 
+    private fun configureEncoder(
+        videoFormat: VideoFormat,
+        candidates: List<EncoderSupport.Supported>,
+    ): Pair<MediaCodec, EncoderSupport.Supported> {
+        val configured = VideoEncoderSupport.firstUsable(candidates) { candidate ->
+            val codec = MediaCodec.createByCodecName(candidate.name)
+            try {
+                val format = MediaFormat.createVideoFormat(
+                    MediaFormat.MIMETYPE_VIDEO_AVC,
+                    videoFormat.width,
+                    videoFormat.height,
+                ).apply {
+                    setInteger(MediaFormat.KEY_COLOR_FORMAT, candidate.colorFormat)
+                    setInteger(MediaFormat.KEY_BIT_RATE, videoFormat.bitrate)
+                    setInteger(MediaFormat.KEY_FRAME_RATE, videoFormat.frameRate)
+                    setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
+                }
+                codec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+                codec.start()
+                codec
+            } catch (error: Throwable) {
+                runCatching { codec.release() }.onFailure(error::addSuppressed)
+                throw error
+            }
+        }
+        return configured ?: throw UnsupportedVideoFormatException(EncoderSupport.Reason.CONFIGURATION, videoFormat)
+    }
+
     // Flexible YUV does not identify the planar or semi-planar byte layout required by this converter.
     @Suppress("DEPRECATION")
     private fun argbToYuv420(pixels: IntArray, output: ByteArray, width: Int, height: Int, colorFormat: Int) {
@@ -314,19 +343,23 @@ class Mp4Exporter(
             return frameCount - outroFrameCount to outroFrameCount
         }
 
-        internal fun overviewWidth(format: dev.mahlernim.timelinevisualizer.render.VideoQuality): Int =
+        internal fun overviewWidth(format: VideoFormat): Int =
             if (format.width >= format.height) {
                 OVERVIEW_MAX_EDGE
             } else {
                 (OVERVIEW_MAX_EDGE * format.aspectRatio).toInt().coerceAtLeast(1).toEven()
             }
 
-        internal fun overviewHeight(format: dev.mahlernim.timelinevisualizer.render.VideoQuality): Int =
+        internal fun overviewWidth(format: VideoQuality): Int = overviewWidth(format.format)
+
+        internal fun overviewHeight(format: VideoFormat): Int =
             if (format.height >= format.width) {
                 OVERVIEW_MAX_EDGE
             } else {
                 (OVERVIEW_MAX_EDGE / format.aspectRatio).toInt().coerceAtLeast(1).toEven()
             }
+
+        internal fun overviewHeight(format: VideoQuality): Int = overviewHeight(format.format)
 
         internal fun requiredTilesForExport(
             painter: TimelinePainter,

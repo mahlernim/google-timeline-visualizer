@@ -24,6 +24,8 @@ data class VideoSettingsSnapshot(
     val longTripCompression: LongTripCompression,
     val resolution: VideoResolution,
     val dataSource: VideoDataSource = VideoDataSource.SEMANTIC,
+    val exportShortEdge: Int? = null,
+    val exportFrameRate: Int? = null,
 )
 
 data class VideoRecord(
@@ -99,6 +101,8 @@ class VideoStore(private val context: Context) : VideoRecordRepository {
                         put("pacing", snapshot.longTripCompression.name)
                         put("resolution", snapshot.resolution.name)
                         put("dataSource", snapshot.dataSource.name)
+                        snapshot.exportShortEdge?.let { put("exportShortEdge", it) }
+                        snapshot.exportFrameRate?.let { put("exportFrameRate", it) }
                     })
                 }
             })
@@ -159,6 +163,8 @@ class VideoStore(private val context: Context) : VideoRecordRepository {
             dataSource = runCatching {
                 VideoDataSource.valueOf(optString("dataSource"))
             }.getOrDefault(VideoDataSource.SEMANTIC),
+            exportShortEdge = optionalPositiveInt("exportShortEdge"),
+            exportFrameRate = optionalPositiveInt("exportFrameRate"),
         )
     }.getOrNull()
 

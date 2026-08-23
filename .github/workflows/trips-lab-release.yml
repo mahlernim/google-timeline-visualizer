@@ -14,7 +14,7 @@ jobs:
     env:
       RELEASE_TAG: ${{ github.ref_name }}
       EXPECTED_PACKAGE: dev.mahlernim.timelinevisualizer.tripslab
-      EXPECTED_VERSION_NAME: 2.3.4-trips-lab.5
+      EXPECTED_VERSION_NAME: 2.3.5-trips-lab.5
       EXPECTED_VERSION_CODE: 5
     steps:
       - uses: actions/checkout@v5

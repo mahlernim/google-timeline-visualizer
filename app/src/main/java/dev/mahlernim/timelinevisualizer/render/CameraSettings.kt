@@ -51,6 +51,89 @@ enum class VideoResolution(val shortEdge: Int) {
     ULTRA(1080),
 }
 
+enum class ExportResolution(val shortEdge: Int) {
+    SD(480),
+    HD(720),
+    FULL_HD(1080),
+    QHD(1440),
+    UHD(2160),
+}
+
+data class VideoFormat(
+    val width: Int,
+    val height: Int,
+    val frameRate: Int,
+    val bitrate: Int,
+) {
+    val aspectRatio: Float get() = width.toFloat() / height
+}
+
+data class ExportFormatSettings(
+    val shortEdge: Int,
+    val frameRate: Int,
+    val customResolution: Boolean = false,
+    val customFrameRate: Boolean = false,
+) {
+    init {
+        require(shortEdge in MIN_SHORT_EDGE..MAX_SHORT_EDGE)
+        require(frameRate in MIN_FRAME_RATE..MAX_FRAME_RATE)
+    }
+
+    fun format(aspectRatio: VideoAspectRatio): VideoFormat {
+        val longEdge = even(shortEdge * 16 / 9)
+        val (width, height) = when (aspectRatio) {
+            VideoAspectRatio.SQUARE -> shortEdge to shortEdge
+            VideoAspectRatio.PORTRAIT -> shortEdge to longEdge
+            VideoAspectRatio.LANDSCAPE -> longEdge to shortEdge
+        }
+        return VideoFormat(width, height, frameRate, bitrate(width, height, frameRate, aspectRatio))
+    }
+
+    companion object {
+        const val MIN_SHORT_EDGE = 480
+        const val MAX_SHORT_EDGE = 2160
+        const val MIN_FRAME_RATE = 15
+        const val MAX_FRAME_RATE = 60
+        const val DEFAULT_SHORT_EDGE = 480
+        const val DEFAULT_FRAME_RATE = 30
+
+        fun parseShortEdge(raw: CharSequence?): Int? = parseBoundedInt(raw, MIN_SHORT_EDGE, MAX_SHORT_EDGE)
+
+        fun parseFrameRate(raw: CharSequence?): Int? = parseBoundedInt(raw, MIN_FRAME_RATE, MAX_FRAME_RATE)
+
+        fun fromLegacy(quality: VideoQuality): ExportFormatSettings = ExportFormatSettings(
+            shortEdge = quality.resolution.shortEdge,
+            frameRate = quality.frameRate,
+        )
+
+        private fun even(value: Int): Int = value / 2 * 2
+
+        private fun parseBoundedInt(raw: CharSequence?, minimum: Int, maximum: Int): Int? {
+            val value = raw?.toString()?.trim().orEmpty()
+            if (!value.matches(Regex("[0-9]+"))) return null
+            return value.toIntOrNull()?.takeIf { it in minimum..maximum }
+        }
+
+        private fun bitrate(
+            width: Int,
+            height: Int,
+            frameRate: Int,
+            aspectRatio: VideoAspectRatio,
+        ): Int {
+            val legacyBase = when (width.coerceAtMost(height)) {
+                480 -> if (aspectRatio == VideoAspectRatio.SQUARE) 2_500_000 else 3_500_000
+                720 -> if (aspectRatio == VideoAspectRatio.SQUARE) 5_000_000 else 7_000_000
+                1080 -> if (aspectRatio == VideoAspectRatio.SQUARE) 8_000_000 else 12_000_000
+                else -> null
+            }
+            val legacyRate = if (aspectRatio == VideoAspectRatio.SQUARE) 24 else 30
+            val calculated = legacyBase?.let { it.toLong() * frameRate / legacyRate }
+                ?: (width.toLong() * height * frameRate * 19 / 100)
+            return calculated.coerceIn(1_500_000L, 40_000_000L).toInt()
+        }
+    }
+}
+
 enum class VideoQuality(
     val width: Int,
     val height: Int,
@@ -71,6 +154,8 @@ enum class VideoQuality(
 
     val aspectRatio: Float get() = width.toFloat() / height
 
+    val format: VideoFormat get() = VideoFormat(width, height, frameRate, bitrate)
+
     fun withAspectRatio(aspectRatio: VideoAspectRatio): VideoQuality = of(aspectRatio, resolution)
 
     fun withResolution(resolution: VideoResolution): VideoQuality = of(aspectRatioOption, resolution)
@@ -86,12 +171,24 @@ data class CameraSettings(
     val cameraMovement: CameraMovement = CameraMovement.STEADY,
     val longTripCompression: LongTripCompression = LongTripCompression.BALANCED,
     val videoQuality: VideoQuality = VideoQuality.STANDARD,
+    val exportFormat: ExportFormatSettings? = null,
     val tripDetection: TripDetection = TripDetection.BALANCED,
     val localFraming: LocalFraming = LocalFraming.BALANCED,
 ) {
     val episodeFramingEnabled: Boolean get() = localFraming.enabled
 
+    val effectiveExportFormat: ExportFormatSettings
+        get() = exportFormat ?: ExportFormatSettings.fromLegacy(videoQuality)
+
+    val activeVideoFormat: VideoFormat
+        get() = exportFormat?.format(videoQuality.aspectRatioOption) ?: videoQuality.format
+
     companion object {
-        val DEFAULT = CameraSettings()
+        val DEFAULT = CameraSettings(
+            exportFormat = ExportFormatSettings(
+                shortEdge = ExportFormatSettings.DEFAULT_SHORT_EDGE,
+                frameRate = ExportFormatSettings.DEFAULT_FRAME_RATE,
+            ),
+        )
     }
 }

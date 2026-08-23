@@ -314,4 +314,11 @@
     <string name="preset_overwritten">プリセットを更新しました</string>
     <string name="view_in_library">ライブラリで表示</string>
     <plurals name="recent_day_recap"><item quantity="other">直近%d日間のまとめ</item></plurals>
+    <string name="format_not_supported_with_rate">この端末では %1$d × %2$d、%3$d fps の動画を作成できません。解像度またはフレームレートを下げてください。</string>
+    <string name="resolution_1440">1440p</string><string name="resolution_2160">2160p</string>
+    <string name="frame_rate">フレームレート</string><string name="frame_rate_value">%1$d fps</string><string name="custom_action">カスタム…</string>
+    <string name="preset_resolution_selected">%1$dp · %2$d × %3$d</string><string name="custom_resolution_selected">カスタム · %1$d × %2$d</string><string name="custom_frame_rate_selected">カスタム · %1$d fps</string>
+    <string name="custom_resolution_title">カスタム解像度</string><string name="custom_resolution_short_edge">短辺のピクセル数</string><string name="custom_resolution_range">%1$d から %2$d までの整数を入力してください。</string><string name="output_dimensions">出力 · %1$d × %2$d</string>
+    <string name="custom_frame_rate_title">カスタムフレームレート</string><string name="custom_frame_rate_range">%1$d から %2$d までの整数を入力してください。</string>
+    <string name="demanding_format_title">この形式は端末への負荷が高い場合があります</string><string name="demanding_format_message">%1$d × %2$d、%3$d fps の動画を作成します。書き出しに大幅に時間がかかる、メモリ使用量が増える、または完了前に失敗する場合があります。高解像度では位置情報の詳細が多く表示される可能性があります。共有前に動画を確認してください。</string><string name="export_anyway">このまま書き出す</string>
 </resources>
