@@ -2,7 +2,71 @@
 
 ## Unreleased
 
+- Add a close-up camera mode to the web app.
+- Add distance-unit selection to the web app.
+- Document the web app's distance units and close-up mode.
+
+## 2.4.1
+
+- Show clearer Raw Data availability text for a project covering a single date or a single location.
+- Show the effective Raw date range in the web app.
+- Add explicit frame rate controls to the web app.
+- Set Android version code 40 and version name 2.4.1.
+
+## 2.4.0
+
+- Add the Trips and Recaps workflow with local trip detection, saved projects, and Library thumbnails.
+- Create trip and recap videos from detected trips, a custom recap period, or the available raw location range.
+- Allow recap titles to include the owner name.
+- Use the available recent range with a fixed 100 m accuracy filter for Raw videos.
+- Add advanced video settings and presets to the creation flow.
+- Set Android version code 39 and version name 2.4.0.
+
+## 2.3.5
+
+- Add flexible export quality settings with 480p, 720p, 1080p, 1440p, 2160p, and custom resolutions.
+- Add 24, 30, 60, and custom frame rate choices.
+- Check the device's H.264 encoders, prefer hardware encoding, and retry compatible alternatives.
+- Block unsupported export formats before encoding starts.
+- Set Android version code 38 and version name 2.3.5.
+
+## 2.3.4
+
+- Fix generated videos running 1.5 seconds longer than the selected duration.
+- Include the 1.5-second route overview ending within the selected total, so a 90-second selection creates a 90-second video.
+- Set Android version code 37 and version name 2.3.4.
+
+## 2.3.3
+
+- Fix the Watch screen going black after switching to another app and back while a video was playing.
 - Embed the resolved video title in exported MP4 metadata for media players and galleries.
+- Upgrade the desktop Python CLI to match the Android feature set.
+- Set Android version code 36 and version name 2.3.3.
+
+## 2.3.2
+
+- Deliver completed video notifications on a normal alert channel while progress updates stay quiet.
+- Make Watch and Share in the system notification open the app's playback and sharing flows.
+- Dismiss the completion notification after either action.
+- Set Android version code 35 and version name 2.3.2.
+
+## 2.3.1
+
+- Save the five camera and aspect-ratio choices from Video defaults as a reusable preset.
+- Show saved presets in Create video, applying them to the current draft until Set as default is chosen.
+- Rename, delete, and share saved presets from the same flow.
+- Share compact HTTPS preset links that carry only those five settings, never Timeline data, locations, dates, owner names, titles, filenames, or resolution.
+- Show every value from an opened preset link for confirmation before anything is applied or saved.
+- Preserve preset drafts across recreation.
+- Set Android version code 34 and version name 2.3.1.
+
+## 2.3.0
+
+- Group aspect ratio, zoom style, long-trip detection, local trip framing, and long-trip pacing into one coherent set of video defaults.
+- Separate export resolution, regional preferences, and Timeline cleanup into their own settings sections.
+- Apply the Camera Lab results, including earlier destination framing and grouped long transfers.
+- Remove the experimental zoom slowdown.
+- Set Android version code 33 and version name 2.3.0.
 
 ## 2.2.13
 
