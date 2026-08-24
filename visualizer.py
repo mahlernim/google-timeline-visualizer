@@ -1041,7 +1041,7 @@ def calculate_overview_viewport(
 def resolve_title_template(
     template: str, year_label: str = "", name: str = "", fallback: str = "My Trips"
 ) -> str:
-    resolved = template.replace("{year}", year_label).replace("{name}", name.strip()).trim() if hasattr(template, "trim") else template.replace("{year}", year_label).replace("{name}", name.strip()).strip()
+    resolved = template.replace("{year}", year_label).replace("{name}", name.strip()).strip()
     return resolved if resolved else fallback
 
 
