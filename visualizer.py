@@ -97,7 +97,6 @@ CAMERA_MOVEMENTS = {
 
 COMPRESSION_EXPONENTS = {
     'off': 1.00,
-    'gentle': 0.92,
     'balanced': 0.85,
     'strong': 0.75,
     'stronger': 0.65,
@@ -1049,7 +1048,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument('--camera-movement', '-c', choices=CAMERA_MOVEMENTS.keys(), default='steady',
                         help="Camera behavior: fixed, steady, dynamic, or close_up")
     parser.add_argument('--long-trip-compression', '-p', choices=COMPRESSION_EXPONENTS.keys(), default='balanced',
-                        help="Timing compression: off, gentle, balanced, strong, or stronger")
+                        help="Timing compression: off, balanced, strong, or stronger")
     parser.add_argument('--trip-detection', choices=TRIP_DETECTION_MULTIPLIERS.keys(), default='balanced',
                         help="Trip detection sensitivity: conservative, balanced, sensitive")
     parser.add_argument('--local-framing', choices=LOCAL_FRAMING_SETTINGS.keys(), default='balanced',
