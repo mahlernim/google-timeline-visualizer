@@ -3,6 +3,13 @@
 ## Unreleased
 
 - Embed the resolved video title in exported MP4 metadata for media players and galleries.
+- Decode current preset tokens in the desktop CLI so links shared from the Android app apply their camera settings and video duration.
+- Reject a preset token whose duration falls outside the supported 10 to 300 second range instead of accepting it.
+- Match the Android transfer-arrival framing floor in the desktop CLI instead of clamping short arrival legs to 15 km.
+- Give desktop map tile requests a timeout and retry a transient failure once.
+- Reuse a placeholder for a map tile that already failed instead of repeating the request on every frame.
+- Stop the desktop export with a typed error when too many map tiles are missing rather than writing a video with blank areas.
+- Remove the gentle long-trip compression option from the desktop CLI, matching the Android migration of that setting to balanced.
 
 ## 2.2.13
 
