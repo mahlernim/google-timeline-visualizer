@@ -21,6 +21,7 @@ import bisect
 import io
 import json
 import math
+import re
 import statistics
 import sys
 import urllib.request
@@ -46,6 +47,8 @@ except ImportError as e:
 # --- CONFIGURATION DEFAULTS ---
 DEFAULT_FPS = 30
 DEFAULT_DURATION = 30
+MIN_DURATION_SECONDS = 10
+MAX_DURATION_SECONDS = 300
 DEFAULT_TAIL_KM = 500
 THEME_COLOR = '#e90064'
 HEAD_COLOR = '#24191d'
@@ -118,6 +121,16 @@ TRIP_DETECTION_ENUM = ['conservative', 'balanced', 'sensitive']
 LOCAL_FRAMING_ENUM = ['off', 'balanced', 'close']
 LONG_TRIP_COMPRESSION_ENUM = ['off', 'balanced', 'strong', 'stronger']
 
+# Preset token wire format, mirroring PresetCodec.kt. 0xA2 carries the video
+# duration in bytes 3 and 4; 0xA1 is the older three-byte layout that predates
+# the duration field and decodes to DEFAULT_DURATION.
+PRESET_FORMAT = 0xA2
+PRESET_LEGACY_FORMAT = 0xA1
+PRESET_MIN_BYTES = 3
+PRESET_MAX_BYTES = 8
+PRESET_MAX_TOKEN_LENGTH = 24
+PRESET_TOKEN_PATTERN = re.compile(r'^[A-Za-z0-9_-]+$')
+
 TRANSFER_PADDING = 2.8
 CAMERA_TRACK_SAMPLES = 480
 CAMERA_DEAD_ZONE_HALF = 0.20
@@ -144,18 +157,20 @@ class PresetValues:
         trip_detection: str = "balanced",
         local_framing: str = "balanced",
         long_trip_compression: str = "balanced",
+        duration_seconds: int = DEFAULT_DURATION,
     ):
         self.camera_movement = camera_movement
         self.aspect_ratio = aspect_ratio
         self.trip_detection = trip_detection
         self.local_framing = local_framing
         self.long_trip_compression = long_trip_compression
+        self.duration_seconds = duration_seconds
 
     def __repr__(self) -> str:
         return (
             f"PresetValues(camera={self.camera_movement}, aspect={self.aspect_ratio}, "
             f"trip={self.trip_detection}, framing={self.local_framing}, "
-            f"pacing={self.long_trip_compression})"
+            f"pacing={self.long_trip_compression}, duration={self.duration_seconds}s)"
         )
 
 
@@ -166,13 +181,22 @@ def encode_preset(values: PresetValues) -> str:
     framing_ord = LOCAL_FRAMING_ENUM.index(values.local_framing)
     comp_ord = LONG_TRIP_COMPRESSION_ENUM.index(values.long_trip_compression)
     packed = cam_ord | (aspect_ord << 2) | (trip_ord << 4) | (framing_ord << 6)
-    raw_bytes = bytes([0xA1, packed, comp_ord])
+    duration = values.duration_seconds
+    raw_bytes = bytes([
+        PRESET_FORMAT,
+        packed,
+        comp_ord,
+        duration & 0xFF,
+        (duration >> 8) & 0xFF,
+    ])
     return base64.urlsafe_b64encode(raw_bytes).decode('ascii').rstrip('=')
 
 
 def decode_preset(token: str) -> Optional[PresetValues]:
     token = token.strip()
-    if not token or len(token) > 16:
+    if not token or len(token) > PRESET_MAX_TOKEN_LENGTH:
+        return None
+    if not PRESET_TOKEN_PATTERN.match(token):
         return None
     pad_len = (4 - len(token) % 4) % 4
     padded = token + ('=' * pad_len)
@@ -180,9 +204,10 @@ def decode_preset(token: str) -> Optional[PresetValues]:
         raw_bytes = base64.urlsafe_b64decode(padded)
     except Exception:
         return None
-    if len(raw_bytes) < 3 or len(raw_bytes) > 8:
+    if len(raw_bytes) < PRESET_MIN_BYTES or len(raw_bytes) > PRESET_MAX_BYTES:
         return None
-    if raw_bytes[0] != 0xA1:
+    preset_format = raw_bytes[0]
+    if preset_format not in (PRESET_FORMAT, PRESET_LEGACY_FORMAT):
         return None
     packed = raw_bytes[1]
     cam_idx = packed & 0b11
@@ -198,12 +223,21 @@ def decode_preset(token: str) -> Optional[PresetValues]:
         or comp_idx >= len(LONG_TRIP_COMPRESSION_ENUM)
     ):
         return None
+    if preset_format == PRESET_FORMAT:
+        if len(raw_bytes) < 5:
+            return None
+        duration_seconds = raw_bytes[3] | (raw_bytes[4] << 8)
+        if not MIN_DURATION_SECONDS <= duration_seconds <= MAX_DURATION_SECONDS:
+            return None
+    else:
+        duration_seconds = DEFAULT_DURATION
     return PresetValues(
         camera_movement=CAMERA_MOVEMENT_ENUM[cam_idx],
         aspect_ratio=ASPECT_RATIO_ENUM[aspect_idx],
         trip_detection=TRIP_DETECTION_ENUM[trip_idx],
         local_framing=LOCAL_FRAMING_ENUM[framing_idx],
         long_trip_compression=LONG_TRIP_COMPRESSION_ENUM[comp_idx],
+        duration_seconds=duration_seconds,
     )
 
 
@@ -1061,6 +1095,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             args.trip_detection = preset_values.trip_detection
             args.local_framing = preset_values.local_framing
             args.long_trip_compression = preset_values.long_trip_compression
+            args.duration = preset_values.duration_seconds
             print(f"Applied preset token '{args.preset}': {preset_values}")
         else:
             print(f"Warning: Invalid preset token '{args.preset}', using command-line arguments.", file=sys.stderr)
