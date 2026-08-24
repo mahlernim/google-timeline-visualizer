@@ -204,4 +204,11 @@ Basemap attribution is displayed in every preview and exported video:
 © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) and
 © [CARTO](https://carto.com/attributions).
 
+## Support
+
+If Timeline Visualizer was useful to you, you can leave an optional
+[one-time contribution](https://github.com/sponsors/mahlernim?frequency=one-time).
+Support is appreciated but never required and does not include paid features,
+priority support, or a commitment to future development.
+
 Licensed under the [MIT License](LICENSE).
