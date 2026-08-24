@@ -1,3 +1,4 @@
+import visualizer
 from visualizer import (
     build_argument_parser,
     build_camera_track,
@@ -6,6 +7,7 @@ from visualizer import (
     ease_in_out_cubic,
     ease_out_cubic,
     latlon_to_meters,
+    raw_camera_sample,
 )
 
 
@@ -111,3 +113,42 @@ def test_outro_easing_bounds():
     assert ease_in_out_cubic(1.0) == 1.0
     assert 0.0 < ease_out_cubic(0.5) <= 1.0
     assert 0.0 < ease_in_out_cubic(0.5) <= 1.0
+
+
+def arrival_span(local_leg_km):
+    """Camera span while arriving at a local leg of the given length after a long transfer."""
+    cumulative = [0.0, 2.5, 5.0, 500.0, 500.0 + local_leg_km / 2, 500.0 + local_leg_km]
+    lats = [37.50, 37.52, 37.54, 13.15, 13.16, 13.17]
+    lons = [127.00, 127.02, 127.04, 123.75, 123.76, 123.77]
+    projected = [latlon_to_meters(lat, lon) for lat, lon in zip(lats, lons)]
+    xs = [point[0] for point in projected]
+    ys = [point[1] for point in projected]
+    legs = build_legs(cumulative)
+    assert legs[1][2], 'the middle leg must be detected as a transfer'
+    assert not legs[2][2], 'the arrival leg must be local'
+    # 470 km sits past EPISODE_ARRIVAL_ZOOM_START_FRACTION of the transfer leg,
+    # so the arrival blend is active.
+    return raw_camera_sample(
+        cumulative, xs, ys, lats, lons, 470.0, 'close_up', legs, local_framing='balanced',
+    )[3]
+
+
+def test_short_arrival_legs_are_not_flattened_to_one_span():
+    """The arrival blend must follow the real leg length.
+
+    A floor above ordinary city distances would clamp both of these to the same
+    value and erase the difference, which is what MIN_CONTEXT_KM = 15.0 did while
+    TimelinePainter.kt used 0.001.
+    """
+    tight = arrival_span(3.0)
+    loose = arrival_span(12.0)
+
+    assert tight < loose
+
+
+def test_log_floor_stays_below_real_leg_lengths():
+    """LOG_FLOOR_KM only guards log(0); it must never shape framing."""
+    assert visualizer.LOG_FLOOR_KM == 0.001
+    assert visualizer.LOG_FLOOR_KM < min(
+        movement['minimum_context_km'] for movement in visualizer.CAMERA_MOVEMENTS.values()
+    )

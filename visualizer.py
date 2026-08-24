@@ -138,7 +138,12 @@ MIN_TRANSFER_THRESHOLD_KM = 60.0
 MAX_TRANSFER_THRESHOLD_KM = 120.0
 TRANSFER_TO_TYPICAL_RATIO = 3.0
 DEVIATION_MULTIPLIER = 6.0
-MIN_CONTEXT_KM = 15.0
+
+# Numeric floor for the transfer-arrival logarithmic blend below, matching
+# MIN_CONTEXT_KM in TimelinePainter.kt. It only exists to keep log() away from
+# zero and must stay far smaller than any real leg length. The per-movement
+# framing minimums live in CAMERA_MOVEMENTS['...']['minimum_context_km'].
+LOG_FLOOR_KM = 0.001
 
 # Web Mercator Constants
 R_EARTH = 6378137.0
@@ -883,8 +888,8 @@ def raw_camera_sample(
         leg_len = leg[1] - leg[0]
         if transfer_arrival_blend > 0:
             arrival_ctx = min(proportional_context, (next_local_leg[1] - next_local_leg[0]) if next_local_leg else proportional_context)
-            arrival_ctx = max(MIN_CONTEXT_KM, arrival_ctx)
-            context = math.exp(lerp(math.log(max(MIN_CONTEXT_KM, leg_len)), math.log(arrival_ctx), transfer_arrival_blend))
+            arrival_ctx = max(LOG_FLOOR_KM, arrival_ctx)
+            context = math.exp(lerp(math.log(max(LOG_FLOOR_KM, leg_len)), math.log(arrival_ctx), transfer_arrival_blend))
             padding = lerp(TRANSFER_PADDING, movement['padding'] * framing['padding_multiplier'], transfer_arrival_blend)
         else:
             context = leg_len
