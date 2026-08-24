@@ -57,6 +57,11 @@ TEXT_PRIMARY_COLOR = '#24191d'
 TEXT_SECONDARY_COLOR = '#5c4b52'
 MAP_ATTRIBUTION = '© OpenStreetMap contributors  © CARTO'
 TILE_URL = "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+TILE_FETCH_TIMEOUT_SECONDS = 10
+TILE_FETCH_ATTEMPTS = 2
+# Isolated misses degrade to a blank tile, but a map this broken means the
+# network is down and the video would be mostly empty, so stop instead.
+MAX_FAILED_TILES = 8
 
 OUTRO_SECONDS = 1.5
 OUTRO_TRANSITION_SECONDS = 1.0
@@ -77,6 +82,10 @@ class NoDataFoundError(TimelineCliError):
 
 class FfmpegUnavailableError(TimelineCliError):
     """Raised when Matplotlib cannot find a configured ffmpeg executable."""
+
+
+class MapTileUnavailableError(TimelineCliError):
+    """Raised when too many map tiles fail to load to render an accurate map."""
 
 
 # Camera behavior matches the Android renderer defaults and options.
@@ -541,22 +550,42 @@ def tile_to_bounds_meters(xtile: int, ytile: int, zoom: int) -> Tuple[float, flo
 
 
 TILE_CACHE: Dict[Tuple[int, int, int], Image.Image] = {}
+FAILED_TILES: set = set()
 
 
 def fetch_tile_img(x: int, y: int, z: int) -> Image.Image:
+    """Return one map tile, reusing the process-lifetime cache.
+
+    A tile that cannot be fetched is cached as a blank placeholder so the frame
+    loop reuses it instead of repeating a request that already failed. Once more
+    than MAX_FAILED_TILES distinct tiles are missing, the map is too incomplete
+    to be worth encoding and the export stops.
+    """
     key = (x, y, z)
-    if key in TILE_CACHE:
-        return TILE_CACHE[key]
+    cached = TILE_CACHE.get(key)
+    if cached is not None:
+        return cached
+
     url = TILE_URL.format(z=z, x=x, y=y)
-    try:
-        req = urllib.request.Request(url, headers={'User-Agent': "Mozilla/5.0"})
-        with urllib.request.urlopen(req) as response:
-            img = Image.open(io.BytesIO(response.read())).convert('RGB')
-            TILE_CACHE[key] = img
-            return img
-    except Exception:
-        fallback = Image.new('RGB', (256, 256), (240, 240, 240))
-        return fallback
+    for attempt in range(TILE_FETCH_ATTEMPTS):
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=TILE_FETCH_TIMEOUT_SECONDS) as response:
+                img = Image.open(io.BytesIO(response.read())).convert('RGB')
+                TILE_CACHE[key] = img
+                return img
+        except Exception:
+            continue
+
+    FAILED_TILES.add(key)
+    if len(FAILED_TILES) > MAX_FAILED_TILES:
+        raise MapTileUnavailableError(
+            f"Could not load {len(FAILED_TILES)} map tiles from the tile server. "
+            "Check the network connection and try again.",
+        )
+    fallback = Image.new('RGB', (256, 256), (240, 240, 240))
+    TILE_CACHE[key] = fallback
+    return fallback
 
 
 def get_map_image(
@@ -1307,7 +1336,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     ani = animation.FuncAnimation(fig, update, frames=len(frame_data), blit=False)
 
     print(f"Saving to {args.output}...")
-    ani.save(args.output, writer='ffmpeg', fps=fps, dpi=100)
+    try:
+        ani.save(args.output, writer='ffmpeg', fps=fps, dpi=100)
+    except TimelineCliError as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
     print("Done!")
     return 0
 
