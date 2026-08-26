@@ -479,6 +479,7 @@
     <string name="raw_data_available_one_day">Raw data available on %1$s</string>
     <string name="raw_data_available_one_point">1 raw location available on %1$s</string>
     <string name="raw_data_range_conflict">This project uses dates outside the raw data currently available. Choose a valid range to continue.</string>
+    <string name="dates_adjusted_to_available_range">Dates were adjusted to fit the available data range (%1$s to %2$s)</string>
     <string name="use_available_range">Use available range</string>
     <string name="save_preset_choice_title">Save preset changes</string>
     <string name="overwrite_preset">Overwrite %1$s</string>

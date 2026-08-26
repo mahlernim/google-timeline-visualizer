@@ -363,6 +363,7 @@
     <string name="raw_data_available_one_day">원시 데이터 사용 가능일: %1$s</string>
     <string name="raw_data_available_one_point">원시 위치 1개 사용 가능일: %1$s</string>
     <string name="raw_data_range_conflict">이 프로젝트의 날짜가 현재 사용 가능한 원시 데이터 범위를 벗어납니다. 유효한 기간을 선택하세요.</string>
+    <string name="dates_adjusted_to_available_range">가용 데이터 범위에 맞춰 날짜가 조정되었습니다 (%1$s ~ %2$s)</string>
     <string name="use_available_range">사용 가능한 기간 적용</string>
     <string name="save_preset_choice_title">프리셋 변경 저장</string>
     <string name="overwrite_preset">%1$s 덮어쓰기</string>

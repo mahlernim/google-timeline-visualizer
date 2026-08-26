@@ -309,6 +309,7 @@
     <string name="raw_data_available_one_day">未処理データの利用可能日: %1$s</string>
     <string name="raw_data_available_one_point">未処理の位置情報 1 件の利用可能日: %1$s</string>
     <string name="raw_data_range_conflict">このプロジェクトの日付は現在利用できる未処理データの範囲外です。有効な期間を選択してください。</string>
+    <string name="dates_adjusted_to_available_range">利用可能なデータ範囲に合わせて日付が調整されました（%1$s〜%2$s）</string>
     <string name="use_available_range">利用可能な期間を使用</string>
     <string name="save_preset_choice_title">プリセットの変更を保存</string>
     <string name="overwrite_preset">%1$sを上書き</string>

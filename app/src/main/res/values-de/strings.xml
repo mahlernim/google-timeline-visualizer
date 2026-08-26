@@ -306,6 +306,7 @@
     <string name="raw_data_available_one_day">Rohdaten verfügbar am %1$s</string>
     <string name="raw_data_available_one_point">1 Rohdatenstandort verfügbar am %1$s</string>
     <string name="raw_data_range_conflict">Dieses Projekt verwendet Daten außerhalb der derzeit verfügbaren Rohdaten. Wähle einen gültigen Zeitraum aus.</string>
+    <string name="dates_adjusted_to_available_range">Die Daten wurden an den verfügbaren Datenbereich angepasst (%1$s bis %2$s)</string>
     <string name="use_available_range">Verfügbaren Zeitraum verwenden</string>
     <string name="save_preset_choice_title">Änderungen speichern</string>
     <string name="overwrite_preset">%1$s überschreiben</string>

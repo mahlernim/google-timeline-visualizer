@@ -58,6 +58,7 @@ import dev.mahlernim.timelinevisualizer.ui.TimelineView
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -1267,6 +1268,62 @@ class MainActivityTest {
 
         assertEquals("1 raw location available on Feb 3, 2026", activity.rawDataAvailability(listOf(first)))
         assertEquals("Raw data available on Feb 3, 2026", activity.rawDataAvailability(listOf(first, second)))
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "en-rUS")
+    fun detectionRangeUsesSemanticBoundsNotRawBounds() {
+        acceptPrivacyDisclosure()
+        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/semantic-and-raw-ranges.json"))
+        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
+        waitUntil { activity.findViewById<View>(R.id.rawDataChoice).visibility == View.VISIBLE }
+
+        val semanticBounds = activity.semanticDateBounds()
+        val rawBounds = activity.rawDateBounds()
+        assertNotNull(semanticBounds)
+        assertNotNull(rawBounds)
+        assertEquals(LocalDate.parse("2026-01-01"), semanticBounds!!.first)
+        assertEquals(LocalDate.parse("2026-01-03"), semanticBounds.second)
+        assertEquals(LocalDate.parse("2026-02-01"), rawBounds!!.first)
+        assertEquals(LocalDate.parse("2026-02-05"), rawBounds.second)
+        assertTrue(!semanticBounds.first.isEqual(rawBounds.first))
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "en-rUS")
+    fun detectionRangePickerReturnsNullForSemanticBoundsWithRawOnlyImport() {
+        val activity = launchActivity()
+        assertNull(activity.semanticDateBounds())
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "en-rUS")
+    fun rawBoundsRespectFilteredEndpoints() {
+        acceptPrivacyDisclosure()
+        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/semantic-and-raw-ranges.json"))
+        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
+        waitUntil { activity.findViewById<View>(R.id.rawDataChoice).visibility == View.VISIBLE }
+
+        val rawBounds = activity.rawDateBounds()
+        assertNotNull(rawBounds)
+        assertEquals(LocalDate.parse("2026-02-01"), rawBounds!!.first)
+        assertEquals(LocalDate.parse("2026-02-05"), rawBounds.second)
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "en-rUS")
+    fun exactDateRangeAcceptsBoundaryDates() {
+        acceptPrivacyDisclosure()
+        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/semantic-and-raw-ranges.json"))
+        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
+        waitUntil { activity.findViewById<View>(R.id.rawDataChoice).visibility == View.VISIBLE }
+
+        activity.findViewById<View>(R.id.rawDataChoice).performClick()
+        waitUntil { activity.findViewById<View>(R.id.rawDataAvailabilityGroup).visibility == View.VISIBLE }
+
+        assertTrue(activity.applyExactDateRange(LocalDate.parse("2026-02-01"), LocalDate.parse("2026-02-05")))
+        assertTrue(!activity.applyExactDateRange(LocalDate.parse("2026-01-31"), LocalDate.parse("2026-02-05")))
+        assertTrue(!activity.applyExactDateRange(LocalDate.parse("2026-02-01"), LocalDate.parse("2026-02-06")))
     }
 
     @Test

@@ -311,6 +311,7 @@
     <string name="raw_data_available_one_day">Données brutes disponibles le %1$s</string>
     <string name="raw_data_available_one_point">1 position brute disponible le %1$s</string>
     <string name="raw_data_range_conflict">Ce projet utilise des dates hors des données brutes disponibles. Choisissez une plage valide.</string>
+    <string name="dates_adjusted_to_available_range">Les dates ont été ajustées pour correspondre à la plage de données disponible (%1$s à %2$s)</string>
     <string name="use_available_range">Utiliser la plage disponible</string>
     <string name="save_preset_choice_title">Enregistrer les modifications</string>
     <string name="overwrite_preset">Écraser %1$s</string>

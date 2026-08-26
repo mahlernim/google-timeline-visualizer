@@ -1645,10 +1645,21 @@ class MainActivity : AppCompatActivity() {
                 rawProjectRangeConflict = activeProjectId != null &&
                     (requestedStart.isBefore(first) || requestedEnd.isAfter(last) || requestedEnd.isBefore(requestedStart))
                 if (!rawProjectRangeConflict) {
+                    val wasAdjusted = requestedStart.isBefore(first) || requestedEnd.isAfter(last)
                     selectedStartDate = requestedStart.coerceIn(first, last)
                     selectedEndDate = requestedEnd.coerceIn(selectedStartDate!!, last)
                     activeStartDate = selectedStartDate
                     activeEndDate = selectedEndDate
+                    if (wasAdjusted) {
+                        val zone = ZoneId.systemDefault()
+                        val startStr = first.atStartOfDay(zone).format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
+                        val endStr = last.atStartOfDay(zone).format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
+                        Snackbar.make(
+                            binding.root,
+                            getString(R.string.dates_adjusted_to_available_range, startStr, endStr),
+                            Snackbar.LENGTH_LONG,
+                        ).show()
+                    }
                 }
                 updateExactDateControls()
                 updateSuggestedProjectTitle()
@@ -3172,13 +3183,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun chooseDetectionRange() {
-        val start = detectionStartDate ?: timeline?.points?.firstOrNull()?.instant
-            ?.atZone(ZoneId.systemDefault())?.toLocalDate() ?: return
-        val end = detectionEndDate ?: timeline?.points?.lastOrNull()?.instant
-            ?.atZone(ZoneId.systemDefault())?.toLocalDate() ?: start
+        val bounds = semanticDateBounds()
+        if (bounds == null) {
+            Snackbar.make(binding.root, R.string.no_timeline, Snackbar.LENGTH_SHORT).show()
+            return
+        }
+        val start = detectionStartDate ?: bounds.first
+        val end = detectionEndDate ?: bounds.second
+        val initialStart = start.coerceIn(bounds.first, bounds.second)
+        val initialEnd = end.coerceIn(initialStart, bounds.second)
+        val constraints = CalendarConstraints.Builder()
+            .setStart(datePickerMillis(bounds.first))
+            .setEnd(datePickerMillis(bounds.second))
+            .setOpenAt(datePickerMillis(initialStart))
+            .setValidator(
+                CompositeDateValidator.allOf(
+                    listOf(
+                        DateValidatorPointForward.from(datePickerMillis(bounds.first)),
+                        DateValidatorPointBackward.before(datePickerMillis(bounds.second) + DAY_MILLIS),
+                    ),
+                ),
+            )
+            .build()
         val picker = MaterialDatePicker.Builder.dateRangePicker()
             .setTitleText(R.string.detection_range)
-            .setSelection(AndroidPair(datePickerMillis(start), datePickerMillis(end)))
+            .setCalendarConstraints(constraints)
+            .setSelection(AndroidPair(datePickerMillis(initialStart), datePickerMillis(initialEnd)))
             .build()
         picker.addOnPositiveButtonClickListener { range ->
             detectionStartDate = Instant.ofEpochMilli(range.first).atZone(ZoneOffset.UTC).toLocalDate()
@@ -3713,7 +3743,7 @@ class MainActivity : AppCompatActivity() {
         updateRawDataAvailability()
     }
 
-    private fun semanticDateBounds(): Pair<LocalDate, LocalDate>? {
+    internal fun semanticDateBounds(): Pair<LocalDate, LocalDate>? {
         if (rawOnlyImport) return null
         val points = timeline?.points.orEmpty()
         if (points.isEmpty()) return null
@@ -3722,7 +3752,7 @@ class MainActivity : AppCompatActivity() {
             points.maxOf { it.instant }.atZone(zone).toLocalDate()
     }
 
-    private fun rawDateBounds(): Pair<LocalDate, LocalDate>? {
+    internal fun rawDateBounds(): Pair<LocalDate, LocalDate>? {
         val points = renderRawSignalsTimeline?.points.orEmpty()
         if (points.isEmpty()) return null
         val zone = ZoneId.systemDefault()

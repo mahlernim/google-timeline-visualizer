@@ -302,6 +302,7 @@
     <string name="raw_data_available_one_day">原始資料可用日期：%1$s</string>
     <string name="raw_data_available_one_point">1 個原始位置可用於 %1$s</string>
     <string name="raw_data_range_conflict">此專案使用的日期超出目前原始資料範圍。請選擇有效範圍。</string>
+    <string name="dates_adjusted_to_available_range">日期已調整為符合可用資料範圍（%1$s 至 %2$s）</string>
     <string name="use_available_range">使用可用範圍</string>
     <string name="save_preset_choice_title">儲存預設組合變更</string>
     <string name="overwrite_preset">覆寫%1$s</string>
