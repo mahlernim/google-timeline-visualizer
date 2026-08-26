@@ -199,12 +199,17 @@ class TimelinePainter {
             width: Int,
             height: Int,
             paint: Paint,
-            alphaScale: Int
+            alphaScale: Int,
+            scale: Float
         ) {
             if (lastCachedIndex < 0 || chunks.isEmpty()) return
 
             val previousAlpha = paint.alpha
-            paint.alpha = (previousAlpha * alphaScale / 255f).toInt().coerceIn(0, 255)
+            val previousStroke = paint.strokeWidth
+            
+            // Make the trail thick enough and opaque enough to see clearly
+            paint.strokeWidth = 6f 
+            paint.alpha = (previousAlpha * alphaScale / 255f * 0.45f).toInt().coerceIn(0, 255)
 
             val matrix = android.graphics.Matrix()
             val scaleX = width / (viewport.maxX - viewport.minX).toFloat()
@@ -223,6 +228,9 @@ class TimelinePainter {
                 chunk.path.transform(matrix, screenPath)
                 canvas.drawPath(screenPath, paint)
             }
+            
+            paint.alpha = previousAlpha
+            paint.strokeWidth = previousStroke
 
             if (distanceKm > 0.0) {
                 val currentPoint = journey.positionAtDistance(distanceKm)
@@ -1020,11 +1028,12 @@ class TimelinePainter {
         val oldEnd = trailStart + visibleTrail * 0.45
         val middleEnd = trailStart + visibleTrail * 0.75
         val activeAlpha = (255 * (1f - easeOutCubic(frame.outroProgress))).toInt().coerceIn(0, 255)
+        val scale = overlayScale(width, height)
         if (prepared != null) {
             if (cameraSettings.ghostTrailEnabled) {
                 ghostTrailCache.update(journey, prepared, current.distanceKm)
                 ghostTrailCache.draw(
-                    canvas, journey, prepared, current.distanceKm, viewport, width, height, ghostTrailPaint, activeAlpha
+                    canvas, journey, prepared, current.distanceKm, viewport, width, height, ghostTrailPaint, activeAlpha, scale
                 )
             }
             

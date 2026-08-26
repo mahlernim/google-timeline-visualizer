@@ -65,6 +65,7 @@ class VideoExportRequestStore(context: Context) {
                 output.writeBoolean(exportFormat.customResolution)
                 output.writeBoolean(exportFormat.customFrameRate)
             }
+            output.writeBoolean(request.cameraSettings.ghostTrailEnabled)
             output.writeBoolean(request.projectId != null)
             request.projectId?.let(output::writeUTF)
             output.writeBoolean(request.presetName != null)
@@ -153,6 +154,7 @@ class VideoExportRequestStore(context: Context) {
                         } else {
                             ExportFormatSettings.fromLegacy(quality)
                         }
+                        val ghostTrailEnabled = if (version >= 12) input.readBoolean() else false
                         CameraSettings(
                             cameraMovement = movement,
                             longTripCompression = compression,
@@ -164,6 +166,7 @@ class VideoExportRequestStore(context: Context) {
                             } else {
                                 LocalFraming.OFF
                             },
+                            ghostTrailEnabled = ghostTrailEnabled,
                         )
                     } else if (version == 3) {
                         repeat(4) { input.readUTF() }
@@ -224,7 +227,7 @@ class VideoExportRequestStore(context: Context) {
     }
 
     companion object {
-        private const val CURRENT_FILE_VERSION = 11
+        private const val CURRENT_FILE_VERSION = 12
         private const val MAX_POINT_COUNT = 2_000_000
         private const val REQUEST_FILE = "pending-video-export.bin"
         private const val TEMPORARY_FILE = "pending-video-export.tmp"
