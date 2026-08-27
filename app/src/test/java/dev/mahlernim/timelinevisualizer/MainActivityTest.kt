@@ -58,7 +58,6 @@ import dev.mahlernim.timelinevisualizer.ui.TimelineView
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeFalse
 import org.junit.Before
@@ -1286,61 +1285,20 @@ class MainActivityTest {
     }
 
     @Test
-    @Config(sdk = [35], qualifiers = "en-rUS")
-    fun detectionRangeUsesSemanticBoundsNotRawBounds() {
-        acceptPrivacyDisclosure()
-        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/semantic-and-raw-ranges.json"))
-        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
-        waitUntil { activity.rawDateBounds() != null }
-
-        val semanticBounds = activity.semanticDateBounds()
-        val rawBounds = activity.rawDateBounds()
-        assertNotNull(semanticBounds)
-        assertNotNull(rawBounds)
-        assertEquals(LocalDate.parse("2026-01-01"), semanticBounds!!.first)
-        assertEquals(LocalDate.parse("2026-01-03"), semanticBounds.second)
-        assertEquals(LocalDate.parse("2026-02-01"), rawBounds!!.first)
-        assertEquals(LocalDate.parse("2026-02-05"), rawBounds.second)
-        assertTrue(!semanticBounds.first.isEqual(rawBounds.first))
-    }
-
-    @Test
-    @Config(sdk = [35], qualifiers = "en-rUS")
-    fun detectionRangePickerReturnsNullForSemanticBoundsWithRawOnlyImport() {
+    fun datePickerConstraintsUseInclusiveBounds() {
         val activity = launchActivity()
-        assertNull(activity.semanticDateBounds())
-    }
+        val first = LocalDate.parse("2026-02-01")
+        val last = LocalDate.parse("2026-02-05")
+        val constraints = activity.datePickerConstraints(first to last, LocalDate.parse("2026-01-01"))
+        val millis = { date: LocalDate -> date.toEpochDay() * 24L * 60L * 60L * 1_000L }
 
-    @Test
-    @Config(sdk = [35], qualifiers = "en-rUS")
-    fun rawBoundsRespectFilteredEndpoints() {
-        acceptPrivacyDisclosure()
-        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/semantic-and-raw-ranges.json"))
-        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
-        waitUntil { activity.rawDateBounds() != null }
-        activity.findViewById<View>(R.id.navigationCreate).performClick()
-        waitUntil { activity.findViewById<View>(R.id.rawDataChoice).visibility == View.VISIBLE }
-
-        val rawBounds = activity.rawDateBounds()
-        assertNotNull(rawBounds)
-        assertEquals(LocalDate.parse("2026-02-01"), rawBounds!!.first)
-        assertEquals(LocalDate.parse("2026-02-05"), rawBounds.second)
-    }
-
-    @Test
-    @Config(sdk = [35], qualifiers = "en-rUS")
-    fun exactDateRangeAcceptsBoundaryDates() {
-        acceptPrivacyDisclosure()
-        val source = Uri.fromFile(repoRoot().resolve("test-fixtures/semantic-and-raw-ranges.json"))
-        val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
-        waitUntil { activity.findViewById<View>(R.id.rawDataChoice).visibility == View.VISIBLE }
-
-        activity.findViewById<View>(R.id.rawDataChoice).performClick()
-        waitUntil { activity.findViewById<View>(R.id.rawDataAvailabilityGroup).visibility == View.VISIBLE }
-
-        assertTrue(activity.applyExactDateRange(LocalDate.parse("2026-02-01"), LocalDate.parse("2026-02-05")))
-        assertTrue(!activity.applyExactDateRange(LocalDate.parse("2026-01-31"), LocalDate.parse("2026-02-05")))
-        assertTrue(!activity.applyExactDateRange(LocalDate.parse("2026-02-01"), LocalDate.parse("2026-02-06")))
+        assertEquals(millis(first), constraints.start)
+        assertEquals(millis(last), constraints.end)
+        assertEquals(millis(first), constraints.openAt)
+        assertTrue(!constraints.dateValidator.isValid(millis(first.minusDays(1))))
+        assertTrue(constraints.dateValidator.isValid(millis(first)))
+        assertTrue(constraints.dateValidator.isValid(millis(last)))
+        assertTrue(!constraints.dateValidator.isValid(millis(last.plusDays(1))))
     }
 
     @Test

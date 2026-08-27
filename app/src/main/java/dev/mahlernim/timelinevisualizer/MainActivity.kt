@@ -2988,19 +2988,7 @@ class MainActivity : AppCompatActivity() {
         val bounds = activeDateBounds()
         val initialStart = start.coerceIn(bounds.first, bounds.second)
         val initialEnd = end.coerceIn(initialStart, bounds.second)
-        val constraints = CalendarConstraints.Builder()
-            .setStart(datePickerMillis(bounds.first))
-            .setEnd(datePickerMillis(bounds.second))
-            .setOpenAt(datePickerMillis(initialStart))
-            .setValidator(
-                CompositeDateValidator.allOf(
-                    listOf(
-                        DateValidatorPointForward.from(datePickerMillis(bounds.first)),
-                        DateValidatorPointBackward.before(datePickerMillis(bounds.second) + DAY_MILLIS),
-                    ),
-                ),
-            )
-            .build()
+        val constraints = datePickerConstraints(bounds, initialStart)
         val picker = MaterialDatePicker.Builder.dateRangePicker()
             .setTitleText(R.string.choose_exact_dates)
             .setCalendarConstraints(constraints)
@@ -3080,6 +3068,23 @@ class MainActivity : AppCompatActivity() {
         .atStartOfDay(ZoneOffset.UTC)
         .toInstant()
         .toEpochMilli()
+
+    internal fun datePickerConstraints(
+        bounds: Pair<LocalDate, LocalDate>,
+        openAt: LocalDate,
+    ): CalendarConstraints = CalendarConstraints.Builder()
+        .setStart(datePickerMillis(bounds.first))
+        .setEnd(datePickerMillis(bounds.second))
+        .setOpenAt(datePickerMillis(openAt.coerceIn(bounds.first, bounds.second)))
+        .setValidator(
+            CompositeDateValidator.allOf(
+                listOf(
+                    DateValidatorPointForward.from(datePickerMillis(bounds.first)),
+                    DateValidatorPointBackward.before(datePickerMillis(bounds.second) + DAY_MILLIS),
+                ),
+            ),
+        )
+        .build()
 
     private fun normalizeRange(changedStart: Boolean) {
         val startYear = selectedStartYear ?: return
@@ -4496,19 +4501,7 @@ class MainActivity : AppCompatActivity() {
         val end = detectionEndDate ?: bounds.second
         val initialStart = start.coerceIn(bounds.first, bounds.second)
         val initialEnd = end.coerceIn(initialStart, bounds.second)
-        val constraints = CalendarConstraints.Builder()
-            .setStart(datePickerMillis(bounds.first))
-            .setEnd(datePickerMillis(bounds.second))
-            .setOpenAt(datePickerMillis(initialStart))
-            .setValidator(
-                CompositeDateValidator.allOf(
-                    listOf(
-                        DateValidatorPointForward.from(datePickerMillis(bounds.first)),
-                        DateValidatorPointBackward.before(datePickerMillis(bounds.second) + DAY_MILLIS),
-                    ),
-                ),
-            )
-            .build()
+        val constraints = datePickerConstraints(bounds, initialStart)
         val picker = MaterialDatePicker.Builder.dateRangePicker()
             .setTitleText(R.string.detection_range)
             .setCalendarConstraints(constraints)
@@ -5133,7 +5126,7 @@ class MainActivity : AppCompatActivity() {
         updateRawDataAvailability()
     }
 
-    internal fun semanticDateBounds(): Pair<LocalDate, LocalDate>? {
+    private fun semanticDateBounds(): Pair<LocalDate, LocalDate>? {
         if (rawOnlyImport) return null
         val points = timeline?.points.orEmpty()
         val zone = ZoneId.systemDefault()
@@ -5159,7 +5152,7 @@ class MainActivity : AppCompatActivity() {
             Instant.ofEpochMilli(endMillis).atZone(zone).toLocalDate()
     }
 
-    internal fun rawDateBounds(): Pair<LocalDate, LocalDate>? {
+    private fun rawDateBounds(): Pair<LocalDate, LocalDate>? {
         val points = renderRawSignalsTimeline?.points.orEmpty()
         if (points.isEmpty()) return null
         val zone = ZoneId.systemDefault()
