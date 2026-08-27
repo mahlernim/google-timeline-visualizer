@@ -3080,7 +3080,7 @@ class MainActivity : AppCompatActivity() {
             CompositeDateValidator.allOf(
                 listOf(
                     DateValidatorPointForward.from(datePickerMillis(bounds.first)),
-                    DateValidatorPointBackward.before(datePickerMillis(bounds.second) + DAY_MILLIS),
+                    DateValidatorPointBackward.before(datePickerMillis(bounds.second)),
                 ),
             ),
         )
