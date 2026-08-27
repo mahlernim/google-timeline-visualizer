@@ -279,6 +279,29 @@ class JournalLabUiTest {
     }
 
     @Test
+    fun firstImportRecapHidesPreparationIndicatorWhenTheRouteIsReady() {
+        val activity = launchActivity()
+        activity.importTimeline(Uri.fromFile(twoYearTimeline()))
+        waitUntil {
+            activity.journalMetadataReady() &&
+                activity.findViewById<View>(R.id.loadingGroup).visibility == View.GONE
+        }
+        ShadowDialog.getLatestDialog()?.dismiss()
+        activity.findViewById<View>(R.id.navigationCreate).performClick()
+        activity.findViewById<View>(R.id.recapVideoChoice).performClick()
+        val recapDialog = ShadowDialog.getLatestDialog() as androidx.appcompat.app.AlertDialog
+        recapDialog.listView.performItemClick(null, 0, 0L)
+
+        val continueButton = activity.findViewById<View>(R.id.wizardContinueButton)
+        waitUntil(continueButton::isEnabled)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.journalRoutePreparingGroup).visibility)
+
+        continueButton.performClick()
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.styleStepGroup).visibility)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.journalRoutePreparingGroup).visibility)
+    }
+
+    @Test
     fun findTripsIsAvailableFromJournalMetadataBeforeGeometryLoads() {
         val database = JournalDatabase.open(context)
         runBlocking {

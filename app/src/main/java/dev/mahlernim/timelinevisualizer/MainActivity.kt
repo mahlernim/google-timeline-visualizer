@@ -1245,7 +1245,10 @@ class MainActivity : AppCompatActivity() {
         val hasJournalMetadata = BuildConfig.IS_JOURNAL_LAB && activeJournalStatus != null
         editor.createTypeStepGroup.visibility = if (isType && (hasTimeline || hasJournalMetadata)) View.VISIBLE else View.GONE
         editor.journalRoutePreparingGroup.visibility = if (
-            hasJournalMetadata && journalRouteLoadJob?.isActive == true
+            hasJournalMetadata &&
+            isProject &&
+            journalRouteLoadJob?.isActive == true &&
+            !selectedJournalRangeReady()
         ) {
             View.VISIBLE
         } else {
@@ -1316,19 +1319,17 @@ class MainActivity : AppCompatActivity() {
     private fun updateWizardContinueAvailability() {
         if (!::editor.isInitialized) return
         val isProject = currentCreateStep == CreateStep.PROJECT
-        val selectedJournalRangeReady = if (BuildConfig.IS_JOURNAL_LAB && isProject) {
-            currentProjectDates()?.let { (start, end) ->
-                val zone = ZoneId.systemDefault()
-                journalRouteCovers(
-                    start.atStartOfDay(zone).toInstant(),
-                    end.plusDays(1).atStartOfDay(zone).toInstant(),
-                )
-            } == true
-        } else {
-            true
-        }
+        val selectedJournalRangeReady = !BuildConfig.IS_JOURNAL_LAB || !isProject || selectedJournalRangeReady()
         editor.wizardContinueButton.isEnabled = !(isProject && rawProjectRangeConflict) && selectedJournalRangeReady
     }
+
+    private fun selectedJournalRangeReady(): Boolean = currentProjectDates()?.let { (start, end) ->
+        val zone = ZoneId.systemDefault()
+        journalRouteCovers(
+            start.atStartOfDay(zone).toInstant(),
+            end.plusDays(1).atStartOfDay(zone).toInstant(),
+        )
+    } == true
 
     private fun renderCreateStepper() {
         val stage = currentCreateStage()
