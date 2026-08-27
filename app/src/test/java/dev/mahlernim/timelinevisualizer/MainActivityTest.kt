@@ -1253,7 +1253,7 @@ class MainActivityTest {
         acceptPrivacyDisclosure()
         val source = Uri.fromFile(repoRoot().resolve("test-fixtures/semantic-and-raw-ranges.json"))
         val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
-        waitUntil { activity.findViewById<View>(R.id.rawDataChoice).visibility == View.VISIBLE }
+        waitUntil { activity.semanticDateBounds() != null && activity.rawDateBounds() != null }
 
         activity.findViewById<View>(R.id.rawDataChoice).performClick()
 
@@ -1291,7 +1291,7 @@ class MainActivityTest {
         acceptPrivacyDisclosure()
         val source = Uri.fromFile(repoRoot().resolve("test-fixtures/semantic-and-raw-ranges.json"))
         val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
-        waitUntil { activity.findViewById<View>(R.id.rawDataChoice).visibility == View.VISIBLE }
+        waitUntil { activity.rawDateBounds() != null }
 
         val semanticBounds = activity.semanticDateBounds()
         val rawBounds = activity.rawDateBounds()
@@ -1317,6 +1317,8 @@ class MainActivityTest {
         acceptPrivacyDisclosure()
         val source = Uri.fromFile(repoRoot().resolve("test-fixtures/semantic-and-raw-ranges.json"))
         val activity = launchActivity(Intent(Intent.ACTION_VIEW, source))
+        waitUntil { activity.rawDateBounds() != null }
+        activity.findViewById<View>(R.id.navigationCreate).performClick()
         waitUntil { activity.findViewById<View>(R.id.rawDataChoice).visibility == View.VISIBLE }
 
         val rawBounds = activity.rawDateBounds()
