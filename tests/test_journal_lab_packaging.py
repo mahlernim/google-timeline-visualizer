@@ -40,8 +40,8 @@ def test_travel_journal_is_enabled_for_production_flavors() -> None:
         assert match is not None
         assert 'buildConfigField("boolean", "IS_JOURNAL_LAB", "true")' in match.group("body")
 
-    assert 'versionCode = 45' in build_file
-    assert 'versionName = "3.0.3"' in build_file
+    assert 'versionCode = 46' in build_file
+    assert 'versionName = "3.0.4"' in build_file
 
 
 def test_normal_validation_builds_the_journal_lab_variant() -> None:
