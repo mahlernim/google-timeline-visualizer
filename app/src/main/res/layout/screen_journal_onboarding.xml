@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/travel_journal"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorPrimary"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/onboardingSkipButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/onboarding_skip" />
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/onboardingLanguageButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginEnd="20dp"
+        android:minHeight="48dp"
+        android:text="@string/language" />
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/onboardingPager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:importantForAccessibility="yes" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurfaceContainer"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="14dp">
+
+        <LinearLayout
+            android:id="@+id/onboardingPageDots"
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center"
+            android:importantForAccessibility="no"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/onboardingDotOne"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:src="@drawable/onboarding_progress_dot"
+                app:tint="?attr/colorPrimary" />
+
+            <ImageView
+                android:id="@+id/onboardingDotTwo"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginStart="10dp"
+                android:src="@drawable/onboarding_progress_dot"
+                app:tint="?attr/colorPrimary" />
+
+            <ImageView
+                android:id="@+id/onboardingDotThree"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginStart="10dp"
+                android:src="@drawable/onboarding_progress_dot"
+                app:tint="?attr/colorPrimary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/onboardingNavigationActions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/onboardingBackButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:text="@string/back" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/onboardingNextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:text="@string/continue_action" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/onboardingFinalActions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/onboardingChooseFileButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:text="@string/onboarding_choose_export" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center_horizontal"
+                android:text="@string/onboarding_file_name_hint"
+                android:textAppearance="?attr/textAppearanceBodySmall" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/onboardingSetupMapsButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:minHeight="48dp"
+                android:text="@string/onboarding_setup_maps" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/onboardingNotNowButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="2dp"
+                android:minHeight="48dp"
+                android:text="@string/not_now" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/onboardingFileDisclosureButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="start|center_vertical"
+                android:minHeight="48dp"
+                android:text="@string/onboarding_file_disclosure_title" />
+
+            <TextView
+                android:id="@+id/onboardingFileDisclosureDetail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
+                android:layout_marginBottom="4dp"
+                android:lineSpacingExtra="2dp"
+                android:text="@string/onboarding_file_disclosure_detail"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

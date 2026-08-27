@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="960dp"
+    android:height="640dp"
+    android:viewportWidth="960"
+    android:viewportHeight="640">
+    <path android:fillColor="@color/onboarding_paper" android:pathData="M360,100 L540,166 L540,358 C540,456 452,518 360,548 C268,518 180,456 180,358 L180,166 Z" android:strokeColor="@color/onboarding_ink" android:strokeLineJoin="round" android:strokeWidth="10" />
+    <path android:fillColor="@color/onboarding_paper" android:pathData="M300,212 H420 A20,20 0,0 1,440 232 V422 A20,20 0,0 1,420 442 H300 A20,20 0,0 1,280 422 V232 A20,20 0,0 1,300 212 Z" android:strokeColor="@color/onboarding_ink" android:strokeLineJoin="round" android:strokeWidth="10" />
+    <path android:pathData="M342,240 L378,240" android:strokeColor="@color/onboarding_muted" android:strokeLineCap="round" android:strokeWidth="10" />
+    <path android:pathData="M312,414 C356,392 314,348 362,330 C388,320 396,316 392,306" android:strokeColor="@color/onboarding_route" android:strokeLineCap="round" android:strokeWidth="12" />
+    <path android:fillColor="@color/onboarding_ink" android:pathData="M392,306 L374,280 A22,22 0,1 1,410 280 Z" />
+    <path android:fillColor="@color/onboarding_paper" android:pathData="M399,267 A7,7 0,1 1,385 267 A7,7 0,1 1,399 267 Z" />
+    <path android:fillColor="@color/onboarding_paper" android:pathData="M630,348 H748 A36,36 0,0 0,744 278 A48,48 0,0 0,652 270 A38,38 0,0 0,630 348 Z" android:strokeColor="@color/onboarding_muted" android:strokeLineJoin="round" android:strokeWidth="10" />
+    <path android:pathData="M604,376 L776,246" android:strokeColor="@color/onboarding_ink" android:strokeLineCap="round" android:strokeWidth="14" />
+</vector>

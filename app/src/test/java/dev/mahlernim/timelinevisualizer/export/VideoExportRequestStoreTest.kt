@@ -63,6 +63,7 @@ class VideoExportRequestStoreTest {
                 videoQuality = VideoQuality.ULTRA,
                 tripDetection = TripDetection.SENSITIVE,
                 localFraming = LocalFraming.CLOSE,
+                keepPastRoutesVisible = true,
             ),
             projectId = "trip-123",
             presetName = "Cinematic",
@@ -97,6 +98,60 @@ class VideoExportRequestStoreTest {
         store.clear()
 
         assertNull(store.load())
+    }
+
+    @Test
+    fun journalSourceSurvivesPendingExportRestart() {
+        val request = VideoExportRequest(
+            outputUri = "content://documents/journal.mp4",
+            journey = Journey.from(
+                listOf(
+                    GeoPoint(Instant.parse("2026-01-01T00:00:00Z"), 37.5, 127.0),
+                    GeoPoint(Instant.parse("2026-01-01T01:00:00Z"), 37.6, 127.1),
+                ),
+                2026,
+            ),
+            title = "Travel Journal",
+            durationSeconds = 30,
+            dataSource = VideoDataSource.JOURNAL,
+        )
+
+        store.save(request)
+
+        assertEquals(VideoDataSource.JOURNAL, store.load()?.dataSource)
+    }
+
+    @Test
+    fun journalRouteBreaksSurvivePendingExportRestart() {
+        val request = VideoExportRequest(
+            outputUri = "content://documents/journal-with-gap.mp4",
+            journey = Journey.fromSections(
+                listOf(
+                    listOf(
+                        GeoPoint(Instant.parse("2026-01-01T00:00:00Z"), 37.5, 127.0),
+                        GeoPoint(Instant.parse("2026-01-01T01:00:00Z"), 37.6, 127.1),
+                    ),
+                    listOf(
+                        GeoPoint(Instant.parse("2026-01-03T00:00:00Z"), 35.6, 139.7),
+                        GeoPoint(Instant.parse("2026-01-03T01:00:00Z"), 35.7, 139.8),
+                    ),
+                ),
+                TimelinePeriod.sameYear(2026),
+                inferredTransferBeforePointIndices = listOf(1),
+            ),
+            title = "Travel Journal",
+            durationSeconds = 30,
+            dataSource = VideoDataSource.JOURNAL,
+        )
+
+        store.save(request)
+        val restored = store.load()!!
+
+        assertEquals(request.journey.points, restored.journey.points)
+        assertEquals(listOf(2), restored.journey.breakBeforePointIndices)
+        assertEquals(listOf(1), restored.journey.inferredTransferBeforePointIndices)
+        assertEquals(request.journey.totalDistanceKm, restored.journey.totalDistanceKm, 0.001)
+        assertEquals(request.journey.knownDistanceKm, restored.journey.knownDistanceKm, 0.001)
     }
 
     @Test

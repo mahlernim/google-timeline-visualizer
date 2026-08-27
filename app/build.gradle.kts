@@ -1,6 +1,13 @@
 plugins {
     id("com.android.application")
+    id("androidx.room")
+    id("com.google.devtools.ksp")
 }
+
+val cartoBasemapApiKey = providers.environmentVariable("CARTO_BASEMAP_API_KEY")
+    .getOrElse("")
+    .replace("\\", "\\\\")
+    .replace("\"", "\\\"")
 
 android {
     namespace = "dev.mahlernim.timelinevisualizer"
@@ -10,10 +17,12 @@ android {
         applicationId = "dev.mahlernim.timelinevisualizer"
         minSdk = 26
         targetSdk = 36
-        versionCode = 40
-        versionName = "2.4.1"
+        versionCode = 45
+        versionName = "3.0.3"
+        manifestPlaceholders["appLabel"] = "@string/app_name"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "CARTO_BASEMAP_API_KEY", "\"$cartoBasemapApiKey\"")
     }
 
     buildFeatures {
@@ -49,13 +58,25 @@ android {
     productFlavors {
         create("github") {
             dimension = "distribution"
+            buildConfigField("boolean", "IS_JOURNAL_LAB", "true")
             buildConfigField("String", "UPDATE_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/latest\"")
             buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/latest\"")
         }
         create("play") {
             dimension = "distribution"
+            buildConfigField("boolean", "IS_JOURNAL_LAB", "true")
             buildConfigField("String", "UPDATE_URL", "\"market://details?id=dev.mahlernim.timelinevisualizer\"")
             buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://play.google.com/store/apps/details?id=dev.mahlernim.timelinevisualizer\"")
+        }
+        create("journalLab") {
+            dimension = "distribution"
+            applicationId = "dev.mahlernim.timelinevisualizer.journallab"
+            versionCode = 20
+            versionName = "3.0.0-journal-lab.20"
+            manifestPlaceholders["appLabel"] = "Journal Lab"
+            buildConfigField("boolean", "IS_JOURNAL_LAB", "true")
+            buildConfigField("String", "UPDATE_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/tag/journal-lab-20\"")
+            buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases\"")
         }
     }
 
@@ -66,6 +87,11 @@ android {
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
+
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 dependencies {
@@ -80,10 +106,17 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.11.0")
     implementation("androidx.media3:media3-muxer:1.11.0")
     implementation("androidx.media3:media3-ui:1.11.0")
+    implementation("androidx.room:room-runtime:2.8.4")
+    implementation("androidx.room:room-ktx:2.8.4")
+    implementation("androidx.work:work-runtime:2.11.2")
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
+    ksp("androidx.room:room-compiler:2.8.4")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("androidx.test:core:1.7.0")
     testImplementation("org.robolectric:robolectric:4.16.1")
+    testImplementation("androidx.room:room-testing:2.8.4")
+    testImplementation("androidx.work:work-testing:2.11.2")
     androidTestImplementation("androidx.test:core-ktx:1.7.0")
     androidTestImplementation("androidx.test.ext:junit-ktx:1.3.0")
     androidTestImplementation("androidx.test:runner:1.7.0")

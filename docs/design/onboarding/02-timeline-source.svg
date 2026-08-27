@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" width="960" height="640" role="img" aria-label="Phone recording a route, a JSON document, and a journal in sequence">
+<g>
+<rect x="110" y="190" width="180" height="300" rx="10" fill="#F7EBE4" stroke="#1E1220" stroke-width="6"></rect>
+<rect x="124" y="216" width="152" height="248" rx="4" fill="none" stroke="#A98A9C" stroke-width="4"></rect>
+<rect x="184" y="202" width="32" height="5" rx="2.5" fill="#1E1220"></rect>
+<path d="M140,420 C 162,372 174,246 256,260" fill="none" stroke="#D01A63" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 14"></path>
+<path d="M256,268 L245,249 A13,13 0 1 1 267,249 Z" fill="#D01A63"></path>
+<circle cx="256" cy="247" r="4.5" fill="#F7EBE4"></circle>
+<circle cx="142" cy="420" r="5" fill="#D01A63"></circle>
+</g><path d="M310,340 H366" stroke="#1E1220" stroke-width="5" stroke-linecap="round" stroke-dasharray="6 12"></path>
+<path d="M364,331 L380,340 L364,349 Z" fill="#1E1220"></path><g>
+<path d="M392,226 a6,6 0 0 1 6,-6 H542 L568,246 V454 a6,6 0 0 1 -6,6 H398 a6,6 0 0 1 -6,-6 Z" fill="#F7EBE4" stroke="#1E1220" stroke-width="6"></path>
+<path d="M542,220 L568,246 H542 Z" fill="#A98A9C" stroke="#1E1220" stroke-width="6" stroke-linejoin="round"></path>
+<rect x="412" y="268" width="68" height="5" rx="2.5" fill="#A98A9C" opacity="0.6"></rect>
+<rect x="412" y="288" width="106.08" height="5" rx="2.5" fill="#D01A63" opacity="1"></rect>
+<rect x="412" y="308" width="84.32" height="5" rx="2.5" fill="#A98A9C" opacity="0.6"></rect>
+<rect x="412" y="328" width="48.96" height="5" rx="2.5" fill="#A98A9C" opacity="0.6"></rect>
+<rect x="412" y="430" width="59.84" height="5" rx="2.5" fill="#A98A9C" opacity="0.6"></rect>
+</g><path d="M588,340 H642" stroke="#1E1220" stroke-width="5" stroke-linecap="round" stroke-dasharray="6 12"></path>
+<path d="M640,331 L656,340 L640,349 Z" fill="#1E1220"></path><g>
+<rect x="674" y="414" width="194" height="10" rx="3" fill="#A98A9C"></rect>
+<rect x="668" y="268" width="206" height="150" rx="6" fill="#F7EBE4" stroke="#1E1220" stroke-width="6"></rect>
+<path d="M771,276 V410" stroke="#1E1220" stroke-width="4" stroke-linecap="round"></path>
+</g><rect x="692" y="300" width="66" height="4" rx="2" fill="#A98A9C" opacity="0.55"></rect>
+<rect x="692" y="316" width="66" height="4" rx="2" fill="#A98A9C" opacity="0.55"></rect>
+<rect x="692" y="332" width="66" height="4" rx="2" fill="#A98A9C" opacity="0.55"></rect>
+<path d="M782,300 C806,336 812,362 838,378" fill="none" stroke="#D01A63" stroke-width="6" stroke-linecap="round"></path>
+<path d="M838,378 L827,359 A13,13 0 1 1 849,359 Z" fill="#D01A63"></path>
+<circle cx="838" cy="357" r="4.5" fill="#F7EBE4"></circle><circle cx="792" cy="318" r="4" fill="#D01A63"></circle><circle cx="812" cy="352" r="4" fill="#D01A63"></circle>
+</svg>

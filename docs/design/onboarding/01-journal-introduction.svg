@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" width="960" height="640" role="img" aria-label="Open journal receiving a flowing travel route">
+<g>
+<rect x="246" y="454" width="468" height="10" rx="3" fill="#A98A9C"></rect>
+<rect x="240" y="232" width="480" height="226" rx="6" fill="#F7EBE4" stroke="#1E1220" stroke-width="6"></rect>
+<path d="M480,240 V450" stroke="#1E1220" stroke-width="4" stroke-linecap="round"></path>
+</g><rect x="276" y="270" width="150" height="4" rx="2" fill="#A98A9C" opacity="0.55"></rect>
+<rect x="276" y="288" width="150" height="4" rx="2" fill="#A98A9C" opacity="0.55"></rect>
+<rect x="276" y="306" width="150" height="4" rx="2" fill="#A98A9C" opacity="0.55"></rect>
+<rect x="276" y="324" width="150" height="4" rx="2" fill="#A98A9C" opacity="0.55"></rect>
+<path d="M148,258 C200,318 240,392 300,420 C340,330 400,300 440,352 C480,404 520,410 560,368 C600,326 620,300 668,286" fill="none" stroke="#D01A63" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path>
+<circle cx="182" cy="300" r="5" fill="#A98A9C"></circle><circle cx="228" cy="352" r="5" fill="#A98A9C"></circle><circle cx="268" cy="392" r="5" fill="#A98A9C"></circle>
+<circle cx="408" cy="318" r="5" fill="#D01A63"></circle><circle cx="500" cy="398" r="5" fill="#D01A63"></circle><circle cx="612" cy="330" r="5" fill="#D01A63"></circle>
+<path d="M300,420 L289,401 A13,13 0 1 1 311,401 Z" fill="#D01A63"></path>
+<circle cx="300" cy="399" r="4.5" fill="#F7EBE4"></circle><path d="M560,368 L549,349 A13,13 0 1 1 571,349 Z" fill="#D01A63"></path>
+<circle cx="560" cy="347" r="4.5" fill="#F7EBE4"></circle><path d="M668,286 L657,267 A13,13 0 1 1 679,267 Z" fill="#D01A63"></path>
+<circle cx="668" cy="265" r="4.5" fill="#F7EBE4"></circle>
+<rect x="536" y="424" width="140" height="5" rx="2.5" fill="#A98A9C" opacity="0.55"></rect>
+<rect x="576" y="440" width="100" height="5" rx="2.5" fill="#A98A9C" opacity="0.4"></rect>
+</svg>

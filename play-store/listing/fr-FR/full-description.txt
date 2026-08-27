@@ -1,34 +1,41 @@
-Donnez vie à une année de voyage.
+Des années de voyages, conservées sur votre téléphone et animées.
 
-Timeline Visualizer transforme une exportation Google Maps Timeline en une vidéo cartographique animée sur votre téléphone Android. Choisissez des dates exactes ou une plage mensuelle, prévisualisez l'itinéraire et créez un MP4 prêt à regarder ou à partager.
+Timeline Visualizer transforme une exportation Google Maps Timeline en carnet de voyage privé sur votre téléphone, puis en fait des vidéos cartographiques animées. Importez Timeline.json une fois, revenez avec des exportations plus récentes, et le carnet conserve le meilleur niveau de détail disponible pour chaque période.
+
+Créez votre carnet de voyage
+• Importez Timeline.json pour créer un carnet qui reste sur cet appareil
+• Revenez avec des exportations récentes pour conserver un détail qu'une exportation ultérieure perdrait
+• Les vidéos utilisent vos itinéraires les plus détaillés et comblent les manques avec l'historique Timeline
+• Rappels discrets facultatifs lorsqu'une nouvelle exportation en vaut la peine
 
 Créez votre histoire
-• Choisissez un fichier Timeline exporté depuis Android ou iPhone.
-• Sélectionnez des dates exactes ou une plage de mois inclusive sur plusieurs années.
-• Personnalisez un titre réutilisable tel que "2026 Mina's Timeline".
+• Trouvez des voyages automatiquement ou saisissez les dates à la main
+• Créez des récapitulatifs mensuels, annuels ou sur une période personnalisée
+• Tracez un itinéraire plus fin à partir des relevés bruts récents, lorsqu'ils existent
+• Enregistrez un titre réutilisable comme « Timeline de Mina 2026 »
 • Prévisualisez l'animation avant de créer la vidéo en pleine qualité
-• Choisissez un mouvement de caméra fixe, stable ou dynamique.
-• Équilibrez les longs trajets avec la compression temporelle des longs trajets en option
-• Exporter en 480p, 720p ou 1080p
-• Choisissez une durée prédéfinie ou personnalisée de 10 à 300 secondes
-• Ignorez prudemment les points GPS aberrants isolés ou désactivez le filtre
-• Terminez avec un zoom arrière fluide et un aperçu complet de l'itinéraire
-• Continuez à créer en arrière-plan avec des notifications de progression et d'achèvement
-• Rouvrez le fichier Timeline le plus récemment utilisé lorsque Android conserve l'accès.
-• Enregistrez automatiquement les vidéos sur Movies/Timeline Visualizer sur Android 10 et versions ultérieures.
-• Enregistrez ou partagez l'aperçu final de l'itinéraire 1 080 × 1 080.
+• Choisissez la vue de la carte : Échelle fixe, Large, Équilibrée ou Rapprochée
+• Équilibrez les longs trajets avec le rythme des longs trajets et le cadrage du trajet local
+• Exportez de 480p à 2160p en carré, portrait ou paysage, avec résolution et fréquence personnalisées
+• Choisissez de 10 à 300 secondes et enregistrez vos préréglages avec un réglage par défaut
+• Ignorez prudemment les valeurs GPS aberrantes isolées, ou désactivez le filtre
+• Terminez par un dézoom fluide et un aperçu de l'itinéraire complet
+• Continuez la création en arrière-plan, avec des notifications
+• Enregistrez les vidéos automatiquement dans Movies/Timeline Visualizer sur Android 10 et versions ultérieures
+• Enregistrez ou partagez l'aperçu final de l'itinéraire en 1080 × 1080
 
 Besoin de restaurer d'abord des voyages plus anciens ?
 Ouvrez le guide de restauration localisé depuis l'application. Il explique comment importer une sauvegarde Timeline cryptée existante dans Google Maps, puis exporter un nouveau fichier JSON pour Timeline Visualizer. L'application n'accède jamais à votre compte Google ou à votre sauvegarde cryptée.
 
-Gardez vos vidéos ensemble
-Les vidéos terminées apparaissent dans Mes vidéos avec une vignette, un titre, une date, une durée et une période sélectionnée. Ajoutez des fichiers MP4 plus anciens, lisez-les dans l'application, partagez-les ou supprimez toute la bibliothèque avec confirmation.
+Votre bibliothèque
+Les voyages enregistrés, les récapitulatifs et chaque vidéo créée apparaissent dans Bibliothèque avec une vignette, un titre, une date, une durée et une période. Ajoutez des fichiers MP4 plus anciens, lisez-les dans l'application, partagez-les ou supprimez toute la bibliothèque avec confirmation.
 
 Navigation simple
-Déplacez-vous entre Mes vidéos, Créer une vidéo et Paramètres dans la barre de navigation inférieure. Le mouvement de la caméra, la compression longue durée et la qualité vidéo sont stockés par défaut pour l'aperçu et l'exportation suivants.
+Déplacez-vous entre Bibliothèque, Créer et Paramètres dans la barre de navigation inférieure. La vue de la carte, le rythme et la qualité vidéo sont conservés comme réglages par défaut pour la prochaine vidéo.
 
 Conçu pour la confidentialité
-Votre fichier Timeline n’est jamais téléchargé. Le parcours, les titres et les vidéos générées sont traités sur votre appareil. Aucune autorisation de connexion, d'analyse, de publicité ou de localisation Google n'est utilisée.
+Votre fichier Timeline et votre carnet de voyage ne sont jamais téléversés, et le carnet est exclu de la sauvegarde et du transfert Android. Les itinéraires, les titres et les vidéos générées sont traités sur votre appareil. Aucune autorisation de connexion, d'analyse, de publicité ou de localisation Google n'est utilisée.
+
 
 Pour dessiner la carte, l'application demande des tuiles de carte à CARTO. Ces demandes incluent les coordonnées des tuiles de la zone cartographique et les informations normales du réseau, qui peuvent révéler des endroits de votre Timeline à CARTO. L'application explique cela avant le chargement du premier Timeline et vous permet d'annuler.
 

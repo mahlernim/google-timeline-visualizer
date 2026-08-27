@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journal_automatic_source_summary">视频会自动使用已保存的最详细路线。旅行记录会用现有最佳时间轴记录补充缺失时段。</string>
+</resources>

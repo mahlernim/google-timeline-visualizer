@@ -1,0 +1,143 @@
+name: Release Journal Lab
+
+on:
+  push:
+    tags:
+      - "journal-lab-*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing immutable Journal Lab tag
+        required: true
+        default: journal-lab-20
+        type: string
+      expected_version_code:
+        description: Expected Journal Lab version code
+        required: true
+        default: "20"
+        type: string
+      expected_version_name:
+        description: Expected Journal Lab version name
+        required: true
+        default: 3.0.0-journal-lab.20
+        type: string
+      previous_lab_commit:
+        description: Signed Journal Lab commit used for upgrade verification
+        required: true
+        default: c3b58c198459bfd1c09a9406e4b1892de19083fa
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      LAB_RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+      EXPECTED_VERSION_CODE: ${{ inputs.expected_version_code || '20' }}
+      EXPECTED_VERSION_NAME: ${{ inputs.expected_version_name || '3.0.0-journal-lab.20' }}
+      PREVIOUS_LAB_COMMIT: ${{ inputs.previous_lab_commit || 'c3b58c198459bfd1c09a9406e4b1892de19083fa' }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.LAB_RELEASE_TAG }}
+          fetch-depth: 0
+      - name: Verify immutable release input
+        run: |
+          test "$(git describe --tags --exact-match)" = "$LAB_RELEASE_TAG"
+          test "$LAB_RELEASE_TAG" = "journal-lab-$EXPECTED_VERSION_CODE"
+          git cat-file -e "$PREVIOUS_LAB_COMMIT^{commit}"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Restore release signing key
+        env:
+          SIGNING_KEY_BASE64: ${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}
+        run: echo "$SIGNING_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/timeline-visualizer-release.jks"
+      - name: Test and build production and Journal Lab APKs
+        env:
+          ANDROID_SIGNING_STORE_FILE: ${{ runner.temp }}/timeline-visualizer-release.jks
+          ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+          CARTO_BASEMAP_API_KEY: ${{ secrets.CARTO_BASEMAP_API_KEY }}
+        run: |
+          test -n "$CARTO_BASEMAP_API_KEY"
+          ./gradlew testGithubDebugUnitTest lintJournalLabRelease assembleGithubRelease assembleJournalLabRelease --stacktrace
+          ./gradlew testJournalLabDebugUnitTest \
+            --tests dev.mahlernim.timelinevisualizer.JournalLabUiTest \
+            --tests dev.mahlernim.timelinevisualizer.JournalOnboardingUiTest \
+            --tests dev.mahlernim.timelinevisualizer.journal.JournalOnboardingStoreTest \
+            --tests dev.mahlernim.timelinevisualizer.journal.JournalSetupNavigationTest \
+            --tests 'dev.mahlernim.timelinevisualizer.journal.reminder.*' \
+            --tests 'dev.mahlernim.timelinevisualizer.journal.route.*' \
+            --tests dev.mahlernim.timelinevisualizer.journal.JournalRepositoryTest \
+            --stacktrace
+      - name: Verify Journal Lab identity and signing continuity
+        run: |
+          production_apk="app/build/outputs/apk/github/release/app-github-release.apk"
+          lab_apk="app/build/outputs/apk/journalLab/release/app-journalLab-release.apk"
+          build_tools_dir="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          test -n "$build_tools_dir"
+
+          "$build_tools_dir/apksigner" verify --verbose --print-certs "$production_apk"
+          "$build_tools_dir/apksigner" verify --verbose --print-certs "$lab_apk"
+
+          production_cert="$($build_tools_dir/apksigner verify --print-certs "$production_apk" | sed -n 's/^.*certificate SHA-256 digest: //p' | head -n 1)"
+          lab_cert="$($build_tools_dir/apksigner verify --print-certs "$lab_apk" | sed -n 's/^.*certificate SHA-256 digest: //p' | head -n 1)"
+          test -n "$production_cert"
+          test "$lab_cert" = "$production_cert"
+
+          package_line="$($build_tools_dir/aapt dump badging "$lab_apk" | head -n 1)"
+          package_name="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<< "$package_line")"
+          version_name="$(sed -n "s/.*versionName='\([^']*\)'.*/\1/p" <<< "$package_line")"
+          application_label="$($build_tools_dir/aapt dump badging "$lab_apk" | sed -n "s/^application-label:'\([^']*\)'.*/\1/p" | head -n 1)"
+          version_code="$(sed -n "s/.*versionCode='\([^']*\)'.*/\1/p" <<< "$package_line")"
+          test "$package_name" = "dev.mahlernim.timelinevisualizer.journallab"
+          test "$package_name" != "dev.mahlernim.timelinevisualizer"
+          test "$version_code" = "$EXPECTED_VERSION_CODE"
+          test "$version_name" = "$EXPECTED_VERSION_NAME"
+          test "$application_label" = "Journal Lab"
+          sha256sum "$lab_apk"
+      - name: Verify co-installation with production
+        uses: ReactiveCircus/android-emulator-runner@v2
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ANDROID_SIGNING_STORE_FILE: ${{ runner.temp }}/timeline-visualizer-release.jks
+          ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+        with:
+          api-level: 35
+          arch: x86_64
+          disable-animations: true
+          script: |
+            adb install app/build/outputs/apk/github/release/app-github-release.apk
+            git worktree add --detach "$RUNNER_TEMP/previous-lab" "$PREVIOUS_LAB_COMMIT"
+            (cd "$RUNNER_TEMP/previous-lab" && ./gradlew :app:assembleJournalLabRelease --stacktrace)
+            adb install "$RUNNER_TEMP/previous-lab/app/build/outputs/apk/journalLab/release/app-journalLab-release.apk"
+            adb install -r app/build/outputs/apk/journalLab/release/app-journalLab-release.apk
+            adb shell pm path dev.mahlernim.timelinevisualizer
+            adb shell pm path dev.mahlernim.timelinevisualizer.journallab
+      - name: Publish immutable Journal Lab prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          lab_apk="JournalLab-${LAB_RELEASE_TAG}.apk"
+          if gh release view "$LAB_RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release $LAB_RELEASE_TAG already exists and will not be replaced."
+            exit 1
+          fi
+          cp app/build/outputs/apk/journalLab/release/app-journalLab-release.apk "$lab_apk"
+          sha256sum "$lab_apk" > "$lab_apk.sha256"
+          gh release create "$LAB_RELEASE_TAG" \
+            "$lab_apk" \
+            "$lab_apk.sha256" \
+            --title "Journal Lab ${LAB_RELEASE_TAG#journal-lab-}" \
+            --notes-file "docs/${LAB_RELEASE_TAG}.md" \
+            --prerelease \
+            --verify-tag

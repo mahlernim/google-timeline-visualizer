@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="onboarding_route">#FF5C98</color>
+    <color name="onboarding_paper">#3C2D34</color>
+    <color name="onboarding_ink">#FFF8FA</color>
+    <color name="onboarding_muted">#C6AAB9</color>
+</resources>

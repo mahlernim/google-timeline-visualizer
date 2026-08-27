@@ -17,9 +17,6 @@ export const zhTW: Strings = {
   appDescription: '從 Google 地圖時間軸匯出檔，在您的裝置上私密地製作旅遊動畫。',
   previewBanner: 'iPhone 預覽版 · 請先使用非敏感的範例資料測試',
   headerTitle: '建立影片',
-  presetLinkTitle: '共享的 Android 預設組合',
-  presetLinkBody: '此隱私安全連結只包含五項相機與長寬比設定。請在 Android 應用程式中開啟，確認所有值後再使用或儲存。',
-  presetLinkOpen: '在 Android 應用程式中開啟',
 
   fileCardTitle: '時間軸檔案',
   fileCardIntro: '請選擇您匯出的 Timeline.json。檔案會留在這部裝置上，只會向地圖供應商請求地圖圖像。',

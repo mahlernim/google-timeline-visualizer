@@ -9,4 +9,8 @@
     <color name="outline">#8A7078</color>
     <color name="thumbnail_surface">#E7E0E2</color>
     <color name="map_surface">#EEE8EA</color>
+    <color name="onboarding_route">#E90064</color>
+    <color name="onboarding_paper">#F7EBE4</color>
+    <color name="onboarding_ink">#1E1220</color>
+    <color name="onboarding_muted">#A98A9C</color>
 </resources>

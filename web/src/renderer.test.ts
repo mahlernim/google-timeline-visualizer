@@ -8,6 +8,7 @@ import {
 import { cumulativeDistances, overviewRouteSegments, unwrapJourneyPoints } from './geo';
 import {
   ASPECT_EPSILON,
+  cartoTileUrl,
   drawFrame,
   MAP_ATTRIBUTION,
   MIN_PREVIEW_SHORT_EDGE,
@@ -418,13 +419,12 @@ describe('drawFrame aspect ratio guard', () => {
 
 describe('map attribution', () => {
   // Burned into the MP4, where it outlives the app locale and cannot be corrected afterwards.
-  // Android translates the same string and it has already regressed: values-pt-rBR dropped
-  // '© CARTO' entirely, and five other locales collapsed the double space. Keeping this
-  // developer-owned is only safe if the constant itself is pinned.
+  // Android and web keep the same developer-owned string after a localized Android value once
+  // dropped '© CARTO' entirely. The constant still needs to be pinned here.
   it('names both providers', () => {
     expect(MAP_ATTRIBUTION).toContain('OpenStreetMap');
     expect(MAP_ATTRIBUTION).toContain('CARTO');
-    expect(MAP_ATTRIBUTION).toBe('© OpenStreetMap contributors  © CARTO');
+    expect(MAP_ATTRIBUTION).toBe('© OpenStreetMap contributors © CARTO');
   });
 
   it('is drawn into every frame', () => {
@@ -440,5 +440,14 @@ describe('map attribution', () => {
     expect(drawn).toContain('Seoul to Busan');
     const halfwayMiles = Math.round(preparedAt(FORMATS[0]).totalDistanceKm * 0.5 * 0.621371192237334);
     expect(drawn).toContain(`March 2026 · ${halfwayMiles} mi`);
+  });
+});
+
+describe('CARTO project key', () => {
+  it('adds the encoded key without changing the tile path', () => {
+    const url = new URL(cartoTileUrl({ zoom: 13, x: 6985, y: 3172 }, 'project key/value'));
+
+    expect(url.pathname).toBe('/light_all/13/6985/3172.png');
+    expect(url.searchParams.get('key')).toBe('project key/value');
   });
 });

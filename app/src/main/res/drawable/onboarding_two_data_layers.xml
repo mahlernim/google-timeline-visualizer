@@ -1,0 +1,135 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="960dp"
+    android:height="640dp"
+    android:viewportWidth="960"
+    android:viewportHeight="640">
+  <path
+      android:pathData="M632,256L858,256A6,6 0,0 1,864 262L864,430A6,6 0,0 1,858 436L632,436A6,6 0,0 1,626 430L626,262A6,6 0,0 1,632 256z"
+      android:strokeWidth="6"
+      android:fillColor="@color/onboarding_paper"
+      android:strokeColor="@color/onboarding_ink"/>
+  <path
+      android:fillColor="#00000000"
+      android:pathData="M745,264V428"
+      android:strokeWidth="4"
+      android:strokeColor="@color/onboarding_ink"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M635,432L855,432A3,3 0,0 1,858 435L858,439A3,3 0,0 1,855 442L635,442A3,3 0,0 1,632 439L632,435A3,3 0,0 1,635 432z"
+      android:fillColor="@color/onboarding_muted"/>
+  <path
+      android:pathData="M654,288L722,288A2,2 0,0 1,724 290L724,290A2,2 0,0 1,722 292L654,292A2,2 0,0 1,652 290L652,290A2,2 0,0 1,654 288z"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M654,304L704,304A2,2 0,0 1,706 306L706,306A2,2 0,0 1,704 308L654,308A2,2 0,0 1,652 306L652,306A2,2 0,0 1,654 304z"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M104,190C196,128 274,204 362,184C450,164 494,206 556,216"
+      android:strokeWidth="7"
+      android:fillColor="#00000000"
+      android:strokeColor="@color/onboarding_route"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M104,190m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M158,158m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M218,156m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M272,194m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M326,190m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M380,176m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M436,170m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M494,192m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M548,210m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M218,148L207,129A13,13 0,1 1,229 129Z"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M218,127m-4.5,0a4.5,4.5 0,1 1,9 0a4.5,4.5 0,1 1,-9 0"
+      android:fillColor="@color/onboarding_paper"/>
+  <path
+      android:pathData="M436,160L425,141A13,13 0,1 1,447 141Z"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M436,139m-4.5,0a4.5,4.5 0,1 1,9 0a4.5,4.5 0,1 1,-9 0"
+      android:fillColor="@color/onboarding_paper"/>
+  <path
+      android:pathData="M104,468C194,492 248,412 344,426C436,440 496,470 556,458"
+      android:strokeWidth="7"
+      android:fillColor="#00000000"
+      android:strokeColor="@color/onboarding_muted"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M170,467L182,467A3,3 0,0 1,185 470L185,482A3,3 0,0 1,182 485L170,485A3,3 0,0 1,167 482L167,470A3,3 0,0 1,170 467z"
+      android:fillColor="@color/onboarding_ink"/>
+  <path
+      android:pathData="M338,417L350,417A3,3 0,0 1,353 420L353,432A3,3 0,0 1,350 435L338,435A3,3 0,0 1,335 432L335,420A3,3 0,0 1,338 417z"
+      android:fillColor="@color/onboarding_ink"/>
+  <path
+      android:pathData="M472,449L484,449A3,3 0,0 1,487 452L487,464A3,3 0,0 1,484 467L472,467A3,3 0,0 1,469 464L469,452A3,3 0,0 1,472 449z"
+      android:fillColor="@color/onboarding_ink"/>
+  <path
+      android:pathData="M104,468m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0"
+      android:fillColor="@color/onboarding_ink"/>
+  <path
+      android:pathData="M556,216C578,256 588,300 596,334"
+      android:strokeWidth="6"
+      android:fillColor="#00000000"
+      android:strokeColor="@color/onboarding_route"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M556,458C578,418 588,378 596,348"
+      android:strokeWidth="6"
+      android:fillColor="#00000000"
+      android:strokeColor="@color/onboarding_muted"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M598,341m-7,0a7,7 0,1 1,14 0a7,7 0,1 1,-14 0"
+      android:fillColor="@color/onboarding_ink"/>
+  <path
+      android:pathData="M660,390C696,356 716,374 748,342C780,310 800,320 836,296"
+      android:strokeWidth="7"
+      android:fillColor="#00000000"
+      android:strokeColor="@color/onboarding_route"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M660,390m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0"
+      android:fillColor="@color/onboarding_muted"/>
+  <path
+      android:pathData="M748,334L737,315A13,13 0,1 1,759 315Z"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M748,313m-4.5,0a4.5,4.5 0,1 1,9 0a4.5,4.5 0,1 1,-9 0"
+      android:fillColor="@color/onboarding_paper"/>
+  <path
+      android:pathData="M836,288L825,269A13,13 0,1 1,847 269Z"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M836,267m-4.5,0a4.5,4.5 0,1 1,9 0a4.5,4.5 0,1 1,-9 0"
+      android:fillColor="@color/onboarding_paper"/>
+  <path
+      android:pathData="M704,368m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0"
+      android:fillColor="@color/onboarding_muted"/>
+  <path
+      android:pathData="M792,306m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0"
+      android:fillColor="@color/onboarding_muted"/>
+</vector>

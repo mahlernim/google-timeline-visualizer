@@ -100,6 +100,7 @@ class VideoStoreTest {
             localFraming = LocalFraming.CLOSE,
             longTripCompression = LongTripCompression.STRONGER,
             resolution = VideoResolution.HIGH,
+            dataSource = VideoDataSource.JOURNAL,
             exportShortEdge = 1440,
             exportFrameRate = 60,
         )

@@ -1,34 +1,40 @@
-Bring a year of travel to life.
+Years of travel, kept on your phone and brought to life.
 
-Timeline Visualizer turns a Google Maps Timeline export into an animated map video on your Android phone. Choose exact dates or a month range, preview the route, and create an MP4 that is ready to watch or share.
+Timeline Visualizer turns a Google Maps Timeline export into a private Travel Journal on your phone, then makes animated map videos from it. Import Timeline.json once, return with newer exports, and the Journal keeps the best route detail for each period.
+
+Build your Travel Journal
+• Import Timeline.json to build a Journal that stays on this device
+• Return with newer exports to preserve detail a later export would lose
+• Videos use your most detailed routes, filling gaps with Timeline history
+• Optional quiet reminders when a fresh export is worth importing
 
 Create your story
-• Choose a Timeline file exported from Android or iPhone
-• Select exact dates or an inclusive month range across multiple years
+• Find trips automatically, or enter dates by hand
+• Make monthly, yearly, or custom-range recaps
+• Draw a finer route from recent raw location samples, when present
 • Personalize a reusable title such as “2026 Mina's Timeline”
 • Preview the animation before creating the full-quality video
-• Choose Fixed, Steady, or Dynamic camera movement
-• Balance long journeys with optional long-trip timing compression
-• Export at 480p, 720p, or 1080p
-• Choose a preset or custom journey from 10 through 300 seconds
+• Choose a map view: Fixed scale, Wide, Balanced, or Close-up
+• Balance long journeys with long-trip pacing and local trip framing
+• Export 480p to 2160p in square, portrait, or landscape, with custom resolution and frame rate
+• Choose 10 to 300 seconds, and save your own presets with a default
 • Conservatively ignore isolated GPS outliers, or turn filtering off
 • Finish with a smooth zoom-out and complete-route overview
-• Keep creating in the background with progress and completion notifications
-• Reopen the most recently used Timeline file when Android retains access
+• Keep creating in the background, with notifications
 • Save videos automatically to Movies/Timeline Visualizer on Android 10 and later
 • Save or share the final 1080 × 1080 route overview
 
 Need to restore older trips first?
 Open the localized restoration guide from the app. It explains how to import an existing encrypted Timeline backup in Google Maps, then export a new JSON file for Timeline Visualizer. The app never accesses your Google account or encrypted backup.
 
-Keep your videos together
-Completed videos appear in My videos with a thumbnail, title, date, duration, and Selected period. Add older MP4 files, play them inside the app, share them, or delete the whole library with confirmation.
+Your Library
+Saved trips, recaps, and every video you create appear in Library with a thumbnail, title, date, duration, and period. Add older MP4 files, play them in the app, share, or delete the library with confirmation.
 
 Simple navigation
-Move between My videos, Create video, and Settings from the bottom navigation bar. Camera movement, long-trip compression, and video quality are stored as your defaults for the next preview and export.
+Move between Library, Create, and Settings from the bottom navigation bar. Map view, pacing, and video quality become your defaults for the next video.
 
 Designed for privacy
-Your Timeline file is never uploaded. The Journey, titles, and generated videos are processed on your device. No Google sign-in, analytics, advertising, or location permission is used.
+Your Timeline file and Travel Journal are never uploaded, and the Journal is excluded from Android backup and device transfer. Routes, titles, and generated videos are processed on your device. No Google sign-in, analytics, advertising, or location permission is used.
 
 To draw the map, the app requests map tiles from CARTO. Those requests include map-area tile coordinates and normal network information, which may reveal places in your Timeline to CARTO. The app explains this before the first Timeline is loaded and lets you cancel.
 

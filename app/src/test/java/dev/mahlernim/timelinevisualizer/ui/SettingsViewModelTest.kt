@@ -22,6 +22,7 @@ class SettingsViewModelTest {
     private lateinit var cameraPreferences: CameraSettingsPreferences
     private lateinit var distancePreferences: DistanceUnitPreferences
     private lateinit var filterPreferences: LocationFilterPreferences
+    private lateinit var timelineDisplayPreferences: TimelineDisplayPreferences
 
     @Before
     fun setUp() {
@@ -29,6 +30,7 @@ class SettingsViewModelTest {
         cameraPreferences = CameraSettingsPreferences(context)
         distancePreferences = DistanceUnitPreferences(context)
         filterPreferences = LocationFilterPreferences(context)
+        timelineDisplayPreferences = TimelineDisplayPreferences(context)
         clearPreferences()
     }
 
@@ -47,11 +49,15 @@ class SettingsViewModelTest {
         viewModel.updateCamera(camera)
         viewModel.updateDistanceUnit(DistanceUnitPreference.MILES)
         viewModel.updateLocationFilter(LocationFilterMode.OFF)
+        viewModel.updateSimplifyRouteDetail(true)
+        viewModel.updateKeepPastRoutesVisible(true)
 
-        assertEquals(SettingsState(camera, DistanceUnitPreference.MILES, LocationFilterMode.OFF), viewModel.state.value)
+        assertEquals(SettingsState(camera, DistanceUnitPreference.MILES, LocationFilterMode.OFF, true, true), viewModel.state.value)
         assertEquals(camera, cameraPreferences.load())
         assertEquals(DistanceUnitPreference.MILES, distancePreferences.load())
         assertEquals(LocationFilterMode.OFF, filterPreferences.load())
+        assertEquals(true, timelineDisplayPreferences.simplifyRouteDetail())
+        assertEquals(true, timelineDisplayPreferences.keepPastRoutesVisible())
     }
 
     @Test
@@ -68,11 +74,17 @@ class SettingsViewModelTest {
         assertEquals(LocationFilterMode.OFF, viewModel.state.value.locationFilter)
     }
 
-    private fun viewModel() = SettingsViewModel(cameraPreferences, distancePreferences, filterPreferences)
+    private fun viewModel() = SettingsViewModel(
+        cameraPreferences,
+        distancePreferences,
+        filterPreferences,
+        timelineDisplayPreferences,
+    )
 
     private fun clearPreferences() {
         cameraPreferences.reset()
         distancePreferences.clear()
         filterPreferences.reset()
+        timelineDisplayPreferences.clear()
     }
 }

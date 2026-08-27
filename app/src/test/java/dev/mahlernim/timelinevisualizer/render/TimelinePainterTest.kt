@@ -11,6 +11,7 @@ import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.model.WebMercator
 import java.time.Instant
+import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
 import java.util.Locale
 import kotlin.math.min
 import org.junit.Assert.assertTrue
@@ -26,6 +27,82 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class TimelinePainterTest {
     @Test
+    fun pastRouteCacheGrowsIncrementallyAndRebuildsAfterBackwardSeek() {
+        val journey = Journey.from(
+            listOf(point(0.0, 0.0), point(0.0, 1.0), point(0.0, 2.0)),
+            2025,
+        )
+        val painter = TimelinePainter()
+        val settings = CameraSettings.DEFAULT.copy(keepPastRoutesVisible = true)
+        val bitmap = Bitmap.createBitmap(SIZE, SIZE, Bitmap.Config.ARGB_8888)
+
+        painter.draw(Canvas(bitmap), SIZE, SIZE, journey, 0.8f, "Timeline", settings) { null }
+        val forwardCount = painter.pastRouteCachedSampleCount
+        painter.draw(Canvas(bitmap), SIZE, SIZE, journey, 0.2f, "Timeline", settings) { null }
+
+        assertTrue(forwardCount > painter.pastRouteCachedSampleCount)
+        assertTrue(painter.pastRouteCachedSampleCount > 0)
+        bitmap.recycle()
+    }
+
+    @Test
+    fun overviewStrokeDoesNotBridgeAJournalRouteBreak() {
+        val journey = Journey.fromSections(
+            listOf(
+                listOf(point(0.0, 0.0), point(0.0, 1.0)),
+                listOf(point(0.0, 3.0), point(0.0, 4.0)),
+            ),
+            TimelinePeriod.sameYear(2025),
+        )
+        val painter = TimelinePainter()
+        val frame = TimelineFrame(1f, 1f)
+        val bitmap = Bitmap.createBitmap(SIZE, SIZE, Bitmap.Config.ARGB_8888)
+
+        painter.draw(
+            canvas = Canvas(bitmap),
+            width = SIZE,
+            height = SIZE,
+            journey = journey,
+            frame = frame,
+            journeyDurationSeconds = 30,
+            title = "Journal",
+            tiles = { null },
+        )
+
+        val viewport = painter.viewport(journey, frame, SIZE, SIZE)
+        val gapMidpoint = WebMercator.project(point(0.0, 2.0))
+        val screenX = ((gapMidpoint.x - viewport.minX) / (viewport.maxX - viewport.minX) * SIZE).toInt()
+        val screenY = ((gapMidpoint.y - viewport.minY) / (viewport.maxY - viewport.minY) * SIZE).toInt()
+        val routeColoredPixels = (-3..3).sumOf { dy ->
+            (-3..3).count { dx ->
+                val color = bitmap.getPixel(
+                    (screenX + dx).coerceIn(0, SIZE - 1),
+                    (screenY + dy).coerceIn(0, SIZE - 1),
+                )
+                Color.red(color) - Color.green(color) > 80
+            }
+        }
+
+        assertEquals("A route stroke crossed the explicit gap", 0, routeColoredPixels)
+        bitmap.recycle()
+    }
+
+    @Test
+    fun exactGapBoundaryStartsAtThePostGapSample() {
+        val sections = listOf(
+            listOf(point(0.0, 0.0), point(0.0, 1.0)),
+            listOf(point(20.0, 20.0), point(20.0, 21.0)),
+        )
+        val journey = Journey.fromSections(sections, TimelinePeriod.sameYear(2025))
+        val prepared = TimelinePainter.PreparedJourney(journey)
+        val boundaryDistance = journey.cumulativeDistanceKm[2]
+        val startIndex = prepared.rangeStartIndex(boundaryDistance)
+
+        assertEquals(WebMercator.project(sections[1].first()).y, prepared.worldPointAt(startIndex).y, 1e-12)
+        assertEquals(false, journey.isRenderConnectionFromPrevious(startIndex))
+    }
+
+    @Test
     fun firstPreviewFrameRendersInEverySupportedLocale() {
         val application = ApplicationProvider.getApplicationContext<Context>()
         val journey = Journey.from(
@@ -40,6 +117,11 @@ class TimelinePainterTest {
             val locale = Locale.forLanguageTag(tag)
             val configuration = Configuration(application.resources.configuration).apply { setLocale(locale) }
             val localized = application.createConfigurationContext(configuration)
+            assertEquals(
+                "Attribution changed in $tag",
+                "© OpenStreetMap contributors © CARTO",
+                localized.getString(R.string.map_attribution),
+            )
             val renderText = RenderText(
                 localeTag = tag,
                 fallbackTitle = localized.getString(R.string.default_title),
@@ -182,7 +264,7 @@ class TimelinePainterTest {
         val track = painter.buildCameraTrackForBackground(journey, SIZE, SIZE, settings).track
 
         fun trackSpanAt(distanceKm: Double): Double {
-            val viewport = track.viewportAt((distanceKm / journey.totalDistanceKm).toFloat())
+            val viewport = track.viewportAt(track.timing.progressAtDistance(distanceKm))
             return viewport.maxY - viewport.minY
         }
 
@@ -207,6 +289,42 @@ class TimelinePainterTest {
             "Arrival span $arrivalSpan still lagged behind its local target $arrivalTarget",
             arrivalSpan <= arrivalTarget * 1.60,
         )
+    }
+
+    @Test
+    fun closeUpSharesItsArrivalBudgetAcrossMultipleLongHaulTripsWithoutPausing() {
+        val journey = multiLongHaulJourney()
+        val settings = CameraSettings(
+            cameraMovement = CameraMovement.CLOSE_UP,
+            longTripCompression = LongTripCompression.OFF,
+            tripDetection = TripDetection.SENSITIVE,
+            localFraming = LocalFraming.CLOSE,
+        )
+        val timing = TimelinePainter()
+            .buildCameraTrackForBackground(journey, SIZE, SIZE, settings)
+            .track
+            .timing
+        val localArrivals = journey.legs.mapIndexedNotNull { index, leg ->
+            leg.takeIf { !it.isTransfer && journey.legs.getOrNull(index - 1)?.isTransfer == true }
+        }
+
+        assertEquals(3, localArrivals.size)
+        val shares = localArrivals.map { leg ->
+            timing.progressAtDistance(leg.endKm) - timing.progressAtDistance(leg.startKm)
+        }
+        val meaningfulShares = listOf(shares[0], shares[2])
+
+        meaningfulShares.forEach { share -> assertTrue("Meaningful arrival share was $share", share >= 0.029f) }
+        assertTrue("Brief stop unexpectedly received the arrival budget: $shares", shares[1] < 0.02f)
+        assertTrue("Arrival budget exceeded its global bound: $shares", meaningfulShares.sum() <= 0.061f)
+
+        listOf(localArrivals[0], localArrivals[2]).forEach { leg ->
+            val start = timing.progressAtDistance(leg.startKm)
+            val end = timing.progressAtDistance(leg.endKm)
+            val middle = timing.distanceAt((start + end) / 2f)
+            assertTrue("Close-up must keep moving after arrival", middle > leg.startKm)
+            assertTrue("Close-up must not jump to the end of the visit", middle < leg.endKm)
+        }
     }
 
     @Test
@@ -282,7 +400,7 @@ class TimelinePainterTest {
         frames.forEachIndexed { index, frame ->
             val progress = index.toDouble() / frames.lastIndex
             val marker = WebMercator.project(
-                journey.positionAtDistance(journey.totalDistanceKm * progress).point,
+                journey.positionAtDistance(track.timing.distanceAt(progress.toFloat())).point,
             )
             val markerX = unwrapNear(marker.x, frame.centerX)
             val xOffset = kotlin.math.abs(markerX - frame.centerX)
@@ -295,7 +413,7 @@ class TimelinePainterTest {
             val progress = sample.toFloat() / (frames.lastIndex * 10)
             val viewport = track.viewportAt(progress)
             val marker = WebMercator.project(
-                journey.positionAtDistance(journey.totalDistanceKm * progress).point,
+                journey.positionAtDistance(track.timing.distanceAt(progress)).point,
             )
             val centerX = (viewport.minX + viewport.maxX) / 2.0
             val centerY = (viewport.minY + viewport.maxY) / 2.0
@@ -475,6 +593,65 @@ class TimelinePainterTest {
     }
 
     @Test
+    fun backgroundCameraPreparationInstallsTheSameViewportTiming() {
+        val journey = roundTripJourney()
+        val settings = CameraSettings(cameraMovement = CameraMovement.DYNAMIC)
+        val backgroundPainter = TimelinePainter()
+        val preparation = backgroundPainter.buildCameraTrackForBackground(journey, SIZE, SIZE, settings)
+        val installedPainter = TimelinePainter()
+        installedPainter.installCameraPreparation(journey, SIZE, SIZE, settings, preparation)
+
+        listOf(0f, 0.1f, 0.35f, 0.7f, 1f).forEach { progress ->
+            assertEquals(
+                backgroundPainter.playbackDistanceForTest(journey, progress, SIZE, SIZE, settings),
+                installedPainter.playbackDistanceForTest(journey, progress, SIZE, SIZE, settings),
+                1e-7,
+            )
+        }
+    }
+
+    @Test
+    fun automaticRendererTimingIgnoresLegacyCompressionSetting() {
+        val journey = roundTripJourney()
+        val natural = CameraSettings(
+            cameraMovement = CameraMovement.FIXED,
+            longTripCompression = LongTripCompression.OFF,
+        )
+        val strongest = natural.copy(longTripCompression = LongTripCompression.STRONGER)
+        val naturalPainter = TimelinePainter()
+        val strongestPainter = TimelinePainter()
+
+        (0..20).forEach { step ->
+            val progress = step / 20f
+            assertEquals(
+                naturalPainter.playbackDistanceForTest(journey, progress, SIZE, SIZE, natural),
+                strongestPainter.playbackDistanceForTest(journey, progress, SIZE, SIZE, strongest),
+                1e-7,
+            )
+        }
+    }
+
+    @Test
+    fun rendererPlaybackIsMonotonicAndReachesBothEndpoints() {
+        val journey = roundTripJourney()
+        val painter = TimelinePainter()
+        val settings = CameraSettings(cameraMovement = CameraMovement.CLOSE_UP)
+        var previous = -1.0
+
+        (0..1_000).forEach { step ->
+            val distance = painter.playbackDistanceForTest(journey, step / 1_000f, SIZE, SIZE, settings)
+            assertTrue(distance + 1e-8 >= previous)
+            previous = distance
+        }
+        assertEquals(0.0, painter.playbackDistanceForTest(journey, 0f, SIZE, SIZE, settings), 0.0)
+        assertEquals(
+            journey.totalDistanceKm,
+            painter.playbackDistanceForTest(journey, 1f, SIZE, SIZE, settings),
+            1e-6,
+        )
+    }
+
+    @Test
     fun lightweightInitialFrameDoesNotPrepareTheFullRoute() {
         val points = List(5_000) { index ->
             GeoPoint(
@@ -511,17 +688,37 @@ class TimelinePainterTest {
 
     private fun roundTripJourney(): Journey = Journey.from(
         listOf(
-            point(37.55, 126.95),
-            point(37.57, 126.98),
-            point(37.56, 127.02),
-            point(35.67, 139.65),
-            point(35.69, 139.70),
-            point(35.66, 139.75),
-            point(35.71, 139.80),
-            point(37.56, 127.02),
-            point(37.58, 126.99),
+            timedPoint(0, 37.55, 126.95),
+            timedPoint(1, 37.57, 126.98),
+            timedPoint(2, 37.56, 127.02),
+            timedPoint(14, 35.67, 139.65),
+            timedPoint(20, 35.69, 139.70),
+            timedPoint(30, 35.66, 139.75),
+            timedPoint(36, 35.71, 139.80),
+            timedPoint(48, 37.56, 127.02),
+            timedPoint(52, 37.58, 126.99),
         ),
         2025,
+    )
+
+    private fun multiLongHaulJourney(): Journey = Journey.from(
+        listOf(
+            timedPoint(0, 0.0, 0.000),
+            timedPoint(1, 0.0, 0.002),
+            timedPoint(2, 0.0, 1.000),
+            timedPoint(7, 0.0, 1.001),
+            timedPoint(10, 0.0, 2.000),
+            GeoPoint(Instant.parse("2025-06-01T10:10:00Z"), 0.0, 2.001),
+            timedPoint(15, 0.0, 3.000),
+            timedPoint(20, 0.0, 3.002),
+        ),
+        2025,
+    )
+
+    private fun timedPoint(hour: Int, latitude: Double, longitude: Double) = GeoPoint(
+        Instant.parse("2025-06-01T00:00:00Z").plusSeconds(hour * 3_600L),
+        latitude,
+        longitude,
     )
 
     private fun tileViewport(width: Int, height: Int): Viewport {

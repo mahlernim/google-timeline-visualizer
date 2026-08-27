@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="960dp"
+    android:height="640dp"
+    android:viewportWidth="960"
+    android:viewportHeight="640">
+    <path android:fillColor="@color/onboarding_paper" android:pathData="M480,200 C380,168 250,188 150,232 L150,500 C250,456 380,448 480,480 Z" android:strokeColor="@color/onboarding_ink" android:strokeLineJoin="round" android:strokeWidth="10" />
+    <path android:fillColor="@color/onboarding_paper" android:pathData="M480,200 C580,168 710,188 810,232 L810,500 C710,456 580,448 480,480 Z" android:strokeColor="@color/onboarding_ink" android:strokeLineJoin="round" android:strokeWidth="10" />
+    <path android:pathData="M480,200 L480,480" android:strokeColor="@color/onboarding_ink" android:strokeLineCap="round" android:strokeWidth="10" />
+    <path android:pathData="M212,292 L420,284" android:strokeColor="@color/onboarding_muted" android:strokeLineCap="round" android:strokeWidth="12" />
+    <path android:pathData="M214,342 L438,336" android:strokeColor="@color/onboarding_muted" android:strokeLineCap="round" android:strokeWidth="12" />
+    <path android:pathData="M216,392 L398,388" android:strokeColor="@color/onboarding_muted" android:strokeLineCap="round" android:strokeWidth="12" />
+    <path android:pathData="M218,442 L356,440" android:strokeColor="@color/onboarding_muted" android:strokeLineCap="round" android:strokeWidth="12" />
+    <path android:pathData="M556,428 C620,414 566,356 632,336 C686,320 692,312 720,292" android:strokeColor="@color/onboarding_route" android:strokeLineCap="round" android:strokeWidth="14" />
+    <path android:fillColor="@color/onboarding_ink" android:pathData="M556,428 L534,396 A27,27 0,1 1,578 396 Z" />
+    <path android:fillColor="@color/onboarding_paper" android:pathData="M565,380 A9,9 0,1 1,547 380 A9,9 0,1 1,565 380 Z" />
+    <path android:fillColor="@color/onboarding_ink" android:pathData="M720,292 L698,260 A27,27 0,1 1,742 260 Z" />
+    <path android:fillColor="@color/onboarding_paper" android:pathData="M729,244 A9,9 0,1 1,711 244 A9,9 0,1 1,729 244 Z" />
+</vector>

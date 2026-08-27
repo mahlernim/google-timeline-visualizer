@@ -21,7 +21,7 @@ def resources(folder: str):
     return {
         node.attrib["name"]: node
         for node in ET.parse(RES / folder / "strings.xml").getroot()
-        if "name" in node.attrib
+        if "name" in node.attrib and node.attrib.get("translatable", "true") != "false"
     }
 
 

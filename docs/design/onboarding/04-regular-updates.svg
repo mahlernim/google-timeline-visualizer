@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" width="960" height="640" role="img" aria-label="A calendar, a fresh JSON export, and a journal whose route grows longer">
+<g>
+<rect x="104" y="196" width="212" height="196" rx="8" fill="#F7EBE4" stroke="#1E1220" stroke-width="6"></rect>
+<path d="M104,246 H316" stroke="#1E1220" stroke-width="6"></path>
+<rect x="146" y="176" width="10" height="30" rx="5" fill="#1E1220"></rect>
+<rect x="264" y="176" width="10" height="30" rx="5" fill="#1E1220"></rect>
+<circle cx="132" cy="268" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="170" cy="268" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="208" cy="268" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="246" cy="268" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="284" cy="268" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="132" cy="298" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="170" cy="298" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="208" cy="298" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="246" cy="298" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="284" cy="298" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="132" cy="328" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="170" cy="328" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="208" cy="328" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="246" cy="328" r="9" fill="#D01A63" opacity="1"></circle><circle cx="284" cy="328" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="132" cy="358" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="170" cy="358" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="208" cy="358" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="246" cy="358" r="5" fill="#A98A9C" opacity="0.55"></circle><circle cx="284" cy="358" r="5" fill="#A98A9C" opacity="0.55"></circle>
+</g><path d="M336,294 H384" stroke="#1E1220" stroke-width="5" stroke-linecap="round" stroke-dasharray="6 12"></path>
+<path d="M382,285 L398,294 L382,303 Z" fill="#1E1220"></path><g>
+<path d="M410,188 a6,6 0 0 1 6,-6 H554 L580,208 V402 a6,6 0 0 1 -6,6 H416 a6,6 0 0 1 -6,-6 Z" fill="#F7EBE4" stroke="#1E1220" stroke-width="6"></path>
+<path d="M554,182 L580,208 H554 Z" fill="#A98A9C" stroke="#1E1220" stroke-width="6" stroke-linejoin="round"></path>
+<rect x="430" y="230" width="65" height="5" rx="2.5" fill="#A98A9C" opacity="0.6"></rect>
+<rect x="430" y="250" width="101.4" height="5" rx="2.5" fill="#D01A63" opacity="1"></rect>
+<rect x="430" y="270" width="80.6" height="5" rx="2.5" fill="#A98A9C" opacity="0.6"></rect>
+<rect x="430" y="290" width="46.8" height="5" rx="2.5" fill="#A98A9C" opacity="0.6"></rect>
+<rect x="430" y="378" width="57.2" height="5" rx="2.5" fill="#A98A9C" opacity="0.6"></rect>
+</g><circle cx="410" cy="182" r="14" fill="#D01A63"></circle><path d="M600,294 H646" stroke="#1E1220" stroke-width="5" stroke-linecap="round" stroke-dasharray="6 12"></path>
+<path d="M644,285 L660,294 L644,303 Z" fill="#1E1220"></path><g>
+<rect x="666" y="404" width="228" height="10" rx="3" fill="#A98A9C"></rect>
+<rect x="660" y="244" width="240" height="164" rx="6" fill="#F7EBE4" stroke="#1E1220" stroke-width="6"></rect>
+<path d="M780,252 V400" stroke="#1E1220" stroke-width="4" stroke-linecap="round"></path>
+</g><rect x="686" y="278" width="74" height="4" rx="2" fill="#A98A9C" opacity="0.55"></rect>
+<rect x="686" y="294" width="74" height="4" rx="2" fill="#A98A9C" opacity="0.55"></rect>
+<rect x="686" y="310" width="74" height="4" rx="2" fill="#A98A9C" opacity="0.55"></rect>
+<path d="M700,368 C734,336 758,352 786,320" fill="none" stroke="#A98A9C" stroke-width="7" stroke-linecap="round"></path>
+<path d="M786,320 C812,290 848,296 882,268" fill="none" stroke="#D01A63" stroke-width="7" stroke-linecap="round"></path>
+<circle cx="700" cy="368" r="6" fill="#A98A9C"></circle><path d="M786,312 L775,293 A13,13 0 1 1 797,293 Z" fill="#D01A63"></path>
+<circle cx="786" cy="291" r="4.5" fill="#F7EBE4"></circle><path d="M882,260 L871,241 A13,13 0 1 1 893,241 Z" fill="#D01A63"></path>
+<circle cx="882" cy="239" r="4.5" fill="#F7EBE4"></circle>
+<path d="M892,238 C906,224 908,212 904,200" fill="none" stroke="#D01A63" stroke-width="5" stroke-linecap="round" stroke-dasharray="3 11"></path>
+</svg>

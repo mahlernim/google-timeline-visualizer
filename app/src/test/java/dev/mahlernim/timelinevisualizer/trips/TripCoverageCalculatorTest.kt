@@ -54,6 +54,41 @@ class TripCoverageCalculatorTest {
         assertTrue(coverage.limited)
     }
 
+    @Test
+    fun connectedComponentsDoNotCountMovementAcrossGap() {
+        val first = Timeline(
+            listOf(
+                point("2026-04-03T00:00:00Z", 35.0, 129.00),
+                point("2026-04-03T01:00:00Z", 35.0, 129.01),
+            ),
+        )
+        val second = Timeline(
+            listOf(
+                point("2026-04-03T02:00:00Z", 35.0, 131.00),
+                point("2026-04-03T03:00:00Z", 35.0, 131.01),
+            ),
+        )
+
+        val coverage = TripCoverageCalculator.calculateConnected(
+            listOf(first, second),
+            LocalDate.parse("2026-04-03"),
+            LocalDate.parse("2026-04-03"),
+            ZoneOffset.UTC,
+        )
+        val flattenedCoverage = TripCoverageCalculator.calculate(
+            Timeline(first.points + second.points),
+            LocalDate.parse("2026-04-03"),
+            LocalDate.parse("2026-04-03"),
+            ZoneOffset.UTC,
+        )
+
+        assertEquals(4, coverage.usablePointCount)
+        assertEquals(2, coverage.movementSegmentCount)
+        assertTrue(coverage.recordedMovementKm in 1.0..3.0)
+        assertEquals(3, flattenedCoverage.movementSegmentCount)
+        assertTrue(flattenedCoverage.recordedMovementKm > 150.0)
+    }
+
     private fun point(instant: String, latitude: Double, longitude: Double) = GeoPoint(
         Instant.parse(instant),
         latitude,

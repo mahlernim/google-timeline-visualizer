@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="960dp"
+    android:height="640dp"
+    android:viewportWidth="960"
+    android:viewportHeight="640">
+    <path android:fillColor="@color/onboarding_paper" android:pathData="M150,195 A22,22 0,0 1,172 173 H300 L385,258 V450 A22,22 0,0 1,363 472 H172 A22,22 0,0 1,150 450 Z" android:strokeColor="@color/onboarding_ink" android:strokeLineJoin="round" android:strokeWidth="10" />
+    <path android:pathData="M300,173 V236 A22,22 0,0 0,322 258 H385" android:strokeColor="@color/onboarding_ink" android:strokeLineJoin="round" android:strokeWidth="10" />
+    <path android:pathData="M190,434 C244,414 202,360 258,342 C282,334 288,330 284,320" android:strokeColor="@color/onboarding_route" android:strokeLineCap="round" android:strokeWidth="12" />
+    <path android:fillColor="@color/onboarding_ink" android:pathData="M284,320 L268,296 A21,21 0,1 1,300 296 Z" />
+    <path android:fillColor="@color/onboarding_paper" android:pathData="M291,282 A7,7 0,1 1,277 282 A7,7 0,1 1,291 282 Z" />
+    <path android:pathData="M400,318 C428,258 452,242 478,250" android:strokeColor="@color/onboarding_muted" android:strokeLineCap="round" android:strokeWidth="12" />
+    <path android:pathData="M453,257 L478,250 L461,230" android:strokeColor="@color/onboarding_muted" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeWidth="12" />
+    <path android:fillColor="@color/onboarding_paper" android:pathData="M662,258 C612,236 544,246 494,268 L494,482 C544,460 612,466 662,490 Z" android:strokeColor="@color/onboarding_ink" android:strokeLineJoin="round" android:strokeWidth="10" />
+    <path android:fillColor="@color/onboarding_paper" android:pathData="M662,258 C712,236 780,246 830,268 L830,482 C780,460 712,466 662,490 Z" android:strokeColor="@color/onboarding_ink" android:strokeLineJoin="round" android:strokeWidth="10" />
+    <path android:pathData="M662,258 L662,490" android:strokeColor="@color/onboarding_ink" android:strokeLineCap="round" android:strokeWidth="10" />
+    <path android:pathData="M708,446 C764,424 722,376 776,356" android:strokeColor="@color/onboarding_route" android:strokeLineCap="round" android:strokeWidth="12" />
+    <path android:fillColor="@color/onboarding_ink" android:pathData="M776,356 L760,332 A21,21 0,1 1,792 332 Z" />
+    <path android:fillColor="@color/onboarding_paper" android:pathData="M783,318 A7,7 0,1 1,769 318 A7,7 0,1 1,783 318 Z" />
+    <path android:pathData="M538,440 L618,434" android:strokeColor="@color/onboarding_muted" android:strokeLineCap="round" android:strokeWidth="12" />
+    <path android:pathData="M536,390 L620,384" android:strokeColor="@color/onboarding_muted" android:strokeLineCap="round" android:strokeWidth="12" />
+</vector>

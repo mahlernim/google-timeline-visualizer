@@ -12,7 +12,7 @@ import dev.mahlernim.timelinevisualizer.model.VideoDuration
 import org.json.JSONArray
 import org.json.JSONObject
 
-enum class VideoDataSource { SEMANTIC, RAW }
+enum class VideoDataSource { SEMANTIC, RAW, JOURNAL }
 
 data class VideoSettingsSnapshot(
     val presetName: String?,

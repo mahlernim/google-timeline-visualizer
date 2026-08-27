@@ -25,6 +25,11 @@
             android:visibility="gone" />
 
         <include
+            android:id="@+id/journalOnboardingScreen"
+            layout="@layout/screen_journal_onboarding"
+            android:visibility="gone" />
+
+        <include
             android:id="@+id/playerScreen"
             layout="@layout/screen_player"
             android:visibility="gone" />

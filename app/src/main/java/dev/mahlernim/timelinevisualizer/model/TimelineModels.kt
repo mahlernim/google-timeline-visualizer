@@ -156,6 +156,7 @@ data class TimelinePeriod(
 data class JourneyPosition(
     val point: GeoPoint,
     val distanceKm: Double,
+    val knownDistanceKm: Double,
     val fromIndex: Int,
     val toIndex: Int,
     val segmentFraction: Double,
@@ -185,6 +186,7 @@ internal class MutableRenderSampleLocation(
 private class JourneyRenderPath(
     private val points: List<GeoPoint>,
     private val cumulativeDistanceKm: DoubleArray,
+    private val breakBeforePointIndices: Set<Int>,
 ) : AbstractList<RouteSample>() {
     private val segmentEnds = IntArray((points.size - 1).coerceAtLeast(0))
 
@@ -194,7 +196,7 @@ private class JourneyRenderPath(
         var sampleCount = if (points.isEmpty()) 0L else 1L
         for (toIndex in 1..points.lastIndex) {
             val segmentDistance = cumulativeDistanceKm[toIndex] - cumulativeDistanceKm[toIndex - 1]
-            val steps = renderSteps(segmentDistance)
+            val steps = if (toIndex in breakBeforePointIndices) 1 else renderSteps(segmentDistance)
             sampleCount += steps
             require(sampleCount <= Int.MAX_VALUE) { "Timeline contains too many render samples" }
             segmentEnds[toIndex - 1] = sampleCount.toInt()
@@ -250,10 +252,27 @@ data class Journey(
     val period: TimelinePeriod,
     val points: List<GeoPoint>,
     val cumulativeDistanceKm: DoubleArray,
+    val breakBeforePointIndices: List<Int> = emptyList(),
+    val inferredTransferBeforePointIndices: List<Int> = emptyList(),
 ) {
-    private val renderPathData = JourneyRenderPath(points, cumulativeDistanceKm)
+    private val breakIndexSet = breakBeforePointIndices.toSet()
+    private val inferredTransferIndexSet = inferredTransferBeforePointIndices.toSet()
+    private val knownCumulativeDistanceKm = DoubleArray(points.size).also { distances ->
+        for (index in 1 until points.size) {
+            distances[index] = distances[index - 1] + if (
+                index in breakIndexSet || index in inferredTransferIndexSet
+            ) {
+                0.0
+            } else {
+                haversineKm(points[index - 1], points[index])
+            }
+        }
+    }
+    private val renderPathData = JourneyRenderPath(points, cumulativeDistanceKm, breakIndexSet)
     val year: Int get() = period.startYear
     val totalDistanceKm: Double get() = cumulativeDistanceKm.lastOrNull() ?: 0.0
+    /** Distance supported by detailed or semantic geometry, excluding inferred transfers. */
+    val knownDistanceKm: Double get() = knownCumulativeDistanceKm.lastOrNull() ?: 0.0
     val renderPath: List<RouteSample> = renderPathData
     /**
      * A bounded, journey-specific cutoff for unusually large untracked hops. Dense local routes
@@ -261,6 +280,28 @@ data class Journey(
      */
     val transferThresholdKm: Double = calculateTransferThresholdKm()
     val legs: List<JourneyLeg> = buildLegs(transferThresholdKm)
+
+    init {
+        require(cumulativeDistanceKm.size == points.size)
+        require(breakBeforePointIndices == breakBeforePointIndices.distinct().sorted())
+        require(breakBeforePointIndices.all { it in 1..points.lastIndex })
+        require(inferredTransferBeforePointIndices == inferredTransferBeforePointIndices.distinct().sorted())
+        require(inferredTransferBeforePointIndices.all { it in 1..points.lastIndex })
+        require(inferredTransferBeforePointIndices.none(breakIndexSet::contains))
+    }
+
+    fun isConnectedToPrevious(pointIndex: Int): Boolean =
+        pointIndex in 1..points.lastIndex && pointIndex !in breakIndexSet
+
+    fun isInferredTransferFromPrevious(pointIndex: Int): Boolean =
+        pointIndex in inferredTransferIndexSet
+
+    internal fun isRenderConnectionFromPrevious(renderIndex: Int): Boolean {
+        if (renderIndex !in 1 until renderPath.size) return false
+        return renderPathData.locationAt(renderIndex).let { location ->
+            location.step > 1 || isConnectedToPrevious(location.toPointIndex)
+        }
+    }
 
     fun pointIndexAt(progress: Float): Int {
         return positionAt(progress).toIndex
@@ -288,16 +329,31 @@ data class Journey(
     fun positionAtDistance(distanceKm: Double): JourneyPosition {
         if (points.isEmpty()) {
             val epoch = GeoPoint(Instant.EPOCH, 0.0, 0.0)
-            return JourneyPosition(epoch, 0.0, 0, 0, 0.0)
+            return JourneyPosition(epoch, 0.0, 0.0, 0, 0, 0.0)
         }
         if (points.size == 1 || totalDistanceKm <= 0.0) {
-            return JourneyPosition(points.first(), 0.0, 0, 0, 0.0)
+            return JourneyPosition(points.first(), 0.0, 0.0, 0, 0, 0.0)
         }
         val target = distanceKm.coerceIn(0.0, totalDistanceKm)
-        val exact = cumulativeDistanceKm.binarySearch(target)
-        if (exact >= 0) return JourneyPosition(points[exact], target, exact, exact, 0.0)
+        var low = 0
+        var high = cumulativeDistanceKm.size
+        while (low < high) {
+            val middle = (low + high) ushr 1
+            if (cumulativeDistanceKm[middle] <= target) low = middle + 1 else high = middle
+        }
+        val fromOrExact = (low - 1).coerceAtLeast(0)
+        if (cumulativeDistanceKm[fromOrExact] == target) {
+            return JourneyPosition(
+                points[fromOrExact],
+                target,
+                knownCumulativeDistanceKm[fromOrExact],
+                fromOrExact,
+                fromOrExact,
+                0.0,
+            )
+        }
 
-        val to = (-exact - 1).coerceIn(1, points.lastIndex)
+        val to = low.coerceIn(1, points.lastIndex)
         val from = to - 1
         val segmentDistance = cumulativeDistanceKm[to] - cumulativeDistanceKm[from]
         val fraction = if (segmentDistance <= 0.0) 0.0 else
@@ -305,6 +361,8 @@ data class Journey(
         return JourneyPosition(
             interpolate(points[from], points[to], fraction),
             target,
+            knownCumulativeDistanceKm[from] +
+                (knownCumulativeDistanceKm[to] - knownCumulativeDistanceKm[from]) * fraction,
             from,
             to,
             fraction,
@@ -324,6 +382,7 @@ data class Journey(
         val candidates = DoubleArray((cumulativeDistanceKm.size - 1).coerceAtLeast(0))
         var count = 0
         for (index in 1 until cumulativeDistanceKm.size) {
+            if (index in inferredTransferIndexSet) continue
             val distance = cumulativeDistanceKm[index] - cumulativeDistanceKm[index - 1]
             if (distance > 0.0 && distance < MAX_TRANSFER_THRESHOLD_KM) candidates[count++] = distance
         }
@@ -353,7 +412,7 @@ data class Journey(
         for (index in 1..points.lastIndex) {
             val transferStartKm = cumulativeDistanceKm[index - 1]
             val transferEndKm = cumulativeDistanceKm[index]
-            if (transferEndKm - transferStartKm < cutoff) continue
+            if (index !in inferredTransferIndexSet && transferEndKm - transferStartKm < cutoff) continue
             if (transferStartKm > localStartKm) result.add(JourneyLeg(localStartKm, transferStartKm, false))
             result.add(JourneyLeg(transferStartKm, transferEndKm, true))
             localStartKm = transferEndKm
@@ -366,11 +425,59 @@ data class Journey(
         fun from(points: List<GeoPoint>, year: Int): Journey = from(points, TimelinePeriod.sameYear(year))
 
         fun from(points: List<GeoPoint>, period: TimelinePeriod): Journey {
+            return fromFlattened(points, period, emptyList())
+        }
+
+        /** Builds one journey while preserving discontinuities between ordered route sections. */
+        fun fromSections(
+            sections: List<List<GeoPoint>>,
+            period: TimelinePeriod,
+            inferredTransferBeforePointIndices: List<Int> = emptyList(),
+        ): Journey {
+            val nonEmptySections = sections.filter(List<GeoPoint>::isNotEmpty)
+            val points = ArrayList<GeoPoint>(nonEmptySections.sumOf(List<GeoPoint>::size))
+            val breaks = ArrayList<Int>((nonEmptySections.size - 1).coerceAtLeast(0))
+            nonEmptySections.forEachIndexed { index, section ->
+                if (index > 0) breaks += points.size
+                points += section
+            }
+            return fromFlattened(points, period, breaks, inferredTransferBeforePointIndices)
+        }
+
+        /** Restores a persisted journey topology after validating its break indices. */
+        fun fromBreakIndices(
+            points: List<GeoPoint>,
+            period: TimelinePeriod,
+            breakBeforePointIndices: List<Int>,
+            inferredTransferBeforePointIndices: List<Int> = emptyList(),
+        ): Journey = fromFlattened(
+            points,
+            period,
+            breakBeforePointIndices,
+            inferredTransferBeforePointIndices,
+        )
+
+        private fun fromFlattened(
+            points: List<GeoPoint>,
+            period: TimelinePeriod,
+            breakBeforePointIndices: List<Int>,
+            inferredTransferBeforePointIndices: List<Int> = emptyList(),
+        ): Journey {
+            val breaks = breakBeforePointIndices.distinct().sorted()
+            require(breaks.all { it in 1..points.lastIndex })
+            val inferredTransfers = inferredTransferBeforePointIndices.distinct().sorted()
+            require(inferredTransfers.all { it in 1..points.lastIndex })
+            require(inferredTransfers.none(breaks::contains))
+            val breakSet = breaks.toSet()
             val distances = DoubleArray(points.size)
             for (index in 1 until points.size) {
-                distances[index] = distances[index - 1] + haversineKm(points[index - 1], points[index])
+                distances[index] = distances[index - 1] + if (index in breakSet) {
+                    0.0
+                } else {
+                    haversineKm(points[index - 1], points[index])
+                }
             }
-            return Journey(period, points, distances)
+            return Journey(period, points, distances, breaks, inferredTransfers)
         }
 
         internal fun interpolate(a: GeoPoint, b: GeoPoint, fraction: Double): GeoPoint {

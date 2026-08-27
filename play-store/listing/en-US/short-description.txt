@@ -1,1 +1,1 @@
-Create, customize, and watch animated videos from your Google Maps Timeline.
+A private Travel Journal from your Google Maps Timeline, with animated videos.

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journal_automatic_source_summary">影片會自動使用已儲存的最詳細路線。旅行記錄會用現有最佳時間軸記錄補上缺少的時段。</string>
+</resources>

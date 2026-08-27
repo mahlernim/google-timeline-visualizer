@@ -21,9 +21,6 @@ export const es: Strings = {
   appDescription: 'Crea una animación de viaje de forma privada a partir de una exportación de Timeline de Google Maps.',
   previewBanner: 'Versión preliminar para iPhone · Prueba primero con datos de ejemplo no sensibles',
   headerTitle: 'Crear vídeo',
-  presetLinkTitle: 'Ajuste de Android compartido',
-  presetLinkBody: 'Este enlace protege la privacidad y solo contiene cinco ajustes de cámara y relación de aspecto. Ábrelo en la aplicación Android para revisar todos los valores antes de usarlo o guardarlo.',
-  presetLinkOpen: 'Abrir en la aplicación Android',
 
   fileCardTitle: 'Archivo Timeline',
   fileCardIntro: 'Elige el archivo Timeline.json que has exportado. El archivo permanece en este dispositivo y solo se solicitan imágenes del mapa al proveedor de mapas.',

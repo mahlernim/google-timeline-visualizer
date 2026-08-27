@@ -194,6 +194,10 @@ class TimelineView @JvmOverloads constructor(
         markFrameDirty()
     }
 
+    fun retryCameraPreparation() {
+        restartCameraPreparation()
+    }
+
     private fun restartCameraPreparation() {
         cameraPreparationJob?.cancel()
         cameraPreparationGeneration += 1

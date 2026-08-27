@@ -3,6 +3,7 @@ from visualizer import (
     build_camera_track,
     build_journey_timing,
     build_legs,
+    build_visual_journey_timing,
     ease_in_out_cubic,
     ease_out_cubic,
     latlon_to_meters,
@@ -27,6 +28,7 @@ def test_cli_defaults_match_android(tmp_path):
     assert args.input == timeline
     assert args.camera_movement == 'steady'
     assert args.long_trip_compression == 'balanced'
+    assert args.pacing_model == 'legacy'
 
 
 def test_balanced_compression_reduces_long_segments_share_without_changing_duration():
@@ -49,6 +51,51 @@ def test_stronger_compression_reduces_share_further():
     stronger_share = progress_at_distance(stronger, 1010.0) - progress_at_distance(stronger, 10.0)
 
     assert stronger_share < balanced_share
+
+
+def test_visual_pacing_gives_a_zoomed_out_transfer_less_time_than_linear_distance():
+    lats = [37.50, 37.55, 48.85, 48.90]
+    lons = [127.00, 127.05, 2.35, 2.40]
+    cumulative = [0.0, 10.0, 1010.0, 1020.0]
+    projected = [latlon_to_meters(lat, lon) for lat, lon in zip(lats, lons)]
+    xs = [point[0] for point in projected]
+    ys = [point[1] for point in projected]
+    linear = build_journey_timing(cumulative, 'off')
+    visual = build_visual_journey_timing(
+        cumulative, xs, ys, lats, lons, 'close_up', local_framing='close',
+    )
+    linear_share = progress_at_distance(linear, 1010.0) - progress_at_distance(linear, 10.0)
+    visual_share = progress_at_distance(visual, 1010.0) - progress_at_distance(visual, 10.0)
+
+    assert visual_share < linear_share
+    assert visual(0.0) == 0.0
+    assert visual(1.0) == cumulative[-1]
+    samples = [visual(index / 100.0) for index in range(101)]
+    assert samples == sorted(samples)
+
+
+def test_visual_zoom_pacing_preserves_endpoints_and_monotonic_progress():
+    lats = [37.50, 37.55, 48.85, 48.90]
+    lons = [127.00, 127.05, 2.35, 2.40]
+    cumulative = [0.0, 10.0, 1010.0, 1020.0]
+    projected = [latlon_to_meters(lat, lon) for lat, lon in zip(lats, lons)]
+    xs = [point[0] for point in projected]
+    ys = [point[1] for point in projected]
+    visual_zoom = build_visual_journey_timing(
+        cumulative,
+        xs,
+        ys,
+        lats,
+        lons,
+        'close_up',
+        local_framing='close',
+        include_zoom_work=True,
+    )
+
+    samples = [visual_zoom(index / 100.0) for index in range(101)]
+    assert samples[0] == 0.0
+    assert samples[-1] == cumulative[-1]
+    assert samples == sorted(samples)
 
 
 def test_adaptive_transfer_detection_separates_a_long_hop():

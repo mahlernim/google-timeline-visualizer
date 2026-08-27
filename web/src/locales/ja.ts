@@ -20,9 +20,6 @@ export const ja: Strings = {
   appDescription: 'Google マップのタイムライン ファイルから、旅のアニメーション動画を端末内だけで作成します。',
   previewBanner: 'iPhoneプレビュー版 · まず機密性のないサンプルデータでお試しください',
   headerTitle: '動画を作成',
-  presetLinkTitle: '共有されたAndroidプリセット',
-  presetLinkBody: 'このプライバシーに配慮したリンクには、カメラと縦横比の5つの設定だけが含まれます。Androidアプリで開き、すべての値を確認してから使用または保存してください。',
-  presetLinkOpen: 'Androidアプリで開く',
 
   fileCardTitle: 'タイムライン ファイル',
   fileCardIntro: '書き出したTimeline.jsonを選択してください。ファイルはこの端末内に保持され、地図プロバイダに要求するのは地図画像だけです。',

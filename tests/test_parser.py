@@ -2,11 +2,58 @@ from datetime import date
 import json
 
 from visualizer import (
+    extract_journal_route_points,
     extract_timeline_points,
     format_distance,
     parse_coordinate,
     resolve_title_template,
 )
+
+
+def test_journal_route_prefers_usable_detail_and_keeps_semantic_backup_outside_coverage():
+    data = {
+        "rawSignals": [
+            {"position": {
+                "LatLng": "37.5000,127.0000",
+                "timestamp": "2025-08-01T00:00:00Z",
+                "accuracyMeters": 12,
+            }},
+            {"position": {
+                "LatLng": "37.5100,127.0100",
+                "timestamp": "2025-08-01T00:05:00Z",
+                "accuracyMeters": 15,
+            }},
+            {"position": {
+                "LatLng": "37.5200,127.0200",
+                "timestamp": "2025-08-01T00:10:00Z",
+                "accuracyMeters": 250,
+            }},
+        ],
+        "semanticSegments": [
+            {
+                "startTime": "2025-08-01T00:02:00Z",
+                "visit": {"topCandidate": {"placeLocation": "35.0,129.0"}},
+            },
+            {
+                "startTime": "2025-08-01T02:00:00Z",
+                "visit": {"topCandidate": {"placeLocation": "36.0,128.0"}},
+            },
+        ],
+    }
+
+    points, stats = extract_journal_route_points(data, year=2025)
+
+    assert [(point["lat"], point["lon"]) for point in points] == [
+        (37.5, 127.0),
+        (37.51, 127.01),
+        (36.0, 128.0),
+    ]
+    assert stats == {
+        "detailed_input": 3,
+        "detailed_usable": 2,
+        "detailed_islands": 1,
+        "semantic_backup": 1,
+    }
 
 
 def test_takeout_object_root():

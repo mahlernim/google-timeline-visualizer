@@ -35,11 +35,14 @@ jobs:
         run: echo "$SIGNING_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/timeline-visualizer-release.jks"
       - name: Test and build signed GitHub APK and Play bundle
         env:
+          CARTO_BASEMAP_API_KEY: ${{ secrets.CARTO_BASEMAP_API_KEY }}
           ANDROID_SIGNING_STORE_FILE: ${{ runner.temp }}/timeline-visualizer-release.jks
           ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
           ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
           ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
-        run: ./gradlew test lint assembleGithubRelease bundlePlayRelease --stacktrace
+        run: |
+          test -n "$CARTO_BASEMAP_API_KEY"
+          ./gradlew test lint assembleGithubRelease bundlePlayRelease --stacktrace
       - name: Verify signed GitHub APK
         run: |
           apk_path="app/build/outputs/apk/github/release/app-github-release.apk"
@@ -51,8 +54,8 @@ jobs:
           package_name="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<< "$package_line")"
           version_code="$(sed -n "s/.*versionCode='\([^']*\)'.*/\1/p" <<< "$package_line")"
           version_name="$(sed -n "s/.*versionName='\([^']*\)'.*/\1/p" <<< "$package_line")"
-          expected_version_code="$(sed -nE 's/^[[:space:]]*versionCode = ([0-9]+).*$/\1/p' app/build.gradle.kts)"
-          expected_version_name="$(sed -nE 's/^[[:space:]]*versionName = "([^"]+)".*$/\1/p' app/build.gradle.kts)"
+          expected_version_code="$(sed -nE 's/^[[:space:]]*versionCode = ([0-9]+).*$/\1/p' app/build.gradle.kts | head -n 1)"
+          expected_version_name="$(sed -nE 's/^[[:space:]]*versionName = "([^"]+)".*$/\1/p' app/build.gradle.kts | head -n 1)"
 
           test "$package_name" = "dev.mahlernim.timelinevisualizer"
           test "$version_code" = "$expected_version_code"

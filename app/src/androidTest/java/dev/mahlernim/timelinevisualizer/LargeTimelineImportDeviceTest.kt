@@ -10,9 +10,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
-import dev.mahlernim.timelinevisualizer.data.TimelineSourceStore
 import dev.mahlernim.timelinevisualizer.data.LocationFilterMode
-import dev.mahlernim.timelinevisualizer.ui.TimelineView
+import dev.mahlernim.timelinevisualizer.journal.JournalOnboardingStore
 import dev.mahlernim.timelinevisualizer.ui.LocationFilterPreferences
 import java.io.File
 import org.junit.Assert.assertEquals
@@ -30,7 +29,7 @@ class LargeTimelineImportDeviceTest {
             .putBoolean("map_privacy_accepted_v1", true)
             .commit()
         LocationFilterPreferences(context).save(LocationFilterMode.CONSERVATIVE)
-        TimelineSourceStore(context).clear()
+        prepareTravelJournal(context)
         val source = File(context.cacheDir, "dense-long-gap-timeline.json")
         writeDenseLongGapTimeline(source, 14L * 1024 * 1024)
 
@@ -41,7 +40,7 @@ class LargeTimelineImportDeviceTest {
         } finally {
             setAppLocales("")
             LocationFilterPreferences(context).reset()
-            TimelineSourceStore(context).clear()
+            context.deleteDatabase(JOURNAL_DATABASE_NAME)
             source.delete()
         }
     }
@@ -58,7 +57,7 @@ class LargeTimelineImportDeviceTest {
         context.getSharedPreferences("display", Context.MODE_PRIVATE).edit()
             .putBoolean("map_privacy_accepted_v1", true)
             .commit()
-        TimelineSourceStore(context).clear()
+        prepareTravelJournal(context)
         val source = File(context.cacheDir, "large-timeline.json")
         writeLargeTimeline(source, 45L * 1024 * 1024)
 
@@ -66,7 +65,7 @@ class LargeTimelineImportDeviceTest {
             assertImportCompletes(context, source)
             assertTrue(source.length() >= 45L * 1024 * 1024)
         } finally {
-            TimelineSourceStore(context).clear()
+            context.deleteDatabase(JOURNAL_DATABASE_NAME)
             source.delete()
         }
     }
@@ -76,8 +75,6 @@ class LargeTimelineImportDeviceTest {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         var imported = false
-        var previewOpened = false
-        val sourceStore = TimelineSourceStore(context)
         ActivityScenario.launch<MainActivity>(intent).use { scenario ->
             scenario.onActivity { activity ->
                 activity.importTimeline(Uri.fromFile(source))
@@ -89,29 +86,25 @@ class LargeTimelineImportDeviceTest {
                 scenario.onActivity { activity ->
                     val loading = activity.findViewById<View>(R.id.loadingGroup).visibility == View.VISIBLE
                     if (loading) assertEquals(false, activity.findViewById<View>(R.id.importButton).isEnabled)
-                    if (!loading && sourceStore.importInProgress() == null && !previewOpened) {
-                        activity.findViewById<View>(R.id.navigationCreate).performClick()
-                        activity.findViewById<View>(R.id.tripVideoChoice).performClick()
-                        activity.findViewById<View>(R.id.createTripButton).performClick()
-                        activity.findViewById<View>(R.id.wizardContinueButton).performClick()
-                        activity.findViewById<View>(R.id.wizardContinueButton).performClick()
-                        previewOpened = true
-                    }
-                    imported = previewOpened &&
-                        activity.findViewById<TimelineView>(R.id.timelineView).isCameraReady &&
-                        activity.findViewById<View>(R.id.playButton).isEnabled
+                    imported = !loading &&
+                        activity.journalMetadataReady() &&
+                        activity.findViewById<View>(R.id.createTypeStepGroup).visibility == View.VISIBLE
                 }
                 if (!imported) Thread.sleep(100)
             }
             scenario.onActivity { activity ->
-                assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.editorGroup).visibility)
+                assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.createTypeStepGroup).visibility)
                 assertEquals(View.GONE, activity.findViewById<View>(R.id.loadingGroup).visibility)
                 assertEquals(true, activity.findViewById<View>(R.id.importButton).isEnabled)
-                assertEquals(true, activity.findViewById<View>(R.id.playButton).isEnabled)
+                assertEquals(true, activity.journalMetadataReady())
             }
         }
         assertTrue(imported)
-        assertEquals(null, sourceStore.importInProgress())
+    }
+
+    private fun prepareTravelJournal(context: Context) {
+        context.deleteDatabase(JOURNAL_DATABASE_NAME)
+        JournalOnboardingStore(context).complete()
     }
 
     private fun writeDenseLongGapTimeline(file: File, minimumBytes: Long) {
@@ -171,5 +164,9 @@ class LargeTimelineImportDeviceTest {
             }
             writer.write("]}")
         }
+    }
+
+    private companion object {
+        const val JOURNAL_DATABASE_NAME = "travel-journal.db"
     }
 }

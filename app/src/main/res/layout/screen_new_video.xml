@@ -37,11 +37,26 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <TextView android:id="@+id/createStepDetails" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:maxLines="1" android:padding="8dp" android:text="1 Details" android:textAppearance="?attr/textAppearanceLabelMedium" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/wizardBackButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:contentDescription="@string/back"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:maxLines="1"
+                android:minWidth="48dp"
+                android:padding="12dp"
+                app:icon="@drawable/ic_arrow_back_24"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp" />
+
+            <TextView android:id="@+id/createStepDetails" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:background="?attr/selectableItemBackgroundBorderless" android:clickable="true" android:focusable="true" android:gravity="center" android:maxLines="1" android:padding="8dp" android:text="1 Details" android:textAppearance="?attr/textAppearanceLabelMedium" />
             <View android:layout_width="8dp" android:layout_height="1dp" android:background="?attr/colorOutlineVariant" />
-            <TextView android:id="@+id/createStepStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:maxLines="1" android:padding="8dp" android:text="2 Style" android:textAppearance="?attr/textAppearanceLabelMedium" />
+            <TextView android:id="@+id/createStepStyle" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:background="?attr/selectableItemBackgroundBorderless" android:clickable="true" android:focusable="true" android:gravity="center" android:maxLines="1" android:padding="8dp" android:text="2 Style" android:textAppearance="?attr/textAppearanceLabelMedium" />
             <View android:layout_width="8dp" android:layout_height="1dp" android:background="?attr/colorOutlineVariant" />
-            <TextView android:id="@+id/createStepCreate" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:maxLines="1" android:padding="8dp" android:text="3 Create" android:textAppearance="?attr/textAppearanceLabelMedium" />
+            <TextView android:id="@+id/createStepCreate" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:background="?attr/selectableItemBackgroundBorderless" android:clickable="true" android:focusable="true" android:gravity="center" android:maxLines="1" android:padding="8dp" android:text="3 Create" android:textAppearance="?attr/textAppearanceLabelMedium" />
         </LinearLayout>
 
         <TextView
@@ -53,29 +68,54 @@
             android:textStyle="bold" />
 
         <LinearLayout
-            android:id="@+id/wizardNavigationGroup"
+            android:id="@+id/journalRoutePreparingGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal">
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:orientation="vertical"
+            android:paddingVertical="6dp"
+            android:visibility="gone"
+            android:accessibilityLiveRegion="polite">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/wizardBackButton"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:text="@string/back" />
+                <LinearLayout
+                    android:id="@+id/journalRouteCompactProgressGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-            <Space android:layout_width="8dp" android:layout_height="1dp" />
+                    <com.google.android.material.progressindicator.CircularProgressIndicator
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:importantForAccessibility="no"
+                        android:indeterminate="true" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/wizardContinueButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:maxLines="1"
-                android:text="@string/continue_label" />
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:text="@string/preparing_your_journeys"
+                        android:textAppearance="?attr/textAppearanceBodySmall" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/journalRouteProgressStageText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/preparing_detailed_routes"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:visibility="gone" />
+
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/journalRouteProgressBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:importantForAccessibility="no"
+                    android:indeterminate="true"
+                    android:visibility="gone" />
         </LinearLayout>
 
         <LinearLayout
@@ -84,6 +124,12 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/automaticJournalSourceText"
+                style="@style/JournalAutomaticSourceMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/tripVideoChoice"
@@ -140,6 +186,7 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/rawDataChoice"
+                style="@style/JournalRawDataChoice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
@@ -339,18 +386,6 @@
                 android:layout_weight="1"
                 android:maxLines="1"
                 android:text="@string/save_preset" />
-
-            <Space android:layout_width="8dp" android:layout_height="1dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/presetShareButton"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:enabled="false"
-                android:maxLines="1"
-                android:text="@string/share" />
 
             <Space android:layout_width="8dp" android:layout_height="1dp" />
 
@@ -636,19 +671,32 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="?attr/textAppearanceBodyMedium" />
 
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:maxLines="1" android:text="@string/journey" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
+            <TextView android:id="@+id/journeyPreviewTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:maxLines="1" android:text="@string/journey_preview" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
 
             <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" app:cardCornerRadius="20dp" app:strokeWidth="0dp">
-                <dev.mahlernim.timelinevisualizer.ui.TimelineView android:id="@+id/timelineView" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:background="@color/map_surface" android:contentDescription="@string/timeline_preview" />
+                <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <dev.mahlernim.timelinevisualizer.ui.TimelineView android:id="@+id/timelineView" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:background="@color/map_surface" android:clickable="true" android:contentDescription="@string/timeline_preview" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/playButton"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@string/preview"
+                        android:insetLeft="0dp"
+                        android:insetRight="0dp"
+                        android:maxLines="1"
+                        android:minWidth="48dp"
+                        android:padding="12dp"
+                        app:icon="@drawable/ic_play_arrow_24"
+                        app:iconGravity="textStart"
+                        app:iconPadding="0dp" />
+                </FrameLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <SeekBar android:id="@+id/timelineSeek" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:contentDescription="@string/playback_position" android:max="1000" />
 
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
-                <com.google.android.material.button.MaterialButton android:id="@+id/playButton" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:maxLines="1" android:text="@string/preview" />
-                <Space android:layout_width="10dp" android:layout_height="1dp" />
-                <com.google.android.material.button.MaterialButton android:id="@+id/exportButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:maxLines="1" android:text="@string/create_video" />
-            </LinearLayout>
+            <com.google.android.material.button.MaterialButton android:id="@+id/exportButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLines="1" android:text="@string/create_video" />
 
             <LinearLayout android:id="@+id/videoReadyGroup" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:orientation="vertical" android:visibility="gone">
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/video_saved" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
@@ -673,6 +721,21 @@
                 <com.google.android.material.button.MaterialButton android:id="@+id/doneButton" android:layout_width="1dp" android:layout_height="1dp" android:maxLines="1" android:visibility="gone" />
             </LinearLayout>
             </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/wizardNavigationGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/wizardContinueButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:text="@string/continue_label" />
         </LinearLayout>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

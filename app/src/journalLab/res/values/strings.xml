@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="timeline_data">Travel Journal</string>
+    <string name="timeline_source">Travel Journal</string>
+    <string name="timeline_source_empty">Grow your Travel Journal by importing Timeline.json.</string>
+    <string name="timeline_source_ready">Your Travel Journal is saved locally. Import Timeline.json regularly to keep its detailed routes growing.</string>
+    <string name="import_or_update">Import updated Timeline</string>
+    <string name="timeline_not_imported">Your Travel Journal is ready to grow. Import Timeline.json to add the history available in the file.</string>
+    <string name="timeline_file_status">%1$s\nUpdated %2$s\nJournal coverage %3$s\nDetailed coverage %4$s</string>
+    <string name="create_step_type">Choose a video for your Travel Journal</string>
+    <string name="trip_video_summary">Use a saved trip, find one in your Travel Journal, or enter dates manually.</string>
+    <string name="recap_video_summary">Create a video for a month or calendar year in your Travel Journal.</string>
+    <string name="custom_recap_summary">Choose exact start and end dates from your Travel Journal.</string>
+    <string name="semantic_data_unavailable">Import Timeline.json to add travel history to your Travel Journal.</string>
+    <string name="journal_automatic_source_summary">Videos automatically use your most detailed saved routes. Your Travel Journal fills any missing periods with the best available Timeline history.</string>
+</resources>

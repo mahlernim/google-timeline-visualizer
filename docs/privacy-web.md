@@ -1,6 +1,6 @@
 # Timeline Visualizer web app privacy
 
-**Effective date:** August 20, 2026
+**Effective date:** August 26, 2026
 
 **Developer:** MahlerLab
 
@@ -40,6 +40,11 @@ The web app does not send the Timeline JSON, a complete route list, titles, vide
 frames, or generated videos to CARTO. You can load and inspect a Timeline file
 without accepting the notice or requesting map tiles.
 
+Under CARTO's current Basemap Terms, CARTO processes request information on the
+developer's behalf, truncates IP addresses when requests arrive, and stores the
+resulting request logs in the United States for 30 days. CARTO may also process
+this information under its privacy notice and data-processing agreement.
+
 ## Browser storage
 
 Selected Timeline data and generated videos remain in the current browser page.
@@ -48,10 +53,15 @@ reliably. It does not cache the selected Timeline JSON or generated MP4. Closing
 or reloading the page clears the active Timeline data. Browser site settings can
 be used to remove cached application files.
 
+Map tiles are held only in the current page's memory while preparing or rendering
+a journey. The application service worker does not place CARTO tiles in persistent
+browser storage.
+
 ## Third parties
 
 - [GitHub Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)
 - [Cloudflare Privacy Policy](https://www.cloudflare.com/privacypolicy/)
 - [Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/)
 - [CARTO Privacy Notice](https://carto.com/privacy/)
+- [CARTO Basemap Terms](https://carto.com/legal/basemap-terms/)
 - [OpenStreetMap Privacy Policy](https://osmfoundation.org/wiki/Privacy_Policy)

@@ -1,0 +1,577 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "dde4e8a61f98fa12a3d63892064830a7",
+    "entities": [
+      {
+        "tableName": "journals",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `isPrimary` INTEGER NOT NULL, `createdAtEpochMillis` INTEGER NOT NULL, `lastAdvancedAtEpochMillis` INTEGER, `detailedCapturedThroughEpochMillis` INTEGER, `detailedUsableThroughEpochMillis` INTEGER, `semanticStartEpochMillis` INTEGER, `semanticEndEpochMillis` INTEGER, `reminderEligible` INTEGER NOT NULL, `reminderEnabled` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isPrimary",
+            "columnName": "isPrimary",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAtEpochMillis",
+            "columnName": "createdAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastAdvancedAtEpochMillis",
+            "columnName": "lastAdvancedAtEpochMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "detailedCapturedThroughEpochMillis",
+            "columnName": "detailedCapturedThroughEpochMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "detailedUsableThroughEpochMillis",
+            "columnName": "detailedUsableThroughEpochMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "semanticStartEpochMillis",
+            "columnName": "semanticStartEpochMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "semanticEndEpochMillis",
+            "columnName": "semanticEndEpochMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "reminderEligible",
+            "columnName": "reminderEligible",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reminderEnabled",
+            "columnName": "reminderEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "import_batches",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `journalId` TEXT NOT NULL, `sourceHash` TEXT NOT NULL, `sourceName` TEXT, `sourceSize` INTEGER, `importedAtEpochMillis` INTEGER NOT NULL, `parserVersion` INTEGER NOT NULL, `matchClassification` TEXT NOT NULL, `status` TEXT NOT NULL, `detailedStartEpochMillis` INTEGER, `detailedEndEpochMillis` INTEGER, `semanticStartEpochMillis` INTEGER, `semanticEndEpochMillis` INTEGER, `parsedObservationCount` INTEGER NOT NULL, `insertedObservationCount` INTEGER NOT NULL, `duplicateObservationCount` INTEGER NOT NULL, `rejectedObservationCount` INTEGER NOT NULL, `conflictObservationCount` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`journalId`) REFERENCES `journals`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "journalId",
+            "columnName": "journalId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceHash",
+            "columnName": "sourceHash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceName",
+            "columnName": "sourceName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sourceSize",
+            "columnName": "sourceSize",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "importedAtEpochMillis",
+            "columnName": "importedAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "parserVersion",
+            "columnName": "parserVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "matchClassification",
+            "columnName": "matchClassification",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "detailedStartEpochMillis",
+            "columnName": "detailedStartEpochMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "detailedEndEpochMillis",
+            "columnName": "detailedEndEpochMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "semanticStartEpochMillis",
+            "columnName": "semanticStartEpochMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "semanticEndEpochMillis",
+            "columnName": "semanticEndEpochMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "parsedObservationCount",
+            "columnName": "parsedObservationCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "insertedObservationCount",
+            "columnName": "insertedObservationCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "duplicateObservationCount",
+            "columnName": "duplicateObservationCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rejectedObservationCount",
+            "columnName": "rejectedObservationCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "conflictObservationCount",
+            "columnName": "conflictObservationCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_import_batches_journalId",
+            "unique": false,
+            "columnNames": [
+              "journalId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_import_batches_journalId` ON `${TABLE_NAME}` (`journalId`)"
+          },
+          {
+            "name": "index_import_batches_journalId_sourceHash",
+            "unique": true,
+            "columnNames": [
+              "journalId",
+              "sourceHash"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_import_batches_journalId_sourceHash` ON `${TABLE_NAME}` (`journalId`, `sourceHash`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "journals",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "journalId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "detailed_observations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `journalId` TEXT NOT NULL, `instantEpochMillis` INTEGER NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `observationKey` TEXT NOT NULL, FOREIGN KEY(`journalId`) REFERENCES `journals`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "journalId",
+            "columnName": "journalId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "instantEpochMillis",
+            "columnName": "instantEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "observationKey",
+            "columnName": "observationKey",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_detailed_observations_journalId",
+            "unique": false,
+            "columnNames": [
+              "journalId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_detailed_observations_journalId` ON `${TABLE_NAME}` (`journalId`)"
+          },
+          {
+            "name": "index_detailed_observations_journalId_observationKey",
+            "unique": true,
+            "columnNames": [
+              "journalId",
+              "observationKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_detailed_observations_journalId_observationKey` ON `${TABLE_NAME}` (`journalId`, `observationKey`)"
+          },
+          {
+            "name": "index_detailed_observations_journalId_instantEpochMillis",
+            "unique": false,
+            "columnNames": [
+              "journalId",
+              "instantEpochMillis"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_detailed_observations_journalId_instantEpochMillis` ON `${TABLE_NAME}` (`journalId`, `instantEpochMillis`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "journals",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "journalId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "observation_imports",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`importBatchId` TEXT NOT NULL, `observationId` INTEGER NOT NULL, `accuracyMeters` REAL, `altitudeMeters` REAL, `speedMetersPerSecond` REAL, `provider` TEXT, PRIMARY KEY(`importBatchId`, `observationId`), FOREIGN KEY(`importBatchId`) REFERENCES `import_batches`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`observationId`) REFERENCES `detailed_observations`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "importBatchId",
+            "columnName": "importBatchId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "observationId",
+            "columnName": "observationId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accuracyMeters",
+            "columnName": "accuracyMeters",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "altitudeMeters",
+            "columnName": "altitudeMeters",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "speedMetersPerSecond",
+            "columnName": "speedMetersPerSecond",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "provider",
+            "columnName": "provider",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "importBatchId",
+            "observationId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_observation_imports_observationId",
+            "unique": false,
+            "columnNames": [
+              "observationId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_observation_imports_observationId` ON `${TABLE_NAME}` (`observationId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "import_batches",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "importBatchId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "detailed_observations",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "observationId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "semantic_snapshots",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `importBatchId` TEXT NOT NULL, `capturedAtEpochMillis` INTEGER NOT NULL, `startEpochMillis` INTEGER, `endEpochMillis` INTEGER, PRIMARY KEY(`id`), FOREIGN KEY(`importBatchId`) REFERENCES `import_batches`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "importBatchId",
+            "columnName": "importBatchId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "capturedAtEpochMillis",
+            "columnName": "capturedAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startEpochMillis",
+            "columnName": "startEpochMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "endEpochMillis",
+            "columnName": "endEpochMillis",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_semantic_snapshots_importBatchId",
+            "unique": true,
+            "columnNames": [
+              "importBatchId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_semantic_snapshots_importBatchId` ON `${TABLE_NAME}` (`importBatchId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "import_batches",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "importBatchId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "semantic_segments",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `snapshotId` TEXT NOT NULL, `sourceOrdinal` INTEGER NOT NULL, `startEpochMillis` INTEGER NOT NULL, `endEpochMillis` INTEGER NOT NULL, `kind` TEXT NOT NULL, `activityType` TEXT, `placeId` TEXT, `geometryJson` TEXT, FOREIGN KEY(`snapshotId`) REFERENCES `semantic_snapshots`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "snapshotId",
+            "columnName": "snapshotId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceOrdinal",
+            "columnName": "sourceOrdinal",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startEpochMillis",
+            "columnName": "startEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endEpochMillis",
+            "columnName": "endEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activityType",
+            "columnName": "activityType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "placeId",
+            "columnName": "placeId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "geometryJson",
+            "columnName": "geometryJson",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_semantic_segments_snapshotId",
+            "unique": false,
+            "columnNames": [
+              "snapshotId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_semantic_segments_snapshotId` ON `${TABLE_NAME}` (`snapshotId`)"
+          },
+          {
+            "name": "index_semantic_segments_snapshotId_sourceOrdinal",
+            "unique": true,
+            "columnNames": [
+              "snapshotId",
+              "sourceOrdinal"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_semantic_segments_snapshotId_sourceOrdinal` ON `${TABLE_NAME}` (`snapshotId`, `sourceOrdinal`)"
+          },
+          {
+            "name": "index_semantic_segments_startEpochMillis_endEpochMillis",
+            "unique": false,
+            "columnNames": [
+              "startEpochMillis",
+              "endEpochMillis"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_semantic_segments_startEpochMillis_endEpochMillis` ON `${TABLE_NAME}` (`startEpochMillis`, `endEpochMillis`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "semantic_snapshots",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "snapshotId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'dde4e8a61f98fa12a3d63892064830a7')"
+    ]
+  }
+}

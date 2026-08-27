@@ -22,9 +22,6 @@ export const zhCN: Strings = {
   appDescription: '私密地将 Google 地图的 Timeline 导出文件制作成旅行动画。',
   previewBanner: 'iPhone 预览版 · 请先使用非敏感的示例数据测试',
   headerTitle: '创建视频',
-  presetLinkTitle: '共享的 Android 预设',
-  presetLinkBody: '此隐私安全链接仅包含五项相机和宽高比设置。请在 Android 应用中打开，查看所有值后再使用或保存。',
-  presetLinkOpen: '在 Android 应用中打开',
 
   fileCardTitle: 'Timeline 文件',
   fileCardIntro: '选择您导出的 Timeline.json。文件保留在此设备上，仅会向地图提供商请求地图图像。',

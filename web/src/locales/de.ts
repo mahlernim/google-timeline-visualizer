@@ -20,9 +20,6 @@ export const de: Strings = {
   appDescription: 'Erstellen Sie aus einem Google Maps Timeline-Export privat eine Reiseanimation.',
   previewBanner: 'iPhone-Vorschauversion · Zuerst mit nicht sensiblen Beispieldaten testen',
   headerTitle: 'Video erstellen',
-  presetLinkTitle: 'Geteilte Android-Voreinstellung',
-  presetLinkBody: 'Dieser datenschutzfreundliche Link enthält nur fünf Kamera- und Seitenverhältniseinstellungen. Öffne ihn in der Android-App und prüfe alle Werte, bevor du ihn verwendest oder speicherst.',
-  presetLinkOpen: 'In der Android-App öffnen',
 
   fileCardTitle: 'Timeline-Datei',
   fileCardIntro: 'Wählen Sie Ihre exportierte Timeline.json. Die Datei bleibt auf diesem Gerät; vom Kartenanbieter werden nur Kartenbilder angefordert.',

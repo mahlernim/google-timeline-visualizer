@@ -21,7 +21,14 @@ jobs:
       - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v5
       - name: Test, lint, and build
-        run: ./gradlew test lint assembleGithubDebug assemblePlayDebug --stacktrace
+        run: |
+          ./gradlew testGithubDebugUnitTest testPlayDebugUnitTest lint assembleGithubDebug assemblePlayDebug assembleJournalLabDebug --stacktrace
+          ./gradlew testJournalLabDebugUnitTest \
+            --tests dev.mahlernim.timelinevisualizer.JournalLabUiTest \
+            --tests dev.mahlernim.timelinevisualizer.JournalOnboardingUiTest \
+            --tests dev.mahlernim.timelinevisualizer.journal.JournalOnboardingStoreTest \
+            --tests dev.mahlernim.timelinevisualizer.journal.JournalSetupNavigationTest \
+            --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: timeline-visualizer-debug

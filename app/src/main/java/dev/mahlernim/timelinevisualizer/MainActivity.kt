@@ -47,6 +47,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.viewpager2.widget.ViewPager2
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -73,8 +74,10 @@ import dev.mahlernim.timelinevisualizer.data.TimelineParseReason
 import dev.mahlernim.timelinevisualizer.data.TimelineSourceStore
 import dev.mahlernim.timelinevisualizer.data.TimelineSourceMetadata
 import dev.mahlernim.timelinevisualizer.databinding.ActivityMainBinding
+import dev.mahlernim.timelinevisualizer.databinding.DialogJournalGrowthBinding
 import dev.mahlernim.timelinevisualizer.databinding.ItemVideoBinding
 import dev.mahlernim.timelinevisualizer.databinding.ItemTripBinding
+import dev.mahlernim.timelinevisualizer.databinding.ScreenJournalOnboardingBinding
 import dev.mahlernim.timelinevisualizer.databinding.ScreenNewVideoBinding
 import dev.mahlernim.timelinevisualizer.databinding.ScreenPlayerBinding
 import dev.mahlernim.timelinevisualizer.databinding.ScreenSettingsBinding
@@ -92,14 +95,39 @@ import dev.mahlernim.timelinevisualizer.export.VideoExportViewModel
 import dev.mahlernim.timelinevisualizer.export.EncoderSupport
 import dev.mahlernim.timelinevisualizer.export.VideoEncoderSupport
 import dev.mahlernim.timelinevisualizer.export.describe
+import dev.mahlernim.timelinevisualizer.journal.JournalDatabase
+import dev.mahlernim.timelinevisualizer.journal.JournalEntity
+import dev.mahlernim.timelinevisualizer.journal.JournalImportResult
+import dev.mahlernim.timelinevisualizer.journal.JournalMatchClassification
+import dev.mahlernim.timelinevisualizer.journal.JournalOnboardingStore
+import dev.mahlernim.timelinevisualizer.journal.JournalRepository
+import dev.mahlernim.timelinevisualizer.journal.JournalEntryDestination
+import dev.mahlernim.timelinevisualizer.journal.JournalSetupNavigation
+import dev.mahlernim.timelinevisualizer.journal.JournalStatusSnapshot
+import dev.mahlernim.timelinevisualizer.journal.inclusiveCalendarDayCount
+import dev.mahlernim.timelinevisualizer.journal.importer.TimelineJournalImportAdapter
+import dev.mahlernim.timelinevisualizer.journal.onboarding.JournalOnboardingAdapter
+import dev.mahlernim.timelinevisualizer.journal.onboarding.JournalOnboardingIllustration
+import dev.mahlernim.timelinevisualizer.journal.onboarding.JournalOnboardingPages
+import dev.mahlernim.timelinevisualizer.journal.reminder.JournalFreshnessPolicy
+import dev.mahlernim.timelinevisualizer.journal.reminder.JournalFreshnessState
+import dev.mahlernim.timelinevisualizer.journal.reminder.JournalReminderCoordinator
+import dev.mahlernim.timelinevisualizer.journal.reminder.JournalReminderNotifications
+import dev.mahlernim.timelinevisualizer.journal.reminder.JournalReminderStateStore
+import dev.mahlernim.timelinevisualizer.journal.route.JournalRoute
+import dev.mahlernim.timelinevisualizer.journal.route.JournalRouteService
+import dev.mahlernim.timelinevisualizer.journal.route.JournalRoutePreparationStage
+import dev.mahlernim.timelinevisualizer.journal.route.RouteSource
+import dev.mahlernim.timelinevisualizer.journal.route.RouteDetail
+import dev.mahlernim.timelinevisualizer.journal.route.connectedTimelines
+import dev.mahlernim.timelinevisualizer.journal.route.journeyForDateRange
+import dev.mahlernim.timelinevisualizer.journal.route.journeyForRange
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.model.Timeline
 import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
 import dev.mahlernim.timelinevisualizer.model.TitleTemplate
 import dev.mahlernim.timelinevisualizer.model.VideoDuration
-import dev.mahlernim.timelinevisualizer.presets.PresetDecodeResult
-import dev.mahlernim.timelinevisualizer.presets.PresetLink
 import dev.mahlernim.timelinevisualizer.presets.PresetNameResult
 import dev.mahlernim.timelinevisualizer.presets.PresetRepository
 import dev.mahlernim.timelinevisualizer.presets.PresetValues
@@ -125,6 +153,7 @@ import dev.mahlernim.timelinevisualizer.ui.AppLanguage
 import dev.mahlernim.timelinevisualizer.ui.LocationFilterPreferences
 import dev.mahlernim.timelinevisualizer.ui.SelectionArrayAdapter
 import dev.mahlernim.timelinevisualizer.ui.SettingsViewModel
+import dev.mahlernim.timelinevisualizer.ui.TimelineDisplayPreferences
 import dev.mahlernim.timelinevisualizer.videos.GeneratedMediaRepository
 import dev.mahlernim.timelinevisualizer.videos.VideoMedia
 import dev.mahlernim.timelinevisualizer.videos.VideoRecord
@@ -147,12 +176,14 @@ import dev.mahlernim.timelinevisualizer.trips.RecapPeriodRules
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.DateFormatSymbols
 import java.text.DateFormat
 import java.text.NumberFormat
 import java.util.Date
+import java.util.UUID
 import java.util.Locale
 import java.time.YearMonth
 import java.time.Instant
@@ -169,6 +200,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var home: ScreenVideosBinding
     private lateinit var editor: ScreenNewVideoBinding
+    private lateinit var onboarding: ScreenJournalOnboardingBinding
     private lateinit var settingsScreen: ScreenSettingsBinding
     private lateinit var playerScreen: ScreenPlayerBinding
     private var timeline: Timeline? = null
@@ -202,6 +234,12 @@ class MainActivity : AppCompatActivity() {
     private val generatedMedia by lazy { GeneratedMediaRepository(applicationContext) }
     private val timelineLoader by lazy { CachedTimelineLoader(applicationContext) }
     private val timelineSourceStore by lazy { TimelineSourceStore(applicationContext) }
+    private val journalDatabaseDelegate = lazy { JournalDatabase.open(applicationContext) }
+    private val journalDatabase by journalDatabaseDelegate
+    private val journalRepository by lazy { JournalRepository(journalDatabase) }
+    private val journalRouteService by lazy { JournalRouteService(journalRepository) }
+    private val journalImportAdapter by lazy { TimelineJournalImportAdapter() }
+    private val journalOnboardingStore by lazy { JournalOnboardingStore(applicationContext) }
     private val presetRepository by lazy { PresetRepository(applicationContext) }
     private val tripsStore by lazy { TripsStore(applicationContext) }
     private val settingsViewModel by viewModels<SettingsViewModel> {
@@ -211,6 +249,7 @@ class MainActivity : AppCompatActivity() {
                     CameraSettingsPreferences(applicationContext),
                     DistanceUnitPreferences(applicationContext),
                     LocationFilterPreferences(applicationContext),
+                    TimelineDisplayPreferences(applicationContext),
                 )
             }
         }
@@ -226,6 +265,7 @@ class MainActivity : AppCompatActivity() {
     private var distanceUnitPreference = DistanceUnitPreference.AUTOMATIC
     private var videoFormatSupported = true
     private var locationFilterMode = LocationFilterMode.CONSERVATIVE
+    private var simplifyRouteDetail = false
     private var routeDurationSeconds = VideoDuration.DEFAULT_SECONDS
     private val applyTitleChanges = Runnable { commitTitlePreferences() }
     private var videoRenderJob: Job? = null
@@ -267,11 +307,34 @@ class MainActivity : AppCompatActivity() {
     private var selectedDetectionYear: Int? = null
     private var detectionYears: List<Int> = emptyList()
     private var tripDiscoveryRequested = false
+    private var tripDetectionRunning = false
+    private var tripDetectionRequestId = 0L
+    private var tripDetectionJob: Job? = null
     private var settingsReturnToCreate = false
+    private var journalSetupMode = false
+    private var journalSetupReturnToCreate = false
     private var customizationOriginalCamera: CameraSettings? = null
     private var customizationOriginalPresetId: String? = null
     private var customizationOriginalModifiedBuiltInId: String? = null
     private var rawProjectRangeConflict = false
+    private var activeJournal: JournalEntity? = null
+    private var activeJournalStatus: JournalStatusSnapshot? = null
+    private var activeJournalRoute: JournalRoute? = null
+    private var activeJournalRouteStart: Instant? = null
+    private var activeJournalRouteEndExclusive: Instant? = null
+    private var journalLoaded = false
+    private var journalLoadJob: Job? = null
+    private var journalRouteLoadJob: Job? = null
+    private var journalRouteRequestId = 0L
+    private var journalRouteProgressDelayJob: Job? = null
+    private var journalRouteProgressExpanded = false
+    private var journalRoutePreparationStage = JournalRoutePreparationStage.PREPARING_DETAILED_ROUTES
+    private var activeJournalRouteRequest: JournalRouteRequest? = null
+    private var journalImportIsInitial: Boolean? = null
+    private var updatingJournalReminderSwitch = false
+    private var pendingJournalReminderId: String? = null
+    private var onboardingPage = 0
+    private var onboardingReplay = false
 
     private val openTimeline = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) importTimeline(uri)
@@ -303,12 +366,26 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission(),
     ) { openExportDestination() }
 
+    private val requestJournalNotificationPermission = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        val journalId = pendingJournalReminderId
+        pendingJournalReminderId = null
+        if (granted && journalId != null) {
+            enableJournalReminders(journalId)
+        } else if (!granted) {
+            Snackbar.make(binding.root, R.string.journal_reminders_permission_denied, Snackbar.LENGTH_LONG).show()
+            updateJournalReminderSwitch(enabled = false)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         home = ScreenVideosBinding.bind(findViewById(R.id.videosScreen))
         editor = ScreenNewVideoBinding.bind(findViewById(R.id.newVideoScreen))
+        onboarding = ScreenJournalOnboardingBinding.bind(findViewById(R.id.journalOnboardingScreen))
         settingsScreen = ScreenSettingsBinding.bind(findViewById(R.id.settingsScreen))
         playerScreen = ScreenPlayerBinding.bind(findViewById(R.id.playerScreen))
         val lightSystemBars = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK !=
@@ -317,10 +394,12 @@ class MainActivity : AppCompatActivity() {
             isAppearanceLightStatusBars = lightSystemBars
             isAppearanceLightNavigationBars = lightSystemBars
         }
-        timelineSourceStore.recoverInterruptedImport()?.let { uri ->
-            releaseUriAccess(uri)
-            interruptedTimelineRecovered = true
-            rememberedTimelineLoaded = true
+        if (!BuildConfig.IS_JOURNAL_LAB) {
+            timelineSourceStore.recoverInterruptedImport()?.let { uri ->
+                releaseUriAccess(uri)
+                interruptedTimelineRecovered = true
+                rememberedTimelineLoaded = true
+            }
         }
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
             val bars: Insets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -366,10 +445,13 @@ class MainActivity : AppCompatActivity() {
             showVideos()
         }
         editor.saveAsButton.setOnClickListener { lastVideoUri?.let(::chooseVideoCopyDestination) }
-        editor.importButton.setOnClickListener { requestTimelineImport() }
+        editor.importButton.setOnClickListener {
+            if (BuildConfig.IS_JOURNAL_LAB) showJournalSetup(returnToCreate = true) else requestTimelineImport()
+        }
         editor.exportHelpButton.setOnClickListener { showExportHelp() }
         editor.restoreTimelineHelpLink.setOnClickListener { openRestoreGuide() }
         editor.playButton.setOnClickListener { togglePreview() }
+        editor.timelineView.setOnClickListener { togglePreview() }
         editor.exportButton.setOnClickListener { chooseExportDestination() }
         editor.shareButton.setOnClickListener { lastVideoUri?.let(::shareVideo) }
         editor.saveOverviewButton.setOnClickListener { lastVideoUri?.let(::chooseOverviewDestination) }
@@ -386,6 +468,9 @@ class MainActivity : AppCompatActivity() {
         editor.saveAsNewTripButton.setOnClickListener { saveActiveProject(asNew = true) }
         editor.wizardBackButton.setOnClickListener { moveCreateStep(-1) }
         editor.wizardContinueButton.setOnClickListener { moveCreateStep(1) }
+        editor.createStepDetails.setOnClickListener { navigateToCreateStage(0) }
+        editor.createStepStyle.setOnClickListener { navigateToCreateStage(1) }
+        editor.createStepCreate.setOnClickListener { navigateToCreateStage(2) }
         editor.customizeSettingsButton.setOnClickListener { showAdvancedVideoSettingsSheet() }
         editor.useAvailableRawRangeButton.setOnClickListener { useAvailableRawRange() }
         editor.tripVideoChoice.setOnClickListener {
@@ -423,15 +508,41 @@ class MainActivity : AppCompatActivity() {
             renderVideos()
         }
         home.deleteAllVideosButton.setOnClickListener { confirmDeleteAllLibraryContent() }
+        home.journalFreshnessCard.setOnClickListener { openJournalFromReminder() }
+        home.journalFreshnessCardAction.setOnClickListener { openJournalFromReminder() }
+        home.journalSetupCard.setOnClickListener { showJournalSetup(returnToCreate = false) }
+        home.journalSetupCardAction.setOnClickListener { showJournalSetup(returnToCreate = false) }
+        home.journalSetupIllustration.illustration = JournalOnboardingIllustration.IMPORT
         settingsScreen.privacyPolicyButton.setOnClickListener { openPrivacyPolicy() }
         settingsScreen.githubProjectButton.setOnClickListener { openWebPage(PROJECT_URL, R.string.web_page_unavailable) }
         settingsScreen.checkUpdatesButton.setOnClickListener { openUpdates() }
+        settingsScreen.saveDefaultsAsPresetButton.setOnClickListener { saveVideoDefaultsAsPreset() }
         settingsScreen.managePresetsButton.setOnClickListener { showPresetManager() }
         settingsScreen.cancelCustomizeButton.setOnClickListener { finishVideoCustomization(apply = false) }
         settingsScreen.applyCustomizeButton.setOnClickListener { finishVideoCustomization(apply = true) }
         settingsScreen.settingsImportTimelineButton.setOnClickListener { requestTimelineImport() }
+        onboarding.onboardingFileDisclosureButton.setOnClickListener {
+            toggleDisclosure(
+                onboarding.onboardingFileDisclosureButton,
+                onboarding.onboardingFileDisclosureDetail,
+            )
+        }
+        settingsScreen.settingsWhyImportButton.setOnClickListener {
+            toggleDisclosure(
+                settingsScreen.settingsWhyImportButton,
+                settingsScreen.settingsWhyImportDetail,
+            )
+        }
+        settingsScreen.journalReminderSwitch.setOnCheckedChangeListener { _, checked ->
+            if (updatingJournalReminderSwitch) return@setOnCheckedChangeListener
+            val journal = activeJournal ?: return@setOnCheckedChangeListener
+            if (checked) requestEnableJournalReminders(journal.id) else disableJournalReminders(journal.id)
+        }
         settingsScreen.settingsTimelineHelpButton.setOnClickListener { showExportHelp() }
         settingsScreen.settingsTimelineRestoreButton.setOnClickListener { openRestoreGuide() }
+        settingsScreen.settingsJournalHowItWorksButton.setOnClickListener {
+            showJournalOnboarding(page = 0, replay = true)
+        }
         settingsScreen.versionText.text = installedVersionLabel()
         playerScreen.playerBackButton.setOnClickListener { showVideos(acknowledgeCompletion = true) }
         playerScreen.playerShareButton.setOnClickListener { playerUri?.let(::shareVideo) }
@@ -441,11 +552,22 @@ class MainActivity : AppCompatActivity() {
             }
         }
         playerScreen.playerExternalButton.setOnClickListener { playerUri?.let(::openExternalVideoPlayer) }
+        configureJournalOnboarding()
         onBackPressedDispatcher.addCallback(this) {
-            if (currentScreen == Screen.NEW_VIDEO) {
+            if (currentScreen == Screen.ONBOARDING) {
+                when {
+                    onboardingPage > 0 -> onboarding.onboardingPager.currentItem = onboardingPage - 1
+                    onboardingReplay -> showSettings(fromCreate = false)
+                    else -> finish()
+                }
+            } else if (currentScreen == Screen.NEW_VIDEO) {
                 if (currentCreateStep == CreateStep.TYPE) showVideos(acknowledgeCompletion = true) else moveCreateStep(-1)
             } else if (currentScreen == Screen.SETTINGS && settingsReturnToCreate) {
                 finishVideoCustomization(apply = false)
+            } else if (currentScreen == Screen.SETTINGS && journalSetupMode) {
+                journalSetupMode = false
+                journalSetupReturnToCreate = false
+                showVideos(acknowledgeCompletion = true)
             } else if (currentScreen == Screen.VIDEOS) {
                 finish()
             } else {
@@ -509,6 +631,7 @@ class MainActivity : AppCompatActivity() {
         configurePresets()
         restoreDraftSettings(savedInstanceState)
         configureLocationFiltering()
+        configureTimelineDisplay()
         configureLanguageSelection()
         configureCameraPreparation()
         configureMonthDropdowns()
@@ -535,6 +658,11 @@ class MainActivity : AppCompatActivity() {
             ?.let { runCatching { CreateStep.valueOf(it) }.getOrNull() }
             ?: CreateStep.TYPE
         settingsReturnToCreate = savedInstanceState?.getBoolean(STATE_SETTINGS_RETURN_TO_CREATE) ?: false
+        journalSetupMode = savedInstanceState?.getBoolean(STATE_JOURNAL_SETUP_MODE) ?: false
+        journalSetupReturnToCreate = savedInstanceState?.getBoolean(STATE_JOURNAL_SETUP_RETURN_TO_CREATE) ?: false
+        pendingJournalReminderId = savedInstanceState?.getString(STATE_PENDING_JOURNAL_REMINDER_ID)
+        onboardingPage = savedInstanceState?.getInt(STATE_JOURNAL_ONBOARDING_PAGE, 0) ?: 0
+        onboardingReplay = savedInstanceState?.getBoolean(STATE_JOURNAL_ONBOARDING_REPLAY) ?: false
         customizationOriginalCamera = restoreCustomizationCamera(savedInstanceState)
         customizationOriginalPresetId = savedInstanceState?.getString(STATE_CUSTOMIZATION_PRESET_ID)
         customizationOriginalModifiedBuiltInId = savedInstanceState?.getString(STATE_CUSTOMIZATION_MODIFIED_ID)
@@ -550,30 +678,55 @@ class MainActivity : AppCompatActivity() {
         playerPositionMs = savedInstanceState?.getLong(STATE_PLAYER_POSITION) ?: 0L
         playerPlayWhenReady = savedInstanceState?.getBoolean(STATE_PLAYER_PLAYING) ?: true
         val incoming = intent?.data
-        if (intent?.action == ACTION_WATCH_VIDEO && incoming != null) {
+        if (intent?.action == ACTION_OPEN_JOURNAL && BuildConfig.IS_JOURNAL_LAB) {
+            openJournalFromReminder()
+            intent?.action = null
+        } else if (intent?.action == ACTION_WATCH_VIDEO && incoming != null) {
             if (savedInstanceState == null) watchVideo(incoming) else showVideoPlayer(incoming, resetPosition = false)
             VideoExportService.clearNotification(applicationContext)
         } else if (intent?.action == ACTION_SHARE_VIDEO && incoming != null) {
             showVideos()
             if (savedInstanceState == null) shareVideo(incoming)
             VideoExportService.clearNotification(applicationContext)
-        } else if (incoming != null && PresetLink.isPresetLink(incoming.toString())) {
-            showNewVideo(loadRemembered = true)
-            if (savedInstanceState == null) showIncomingPreset(incoming)
         } else if (incoming != null) {
             showNewVideo(loadRemembered = false)
             requestTimelineImport(incoming)
+            intent?.data = null
+            intent?.action = null
         } else when (savedInstanceState?.getString(STATE_SCREEN)) {
             Screen.NEW_VIDEO.name -> showNewVideo(loadRemembered = true)
             Screen.VIDEOS.name -> showVideos()
-            Screen.SETTINGS.name -> showSettings(fromCreate = settingsReturnToCreate)
+            Screen.SETTINGS.name -> when {
+                journalSetupMode -> showJournalSetup(journalSetupReturnToCreate)
+                else -> showSettings(fromCreate = settingsReturnToCreate)
+            }
             Screen.PLAYER.name -> playerUri?.let { showVideoPlayer(it, resetPosition = false) } ?: showVideos()
+            Screen.ONBOARDING.name -> showJournalOnboarding(onboardingPage, onboardingReplay)
             else -> showDefaultLaunchScreen()
         }
     }
 
     private fun showDefaultLaunchScreen() {
-        showVideos()
+        if (!BuildConfig.IS_JOURNAL_LAB) {
+            showVideos()
+            return
+        }
+        showJournalStartupPlaceholder()
+        lifecycleScope.launch {
+            val journal = withContext(Dispatchers.IO) { journalRepository.primaryJournal() }
+            if (currentScreen != Screen.VIDEOS) return@launch
+            when (JournalSetupNavigation.defaultDestination(
+                isJournalLab = true,
+                hasJournal = journal != null,
+                onboardingCompleted = journalOnboardingStore.isCompleted(),
+            )) {
+                JournalEntryDestination.JOURNAL_ONBOARDING -> showJournalOnboarding(page = 0, replay = false)
+                else -> {
+                    journal?.let { loadJournalMetadata(it.id) }
+                    showVideos()
+                }
+            }
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -602,6 +755,11 @@ class MainActivity : AppCompatActivity() {
         outState.putBoolean(STATE_VIDEO_TITLE_EDITED, videoTitleUserEdited)
         outState.putInt(STATE_DRAFT_DURATION, routeDurationSeconds)
         outState.putBoolean(STATE_SETTINGS_RETURN_TO_CREATE, settingsReturnToCreate)
+        outState.putBoolean(STATE_JOURNAL_SETUP_MODE, journalSetupMode)
+        outState.putBoolean(STATE_JOURNAL_SETUP_RETURN_TO_CREATE, journalSetupReturnToCreate)
+        outState.putString(STATE_PENDING_JOURNAL_REMINDER_ID, pendingJournalReminderId)
+        outState.putInt(STATE_JOURNAL_ONBOARDING_PAGE, onboardingPage)
+        outState.putBoolean(STATE_JOURNAL_ONBOARDING_REPLAY, onboardingReplay)
         customizationOriginalCamera?.let { original ->
             outState.putString(STATE_CUSTOMIZATION_CAMERA, original.cameraMovement.name)
             outState.putString(STATE_CUSTOMIZATION_PACING, original.longTripCompression.name)
@@ -625,6 +783,11 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        if (intent.action == ACTION_OPEN_JOURNAL && BuildConfig.IS_JOURNAL_LAB) {
+            openJournalFromReminder()
+            intent.action = null
+            return
+        }
         intent.data?.let { uri ->
             when (intent.action) {
                 ACTION_WATCH_VIDEO -> {
@@ -636,18 +799,30 @@ class MainActivity : AppCompatActivity() {
                     shareVideo(uri)
                     VideoExportService.clearNotification(applicationContext)
                 }
-                else -> if (PresetLink.isPresetLink(uri.toString())) {
-                    showNewVideo(loadRemembered = true)
-                    showIncomingPreset(uri)
-                } else {
+                else -> {
                     showNewVideo(loadRemembered = false)
                     requestTimelineImport(uri)
+                    intent.data = null
+                    intent.action = null
                 }
             }
         }
     }
 
+    private fun openJournalFromReminder() {
+        JournalReminderNotifications.cancel(applicationContext)
+        showSettings(fromCreate = false)
+        loadJournalIfNeeded()
+        settingsScreen.settingsImportTimelineButton.post {
+            settingsScreen.settingsImportTimelineButton.requestFocus()
+            settingsScreen.settingsImportTimelineButton.announceForAccessibility(
+                getString(R.string.update_journal),
+            )
+        }
+    }
+
     private fun showVideos(acknowledgeCompletion: Boolean = false) {
+        if (currentCreateStep == CreateStep.DISCOVERY) cancelTripDetection()
         if (acknowledgeCompletion) acknowledgeCompletedExport()
         releaseVideoPlayer()
         currentScreen = Screen.VIDEOS
@@ -655,14 +830,20 @@ class MainActivity : AppCompatActivity() {
         editor.root.visibility = View.GONE
         settingsScreen.root.visibility = View.GONE
         playerScreen.root.visibility = View.GONE
+        onboarding.root.visibility = View.GONE
         binding.bottomNavigation.visibility = View.VISIBLE
         if (binding.bottomNavigation.selectedItemId != R.id.navigationVideos) {
             syncingBottomNavigation = true
             binding.bottomNavigation.selectedItemId = R.id.navigationVideos
             syncingBottomNavigation = false
         }
+        updateHomeJournalCard()
         renderVideos()
         renderTrips()
+        if (BuildConfig.IS_JOURNAL_LAB) {
+            loadJournalIfNeeded()
+            return
+        }
         if (!rememberedTimelineLoaded && timeline == null && preferences.getBoolean(MAP_PRIVACY_ACCEPTED, false)) {
             rememberedTimelineLoaded = true
             timelineSourceStore.load()?.let { importTimeline(it, remembered = true) }
@@ -671,7 +852,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun openCreateTab() {
         if (currentScreen == Screen.VIDEOS || currentScreen == Screen.PLAYER) resetCreateEntry()
-        showNewVideo(loadRemembered = true)
+        val journalAvailable = activeJournal != null || (BuildConfig.IS_JOURNAL_LAB && !journalLoaded)
+        when (JournalSetupNavigation.createDestination(BuildConfig.IS_JOURNAL_LAB, journalAvailable || timeline != null)) {
+            JournalEntryDestination.JOURNAL_SETUP -> showJournalSetup(returnToCreate = true)
+            else -> showNewVideo(loadRemembered = true)
+        }
     }
 
     private fun resetCreateEntry() {
@@ -705,6 +890,7 @@ class MainActivity : AppCompatActivity() {
         editor.root.visibility = View.VISIBLE
         settingsScreen.root.visibility = View.GONE
         playerScreen.root.visibility = View.GONE
+        onboarding.root.visibility = View.GONE
         binding.bottomNavigation.visibility = View.VISIBLE
         if (binding.bottomNavigation.selectedItemId != R.id.navigationCreate) {
             syncingBottomNavigation = true
@@ -713,6 +899,10 @@ class MainActivity : AppCompatActivity() {
         }
         editor.saveTripButton.isEnabled = activeProjectId != null
         renderCreateStep()
+        if (BuildConfig.IS_JOURNAL_LAB) {
+            loadJournalIfNeeded()
+            return
+        }
         if (loadRemembered && interruptedTimelineRecovered) {
             interruptedTimelineRecovered = false
             editor.statusText.setText(R.string.timeline_file_unavailable)
@@ -727,16 +917,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showSettings(fromCreate: Boolean = false) {
+        if (currentCreateStep == CreateStep.DISCOVERY) cancelTripDetection()
         releaseVideoPlayer()
+        journalSetupMode = false
+        journalSetupReturnToCreate = false
         settingsReturnToCreate = fromCreate
         currentScreen = Screen.SETTINGS
         home.root.visibility = View.GONE
         editor.root.visibility = View.GONE
         settingsScreen.root.visibility = View.VISIBLE
         playerScreen.root.visibility = View.GONE
+        onboarding.root.visibility = View.GONE
         binding.bottomNavigation.visibility = if (fromCreate) View.GONE else View.VISIBLE
         settingsScreen.customizeSettingsActions.visibility = if (fromCreate) View.VISIBLE else View.GONE
         settingsScreen.timelineDataCard.visibility = if (fromCreate) View.GONE else View.VISIBLE
+        settingsScreen.settingsJournalHowItWorksButton.visibility =
+            if (BuildConfig.IS_JOURNAL_LAB && !fromCreate) View.VISIBLE else View.GONE
+        settingsScreen.journalSetupIntro.visibility = View.GONE
+        settingsScreen.timelineDataTitle.setText(R.string.timeline_data)
         settingsScreen.settingsTitle.setText(if (fromCreate) R.string.customize_video else R.string.settings)
         settingsScreen.settingsSummary.setText(if (fromCreate) R.string.customize_video_summary else R.string.settings_summary)
         if (!fromCreate && binding.bottomNavigation.selectedItemId != R.id.navigationSettings) {
@@ -745,6 +943,156 @@ class MainActivity : AppCompatActivity() {
             syncingBottomNavigation = false
         }
         if (!fromCreate) updateTimelineSettingsCard()
+    }
+
+    private fun showJournalSetup(returnToCreate: Boolean) {
+        releaseVideoPlayer()
+        settingsReturnToCreate = false
+        journalSetupMode = true
+        journalSetupReturnToCreate = returnToCreate
+        currentScreen = Screen.SETTINGS
+        home.root.visibility = View.GONE
+        editor.root.visibility = View.GONE
+        settingsScreen.root.visibility = View.VISIBLE
+        playerScreen.root.visibility = View.GONE
+        onboarding.root.visibility = View.GONE
+        binding.bottomNavigation.visibility = View.VISIBLE
+        settingsScreen.customizeSettingsActions.visibility = View.GONE
+        settingsScreen.timelineDataCard.visibility = View.VISIBLE
+        settingsScreen.settingsJournalHowItWorksButton.visibility =
+            if (BuildConfig.IS_JOURNAL_LAB) View.VISIBLE else View.GONE
+        settingsScreen.journalSetupIntro.visibility = View.VISIBLE
+        settingsScreen.timelineDataTitle.setText(R.string.travel_journal)
+        settingsScreen.settingsTitle.setText(R.string.journal_setup_title)
+        settingsScreen.settingsSummary.setText(R.string.journal_setup_summary)
+        if (binding.bottomNavigation.selectedItemId != R.id.navigationSettings) {
+            syncingBottomNavigation = true
+            binding.bottomNavigation.selectedItemId = R.id.navigationSettings
+            syncingBottomNavigation = false
+        }
+        updateTimelineSettingsCard()
+        loadJournalIfNeeded()
+    }
+
+    private fun showJournalStartupPlaceholder() {
+        currentScreen = Screen.VIDEOS
+        home.root.visibility = View.GONE
+        editor.root.visibility = View.GONE
+        settingsScreen.root.visibility = View.GONE
+        playerScreen.root.visibility = View.GONE
+        onboarding.root.visibility = View.GONE
+        binding.bottomNavigation.visibility = View.GONE
+        binding.exportStatusTray.visibility = View.GONE
+    }
+
+    private fun configureJournalOnboarding() {
+        val pages = JournalOnboardingPages.all
+        setDisclosureExpanded(
+            onboarding.onboardingFileDisclosureButton,
+            onboarding.onboardingFileDisclosureDetail,
+            expanded = false,
+        )
+        setDisclosureExpanded(
+            settingsScreen.settingsWhyImportButton,
+            settingsScreen.settingsWhyImportDetail,
+            expanded = false,
+        )
+        onboarding.onboardingPager.adapter = JournalOnboardingAdapter(pages)
+        onboarding.onboardingPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                onboardingPage = position
+                renderJournalOnboardingPage(announce = currentScreen == Screen.ONBOARDING)
+            }
+        })
+        onboarding.onboardingNextButton.setOnClickListener {
+            onboarding.onboardingPager.currentItem = (onboardingPage + 1).coerceAtMost(pages.lastIndex)
+        }
+        onboarding.onboardingBackButton.setOnClickListener {
+            if (onboardingPage > 0) {
+                onboarding.onboardingPager.currentItem = onboardingPage - 1
+            } else if (onboardingReplay) {
+                showSettings(fromCreate = false)
+            }
+        }
+        onboarding.onboardingSkipButton.setOnClickListener {
+            onboarding.onboardingPager.currentItem = pages.lastIndex
+        }
+        onboarding.onboardingLanguageButton.setOnClickListener { showOnboardingLanguagePicker() }
+        onboarding.onboardingChooseFileButton.setOnClickListener {
+            journalOnboardingStore.complete()
+            showJournalSetup(returnToCreate = false)
+            requestTimelineImport()
+        }
+        onboarding.onboardingSetupMapsButton.setOnClickListener {
+            journalOnboardingStore.complete()
+            showJournalSetup(returnToCreate = false)
+            showExportHelp()
+        }
+        onboarding.onboardingNotNowButton.setOnClickListener {
+            journalOnboardingStore.complete()
+            if (onboardingReplay) showSettings(fromCreate = false) else showVideos()
+        }
+    }
+
+    private fun showJournalOnboarding(page: Int, replay: Boolean) {
+        releaseVideoPlayer()
+        onboardingReplay = replay
+        onboardingPage = page.coerceIn(JournalOnboardingPages.all.indices)
+        currentScreen = Screen.ONBOARDING
+        home.root.visibility = View.GONE
+        editor.root.visibility = View.GONE
+        settingsScreen.root.visibility = View.GONE
+        playerScreen.root.visibility = View.GONE
+        onboarding.root.visibility = View.VISIBLE
+        setDisclosureExpanded(
+            onboarding.onboardingFileDisclosureButton,
+            onboarding.onboardingFileDisclosureDetail,
+            expanded = false,
+        )
+        binding.bottomNavigation.visibility = View.GONE
+        binding.exportStatusTray.visibility = View.GONE
+        onboarding.onboardingPager.setCurrentItem(onboardingPage, false)
+        renderJournalOnboardingPage(announce = false)
+    }
+
+    private fun renderJournalOnboardingPage(announce: Boolean) {
+        val pages = JournalOnboardingPages.all
+        val pageNumber = onboardingPage + 1
+        val isFinal = onboardingPage == pages.lastIndex
+        listOf(
+            onboarding.onboardingDotOne,
+            onboarding.onboardingDotTwo,
+            onboarding.onboardingDotThree,
+        ).forEachIndexed { index, dot ->
+            dot.alpha = if (index == onboardingPage) 1f else 0.24f
+        }
+        onboarding.onboardingBackButton.visibility =
+            if (onboardingPage > 0 || onboardingReplay) View.VISIBLE else View.INVISIBLE
+        onboarding.onboardingSkipButton.visibility = if (isFinal) View.INVISIBLE else View.VISIBLE
+        onboarding.onboardingLanguageButton.visibility = if (onboardingPage == 0) View.VISIBLE else View.GONE
+        updateOnboardingLanguageLabel()
+        onboarding.onboardingNavigationActions.visibility = if (isFinal) View.GONE else View.VISIBLE
+        onboarding.onboardingFinalActions.visibility = if (isFinal) View.VISIBLE else View.GONE
+        val announcement = getString(
+            R.string.onboarding_page_announcement,
+            pageNumber,
+            pages.size,
+            getString(pages[onboardingPage].titleRes),
+        )
+        onboarding.onboardingPager.contentDescription = announcement
+        if (announce) onboarding.onboardingPager.announceForAccessibility(announcement)
+    }
+
+    private fun toggleDisclosure(button: View, detail: View) {
+        setDisclosureExpanded(button, detail, detail.visibility != View.VISIBLE)
+    }
+
+    private fun setDisclosureExpanded(button: View, detail: View, expanded: Boolean) {
+        detail.visibility = if (expanded) View.VISIBLE else View.GONE
+        ViewCompat.setStateDescription(
+            button,
+            getString(if (expanded) R.string.disclosure_expanded else R.string.disclosure_collapsed),
+        )
     }
 
     private fun showVideoCustomization() {
@@ -761,7 +1109,7 @@ class MainActivity : AppCompatActivity() {
         var working = cameraSettings
 
         val aspectLabels = listOf(R.string.aspect_square, R.string.aspect_portrait, R.string.aspect_landscape).map(::getString)
-        val cameraLabels = listOf(R.string.camera_fixed, R.string.camera_steady, R.string.camera_dynamic, R.string.camera_close_up).map(::getString)
+        val cameraLabels = mapViewLabelResources.map(::getString)
         val detectionLabels = listOf(R.string.trip_detection_conservative, R.string.trip_detection_balanced, R.string.trip_detection_sensitive).map(::getString)
         val framingLabels = listOf(R.string.local_framing_off, R.string.local_framing_balanced, R.string.local_framing_close).map(::getString)
         val pacingLabels = listOf(R.string.compression_off, R.string.compression_balanced, R.string.compression_strong, R.string.compression_stronger).map(::getString)
@@ -779,6 +1127,15 @@ class MainActivity : AppCompatActivity() {
             val format = working.activeVideoFormat
             resolutionLabels += getString(R.string.custom_resolution_selected, format.width, format.height)
         }
+        val presetFrameRates = listOf(24, 30, 60)
+        val frameRateLabels = presetFrameRates.map { getString(R.string.frame_rate_value, it) }.toMutableList()
+        val currentFrameRateIndex = presetFrameRates.indexOf(working.effectiveExportFormat.frameRate)
+        if (currentFrameRateIndex < 0 || working.effectiveExportFormat.customFrameRate) {
+            frameRateLabels += getString(
+                R.string.custom_frame_rate_selected,
+                working.effectiveExportFormat.frameRate,
+            )
+        }
 
         listOf(
             sheet.aspectRatioDropdown to aspectLabels,
@@ -787,6 +1144,7 @@ class MainActivity : AppCompatActivity() {
             sheet.localFramingDropdown to framingLabels,
             sheet.longTripDropdown to pacingLabels,
             sheet.videoQualityDropdown to resolutionLabels,
+            sheet.frameRateDropdown to frameRateLabels,
         ).forEach { (dropdown, labels) ->
             dropdown.setAdapter(SelectionArrayAdapter(this, labels))
             makeDropdownOpenReliably(dropdown)
@@ -800,12 +1158,18 @@ class MainActivity : AppCompatActivity() {
             resolutionLabels[currentResolutionIndex.takeIf { it >= 0 } ?: resolutionLabels.lastIndex],
             false,
         )
+        sheet.frameRateDropdown.setText(
+            frameRateLabels[currentFrameRateIndex.takeIf {
+                it >= 0 && !working.effectiveExportFormat.customFrameRate
+            } ?: frameRateLabels.lastIndex],
+            false,
+        )
 
         sheet.aspectRatioDropdown.setOnItemClickListener { _, _, position, _ ->
             working = working.copy(videoQuality = working.videoQuality.withAspectRatio(VideoAspectRatio.entries[position]))
         }
         sheet.cameraMovementDropdown.setOnItemClickListener { _, _, position, _ ->
-            working = working.copy(cameraMovement = CameraMovement.entries[position])
+            working = working.withAutomaticMapView(CameraMovement.entries[position])
         }
         sheet.tripDetectionDropdown.setOnItemClickListener { _, _, position, _ ->
             working = working.copy(tripDetection = TripDetection.entries[position])
@@ -822,6 +1186,16 @@ class MainActivity : AppCompatActivity() {
                     exportFormat = working.effectiveExportFormat.copy(
                         shortEdge = resolution.shortEdge,
                         customResolution = false,
+                    ),
+                )
+            }
+        }
+        sheet.frameRateDropdown.setOnItemClickListener { _, _, position, _ ->
+            presetFrameRates.getOrNull(position)?.let { frameRate ->
+                working = working.copy(
+                    exportFormat = working.effectiveExportFormat.copy(
+                        frameRate = frameRate,
+                        customFrameRate = false,
                     ),
                 )
             }
@@ -868,11 +1242,34 @@ class MainActivity : AppCompatActivity() {
         val isStyle = currentCreateStep == CreateStep.STYLE
         val isPreview = currentCreateStep == CreateStep.PREVIEW
         val hasTimeline = timeline != null
-        editor.createTypeStepGroup.visibility = if (isType && hasTimeline) View.VISIBLE else View.GONE
+        val hasJournalMetadata = BuildConfig.IS_JOURNAL_LAB && activeJournalStatus != null
+        editor.createTypeStepGroup.visibility = if (isType && (hasTimeline || hasJournalMetadata)) View.VISIBLE else View.GONE
+        editor.journalRoutePreparingGroup.visibility = if (
+            hasJournalMetadata && journalRouteLoadJob?.isActive == true
+        ) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
+        val showExpandedRouteProgress = editor.journalRoutePreparingGroup.visibility == View.VISIBLE &&
+            journalRouteProgressExpanded
+        editor.journalRouteCompactProgressGroup.visibility = if (showExpandedRouteProgress) View.GONE else View.VISIBLE
+        editor.journalRouteProgressStageText.visibility = if (showExpandedRouteProgress) View.VISIBLE else View.GONE
+        editor.journalRouteProgressBar.visibility = if (showExpandedRouteProgress) View.VISIBLE else View.GONE
+        if (showExpandedRouteProgress) {
+            editor.journalRouteProgressStageText.setText(journalRoutePreparationStage.labelResource())
+            editor.journalRoutePreparingGroup.contentDescription = editor.journalRouteProgressStageText.text
+        } else {
+            editor.journalRoutePreparingGroup.contentDescription = getString(R.string.preparing_your_journeys)
+        }
         editor.tripSourceStepGroup.visibility = if (isTripSource) View.VISIBLE else View.GONE
         editor.tripDiscoveryStepGroup.visibility = if (isDiscovery) View.VISIBLE else View.GONE
         editor.projectStepGroup.visibility = if (isProject) View.VISIBLE else View.GONE
-        editor.timelineSourceGroup.visibility = if (isType && !hasTimeline) View.VISIBLE else View.GONE
+        editor.timelineSourceGroup.visibility = if (!BuildConfig.IS_JOURNAL_LAB && isType && !hasTimeline) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
         editor.periodStepGroup.visibility = if (isProject) View.VISIBLE else View.GONE
         editor.styleStepGroup.visibility = if (isStyle) View.VISIBLE else View.GONE
         editor.videoDetailsGroup.visibility = if (isStyle) View.VISIBLE else View.GONE
@@ -888,31 +1285,54 @@ class MainActivity : AppCompatActivity() {
             },
         )
         renderCreateStepper()
-        editor.wizardNavigationGroup.visibility = if (isType) View.GONE else View.VISIBLE
+        editor.wizardNavigationGroup.visibility = if (isProject || isStyle) View.VISIBLE else View.GONE
+        editor.wizardBackButton.visibility = if (isType) View.GONE else View.VISIBLE
         editor.wizardBackButton.isEnabled = true
         editor.wizardContinueButton.visibility = if (isProject || isStyle) View.VISIBLE else View.GONE
         editor.wizardContinueButton.setText(
             if (isProject && editingProjectOnly) R.string.save_trip else R.string.continue_label,
         )
-        editor.wizardContinueButton.isEnabled = !(isProject && rawProjectRangeConflict)
-        if (isType && hasTimeline) updateCreateTypeAvailability()
+        updateWizardContinueAvailability()
+        if (isType && (hasTimeline || hasJournalMetadata)) updateCreateTypeAvailability()
         // The wizard's primary action saves the project. Keeping the older inline save
         // actions here creates two competing paths through the same step.
         editor.saveTripButton.visibility = View.GONE
         editor.saveAsNewTripButton.visibility = View.GONE
         if (isTripSource) renderCreateTripSources()
-        if (isDiscovery) renderTripSuggestions()
+        if (isDiscovery) {
+            editor.runTripDetectionButton.isEnabled = !tripDetectionRunning
+            editor.runTripDetectionButton.setText(
+                if (tripDetectionRunning) R.string.detecting_trips else R.string.recommend_trips,
+            )
+            editor.detectionRangeDropdown.isEnabled = !tripDetectionRunning
+            editor.detectionCustomRangeButton.isEnabled = !tripDetectionRunning
+            renderTripSuggestions()
+        }
         if (isProject) updateProjectDateLabel()
         updateRawDataAvailability()
         if (isPreview) editor.previewSettingsSummary.text = currentVideoSettingsSummary()
     }
 
-    private fun renderCreateStepper() {
-        val stage = when (currentCreateStep) {
-            CreateStep.TYPE, CreateStep.TRIP_SOURCE, CreateStep.DISCOVERY, CreateStep.PROJECT -> 0
-            CreateStep.STYLE -> 1
-            CreateStep.PREVIEW -> 2
+    private fun updateWizardContinueAvailability() {
+        if (!::editor.isInitialized) return
+        val isProject = currentCreateStep == CreateStep.PROJECT
+        val selectedJournalRangeReady = if (BuildConfig.IS_JOURNAL_LAB && isProject) {
+            currentProjectDates()?.let { (start, end) ->
+                val zone = ZoneId.systemDefault()
+                journalRouteCovers(
+                    start.atStartOfDay(zone).toInstant(),
+                    end.plusDays(1).atStartOfDay(zone).toInstant(),
+                )
+            } == true
+        } else {
+            true
         }
+        editor.wizardContinueButton.isEnabled = !(isProject && rawProjectRangeConflict) && selectedJournalRangeReady
+    }
+
+    private fun renderCreateStepper() {
+        val stage = currentCreateStage()
+        val canAdvanceOneStage = currentCreateStep == CreateStep.PROJECT || currentCreateStep == CreateStep.STYLE
         val labels = listOf(
             getString(R.string.create_step_details_label),
             getString(R.string.create_step_style_label),
@@ -930,10 +1350,48 @@ class MainActivity : AppCompatActivity() {
             view.setTypeface(null, if (index == stage) Typeface.BOLD else Typeface.NORMAL)
             view.setTextColor(ContextCompat.getColor(this, if (index <= stage) R.color.interactive else R.color.on_surface_variant))
             view.contentDescription = getString(R.string.step_accessibility, index + 1, views.size, labels[index], getString(status))
+            view.isEnabled = index <= stage || (canAdvanceOneStage && index == stage + 1)
+        }
+    }
+
+    private fun currentCreateStage(): Int = when (currentCreateStep) {
+        CreateStep.TYPE, CreateStep.TRIP_SOURCE, CreateStep.DISCOVERY, CreateStep.PROJECT -> 0
+        CreateStep.STYLE -> 1
+        CreateStep.PREVIEW -> 2
+    }
+
+    private fun navigateToCreateStage(targetStage: Int) {
+        val currentStage = currentCreateStage()
+        when {
+            targetStage == currentStage -> Unit
+            targetStage == 0 && currentStage > 0 -> {
+                currentCreateStep = CreateStep.PROJECT
+                renderCreateStep()
+            }
+            targetStage == 1 && currentStage == 2 -> {
+                currentCreateStep = CreateStep.STYLE
+                renderCreateStep()
+            }
+            targetStage == currentStage + 1 &&
+                (currentCreateStep == CreateStep.PROJECT || currentCreateStep == CreateStep.STYLE) -> {
+                moveCreateStep(1)
+            }
         }
     }
 
     private fun updateCreateTypeAvailability() {
+        if (BuildConfig.IS_JOURNAL_LAB && activeJournalStatus != null && timeline == null) {
+            listOf(editor.tripVideoChoice, editor.recapVideoChoice, editor.customRecapChoice).forEach { card ->
+                card.isEnabled = true
+                card.isClickable = true
+                card.alpha = 1f
+            }
+            editor.rawDataChoice.isEnabled = false
+            editor.rawDataChoice.isClickable = false
+            editor.rawDataChoice.alpha = 0.55f
+            editor.semanticUnavailableText.visibility = View.GONE
+            return
+        }
         val semanticAvailable = semanticDateBounds() != null
         val rawAvailable = rawDateBounds() != null
         listOf(editor.tripVideoChoice, editor.recapVideoChoice, editor.customRecapChoice).forEach { card ->
@@ -957,6 +1415,7 @@ class MainActivity : AppCompatActivity() {
                 showVideos()
                 return
             }
+            if (currentCreateStep == CreateStep.DISCOVERY) cancelTripDetection()
             currentCreateStep = when (currentCreateStep) {
                 CreateStep.TYPE -> CreateStep.TYPE
                 CreateStep.TRIP_SOURCE -> CreateStep.TYPE
@@ -970,6 +1429,21 @@ class MainActivity : AppCompatActivity() {
         }
         currentCreateStep = when (currentCreateStep) {
             CreateStep.PROJECT -> {
+                if (BuildConfig.IS_JOURNAL_LAB) {
+                    val dates = currentProjectDates()
+                    val zone = ZoneId.systemDefault()
+                    val routeReady = dates?.let { (start, end) ->
+                        journalRouteCovers(
+                            start.atStartOfDay(zone).toInstant(),
+                            end.plusDays(1).atStartOfDay(zone).toInstant(),
+                        )
+                    } == true
+                    if (!routeReady) {
+                        dates?.let { (start, end) -> loadJournalRouteForRange(start, end) }
+                        Snackbar.make(binding.root, R.string.preparing_your_journeys, Snackbar.LENGTH_SHORT).show()
+                        return
+                    }
+                }
                 if (timeline == null) {
                     Snackbar.make(binding.root, R.string.choose_timeline_again, Snackbar.LENGTH_LONG).show()
                     return
@@ -992,7 +1466,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderCreateTripSources() {
         val savedTrips = tripsStore.list().filter { it.kind == TripKind.TRIP }
-        editor.findTripsButton.isEnabled = timeline != null && !rawOnlyImport
+        editor.findTripsButton.isEnabled = semanticDateBounds() != null && !rawOnlyImport
         editor.emptySavedTripsText.visibility = if (savedTrips.isEmpty()) View.VISIBLE else View.GONE
         editor.savedTripsList.removeAllViews()
         savedTrips.forEach { project ->
@@ -1043,6 +1517,7 @@ class MainActivity : AppCompatActivity() {
         editor.root.visibility = View.GONE
         settingsScreen.root.visibility = View.GONE
         playerScreen.root.visibility = View.VISIBLE
+        onboarding.root.visibility = View.GONE
         binding.bottomNavigation.visibility = View.GONE
         playerScreen.playerTitle.text =
             videoLibraryViewModel.records.value.firstOrNull { it.uri == uri.toString() }?.title
@@ -1061,6 +1536,13 @@ class MainActivity : AppCompatActivity() {
         if (::settingsScreen.isInitialized) updateLanguageSelectionLabel()
         if (::settingsScreen.isInitialized && distanceUnitPreference == DistanceUnitPreference.AUTOMATIC) {
             applyDistanceUnitPreference(distanceUnitPreference, save = false)
+        }
+        if (
+            BuildConfig.IS_JOURNAL_LAB &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            activeJournal?.takeIf { it.reminderEnabled }?.let { disableJournalReminders(it.id) }
         }
     }
 
@@ -1101,8 +1583,11 @@ class MainActivity : AppCompatActivity() {
         releaseVideoPlayer()
         titleHandler.removeCallbacks(applyTitleChanges)
         importJob?.cancel()
+        journalLoadJob?.cancel()
+        journalRouteLoadJob?.cancel()
         setTimelineLoading(false)
         animation?.cancel()
+        if (journalDatabaseDelegate.isInitialized()) journalDatabase.close()
         super.onDestroy()
     }
 
@@ -1138,6 +1623,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     internal fun importTimeline(uri: Uri, remembered: Boolean = false) {
+        if (BuildConfig.IS_JOURNAL_LAB) {
+            importJournalTimeline(uri)
+            return
+        }
         if (importJob?.isActive == true) return
         if (!remembered && currentScreen == Screen.VIDEOS) showNewVideo(loadRemembered = false)
         if (!remembered) interruptedTimelineRecovered = false
@@ -1222,6 +1711,430 @@ class MainActivity : AppCompatActivity() {
                 importJob = null
             }
         }
+    }
+
+    private fun importJournalTimeline(uri: Uri) {
+        if (importJob?.isActive == true) return
+        if (currentScreen == Screen.VIDEOS) showNewVideo(loadRemembered = false)
+        animation?.cancel()
+        journalImportIsInitial = null
+        setTimelineLoading(true, R.string.opening_timeline)
+        importJob = lifecycleScope.launch {
+            try {
+                val sourceSize = timelineFileSize(uri)
+                showJournalImportStage(R.string.reading_timeline, bytesRead = 0L, totalBytes = sourceSize)
+                val existing = withContext(Dispatchers.IO) { journalRepository.primaryJournal() }
+                journalImportIsInitial = existing == null
+                updateSettingsImportButton(loading = true)
+                val adapted = withContext(Dispatchers.IO) {
+                    contentResolver.openInputStream(uri)?.buffered()?.use { input ->
+                        journalImportAdapter.adapt(
+                            input = input,
+                            sourceName = timelineDisplayName(uri),
+                            importedAtEpochMillis = System.currentTimeMillis(),
+                            matchClassification = if (existing == null) {
+                                JournalMatchClassification.NEW_JOURNAL
+                            } else {
+                                JournalMatchClassification.UNCERTAIN
+                            },
+                            onBytesRead = { bytesRead ->
+                                runOnUiThread {
+                                    showJournalImportStage(
+                                        R.string.reading_timeline,
+                                        bytesRead = bytesRead,
+                                        totalBytes = sourceSize,
+                                    )
+                                }
+                            },
+                        )
+                    } ?: error("Timeline document is unavailable")
+                }
+                val journal = existing ?: JournalEntity(
+                    id = UUID.randomUUID().toString(),
+                    name = getString(R.string.timeline_data),
+                    isPrimary = true,
+                    createdAtEpochMillis = System.currentTimeMillis(),
+                    reminderEnabled = canPostJournalReminders(),
+                )
+                val classified = if (existing == null) {
+                    adapted
+                } else {
+                    showJournalImportStage(R.string.journal_import_checking)
+                    val committed = withContext(Dispatchers.IO) {
+                        journalRepository.committedImport(journal.id, adapted.sourceHash)
+                    }
+                    if (committed != null) {
+                        showJournalDuplicateResult()
+                        return@launch
+                    } else {
+                        val likelySame = withContext(Dispatchers.IO) {
+                            journalRepository.hasLikelySameDetailedIdentity(journal.id, adapted.detailedObservations)
+                        }
+                        if (!likelySame) {
+                            showJournalMismatch()
+                            return@launch
+                        }
+                        adapted.copy(matchClassification = JournalMatchClassification.LIKELY_SAME)
+                    }
+                }
+                showJournalImportStage(R.string.journal_import_saving)
+                val result = withContext(Dispatchers.IO) {
+                    if (existing == null) {
+                        journalRepository.createJournalAndImport(journal, classified) { processed, total ->
+                            runOnUiThread { showJournalSaveProgress(processed, total) }
+                        }
+                    } else {
+                        journalRepository.import(journal.id, classified) { processed, total ->
+                            runOnUiThread { showJournalSaveProgress(processed, total) }
+                        }
+                    }
+                }
+                showJournalImportStage(R.string.journal_import_updating)
+                refreshJournalAfterImport(journal.id, result)
+                showJournalImportResult(result, previousJournal = existing)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Throwable) {
+                Log.e(TAG, "Travel Journal import failed", error)
+                Snackbar.make(binding.root, R.string.journal_import_failed_preserved, Snackbar.LENGTH_LONG).show()
+            } finally {
+                setTimelineLoading(false)
+                journalImportIsInitial = null
+                importJob = null
+            }
+        }
+    }
+
+    private fun showJournalMismatch() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.journal_import_mismatch_title)
+            .setMessage(R.string.journal_import_mismatch_message)
+            .setPositiveButton(R.string.done, null)
+            .show()
+    }
+
+    private fun loadJournalIfNeeded() {
+        if (journalLoaded || journalLoadJob?.isActive == true) return
+        journalLoadJob = lifecycleScope.launch {
+            try {
+                val journal = withContext(Dispatchers.IO) { journalRepository.primaryJournal() }
+                if (journal != null) {
+                    if (journalSetupMode && !journalSetupReturnToCreate) {
+                        journalSetupMode = false
+                        journalSetupReturnToCreate = false
+                        showVideos()
+                    }
+                    loadJournalMetadata(journal.id)
+                }
+            } catch (error: Throwable) {
+                Log.e(TAG, "Travel Journal reload failed", error)
+            } finally {
+                journalLoaded = true
+                journalLoadJob = null
+                updateTimelineSettingsCard()
+                renderCreateStep()
+                if (journalSetupMode && timeline != null) {
+                    val returnToCreate = journalSetupReturnToCreate
+                    journalSetupMode = false
+                    journalSetupReturnToCreate = false
+                    if (returnToCreate) showNewVideo(loadRemembered = true) else showVideos()
+                }
+            }
+        }
+    }
+
+    private suspend fun loadJournalMetadata(journalId: String) {
+        val status = withContext(Dispatchers.IO) { journalRepository.status(journalId) } ?: return
+        activeJournal = status.journal
+        activeJournalStatus = status
+        journalLoaded = true
+        updateTimelineSettingsCard()
+        updateHomeJournalCard()
+        if (currentScreen == Screen.NEW_VIDEO && currentCreateStep in setOf(
+                CreateStep.PROJECT,
+                CreateStep.STYLE,
+                CreateStep.PREVIEW,
+            )
+        ) {
+            prepareActiveProjectRoute()
+        }
+    }
+
+    private fun loadJournalRouteForRange(
+        startDate: LocalDate,
+        endDateInclusive: LocalDate,
+        onComplete: ((JournalRouteLoadOutcome) -> Unit)? = null,
+    ) {
+        if (!BuildConfig.IS_JOURNAL_LAB) {
+            onComplete?.invoke(JournalRouteLoadOutcome.READY)
+            return
+        }
+        val zone = ZoneId.systemDefault()
+        val requestedStart = startDate.atStartOfDay(zone).toInstant()
+        val requestedEndExclusive = endDateInclusive.plusDays(1).atStartOfDay(zone).toInstant()
+        if (journalRouteCovers(requestedStart, requestedEndExclusive)) {
+            val inFlight = activeJournalRouteRequest
+            if (
+                journalRouteLoadJob?.isActive == true &&
+                (inFlight?.start != requestedStart || inFlight.endExclusive != requestedEndExclusive)
+            ) {
+                invalidateJournalRouteRequest()
+            }
+            updateWizardContinueAvailability()
+            onComplete?.let { callback ->
+                runCatching { callback(JournalRouteLoadOutcome.READY) }
+                    .onFailure { error -> Log.e(TAG, "Journal route completion callback failed", error) }
+            }
+            return
+        }
+        val inFlight = activeJournalRouteRequest
+        if (
+            journalRouteLoadJob?.isActive == true &&
+            inFlight?.start == requestedStart &&
+            inFlight.endExclusive == requestedEndExclusive
+        ) {
+            onComplete?.let(inFlight.callbacks::add)
+            return
+        }
+        completeJournalRouteRequest(JournalRouteLoadOutcome.CANCELLED)
+        journalRouteLoadJob?.cancel()
+        val requestId = ++journalRouteRequestId
+        activeJournalRouteRequest = JournalRouteRequest(
+            id = requestId,
+            start = requestedStart,
+            endExclusive = requestedEndExclusive,
+            callbacks = onComplete?.let { mutableListOf(it) } ?: mutableListOf(),
+        )
+        updateWizardContinueAvailability()
+        journalRouteProgressExpanded = false
+        journalRoutePreparationStage = JournalRoutePreparationStage.PREPARING_DETAILED_ROUTES
+        journalRouteProgressDelayJob?.cancel()
+        journalRouteProgressDelayJob = lifecycleScope.launch {
+            delay(JOURNAL_ROUTE_PROGRESS_DELAY_MILLIS)
+            if (journalRouteLoadJob?.isActive == true) {
+                journalRouteProgressExpanded = true
+                renderCreateStep()
+            }
+        }
+        journalRouteLoadJob = lifecycleScope.launch {
+            renderCreateStep()
+            try {
+                val journal = activeJournal ?: withContext(Dispatchers.IO) { journalRepository.primaryJournal() }
+                if (journal == null) {
+                    completeJournalRouteRequest(JournalRouteLoadOutcome.FAILED, requestId)
+                    showJournalSetup(returnToCreate = true)
+                    return@launch
+                }
+                if (activeJournal == null) loadJournalMetadata(journal.id)
+                val loaded = loadJournalRange(
+                    journalId = journal.id,
+                    start = requestedStart,
+                    endExclusive = requestedEndExclusive,
+                    requestId = requestId,
+                )
+                completeJournalRouteRequest(
+                    if (loaded) JournalRouteLoadOutcome.READY else JournalRouteLoadOutcome.FAILED,
+                    requestId,
+                )
+                if (!loaded) {
+                    Snackbar.make(binding.root, R.string.journal_route_load_failed, Snackbar.LENGTH_LONG).show()
+                }
+            } catch (error: Throwable) {
+                if (error is kotlinx.coroutines.CancellationException) {
+                    completeJournalRouteRequest(JournalRouteLoadOutcome.CANCELLED, requestId)
+                    throw error
+                }
+                completeJournalRouteRequest(JournalRouteLoadOutcome.FAILED, requestId)
+                Log.e(TAG, "Travel Journal route load failed", error)
+                Snackbar.make(binding.root, R.string.journal_route_load_failed, Snackbar.LENGTH_LONG).show()
+            } finally {
+                if (requestId != journalRouteRequestId) return@launch
+                journalRouteProgressDelayJob?.cancel()
+                journalRouteProgressDelayJob = null
+                journalRouteProgressExpanded = false
+                journalRouteLoadJob = null
+                renderCreateStep()
+            }
+        }
+    }
+
+    private fun completeJournalRouteRequest(
+        outcome: JournalRouteLoadOutcome,
+        requestId: Long? = null,
+    ) {
+        val request = activeJournalRouteRequest ?: return
+        if (requestId != null && request.id != requestId) return
+        activeJournalRouteRequest = null
+        request.callbacks.toList().forEach { callback ->
+            runCatching { callback(outcome) }
+                .onFailure { error -> Log.e(TAG, "Journal route completion callback failed", error) }
+        }
+    }
+
+    private fun journalRouteCovers(start: Instant, endExclusive: Instant): Boolean =
+        activeJournalRoute != null &&
+            activeJournalRouteStart?.let { !it.isAfter(start) } == true &&
+            activeJournalRouteEndExclusive?.let { !it.isBefore(endExclusive) } == true
+
+    private suspend fun loadJournalRange(
+        journalId: String,
+        start: Instant,
+        endExclusive: Instant,
+        requestId: Long,
+    ): Boolean {
+        val loadedJournal = withContext(Dispatchers.IO) { journalRepository.journal(journalId) } ?: return false
+        val route = withContext(Dispatchers.IO) {
+            journalRouteService.route(
+                journalId = journalId,
+                start = start,
+                endExclusive = endExclusive,
+                routeDetail = if (simplifyRouteDetail) RouteDetail.SIMPLIFIED else RouteDetail.DETAILED,
+                onPreparationStage = { stage ->
+                    withContext(Dispatchers.Main.immediate) {
+                        if (requestId == journalRouteRequestId && activeJournalRouteRequest?.id == requestId) {
+                            journalRoutePreparationStage = stage
+                            if (journalRouteProgressExpanded) renderCreateStep()
+                        }
+                    }
+                },
+            )
+        }
+        if (requestId != journalRouteRequestId) return false
+        applyJournalRoute(
+            journal = loadedJournal,
+            route = route,
+            refreshTrips = false,
+            routeStart = start,
+            routeEndExclusive = endExclusive,
+            updateDetailedFreshness = false,
+        )
+        return true
+    }
+
+    private fun JournalRoutePreparationStage.labelResource(): Int = when (this) {
+        JournalRoutePreparationStage.PREPARING_DETAILED_ROUTES -> R.string.preparing_detailed_routes
+        JournalRoutePreparationStage.COMBINING_JOURNEY_HISTORY -> R.string.combining_journey_history
+        JournalRoutePreparationStage.SAVING_FOR_FASTER_STARTS -> R.string.saving_for_faster_starts
+    }
+
+    private suspend fun refreshJournalAfterImport(journalId: String, result: JournalImportResult) {
+        val committed = result as? JournalImportResult.Committed ?: return
+        if (!committed.needsRouteRefresh) {
+            val loadedJournal = withContext(Dispatchers.IO) { journalRepository.journal(journalId) } ?: return
+            activeJournal = loadedJournal
+            activeJournalStatus = withContext(Dispatchers.IO) { journalRepository.status(journalId) }
+            journalLoaded = true
+            updateTimelineSettingsCard()
+            return
+        }
+        invalidateJournalRouteRequest()
+        if (committed.changeKind == JournalImportResult.ChangeKind.INITIAL) {
+            activeJournalRoute = null
+            activeJournalRouteStart = null
+            activeJournalRouteEndExclusive = null
+            timeline = null
+            renderTimeline = null
+            loadJournalMetadata(journalId)
+            return
+        }
+        activeJournalRoute = null
+        activeJournalRouteStart = null
+        activeJournalRouteEndExclusive = null
+        timeline = null
+        renderTimeline = null
+        loadJournalMetadata(journalId)
+        if (currentScreen == Screen.NEW_VIDEO && currentCreateStep != CreateStep.TYPE) {
+            currentProjectDates()?.let { (start, end) -> loadJournalRouteForRange(start, end) }
+        }
+    }
+
+    private fun invalidateJournalRouteRequest() {
+        journalRouteRequestId += 1
+        completeJournalRouteRequest(JournalRouteLoadOutcome.CANCELLED)
+        journalRouteLoadJob?.cancel()
+        journalRouteLoadJob = null
+        journalRouteProgressDelayJob?.cancel()
+        journalRouteProgressDelayJob = null
+        journalRouteProgressExpanded = false
+    }
+
+    private suspend fun applyJournalRoute(
+        journal: JournalEntity,
+        route: JournalRoute,
+        refreshTrips: Boolean,
+        routeStart: Instant? = null,
+        routeEndExclusive: Instant? = null,
+        updateDetailedFreshness: Boolean = true,
+    ) {
+        var reminderAdjustedJournal = journal
+        if (
+            journal.reminderEnabled &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            withContext(Dispatchers.IO) { journalRepository.setReminderEnabled(journal.id, enabled = false) }
+            JournalReminderCoordinator(applicationContext).cancel(journal.id)
+            reminderAdjustedJournal = journal.copy(reminderEnabled = false)
+        }
+        val usableThrough = if (updateDetailedFreshness) {
+            route.spans.asSequence()
+                .filter { it.source == RouteSource.DETAILED }
+                .flatMap { it.points.asSequence() }
+                .maxOfOrNull { it.instant.toEpochMilli() }
+        } else {
+            reminderAdjustedJournal.detailedUsableThroughEpochMillis
+        }
+        if (updateDetailedFreshness && reminderAdjustedJournal.detailedUsableThroughEpochMillis != usableThrough) {
+            withContext(Dispatchers.IO) {
+                journalRepository.setDetailedUsableThrough(reminderAdjustedJournal.id, usableThrough)
+            }
+        }
+        val loadedJournal = reminderAdjustedJournal.copy(detailedUsableThroughEpochMillis = usableThrough)
+        activeJournal = loadedJournal
+        activeJournalStatus = withContext(Dispatchers.IO) { journalRepository.status(journal.id) }
+            ?.copy(journal = loadedJournal)
+        activeJournalRoute = route
+        activeJournalRouteStart = routeStart
+        activeJournalRouteEndExclusive = routeEndExclusive
+        journalLoaded = true
+        loadedJournal.detailedUsableThroughEpochMillis?.takeIf { loadedJournal.reminderEnabled }?.let { anchor ->
+            val stateStore = JournalReminderStateStore(applicationContext)
+            val anchorChanged = stateStore.state(loadedJournal.id).anchorEpochMillis != anchor
+            if (anchorChanged) {
+                JournalReminderNotifications.cancel(applicationContext)
+                stateStore.resetForAdvance(loadedJournal.id, anchor)
+            }
+            JournalReminderCoordinator(applicationContext).schedule(loadedJournal.id, anchor, replace = anchorChanged)
+        }
+        rawSignalPoints = emptyList()
+        rawSignalProcessing = null
+        renderRawSignalsTimeline = null
+        rawSignalsEnabled = false
+        rawOnlyImport = false
+        timeline = route.timeline.takeIf { it.points.isNotEmpty() }
+        renderTimeline = timeline
+        val loaded = timeline
+        if (loaded != null) {
+            val period = TimelinePeriod.sameYear(loaded.years.first())
+            configureYears(
+                loaded = loaded,
+                initialJourney = route.journeyForRange(period),
+                ignoredCount = 0,
+                availableYears = semanticDateBounds()?.let { (start, end) ->
+                    (start.year..end.year).toList().sortedDescending()
+                }.orEmpty(),
+            )
+            applyActiveProjectDates()
+            if (refreshTrips) {
+                if (importJob?.isActive == true) showJournalImportStage(R.string.finding_suggested_trips)
+                tripSuggestions = refreshRequestedTripSuggestions(loaded)
+            }
+            editor.editorGroup.visibility = View.VISIBLE
+            updateCameraPreparationUi()
+        }
+        renderTrips()
+        renderCreateStep()
+        updateTimelineSettingsCard()
     }
 
     private fun showRawOnlyImportChoice(uri: Uri, points: List<RawSignalPoint>, remembered: Boolean) {
@@ -1330,9 +2243,91 @@ class MainActivity : AppCompatActivity() {
         editor.importButton.isEnabled = !loading
         editor.exportHelpButton.isEnabled = !loading
         if (::settingsScreen.isInitialized) {
+            settingsScreen.settingsTimelineProgressGroup.visibility = if (loading) View.VISIBLE else View.GONE
             settingsScreen.settingsImportTimelineButton.isEnabled = !loading
             settingsScreen.settingsTimelineHelpButton.isEnabled = !loading
+            updateSettingsImportButton(loading)
+            if (loading) {
+                showJournalImportStage(stage)
+            } else {
+                settingsScreen.settingsTimelineProgress.isIndeterminate = true
+                settingsScreen.settingsTimelineProgress.progress = 0
+                settingsScreen.settingsTimelineProgressDetail.setText(R.string.journal_import_working_detail)
+            }
         }
+    }
+
+    private fun updateSettingsImportButton(loading: Boolean) {
+        if (!::settingsScreen.isInitialized) return
+        settingsScreen.settingsImportTimelineButton.setText(
+            if (!loading) {
+                if (BuildConfig.IS_JOURNAL_LAB) {
+                    if (activeJournal == null) R.string.import_timeline_to_journal else R.string.import_updated_timeline
+                } else {
+                    R.string.import_or_update
+                }
+            } else if (!BuildConfig.IS_JOURNAL_LAB) {
+                R.string.journal_import_in_progress
+            } else {
+                when (journalImportIsInitial) {
+                    true -> R.string.journal_import_creating
+                    false -> R.string.journal_import_in_progress
+                    null -> R.string.journal_import_preparing
+                }
+            },
+        )
+    }
+
+    private fun showJournalImportStage(
+        stage: Int,
+        bytesRead: Long? = null,
+        totalBytes: Long? = null,
+    ) {
+        editor.loadingStageText.setText(stage)
+        if (!::settingsScreen.isInitialized) return
+        settingsScreen.settingsTimelineProgressStage.setText(stage)
+        val determinate = bytesRead != null && totalBytes != null && totalBytes > 0L
+        setJournalProgressIndeterminate(!determinate)
+        if (determinate) {
+            val boundedBytes = bytesRead.coerceIn(0L, totalBytes)
+            settingsScreen.settingsTimelineProgress.progress =
+                ((boundedBytes * JOURNAL_PROGRESS_MAX) / totalBytes).toInt()
+            settingsScreen.settingsTimelineProgressDetail.text = getString(
+                R.string.journal_import_read_progress,
+                Formatter.formatFileSize(this, boundedBytes),
+                Formatter.formatFileSize(this, totalBytes),
+            )
+        } else {
+            settingsScreen.settingsTimelineProgress.progress = 0
+            settingsScreen.settingsTimelineProgressDetail.setText(R.string.journal_import_working_detail)
+        }
+    }
+
+    private fun showJournalSaveProgress(processed: Int, total: Int) {
+        if (!::settingsScreen.isInitialized) return
+        settingsScreen.settingsTimelineProgressStage.setText(R.string.journal_import_saving)
+        if (total > 0) {
+            setJournalProgressIndeterminate(false)
+            settingsScreen.settingsTimelineProgress.progress =
+                ((processed.toLong().coerceIn(0L, total.toLong()) * JOURNAL_PROGRESS_MAX) / total).toInt()
+            settingsScreen.settingsTimelineProgressDetail.text = getString(
+                R.string.journal_import_save_progress,
+                processed.coerceIn(0, total),
+                total,
+            )
+        } else {
+            setJournalProgressIndeterminate(true)
+            settingsScreen.settingsTimelineProgressDetail.setText(R.string.journal_import_working_detail)
+        }
+    }
+
+    private fun setJournalProgressIndeterminate(indeterminate: Boolean) {
+        val indicator = settingsScreen.settingsTimelineProgress
+        if (indicator.isIndeterminate == indeterminate) return
+        val wasVisible = indicator.visibility == View.VISIBLE
+        if (wasVisible) indicator.visibility = View.INVISIBLE
+        indicator.isIndeterminate = indeterminate
+        if (wasVisible) indicator.visibility = View.VISIBLE
     }
 
     private fun rememberTimelineSource(uri: Uri) {
@@ -1383,8 +2378,252 @@ class MainActivity : AppCompatActivity() {
         }
     }.getOrNull()?.takeIf { it >= 0L }
 
+    private fun showJournalDuplicateResult() {
+        showJournalGrowthDialog(
+            title = getString(R.string.journal_up_to_date_title),
+            detail = getString(R.string.journal_up_to_date_detail),
+            initial = false,
+            offerReminders = false,
+        )
+    }
+
+    private suspend fun showJournalImportResult(
+        result: JournalImportResult,
+        previousJournal: JournalEntity?,
+    ) {
+        val committed = result as? JournalImportResult.Committed
+        if (committed == null) {
+            showJournalDuplicateResult()
+            return
+        }
+        var journal = activeJournal
+        val initial = committed.changeKind == JournalImportResult.ChangeKind.INITIAL
+        val previousDetailedThrough = previousJournal?.detailedCapturedThroughEpochMillis
+        val advancedAnchor = journal?.detailedCapturedThroughEpochMillis?.takeIf { anchor ->
+            committed.insertedObservationCount > 0 &&
+                (previousDetailedThrough == null || anchor > previousDetailedThrough)
+        }
+        val preservedObservations = resources.getQuantityString(
+            R.plurals.journal_preserved_observations_count,
+            committed.insertedObservationCount,
+            committed.insertedObservationCount,
+        )
+        val statusDetail = activeJournalStatus?.let(::journalStatusDetail)
+            ?: getString(R.string.journal_timeline_growth_detail)
+        val (title, detail) = when {
+            initial -> getString(R.string.journal_created_title) to statusDetail
+            advancedAnchor != null -> {
+                getString(R.string.journal_growth_title) to getString(
+                    R.string.journal_update_added_detail,
+                    preservedObservations,
+                    statusDetail,
+                )
+            }
+            committed.insertedObservationCount > 0 -> {
+                getString(R.string.journal_backfill_title) to getString(
+                    R.string.journal_update_added_detail,
+                    preservedObservations,
+                    statusDetail,
+                )
+            }
+            committed.semanticSegmentCount > 0 -> {
+                getString(R.string.journal_timeline_growth_title) to statusDetail
+            }
+            else -> getString(R.string.journal_up_to_date_title) to getString(R.string.journal_up_to_date_detail)
+        }
+        val meaningfulRecentAdvance = JournalFreshnessPolicy.isRecent(advancedAnchor, System.currentTimeMillis())
+        if (advancedAnchor != null) {
+            JournalReminderNotifications.cancel(applicationContext)
+            JournalReminderStateStore(applicationContext).resetForAdvance(journal.id, advancedAnchor)
+            if (journal.reminderEnabled) {
+                JournalReminderCoordinator(applicationContext).schedule(journal.id, advancedAnchor, replace = true)
+            }
+        }
+        if (meaningfulRecentAdvance && journal != null && !journal.reminderEligible) {
+            withContext(Dispatchers.IO) { journalRepository.setReminderEligible(journal.id, eligible = true) }
+            journal = journal.copy(reminderEligible = true)
+            activeJournal = journal
+            activeJournalStatus = activeJournalStatus?.copy(journal = journal)
+        }
+        showJournalGrowthDialog(
+            title = title,
+            detail = detail,
+            initial = initial,
+            offerReminders = meaningfulRecentAdvance && journal?.reminderEnabled != true,
+        )
+        if (initial) {
+            journalSetupMode = false
+            journalSetupReturnToCreate = false
+            showNewVideo(loadRemembered = true)
+        }
+    }
+
+    private fun showJournalGrowthDialog(
+        title: String,
+        detail: String,
+        initial: Boolean,
+        offerReminders: Boolean,
+    ) {
+        val content = DialogJournalGrowthBinding.inflate(layoutInflater)
+        content.journalGrowthHeadline.text = title
+        content.journalGrowthDetail.text = detail
+        content.journalGrowthProgress.progress = 0
+        val builder = MaterialAlertDialogBuilder(this)
+            .setView(content.root)
+            .setPositiveButton(
+                if (initial) R.string.journal_import_result_create else R.string.journal_import_result_done,
+            ) { _, _ -> Unit }
+        if (offerReminders) {
+            builder.setNeutralButton(R.string.turn_on_reminders) { _, _ ->
+                activeJournal?.let { requestEnableJournalReminders(it.id) }
+            }
+        }
+        val dialog = builder.show()
+        content.journalGrowthProgress.setProgressCompat(1000, ValueAnimator.areAnimatorsEnabled())
+        content.journalGrowthDetail.post {
+            content.journalGrowthDetail.announceForAccessibility("$title. $detail")
+        }
+        dialog.setOnDismissListener { updateTimelineSettingsCard() }
+    }
+
+    private fun requestEnableJournalReminders(journalId: String) {
+        if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            pendingJournalReminderId = journalId
+            requestJournalNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            enableJournalReminders(journalId)
+        }
+    }
+
+    private fun canPostJournalReminders(): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+
+    private fun enableJournalReminders(journalId: String) {
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) { journalRepository.setReminderEnabled(journalId, enabled = true) }
+            activeJournal = activeJournal?.takeIf { it.id == journalId }?.copy(reminderEnabled = true) ?: activeJournal
+            activeJournalStatus = activeJournalStatus?.let { status ->
+                if (status.journal.id == journalId) {
+                    status.copy(journal = status.journal.copy(reminderEnabled = true))
+                } else {
+                    status
+                }
+            }
+            val anchor = activeJournal?.takeIf { it.id == journalId }?.detailedUsableThroughEpochMillis
+            if (anchor != null) {
+                val store = JournalReminderStateStore(applicationContext)
+                if (store.state(journalId).anchorEpochMillis != anchor) store.resetForAdvance(journalId, anchor)
+                JournalReminderCoordinator(applicationContext).schedule(journalId, anchor, replace = true)
+                JournalReminderNotifications.createChannel(applicationContext)
+            }
+            updateTimelineSettingsCard()
+            Snackbar.make(binding.root, R.string.journal_reminders_enabled, Snackbar.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun disableJournalReminders(journalId: String) {
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) { journalRepository.setReminderEnabled(journalId, enabled = false) }
+            activeJournal = activeJournal?.takeIf { it.id == journalId }?.copy(reminderEnabled = false) ?: activeJournal
+            activeJournalStatus = activeJournalStatus?.let { status ->
+                if (status.journal.id == journalId) {
+                    status.copy(journal = status.journal.copy(reminderEnabled = false))
+                } else {
+                    status
+                }
+            }
+            JournalReminderStateStore(applicationContext).clear(journalId)
+            JournalReminderCoordinator(applicationContext).cancel(journalId)
+            updateTimelineSettingsCard()
+        }
+    }
+
+    private fun updateJournalReminderSwitch(enabled: Boolean) {
+        if (!::settingsScreen.isInitialized) return
+        updatingJournalReminderSwitch = true
+        settingsScreen.journalReminderSwitch.isChecked = enabled
+        updatingJournalReminderSwitch = false
+    }
+
+    private fun formatJournalDate(epochMillis: Long): String =
+        DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(epochMillis))
+
+    private fun formatJournalRange(startEpochMillis: Long?, endEpochMillis: Long?): String =
+        if (startEpochMillis == null || endEpochMillis == null) {
+            getString(R.string.timeline_range_unavailable)
+        } else {
+            getString(
+                R.string.timeline_raw_points_available,
+                formatJournalDate(startEpochMillis),
+                formatJournalDate(endEpochMillis),
+            )
+        }
+
+    private fun formatJournalCoverageDays(startEpochMillis: Long?, endEpochMillis: Long?): String {
+        val dayCount = inclusiveCalendarDayCount(startEpochMillis, endEpochMillis)
+        return resources.getQuantityString(R.plurals.journal_coverage_days, dayCount, dayCount)
+    }
+
+    private fun journalStatusDetail(status: JournalStatusSnapshot): String = getString(
+        R.string.journal_status_detail,
+        formatJournalRange(status.detailedStartEpochMillis, status.detailedEndEpochMillis),
+        formatJournalCoverageDays(status.detailedStartEpochMillis, status.detailedEndEpochMillis),
+        NumberFormat.getIntegerInstance().format(status.preservedObservationCount),
+        formatJournalRange(status.journal.semanticStartEpochMillis, status.journal.semanticEndEpochMillis),
+        formatJournalCoverageDays(status.journal.semanticStartEpochMillis, status.journal.semanticEndEpochMillis),
+        NumberFormat.getIntegerInstance().format(status.semanticEntryCount),
+        DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(
+            Date(status.lastSuccessfulImportAtEpochMillis ?: status.journal.createdAtEpochMillis),
+        ),
+    )
+
     private fun updateTimelineSettingsCard() {
         if (!::settingsScreen.isInitialized) return
+        if (BuildConfig.IS_JOURNAL_LAB) {
+            val journal = activeJournal
+            if (journal == null) {
+                settingsScreen.timelineDataStatus.text = getString(R.string.timeline_not_imported)
+                settingsScreen.settingsTimelineHelpButton.setText(R.string.get_timeline_file)
+                updateSettingsImportButton(loading = false)
+                settingsScreen.journalFreshnessStatus.visibility = View.GONE
+                settingsScreen.journalReminderSwitch.visibility = View.GONE
+                settingsScreen.journalReminderSummary.visibility = View.GONE
+                settingsScreen.settingsWhyImportButton.visibility = View.GONE
+                settingsScreen.settingsWhyImportDetail.visibility = View.GONE
+                updateHomeJournalCard()
+                return
+            }
+            val status = activeJournalStatus
+            settingsScreen.settingsTimelineHelpButton.setText(R.string.get_updated_timeline_file)
+            settingsScreen.settingsWhyImportButton.visibility = View.VISIBLE
+            updateSettingsImportButton(loading = false)
+            settingsScreen.timelineDataStatus.text = status?.let(::journalStatusDetail)
+                ?: getString(R.string.timeline_range_unavailable)
+            val freshness = JournalFreshnessPolicy.evaluate(
+                journal.detailedUsableThroughEpochMillis,
+                System.currentTimeMillis(),
+            )
+            settingsScreen.journalFreshnessStatus.text = when (freshness.state) {
+                JournalFreshnessState.NO_DETAIL -> getString(R.string.journal_status_no_detail)
+                JournalFreshnessState.CURRENT -> getString(R.string.journal_status_current, freshness.ageDays)
+                JournalFreshnessState.GENTLE -> getString(R.string.journal_status_gentle, freshness.ageDays)
+                JournalFreshnessState.UPDATE_DUE -> getString(R.string.journal_status_due)
+                JournalFreshnessState.AT_RISK -> getString(R.string.journal_status_at_risk)
+                JournalFreshnessState.OVERDUE -> getString(R.string.journal_status_overdue)
+            }
+            settingsScreen.journalFreshnessStatus.visibility = View.VISIBLE
+            val remindersAvailable = journal.reminderEligible && journal.detailedUsableThroughEpochMillis != null
+            settingsScreen.journalReminderSwitch.visibility = if (remindersAvailable) View.VISIBLE else View.GONE
+            settingsScreen.journalReminderSummary.visibility = if (remindersAvailable) View.VISIBLE else View.GONE
+            updateJournalReminderSwitch(journal.reminderEnabled)
+            updateHomeJournalCard()
+            return
+        }
         var metadata = timelineSourceStore.metadata()
         if (metadata?.fileSizeBytes == null) {
             timelineSourceStore.load()?.let(::timelineFileSize)?.let { size ->
@@ -1414,12 +2653,57 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateHomeJournalCard() {
+        if (!::home.isInitialized) return
+        val journal = activeJournal
+        if (!BuildConfig.IS_JOURNAL_LAB) {
+            home.journalFreshnessCard.visibility = View.GONE
+            home.journalSetupCard.visibility = View.GONE
+            return
+        }
+        if (journal == null) {
+            home.journalFreshnessCard.visibility = View.GONE
+            home.journalSetupCard.visibility =
+                if (journalOnboardingStore.isCompleted()) View.VISIBLE else View.GONE
+            return
+        }
+        home.journalSetupCard.visibility = View.GONE
+        val freshness = JournalFreshnessPolicy.evaluate(
+            journal.detailedUsableThroughEpochMillis,
+            System.currentTimeMillis(),
+        )
+        val ageDays = freshness.ageDays
+        if (
+            ageDays == null ||
+            freshness.state !in setOf(
+                JournalFreshnessState.UPDATE_DUE,
+                JournalFreshnessState.AT_RISK,
+                JournalFreshnessState.OVERDUE,
+            )
+        ) {
+            home.journalFreshnessCard.visibility = View.GONE
+            return
+        }
+        home.journalFreshnessCardDetail.text = getString(R.string.journal_freshness_inline, ageDays)
+        home.journalFreshnessCard.contentDescription = home.journalFreshnessCardDetail.text
+        home.journalFreshnessCard.visibility = View.VISIBLE
+    }
+
     private fun formatTimelineRange(start: LocalDate?, end: LocalDate?): String =
         if (start == null || end == null) {
             getString(R.string.timeline_range_unavailable)
         } else {
             getString(R.string.timeline_raw_points_available, formatExactDate(start), formatExactDate(end))
         }
+
+    private fun formatPointRange(points: List<GeoPoint>): String {
+        if (points.isEmpty()) return getString(R.string.timeline_range_unavailable)
+        val zone = ZoneId.systemDefault()
+        return formatTimelineRange(
+            points.minOf { it.instant }.atZone(zone).toLocalDate(),
+            points.maxOf { it.instant }.atZone(zone).toLocalDate(),
+        )
+    }
 
     private fun prepareTimeline(loaded: Timeline): PreparedTimeline {
         val filtered = LocationOutlierFilter.filter(loaded.points, locationFilterMode)
@@ -1439,8 +2723,9 @@ class MainActivity : AppCompatActivity() {
         initialJourney: Journey,
         ignoredCount: Int,
         startInRawMode: Boolean = false,
+        availableYears: List<Int> = loaded.years,
     ) {
-        val years = loaded.years
+        val years = availableYears.ifEmpty { loaded.years }
         val labels = years.map { NumberFormat.getIntegerInstance().apply { isGroupingUsed = false }.format(it) }
         editor.startYearDropdown.setAdapter(SelectionArrayAdapter(this, labels))
         editor.endYearDropdown.setAdapter(SelectionArrayAdapter(this, labels))
@@ -1472,6 +2757,35 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun selectRange() {
+        if (BuildConfig.IS_JOURNAL_LAB) {
+            val requestedDates = currentProjectDates()
+            if (requestedDates != null) {
+                val zone = ZoneId.systemDefault()
+                val requestedStart = requestedDates.first.atStartOfDay(zone).toInstant()
+                val requestedEnd = requestedDates.second.plusDays(1).atStartOfDay(zone).toInstant()
+                if (!journalRouteCovers(requestedStart, requestedEnd)) {
+                    loadJournalRouteForRange(requestedDates.first, requestedDates.second) { outcome ->
+                        if (outcome == JournalRouteLoadOutcome.READY) selectRange()
+                    }
+                    return
+                }
+                // Even a cached selection must supersede an incompatible request that is
+                // still preparing a range the user has already left.
+                loadJournalRouteForRange(requestedDates.first, requestedDates.second)
+            }
+            val route = activeJournalRoute ?: return
+            val period = currentPeriod() ?: return
+            val selected = if (exactDateRangeEnabled) {
+                route.journeyForDateRange(
+                    start = selectedStartDate ?: return,
+                    endInclusive = selectedEndDate ?: return,
+                )
+            } else {
+                route.journeyForRange(period)
+            }
+            applySelectedJourney(selected, ignoredCount = 0)
+            return
+        }
         if (rawSignalsEnabled) {
             val period = rawSignalsPeriod() ?: return
             val selected = if (exactDateRangeEnabled && selectedStartDate != null && selectedEndDate != null) {
@@ -1520,12 +2834,12 @@ class MainActivity : AppCompatActivity() {
             return getString(
                 R.string.raw_location_summary,
                 number.format(selected.points.size),
-                number.format(unit.fromKilometers(selected.totalDistanceKm)),
+                number.format(unit.fromKilometers(selected.knownDistanceKm)),
                 unit.symbol,
                 number.format(rawSignalProcessing?.rejectedCount ?: ignoredCount),
             )
         }
-        if (selected.totalDistanceKm <= 0) {
+        if (selected.knownDistanceKm <= 0) {
             return withOutlierSummary(
                 getString(R.string.selected_period_no_movement, number.format(selected.points.size)),
                 ignoredCount,
@@ -1564,7 +2878,7 @@ class MainActivity : AppCompatActivity() {
             getString(
                 R.string.selected_period_summary,
                 number.format(selected.points.size),
-                number.format(unit.fromKilometers(selected.totalDistanceKm)),
+                number.format(unit.fromKilometers(selected.knownDistanceKm)),
                 unit.symbol,
                 period,
             ),
@@ -1645,21 +2959,10 @@ class MainActivity : AppCompatActivity() {
                 rawProjectRangeConflict = activeProjectId != null &&
                     (requestedStart.isBefore(first) || requestedEnd.isAfter(last) || requestedEnd.isBefore(requestedStart))
                 if (!rawProjectRangeConflict) {
-                    val wasAdjusted = requestedStart.isBefore(first) || requestedEnd.isAfter(last)
                     selectedStartDate = requestedStart.coerceIn(first, last)
                     selectedEndDate = requestedEnd.coerceIn(selectedStartDate!!, last)
                     activeStartDate = selectedStartDate
                     activeEndDate = selectedEndDate
-                    if (wasAdjusted) {
-                        val zone = ZoneId.systemDefault()
-                        val startStr = first.atStartOfDay(zone).format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
-                        val endStr = last.atStartOfDay(zone).format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
-                        Snackbar.make(
-                            binding.root,
-                            getString(R.string.dates_adjusted_to_available_range, startStr, endStr),
-                            Snackbar.LENGTH_LONG,
-                        ).show()
-                    }
                 }
                 updateExactDateControls()
                 updateSuggestedProjectTitle()
@@ -1732,7 +3035,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateRawDataAvailability() {
         if (!::editor.isInitialized) return
-        val visible = currentCreateStep == CreateStep.PROJECT && activeProjectKind == TripKind.RAW_DATA
+        val visible = !BuildConfig.IS_JOURNAL_LAB &&
+            currentCreateStep == CreateStep.PROJECT && activeProjectKind == TripKind.RAW_DATA
         editor.rawDataAvailabilityGroup.visibility = if (visible) View.VISIBLE else View.GONE
         if (!visible) return
         editor.rawDataAvailabilityText.text = rawDataAvailability(renderRawSignalsTimeline?.points.orEmpty())
@@ -1833,12 +3137,12 @@ class MainActivity : AppCompatActivity() {
         journey ?: return
         if (animation?.isPaused == true) {
             animation?.resume()
-            editor.playButton.text = getString(R.string.pause_preview)
+            updatePreviewControl(playing = true)
             return
         }
         if (animation?.isRunning == true) {
             animation?.pause()
-            editor.playButton.text = getString(R.string.preview)
+            updatePreviewControl(playing = false)
             return
         }
         val start = if (editor.timelineSeek.progress >= 1000) {
@@ -1857,19 +3161,24 @@ class MainActivity : AppCompatActivity() {
             }
             addListener(object : android.animation.AnimatorListenerAdapter() {
                 override fun onAnimationStart(animation: android.animation.Animator) {
-                    editor.playButton.text = getString(R.string.pause_preview)
+                    updatePreviewControl(playing = true)
                 }
 
                 override fun onAnimationEnd(animation: android.animation.Animator) {
-                    editor.playButton.text = getString(R.string.preview)
+                    updatePreviewControl(playing = false)
                 }
 
                 override fun onAnimationCancel(animation: android.animation.Animator) {
-                    editor.playButton.text = getString(R.string.preview)
+                    updatePreviewControl(playing = false)
                 }
             })
             start()
         }
+    }
+
+    private fun updatePreviewControl(playing: Boolean) {
+        editor.playButton.setIconResource(if (playing) R.drawable.ic_pause_24 else R.drawable.ic_play_arrow_24)
+        editor.playButton.contentDescription = getString(if (playing) R.string.pause_preview else R.string.preview)
     }
 
     private fun showProgress(progress: Float) {
@@ -1882,12 +3191,7 @@ class MainActivity : AppCompatActivity() {
             R.string.aspect_portrait,
             R.string.aspect_landscape,
         ).map(::getString)
-        val cameraLabels = listOf(
-            R.string.camera_fixed,
-            R.string.camera_steady,
-            R.string.camera_dynamic,
-            R.string.camera_close_up,
-        ).map(::getString)
+        val cameraLabels = mapViewLabelResources.map(::getString)
         val compressionLabels = listOf(
             R.string.compression_off,
             R.string.compression_balanced,
@@ -1935,7 +3239,7 @@ class MainActivity : AppCompatActivity() {
             )
         }
         settingsScreen.cameraMovementDropdown.setOnItemClickListener { _, _, position, _ ->
-            updateAdvancedSettings(cameraSettings.copy(cameraMovement = CameraMovement.values()[position]))
+            updateAdvancedSettings(cameraSettings.withAutomaticMapView(CameraMovement.entries[position]))
         }
         settingsScreen.tripDetectionDropdown.setOnItemClickListener { _, _, position, _ ->
             updateAdvancedSettings(cameraSettings.copy(tripDetection = TripDetection.entries[position]))
@@ -2007,7 +3311,6 @@ class MainActivity : AppCompatActivity() {
         }
         makeDropdownOpenReliably(editor.presetDropdown)
         editor.presetSaveButton.setOnClickListener { saveCurrentPreset() }
-        editor.presetShareButton.setOnClickListener { selectedPreset()?.let(::sharePreset) }
         editor.presetMoreButton.setOnClickListener { selectedPreset()?.let(::showPresetActions) }
         renderPresetSelection()
     }
@@ -2068,15 +3371,6 @@ class MainActivity : AppCompatActivity() {
         renderPresetSelection()
     }
 
-    private fun applySharedPreset(values: PresetValues, savedId: String? = null) {
-        modifiedBuiltInId = null
-        activePresetId = savedId
-        presetOriginId = savedId
-        applyAdvancedSettings(values.applyTo(cameraSettings))
-        applyDuration(values.durationSeconds)
-        renderPresetSelection()
-    }
-
     private fun markPresetCustom(clearDefault: Boolean = false, preserveBuiltIn: Boolean = true) {
         if (preserveBuiltIn) {
             selectedPreset()?.takeIf(VideoPreset::builtIn)?.let { modifiedBuiltInId = it.id }
@@ -2102,7 +3396,6 @@ class MainActivity : AppCompatActivity() {
             false,
         )
         editor.presetSummaryText.text = draftStyleSummary(selected, modifiedBuiltIn ?: modifiedOrigin)
-        editor.presetShareButton.isEnabled = selected != null && !exportingVideo
         editor.presetMoreButton.isEnabled = selected != null && !selected.builtIn && !exportingVideo
         editor.presetSaveButton.isEnabled = selected == null && !exportingVideo
         editor.presetDropdown.isEnabled = !exportingVideo
@@ -2135,6 +3428,19 @@ class MainActivity : AppCompatActivity() {
         } else {
             saveNewPreset(values)
         }
+    }
+
+    private fun saveVideoDefaultsAsPreset() {
+        val values = PresetValues.from(settingsViewModel.state.value.camera, VideoDuration.DEFAULT_SECONDS)
+        presetRepository.exactMatch(values)?.let { existing ->
+            Snackbar.make(
+                binding.root,
+                getString(R.string.preset_already_exists, existing.name),
+                Snackbar.LENGTH_LONG,
+            ).show()
+            return
+        }
+        saveNewPreset(values)
     }
 
     private fun overwritePreset(origin: VideoPreset, values: PresetValues) {
@@ -2266,59 +3572,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun sharePreset(preset: VideoPreset) {
-        val link = PresetLink.create(preset.values)
-        val share = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, link)
-        }
-        runCatching { startActivity(Intent.createChooser(share, getString(R.string.share_preset))) }
-            .onFailure {
-                Snackbar.make(binding.root, R.string.web_page_unavailable, Snackbar.LENGTH_LONG).show()
-            }
-    }
-
-    private fun showIncomingPreset(uri: Uri) {
-        when (val decoded = PresetLink.parse(uri.toString())) {
-            is PresetDecodeResult.Success -> {
-                val message = presetValueSummary(decoded.values) + "\n\n" +
-                    getString(R.string.shared_preset_privacy)
-                MaterialAlertDialogBuilder(this)
-                    .setTitle(R.string.shared_preset)
-                    .setMessage(message)
-                    .setNegativeButton(R.string.cancel, null)
-                    .setNeutralButton(R.string.save_and_use_preset) { _, _ ->
-                        val existing = presetRepository.exactMatch(decoded.values)
-                        if (existing != null) {
-                            applyPreset(existing)
-                            Snackbar.make(
-                                binding.root,
-                                getString(R.string.preset_already_exists, existing.name),
-                                Snackbar.LENGTH_LONG,
-                            ).show()
-                        } else if (presetRepository.presets().count { !it.builtIn } >= PresetRepository.MAX_PRESETS) {
-                            Snackbar.make(binding.root, R.string.preset_limit_reached, Snackbar.LENGTH_LONG).show()
-                        } else {
-                            showPresetNameDialog { name ->
-                                val preset = presetRepository.add(name, decoded.values)
-                                applySharedPreset(decoded.values, preset.id)
-                                Snackbar.make(binding.root, R.string.preset_saved, Snackbar.LENGTH_SHORT).show()
-                            }
-                        }
-                    }
-                    .setPositiveButton(R.string.use_preset) { _, _ -> applySharedPreset(decoded.values) }
-                    .show()
-            }
-            PresetDecodeResult.Invalid, PresetDecodeResult.Unsupported -> {
-                MaterialAlertDialogBuilder(this)
-                    .setTitle(R.string.preset_link_unsupported_title)
-                    .setMessage(R.string.preset_link_unsupported_message)
-                    .setPositiveButton(R.string.done, null)
-                    .show()
-            }
-        }
-    }
-
     private fun presetValueSummary(values: PresetValues): String = listOf(
         R.string.duration to resources.getQuantityString(
             R.plurals.duration_seconds,
@@ -2330,28 +3583,7 @@ class MainActivity : AppCompatActivity() {
             R.string.aspect_portrait,
             R.string.aspect_landscape,
         )[values.aspectRatio.ordinal],
-        R.string.camera_movement to listOf(
-            R.string.camera_fixed,
-            R.string.camera_steady,
-            R.string.camera_dynamic,
-            R.string.camera_close_up,
-        )[values.cameraMovement.ordinal],
-        R.string.trip_detection to listOf(
-            R.string.trip_detection_conservative,
-            R.string.trip_detection_balanced,
-            R.string.trip_detection_sensitive,
-        )[values.tripDetection.ordinal],
-        R.string.episode_framing to listOf(
-            R.string.local_framing_off,
-            R.string.local_framing_balanced,
-            R.string.local_framing_close,
-        )[values.localFraming.ordinal],
-        R.string.long_trip_compression to listOf(
-            R.string.compression_off,
-            R.string.compression_balanced,
-            R.string.compression_strong,
-            R.string.compression_stronger,
-        )[values.longTripCompression.ordinal],
+        R.string.map_view to mapViewLabelResources[values.cameraMovement.ordinal],
     ).joinToString("\n") { (label, value) ->
         getString(R.string.preset_value_format, getString(label), if (value is Int) getString(value) else value)
     }
@@ -2384,12 +3616,34 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun configureLocationFiltering() {
-        locationFilterMode = settingsViewModel.state.value.locationFilter
-        settingsScreen.locationFilterSwitch.isChecked = locationFilterMode == LocationFilterMode.CONSERVATIVE
-        settingsScreen.locationFilterSwitch.setOnCheckedChangeListener { _, checked ->
-            locationFilterMode = if (checked) LocationFilterMode.CONSERVATIVE else LocationFilterMode.OFF
-            settingsViewModel.updateLocationFilter(locationFilterMode)
-            rebuildRenderTimeline(reselect = true)
+        locationFilterMode = LocationFilterMode.CONSERVATIVE
+    }
+
+    private fun configureTimelineDisplay() {
+        simplifyRouteDetail = settingsViewModel.state.value.simplifyRouteDetail
+        settingsScreen.simplifyRouteDetailSwitch.isChecked = simplifyRouteDetail
+        settingsScreen.simplifyRouteDetailSwitch.setOnCheckedChangeListener { _, checked ->
+            if (simplifyRouteDetail == checked) return@setOnCheckedChangeListener
+            simplifyRouteDetail = checked
+            settingsViewModel.updateSimplifyRouteDetail(checked)
+            if (!BuildConfig.IS_JOURNAL_LAB) return@setOnCheckedChangeListener
+            invalidateJournalRouteRequest()
+            activeJournalRoute = null
+            activeJournalRouteStart = null
+            activeJournalRouteEndExclusive = null
+            currentProjectDates()?.let { (start, end) ->
+                loadJournalRouteForRange(start, end) { outcome ->
+                    if (outcome == JournalRouteLoadOutcome.READY) selectRange()
+                }
+            }
+        }
+        val keepVisible = settingsViewModel.state.value.keepPastRoutesVisible
+        settingsScreen.keepPastRoutesVisibleSwitch.isChecked = keepVisible
+        applyAdvancedSettings(cameraSettings.copy(keepPastRoutesVisible = keepVisible))
+        settingsScreen.keepPastRoutesVisibleSwitch.setOnCheckedChangeListener { _, checked ->
+            settingsViewModel.updateKeepPastRoutesVisible(checked)
+            applyAdvancedSettings(cameraSettings.copy(keepPastRoutesVisible = checked))
+            editor.timelineView.invalidate()
         }
     }
 
@@ -2446,7 +3700,16 @@ class MainActivity : AppCompatActivity() {
         Resources.getSystem().configuration.locales[0] ?: Locale.getDefault(Locale.Category.FORMAT)
 
     private fun configureLanguageSelection() {
-        val labels = listOf(
+        val labels = languageLabels()
+        val dropdown = settingsScreen.languageDropdown
+        dropdown.setAdapter(SelectionArrayAdapter(this, labels))
+        makeDropdownOpenReliably(dropdown)
+        updateLanguageSelectionLabel()
+        dropdown.post(::updateLanguageSelectionLabel)
+        dropdown.setOnItemClickListener { _, _, position, _ -> applyLanguageSelection(position) }
+    }
+
+    private fun languageLabels(): List<String> = listOf(
             getString(R.string.language_system_default),
             getString(R.string.language_name_en),
             getString(R.string.language_name_ko),
@@ -2458,17 +3721,30 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.language_name_de),
             getString(R.string.language_name_pt_br),
         )
-        val dropdown = settingsScreen.languageDropdown
-        dropdown.setAdapter(SelectionArrayAdapter(this, labels))
-        makeDropdownOpenReliably(dropdown)
-        updateLanguageSelectionLabel()
-        dropdown.post(::updateLanguageSelectionLabel)
-        dropdown.setOnItemClickListener { _, _, position, _ ->
-            val locales = AppLanguage.localesForSelection(position)
-            if (AppCompatDelegate.getApplicationLocales() != locales) {
-                AppCompatDelegate.setApplicationLocales(locales)
-            }
+
+    private fun applyLanguageSelection(position: Int) {
+        val locales = AppLanguage.localesForSelection(position)
+        if (AppCompatDelegate.getApplicationLocales() != locales) {
+            AppCompatDelegate.setApplicationLocales(locales)
         }
+    }
+
+    private fun showOnboardingLanguagePicker() {
+        val labels = languageLabels().toTypedArray()
+        val selected = AppLanguage.selectionIndex(currentApplicationLanguageTags())
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.language)
+            .setSingleChoiceItems(labels, selected) { dialog, position ->
+                dialog.dismiss()
+                applyLanguageSelection(position)
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun updateOnboardingLanguageLabel() {
+        val selected = AppLanguage.selectionIndex(currentApplicationLanguageTags())
+        onboarding.onboardingLanguageButton.text = languageLabels()[selected]
     }
 
     private fun updateLanguageSelectionLabel() {
@@ -2492,7 +3768,14 @@ class MainActivity : AppCompatActivity() {
         }
         editor.timelineView.onCameraPreparationFailed = { error ->
             Log.e(TAG, "Timeline camera preparation failed", error)
-            editor.statusText.setText(R.string.import_failed_detail)
+            updateCameraPreparationUi()
+            editor.statusText.setText(R.string.preview_preparation_failed)
+            Snackbar.make(binding.root, R.string.preview_preparation_failed, Snackbar.LENGTH_INDEFINITE)
+                .setAction(R.string.retry) {
+                    editor.statusText.setText(R.string.preparing_preview)
+                    editor.timelineView.retryCameraPreparation()
+                }
+                .show()
         }
     }
 
@@ -2505,7 +3788,12 @@ class MainActivity : AppCompatActivity() {
         editor.timelineSeek.isEnabled = !exportingVideo && ready
         if (selected != null && !ready && !exportingVideo) {
             editor.statusText.setText(R.string.preparing_preview)
-        } else if (editor.statusText.text?.toString() == getString(R.string.preparing_preview)) {
+        } else if (
+            editor.statusText.text?.toString() in setOf(
+                getString(R.string.preparing_preview),
+                getString(R.string.preview_preparation_failed),
+            )
+        ) {
             editor.statusText.text = ""
         }
     }
@@ -2514,6 +3802,14 @@ class MainActivity : AppCompatActivity() {
         val source = timeline
         if (source == null) {
             renderTimeline = null
+            return
+        }
+        if (BuildConfig.IS_JOURNAL_LAB) {
+            // JournalRouteService already applies the active detailed filter and fuses semantic
+            // fallback. Journey cannot represent explicit GAP spans yet, so Lab 2 uses the
+            // service's documented flattened compatibility projection.
+            renderTimeline = source
+            if (reselect && selectedStartYear != null && selectedEndYear != null) selectRange()
             return
         }
         val result = LocationOutlierFilter.filter(source.points, locationFilterMode)
@@ -2547,12 +3843,7 @@ class MainActivity : AppCompatActivity() {
         )
         settingsScreen.cameraMovementDropdown.setText(
             getString(
-                listOf(
-                    R.string.camera_fixed,
-                    R.string.camera_steady,
-                    R.string.camera_dynamic,
-                    R.string.camera_close_up,
-                )[settings.cameraMovement.ordinal],
+                mapViewLabelResources[settings.cameraMovement.ordinal],
             ),
             false,
         )
@@ -2851,7 +4142,7 @@ class MainActivity : AppCompatActivity() {
             cameraSettings = cameraSettings,
             projectId = project?.id,
             presetName = selectedPreset()?.name,
-            dataSource = if (rawSignalsEnabled) VideoDataSource.RAW else VideoDataSource.SEMANTIC,
+            dataSource = currentVideoDataSource(),
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val request = pendingExport ?: return
@@ -2950,6 +4241,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showRunningExportTray() {
+        if (currentScreen == Screen.ONBOARDING) {
+            binding.exportStatusTray.visibility = View.GONE
+            return
+        }
         binding.exportStatusTray.visibility = View.VISIBLE
         binding.exportTrayProgress.visibility = View.VISIBLE
         binding.exportTrayCancelButton.visibility = View.VISIBLE
@@ -2960,6 +4255,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showCompletedExportTray() {
+        if (currentScreen == Screen.ONBOARDING) {
+            binding.exportStatusTray.visibility = View.GONE
+            return
+        }
         binding.exportStatusTray.visibility = View.VISIBLE
         binding.exportTrayProgress.visibility = View.GONE
         binding.exportTrayCancelButton.visibility = View.GONE
@@ -2975,6 +4274,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showFailedExportTray(message: String?) {
+        if (currentScreen == Screen.ONBOARDING) {
+            binding.exportStatusTray.visibility = View.GONE
+            return
+        }
         binding.exportStatusTray.visibility = View.VISIBLE
         binding.exportTrayProgress.visibility = View.GONE
         binding.exportTrayCancelButton.visibility = View.GONE
@@ -3112,7 +4415,8 @@ class MainActivity : AppCompatActivity() {
         settingsScreen.videoQualityDropdown.isEnabled = !exporting
         settingsScreen.frameRateDropdown.isEnabled = !exporting
         settingsScreen.resetAdvancedSettingsButton.isEnabled = !exporting
-        settingsScreen.locationFilterSwitch.isEnabled = !exporting
+        settingsScreen.simplifyRouteDetailSwitch.isEnabled = !exporting
+        settingsScreen.keepPastRoutesVisibleSwitch.isEnabled = !exporting
         renderPresetSelection()
         if (exporting) editor.videoReadyGroup.visibility = View.GONE
         if (!exporting) updateCameraPreparationUi()
@@ -3131,6 +4435,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun configureTripDiscovery() {
         editor.detectionRangeDropdown.setOnItemClickListener { _, _, position, _ ->
+            val previousRange = detectionStartDate to detectionEndDate
             if (position < detectionYears.size) {
                 val year = detectionYears[position]
                 selectedDetectionYear = year
@@ -3141,12 +4446,15 @@ class MainActivity : AppCompatActivity() {
                 selectedDetectionYear = null
                 editor.detectionCustomRangeButton.visibility = View.VISIBLE
             }
+            if (previousRange != (detectionStartDate to detectionEndDate)) invalidateTripSuggestionsForRange()
         }
         makeDropdownOpenReliably(editor.detectionRangeDropdown)
     }
 
     private fun refreshDetectionRanges() {
-        detectionYears = timeline?.years.orEmpty().sortedDescending()
+        detectionYears = semanticDateBounds()?.let { (start, end) ->
+            (start.year..end.year).toList().sortedDescending()
+        }.orEmpty()
         val labels = detectionYears.map(Int::toString) + getString(R.string.custom_range)
         editor.detectionRangeDropdown.setAdapter(SelectionArrayAdapter(this, labels))
         if (selectedDetectionYear == null && detectionStartDate != null && detectionEndDate != null) {
@@ -3172,7 +4480,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showTripDiscovery() {
-        if (timeline == null) {
+        if (semanticDateBounds() == null) {
             showNewVideo(loadRemembered = false)
             requestTimelineImport()
             return
@@ -3183,11 +4491,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun chooseDetectionRange() {
-        val bounds = semanticDateBounds()
-        if (bounds == null) {
-            Snackbar.make(binding.root, R.string.no_timeline, Snackbar.LENGTH_SHORT).show()
-            return
-        }
+        val bounds = semanticDateBounds() ?: return
         val start = detectionStartDate ?: bounds.first
         val end = detectionEndDate ?: bounds.second
         val initialStart = start.coerceIn(bounds.first, bounds.second)
@@ -3218,24 +4522,83 @@ class MainActivity : AppCompatActivity() {
                 requireNotNull(detectionStartDate),
                 requireNotNull(detectionEndDate),
             )
+            invalidateTripSuggestionsForRange()
         }
         picker.show(supportFragmentManager, "trip-detection-range")
     }
 
     private fun runTripDetection() {
-        val loaded = timeline ?: return
+        if (tripDetectionRunning) return
         val start = detectionStartDate ?: return
         val end = detectionEndDate ?: return
         tripDiscoveryRequested = true
-        editor.runTripDetectionButton.isEnabled = false
-        editor.runTripDetectionButton.setText(R.string.detecting_trips)
-        lifecycleScope.launch {
-            tripSuggestions = detectTrips(loaded, start, end)
-            suggestionsExpanded = false
-            editor.runTripDetectionButton.isEnabled = true
-            editor.runTripDetectionButton.setText(R.string.recommend_trips)
-            renderTrips()
+        val requestId = ++tripDetectionRequestId
+        setTripDetectionRunning(true)
+        loadJournalRouteForRange(start, end) { outcome ->
+            if (requestId != tripDetectionRequestId) return@loadJournalRouteForRange
+            if (outcome != JournalRouteLoadOutcome.READY) {
+                finishTripDetection(requestId)
+                return@loadJournalRouteForRange
+            }
+            val loaded = timeline
+            if (loaded == null) {
+                finishTripDetection(requestId)
+                return@loadJournalRouteForRange
+            }
+            tripDetectionJob = lifecycleScope.launch {
+                try {
+                    val detected = detectTrips(loaded, start, end)
+                    if (
+                        requestId == tripDetectionRequestId &&
+                        detectionStartDate == start &&
+                        detectionEndDate == end
+                    ) {
+                        tripSuggestions = detected
+                        suggestionsExpanded = false
+                        renderTrips()
+                    }
+                } catch (error: Throwable) {
+                    if (error is kotlinx.coroutines.CancellationException) throw error
+                    Log.e(TAG, "Trip detection failed", error)
+                    Snackbar.make(binding.root, R.string.journal_route_load_failed, Snackbar.LENGTH_LONG).show()
+                } finally {
+                    finishTripDetection(requestId)
+                }
+            }
         }
+    }
+
+    private fun setTripDetectionRunning(running: Boolean) {
+        tripDetectionRunning = running
+        editor.runTripDetectionButton.isEnabled = !running
+        editor.runTripDetectionButton.setText(
+            if (running) R.string.detecting_trips else R.string.recommend_trips,
+        )
+        editor.detectionRangeDropdown.isEnabled = !running
+        editor.detectionCustomRangeButton.isEnabled = !running
+        if (currentCreateStep == CreateStep.DISCOVERY) renderTripSuggestions()
+    }
+
+    private fun finishTripDetection(requestId: Long) {
+        if (requestId != tripDetectionRequestId) return
+        tripDetectionJob = null
+        setTripDetectionRunning(false)
+    }
+
+    private fun cancelTripDetection() {
+        if (!tripDetectionRunning) return
+        tripDetectionRequestId += 1
+        tripDetectionJob?.cancel()
+        tripDetectionJob = null
+        setTripDetectionRunning(false)
+    }
+
+    private fun invalidateTripSuggestionsForRange() {
+        if (tripDetectionRunning) cancelTripDetection() else tripDetectionRequestId += 1
+        tripDiscoveryRequested = false
+        tripSuggestions = emptyList()
+        suggestionsExpanded = false
+        if (currentCreateStep == CreateStep.DISCOVERY) renderTripSuggestions()
     }
 
     private suspend fun refreshRequestedTripSuggestions(loaded: Timeline): List<TripSuggestion> {
@@ -3291,6 +4654,7 @@ class MainActivity : AppCompatActivity() {
         currentCreateStep = CreateStep.PROJECT
         showNewVideo(loadRemembered = true)
         applyActiveProjectDates()
+        prepareActiveProjectRoute()
     }
 
     private fun chooseRecapKind() {
@@ -3323,12 +4687,13 @@ class MainActivity : AppCompatActivity() {
     private fun renderTripSuggestions() {
         val confirmedDates = tripsStore.list().map { it.startDate to it.endDate }.toSet()
         val suggestions = tripSuggestions.filterNot { it.startDate to it.endDate in confirmedDates }
-        editor.emptySuggestionsText.visibility = if (suggestions.isEmpty()) View.VISIBLE else View.GONE
+        editor.emptySuggestionsText.visibility = if (suggestions.isEmpty() && !tripDetectionRunning) View.VISIBLE else View.GONE
         editor.showAllSuggestionsButton.visibility = if (suggestions.size > COLLAPSED_CREATION_COUNT) View.VISIBLE else View.GONE
+        editor.showAllSuggestionsButton.isEnabled = !tripDetectionRunning
         editor.showAllSuggestionsButton.text = if (suggestionsExpanded) {
             getString(R.string.show_fewer_suggestions)
         } else {
-            getString(R.string.show_all_suggestions, suggestions.size)
+            getString(R.string.show_all_suggestions, suggestions.size - COLLAPSED_CREATION_COUNT)
         }
         editor.suggestionsList.removeAllViews()
         (if (suggestionsExpanded) suggestions else suggestions.take(COLLAPSED_CREATION_COUNT)).forEach { suggestion ->
@@ -3343,9 +4708,11 @@ class MainActivity : AppCompatActivity() {
             )
             showTripCoverage(card, coverageFor(suggestion.startDate, suggestion.endDate))
             card.tripPrimaryButton.setText(R.string.confirm_and_create)
+            card.tripPrimaryButton.isEnabled = !tripDetectionRunning
             card.tripPrimaryButton.setOnClickListener { confirmSuggestion(suggestion) }
             card.tripSecondaryButton.visibility = View.VISIBLE
             card.tripSecondaryButton.setText(R.string.dismiss_suggestion)
+            card.tripSecondaryButton.isEnabled = !tripDetectionRunning
             card.tripSecondaryButton.setOnClickListener {
                 tripsStore.dismissSuggestion(suggestion.id)
                 tripSuggestions = tripSuggestions.filterNot { it.id == suggestion.id }
@@ -3455,7 +4822,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun coverageFor(start: LocalDate, end: LocalDate): TripCoverage? =
-        (renderTimeline ?: timeline)?.let { TripCoverageCalculator.calculate(it, start, end) }
+        if (BuildConfig.IS_JOURNAL_LAB) {
+            val zone = ZoneId.systemDefault()
+            val rangeLoaded = journalRouteCovers(
+                start.atStartOfDay(zone).toInstant(),
+                end.plusDays(1).atStartOfDay(zone).toInstant(),
+            )
+            activeJournalRoute?.takeIf { rangeLoaded }?.let { route ->
+                TripCoverageCalculator.calculateConnected(route.connectedTimelines(), start, end)
+            }
+        } else {
+            (renderTimeline ?: timeline)?.let { TripCoverageCalculator.calculate(it, start, end) }
+        }
 
     private fun showTripCoverage(card: ItemTripBinding, coverage: TripCoverage?) {
         if (coverage == null) {
@@ -3533,6 +4911,7 @@ class MainActivity : AppCompatActivity() {
         currentCreateStep = CreateStep.PROJECT
         showNewVideo(loadRemembered = true)
         applyActiveProjectDates()
+        prepareActiveProjectRoute()
     }
 
     internal fun tripSuggestionTitle(suggestion: TripSuggestion): String = suggestion.destinationName
@@ -3557,14 +4936,23 @@ class MainActivity : AppCompatActivity() {
         editor.saveTripButton.isEnabled = true
         showNewVideo(loadRemembered = true)
         applyActiveProjectDates()
+        prepareActiveProjectRoute()
+    }
+
+    private fun prepareActiveProjectRoute() {
+        if (!BuildConfig.IS_JOURNAL_LAB) return
+        val start = activeStartDate ?: return
+        val end = activeEndDate ?: return
+        loadJournalRouteForRange(start, end) { outcome ->
+            if (outcome == JournalRouteLoadOutcome.READY) applyActiveProjectDates()
+        }
     }
 
     private fun applyActiveProjectDates() {
         val start = activeStartDate ?: return
         val end = activeEndDate ?: return
-        val years = timeline?.years ?: return
-        if (start.year !in years || end.year !in years) return
-        rawSignalsEnabled = activeProjectKind == TripKind.RAW_DATA
+        if (timeline == null) return
+        rawSignalsEnabled = !BuildConfig.IS_JOURNAL_LAB && activeProjectKind == TripKind.RAW_DATA
         if (!rawSignalsEnabled) rawProjectRangeConflict = false
         if (rawSignalsEnabled) rebuildRawSignalsTimeline()
         exactDateRangeEnabled = activeProjectKind in setOf(TripKind.TRIP, TripKind.CUSTOM_RECAP, TripKind.RAW_DATA)
@@ -3589,6 +4977,7 @@ class MainActivity : AppCompatActivity() {
         selectRange()
         updateProjectDateLabel()
         updateSuggestedProjectTitle()
+        updateWizardContinueAvailability()
     }
 
     private fun updateProjectDateLabel() {
@@ -3737,7 +5126,8 @@ class MainActivity : AppCompatActivity() {
         editor.exactDateSwitch.visibility = View.GONE
         editor.exactDateRangeButton.visibility = if (!periodBased) View.VISIBLE else View.GONE
         editor.rawSignalsSwitch.visibility = View.GONE
-        editor.rawSignalsDescription.visibility = if (activeProjectKind == TripKind.RAW_DATA) View.VISIBLE else View.GONE
+        editor.rawSignalsDescription.visibility =
+            if (!BuildConfig.IS_JOURNAL_LAB && activeProjectKind == TripKind.RAW_DATA) View.VISIBLE else View.GONE
         updateExactDateControls()
         if (periodBased) editor.exactDateRangeButton.visibility = View.GONE
         updateRawDataAvailability()
@@ -3746,10 +5136,27 @@ class MainActivity : AppCompatActivity() {
     internal fun semanticDateBounds(): Pair<LocalDate, LocalDate>? {
         if (rawOnlyImport) return null
         val points = timeline?.points.orEmpty()
-        if (points.isEmpty()) return null
         val zone = ZoneId.systemDefault()
-        return points.minOf { it.instant }.atZone(zone).toLocalDate() to
-            points.maxOf { it.instant }.atZone(zone).toLocalDate()
+        if (points.isNotEmpty()) {
+            val loadedStart = points.minOf { it.instant }
+            val loadedEnd = points.maxOf { it.instant }
+            val loadedBoundsCoverJournal = activeJournalRouteStart?.toEpochMilli() == Long.MIN_VALUE &&
+                activeJournalRouteEndExclusive?.toEpochMilli() == Long.MAX_VALUE
+            if (!BuildConfig.IS_JOURNAL_LAB || loadedBoundsCoverJournal) {
+                return loadedStart.atZone(zone).toLocalDate() to loadedEnd.atZone(zone).toLocalDate()
+            }
+        }
+        val status = activeJournalStatus ?: return null
+        val startMillis = listOfNotNull(
+            status.detailedStartEpochMillis,
+            status.journal.semanticStartEpochMillis,
+        ).minOrNull() ?: return null
+        val endMillis = listOfNotNull(
+            status.detailedEndEpochMillis,
+            status.journal.semanticEndEpochMillis,
+        ).maxOrNull() ?: return null
+        return Instant.ofEpochMilli(startMillis).atZone(zone).toLocalDate() to
+            Instant.ofEpochMilli(endMillis).atZone(zone).toLocalDate()
     }
 
     internal fun rawDateBounds(): Pair<LocalDate, LocalDate>? {
@@ -3761,7 +5168,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun activeDateBounds(): Pair<LocalDate, LocalDate> =
-        (if (activeProjectKind == TripKind.RAW_DATA) rawDateBounds() else semanticDateBounds())
+        (if (!BuildConfig.IS_JOURNAL_LAB && activeProjectKind == TripKind.RAW_DATA) rawDateBounds() else semanticDateBounds())
             ?: ((selectedStartDate ?: LocalDate.now()) to (selectedEndDate ?: LocalDate.now()))
 
     private fun saveActiveProject(asNew: Boolean): TripProject? {
@@ -4051,7 +5458,7 @@ class MainActivity : AppCompatActivity() {
                 localFraming = cameraSettings.localFraming,
                 longTripCompression = cameraSettings.longTripCompression,
                 resolution = cameraSettings.videoQuality.resolution,
-                dataSource = if (rawSignalsEnabled) VideoDataSource.RAW else VideoDataSource.SEMANTIC,
+                dataSource = currentVideoDataSource(),
                 exportShortEdge = cameraSettings.effectiveExportFormat.shortEdge,
                 exportFrameRate = cameraSettings.effectiveExportFormat.frameRate,
             ),
@@ -4062,8 +5469,22 @@ class MainActivity : AppCompatActivity() {
         listOf(R.string.aspect_square, R.string.aspect_portrait, R.string.aspect_landscape)[value.ordinal],
     )
 
-    private fun cameraMovementLabel(value: CameraMovement): String = getString(
-        listOf(R.string.camera_fixed, R.string.camera_steady, R.string.camera_dynamic, R.string.camera_close_up)[value.ordinal],
+    private fun cameraMovementLabel(value: CameraMovement): String =
+        getString(mapViewLabelResources[value.ordinal])
+
+    private fun CameraSettings.withAutomaticMapView(movement: CameraMovement): CameraSettings = copy(
+        cameraMovement = movement,
+        tripDetection = when (movement) {
+            CameraMovement.FIXED, CameraMovement.STEADY -> TripDetection.BALANCED
+            CameraMovement.DYNAMIC -> TripDetection.BALANCED
+            CameraMovement.CLOSE_UP -> TripDetection.SENSITIVE
+        },
+        localFraming = when (movement) {
+            CameraMovement.FIXED, CameraMovement.STEADY -> LocalFraming.OFF
+            CameraMovement.DYNAMIC -> LocalFraming.BALANCED
+            CameraMovement.CLOSE_UP -> LocalFraming.CLOSE
+        },
+        longTripCompression = LongTripCompression.BALANCED,
     )
 
     private fun tripDetectionLabel(value: TripDetection): String = getString(
@@ -4076,6 +5497,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun compressionLabel(value: LongTripCompression): String = getString(
         listOf(R.string.compression_off, R.string.compression_balanced, R.string.compression_strong, R.string.compression_stronger)[value.ordinal],
+    )
+
+    private val mapViewLabelResources = listOf(
+        R.string.map_view_fixed,
+        R.string.map_view_wide,
+        R.string.map_view_balanced,
+        R.string.map_view_close_up,
     )
 
     private fun resolutionLabel(value: VideoResolution): String = getString(
@@ -4220,6 +5648,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestTimelineImport(uri: Uri? = null) {
+        if (BuildConfig.IS_JOURNAL_LAB && currentScreen != Screen.SETTINGS) {
+            showJournalSetup(returnToCreate = true)
+        }
         val continueImport = {
             if (uri != null) {
                 importTimeline(uri)
@@ -4235,6 +5666,7 @@ class MainActivity : AppCompatActivity() {
             .setTitle(R.string.map_privacy_title)
             .setMessage(R.string.map_privacy_message)
             .setNegativeButton(android.R.string.cancel, null)
+            .setNeutralButton(R.string.privacy_policy) { _, _ -> openPrivacyPolicy() }
             .setPositiveButton(R.string.continue_action) { _, _ ->
                 preferences.edit { putBoolean(MAP_PRIVACY_ACCEPTED, true) }
                 continueImport()
@@ -4451,6 +5883,67 @@ class MainActivity : AppCompatActivity() {
 
     internal fun pendingExportDurationSeconds(): Int? = pendingExport?.durationSeconds
 
+    internal fun currentJourneyPoints(): List<GeoPoint> = journey?.points.orEmpty()
+
+    internal fun currentJourneyBreakIndices(): List<Int> = journey?.breakBeforePointIndices.orEmpty()
+
+    internal fun journalMetadataReady(): Boolean = activeJournalStatus != null
+
+    internal fun journalRouteReady(): Boolean = activeJournalRoute != null
+
+    internal fun currentJourneyDistanceKm(): Double = journey?.knownDistanceKm ?: 0.0
+
+    internal fun prepareJournalRangeForTest(start: LocalDate, end: LocalDate) {
+        loadJournalRouteForRange(start, end)
+    }
+
+    internal fun journalRouteCoversForTest(start: LocalDate, end: LocalDate): Boolean {
+        val zone = ZoneId.systemDefault()
+        return journalRouteCovers(
+            start.atStartOfDay(zone).toInstant(),
+            end.plusDays(1).atStartOfDay(zone).toInstant(),
+        )
+    }
+
+    internal fun confirmSuggestionForTest(suggestion: TripSuggestion) {
+        confirmSuggestion(suggestion)
+    }
+
+    internal fun startManualProjectForTest(kind: TripKind) {
+        startManualProject(kind)
+    }
+
+    internal fun openProjectForTest(project: TripProject) {
+        openProject(project)
+    }
+
+    internal fun selectProjectDatesForTest(start: LocalDate, end: LocalDate) {
+        activeStartDate = start
+        activeEndDate = end
+        exactDateRangeEnabled = true
+        selectedStartDate = start
+        selectedEndDate = end
+        selectRange()
+        updateWizardContinueAvailability()
+    }
+
+    internal fun continueCreateForTest() {
+        moveCreateStep(1)
+    }
+
+    internal fun installTripSuggestionsForTest(suggestions: List<TripSuggestion>) {
+        tripSuggestions = suggestions
+        renderTripSuggestions()
+    }
+
+    internal fun tripSuggestionCountForTest(): Int = tripSuggestions.size
+
+    internal fun currentVideoDataSource(): VideoDataSource = when {
+        BuildConfig.IS_JOURNAL_LAB -> VideoDataSource.JOURNAL
+        rawSignalsEnabled -> VideoDataSource.RAW
+        else -> VideoDataSource.SEMANTIC
+    }
+
     internal fun installedVersionLabel(): String =
         getString(R.string.app_version, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE)
 
@@ -4466,8 +5959,16 @@ class MainActivity : AppCompatActivity() {
         dropdown.setOnClickListener { dropdown.showDropDown() }
     }
 
-    private enum class Screen { VIDEOS, NEW_VIDEO, SETTINGS, PLAYER }
+    private enum class Screen { VIDEOS, NEW_VIDEO, SETTINGS, PLAYER, ONBOARDING }
     private enum class CreateStep { TYPE, TRIP_SOURCE, DISCOVERY, PROJECT, STYLE, PREVIEW }
+    private enum class JournalRouteLoadOutcome { READY, FAILED, CANCELLED }
+
+    private data class JournalRouteRequest(
+        val id: Long,
+        val start: Instant,
+        val endExclusive: Instant,
+        val callbacks: MutableList<(JournalRouteLoadOutcome) -> Unit>,
+    )
 
     private data class PreparedTimeline(
         val source: Timeline,
@@ -4514,6 +6015,11 @@ class MainActivity : AppCompatActivity() {
         private const val STATE_VIDEO_TITLE_EDITED = "video_title_edited_v2"
         private const val STATE_DRAFT_DURATION = "draft_duration_v2"
         private const val STATE_SETTINGS_RETURN_TO_CREATE = "settings_return_to_create_v3"
+        private const val STATE_JOURNAL_SETUP_MODE = "journal_setup_mode_v1"
+        private const val STATE_JOURNAL_SETUP_RETURN_TO_CREATE = "journal_setup_return_to_create_v1"
+        private const val STATE_PENDING_JOURNAL_REMINDER_ID = "pending_journal_reminder_id_v1"
+        private const val STATE_JOURNAL_ONBOARDING_PAGE = "journal_onboarding_page_v1"
+        private const val STATE_JOURNAL_ONBOARDING_REPLAY = "journal_onboarding_replay_v1"
         private const val STATE_CUSTOMIZATION_CAMERA = "customization_camera_v3"
         private const val STATE_CUSTOMIZATION_PACING = "customization_pacing_v3"
         private const val STATE_CUSTOMIZATION_QUALITY = "customization_quality_v3"
@@ -4523,6 +6029,7 @@ class MainActivity : AppCompatActivity() {
         private const val STATE_CUSTOMIZATION_MODIFIED_ID = "customization_modified_id_v3"
         internal const val ACTION_WATCH_VIDEO = "dev.mahlernim.timelinevisualizer.action.WATCH_VIDEO"
         internal const val ACTION_SHARE_VIDEO = "dev.mahlernim.timelinevisualizer.action.SHARE_VIDEO"
+        const val ACTION_OPEN_JOURNAL = "dev.mahlernim.timelinevisualizer.action.OPEN_JOURNAL"
         private const val PROJECT_URL = "https://github.com/mahlernim/google-timeline-visualizer"
         private const val PRIVACY_URL =
             "https://github.com/mahlernim/google-timeline-visualizer/blob/main/docs/privacy.md"
@@ -4537,6 +6044,8 @@ class MainActivity : AppCompatActivity() {
         private const val RESTORE_GUIDE_URL_JA =
             "https://github.com/mahlernim/google-timeline-visualizer/blob/main/docs/restore-google-maps-timeline.ja.md"
         private const val TAG = "TimelineVisualizer"
+        private const val JOURNAL_PROGRESS_MAX = 1_000
+        private const val JOURNAL_ROUTE_PROGRESS_DELAY_MILLIS = 2_000L
         private const val DAY_MILLIS = 24L * 60L * 60L * 1_000L
 
         internal fun playbackIntent(context: Context, uri: Uri): Intent =

@@ -310,6 +310,35 @@ class TimelineParserTest {
         )
     }
 
+    @Test
+    fun rawNormalizationKeepsFirstCoordinateOrderAndBestAccuracyWithinAMillisecond() {
+        val parsed = parser.parseWithRawSignals(
+            ByteArrayInputStream(
+                """
+                {"rawSignals": [
+                  {"position": {"LatLng": "37.1,127.1", "timestamp": "2026-02-01T00:00:00.000100Z", "accuracyMeters": 20}},
+                  {"position": {"LatLng": "37.2,127.2", "timestamp": "2026-02-01T00:00:00.000200Z", "accuracyMeters": 30}},
+                  {"position": {"LatLng": "37.1,127.1", "timestamp": "2026-02-01T00:00:00.000300Z", "accuracyMeters": 10}},
+                  {"position": {"LatLng": "37.1,127.1", "timestamp": "2026-02-01T00:00:01Z", "accuracyMeters": 5}}
+                ]}
+                """.trimIndent().toByteArray(),
+            ),
+        )
+
+        assertEquals(
+            listOf(37.1, 37.2, 37.1),
+            parsed.rawSignals.map { it.point.latitude },
+        )
+        assertEquals(
+            listOf(10.0, 30.0, 5.0),
+            parsed.rawSignals.map { it.accuracyMeters },
+        )
+        assertEquals(
+            Instant.parse("2026-02-01T00:00:00.000300Z"),
+            parsed.rawSignals.first().point.instant,
+        )
+    }
+
     @Test(expected = TimelineParseException::class)
     fun rejectsUnsupportedJson() {
         parse("""{"locations": []}""")

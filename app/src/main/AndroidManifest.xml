@@ -12,7 +12,7 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="${appLabel}"
         android:localeConfig="@xml/locales_config"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
@@ -32,27 +32,15 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:mimeType="application/json" />
             </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="ahn-lab.org"
-                    android:path="/google-timeline-visualizer/" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="timelinevisualizer" android:host="preset" />
-            </intent-filter>
         </activity>
         <service
             android:name=".export.VideoExportService"
             android:exported="false"
             android:foregroundServiceType="dataSync|mediaProcessing"
             android:stopWithTask="false" />
+        <receiver
+            android:name=".journal.reminder.JournalReminderReceiver"
+            android:exported="false" />
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
             android:enabled="false"

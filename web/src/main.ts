@@ -18,7 +18,6 @@ import {
 } from './i18n';
 import { applyStrings, syncDocumentLang } from './i18n-dom';
 import { filterLocationOutliers } from './outlier';
-import { parsePresetToken, presetIntentUrl } from './preset-link';
 import { formatRawDateRange } from './raw-range';
 import { drawFrame, prepareJourney, previewCanvasSize } from './renderer';
 import { selectTimelineModePoints } from './selection';
@@ -112,15 +111,6 @@ const downloadLink = element<HTMLAnchorElement>('download-link');
 const rawOnlyDialog = element<HTMLDialogElement>('raw-only-dialog');
 const openGoogleMapsButton = element<HTMLButtonElement>('open-google-maps');
 const continueRawDataButton = element<HTMLButtonElement>('continue-raw-data');
-const presetLinkCard = element<HTMLElement>('preset-link-card');
-const openPresetLink = element<HTMLAnchorElement>('open-preset-link');
-
-const presetToken = parsePresetToken(window.location.search);
-if (presetToken !== null) {
-  presetLinkCard.classList.remove('hidden');
-  openPresetLink.href = presetIntentUrl(presetToken, window.location.href);
-}
-
 if (import.meta.env.VITE_PREVIEW === 'true') {
   element<HTMLElement>('preview-banner').classList.remove('hidden');
 }

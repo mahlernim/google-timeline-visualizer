@@ -21,6 +21,7 @@ import { AppError } from './errors';
 import { overlayCard, overlayScale } from './overlay';
 
 const TILE_TEMPLATE = 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png';
+const CARTO_BASEMAP_API_KEY = import.meta.env.VITE_CARTO_BASEMAP_API_KEY?.trim() ?? '';
 
 /**
  * The overlay text of one frame, already resolved by the caller.
@@ -40,13 +41,11 @@ export interface OverlayText {
 
 /**
  * The map attribution is a licensing artifact burned into the MP4, which outlives the app
- * locale, so it is developer-owned and deliberately not translatable. Android does translate
- * its map_attribution and that has already regressed: values-pt-rBR dropped '© CARTO'
- * altogether, and five other locales collapsed the double space. A viewer of an exported video
- * has no way to correct it afterwards, so the only translatable token here, 'contributors', is
- * not worth the risk. renderer.test.ts pins both names against exactly that class of loss.
+ * locale, so it is developer-owned and deliberately not translatable. Android now follows the
+ * same rule after one locale dropped '© CARTO' altogether. A viewer of an exported video has no
+ * way to correct it afterwards, so renderer.test.ts pins both names against that class of loss.
  */
-export const MAP_ATTRIBUTION = '© OpenStreetMap contributors  © CARTO';
+export const MAP_ATTRIBUTION = '© OpenStreetMap contributors © CARTO';
 
 // Route and marker sizes are authored on the same 720 design grid as the overlay,
 // so a single scale keeps every stroke proportional at any output size.
@@ -71,6 +70,19 @@ interface TileCoordinate {
   y: number;
 }
 
+export function cartoTileUrl(
+  tile: TileCoordinate,
+  apiKey: string = CARTO_BASEMAP_API_KEY,
+): string {
+  const path = TILE_TEMPLATE.replace('{z}', String(tile.zoom))
+    .replace('{x}', String(tile.x))
+    .replace('{y}', String(tile.y));
+  if (!apiKey) return path;
+  const url = new URL(path);
+  url.searchParams.set('key', apiKey);
+  return url.toString();
+}
+
 function tileKey(tile: TileCoordinate): string {
   return `${tile.zoom}/${tile.x}/${tile.y}`;
 }
@@ -91,7 +103,7 @@ function loadImage(url: string, signal?: AbortSignal): Promise<HTMLImageElement>
     };
     image.onerror = () => {
       cleanup();
-      reject(new Error(`Could not load map tile ${url}`));
+      reject(new Error('Could not load a map tile.'));
     };
     if (signal?.aborted) {
       abort();
@@ -166,9 +178,7 @@ async function loadRequiredTiles(
       if (signal?.aborted) throw new DOMException('Video creation was cancelled.', 'AbortError');
       const coordinate = coordinates[nextIndex];
       nextIndex += 1;
-      const url = TILE_TEMPLATE.replace('{z}', String(coordinate.zoom))
-        .replace('{x}', String(coordinate.x))
-        .replace('{y}', String(coordinate.y));
+      const url = cartoTileUrl(coordinate);
       try {
         tiles.set(tileKey(coordinate), await loadImage(url, signal));
       } catch (error) {

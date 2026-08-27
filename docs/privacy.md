@@ -2,7 +2,7 @@
 
 [한국어](privacy.ko.md) · [日本語](privacy.ja.md)
 
-**Effective date:** August 21, 2026
+**Effective date:** August 27, 2026
 
 **Developer:** MahlerLab
 
@@ -20,12 +20,13 @@ permission.
 ## Data storage
 
 The selected JSON file is not copied into app storage. After a successful import,
-the app may keep a compact preprocessed copy of normalized Timeline points in its
-private temporary cache so the remembered document can open faster. The cache is
-versioned and tied to the selected document reference and available file metadata.
-Selecting the document again refreshes it. Android may remove it at any time, and
-the app safely reads the original JSON again when the cache is absent, changed,
-incompatible, or damaged.
+the app saves useful journey history from that file in an app-private Travel Journal
+database. The Journal can accumulate detailed locations and semantic Timeline
+history across later imports so older route detail remains available on the device.
+The app also records import provenance needed to reject duplicate or mismatched
+files. This database is more sensitive than one Timeline export because it can
+consolidate movement history over time. It is excluded from Android cloud backup
+and device transfer.
 
 While a video is being created, the selected route points and export settings are
 temporarily stored in private app storage so creation can continue when the app is
@@ -35,8 +36,9 @@ excluded from Android backup and device transfer. Generated videos are written
 through Android's media storage interfaces. On Android 10 and later, completed MP4
 files are saved through MediaStore under
 `Movies/Timeline Visualizer`. Android 8 and 9 use the system Save As picker.
-Cached basemap image tiles may remain in the app's temporary cache
-and can be removed by clearing the app cache or uninstalling the app.
+Cached basemap image tiles remain in the app's temporary cache for no more than
+30 days. The app deletes older tiles automatically. They can also be removed by
+clearing the app cache or uninstalling the app.
 
 After a successful Timeline import, the app also stores the selected document URI
 so it can request access to the same document on the next launch. Replacing the
@@ -45,6 +47,13 @@ selection replaces this URI.
 On Android 13 and newer, the app may request notification permission so it can
 show video progress and a completion alert. Declining this permission does not
 stop video creation and does not grant access to any personal data.
+
+Travel Journal reminders are optional. If enabled, an inexact local background
+check reads only the Journal's freshness metadata and may show one or two quiet
+notifications when a newer Timeline export could preserve recent route detail.
+The check does not reopen the source document, use device location, or contact a
+developer server. Reminder preferences are stored locally and excluded from
+Android backup and device transfer.
 
 For the Videos library, the app stores a local index containing the selected
 video URI, title, filename, duration, creation date, and Timeline period when
@@ -71,22 +80,23 @@ videos to CARTO or to the developer.
 The application has no analytics, advertising, crash-reporting, login, or
 developer-operated server.
 
-Video presets are stored only in private app storage. A shared preset link uses a
-short validated code containing only aspect ratio, zoom style, long-trip detection,
-local trip framing, and long-trip pacing. It does not contain the local preset name,
-Timeline data, coordinates, dates, filenames, owner names, video titles, resolution,
-or account identifiers. Opening a link shows all five values before the recipient
-chooses whether to use or save it.
+Video presets are stored only in private app storage. They are never shared off the
+device and are excluded from Android backup and device transfer.
 
-All network requests made by the app use encrypted HTTPS connections. CARTO may
-process network and tile-request information under its own privacy notice.
+All network requests made by the app use encrypted HTTPS connections. Under
+CARTO's current Basemap Terms, CARTO processes request information on the
+developer's behalf, truncates IP addresses when requests arrive, and stores the
+resulting request logs in the United States for 30 days. CARTO may also process
+this information under its privacy notice and data-processing agreement.
 
 ## Deleting data
 
 Use Android's **Settings → Apps → Timeline Visualizer → Storage & cache → Clear
-cache** to remove preprocessed Timeline points, cached map tiles, and other temporary
-files. Clear storage or uninstall the app to remove the Videos index and thumbnails
-along with all other application data. Removing
+cache** to remove cached map tiles and other temporary files. Clearing the cache
+does not delete the Travel Journal. Use **Clear storage** or uninstall the app to
+remove the Travel Journal, reminder metadata, Videos index, thumbnails, and all
+other private application data. The Travel Journal is not recoverable unless the
+source Timeline history is still available for import. Removing
 an entry from Videos does not delete the MP4. Use the separately confirmed
 **Delete video** action, or delete the file from its saved location, to remove the
 actual video.
@@ -97,4 +107,5 @@ Map tiles are provided by CARTO and use OpenStreetMap data. Their terms and
 privacy practices apply to tile requests:
 
 - [CARTO privacy notice](https://carto.com/privacy/)
+- [CARTO Basemap Terms](https://carto.com/legal/basemap-terms/)
 - [OpenStreetMap privacy policy](https://osmfoundation.org/wiki/Privacy_Policy)

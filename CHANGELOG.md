@@ -2,7 +2,104 @@
 
 ## Unreleased
 
+- Add a close-up camera mode to the web app.
+- Add distance-unit selection to the web app.
+- Document the web app's distance units and close-up mode.
+
+## 3.0.2
+
+- Remove clusters of consecutive impossible raw-signal readings, which previously survived because the spike filter only ever inspected a single point between its neighbours.
+- Harmonize the Korean word for video on 동영상 across the app, the web app, and the store listing; the app had been using two words for the same English string on adjacent buttons.
+- Improve desktop CLI error handling and remove dead code, contributed by @smshozab.
+- Rewrite the Play Store listing in all nine locales to describe the Travel Journal release. Store metadata only; not part of the app.
+- Set Android version code 44 and version name 3.0.2.
+
+## 3.0.1
+
+- Complete the localization of the 3.0.0 Travel Journal release across de, es, fr, ja, ko, pt-BR, zh-CN, and zh-TW: translate sixteen onboarding and disclosure strings that shipped marked untranslatable, retranslate twelve strings the Travel Journal rename left describing the old behavior, and correct machine-translation defects including "Library" as a book library, "Dismiss" as firing an employee, and counts whose placeholder bound to the wrong noun.
+- Follow the zh-TW terminology review from #108 for strings added after it, and align the Korean bottom navigation on 라이브러리 · 만들기 · 설정.
+- Remove preset sharing. The share button, the `https://ahn-lab.org/google-timeline-visualizer/?preset=` and `timelinevisualizer://preset` link handlers, the preset token codec, and the web app's link-forwarding card are gone from the Android app, the web app, and the `--preset` option of the desktop CLI. Saved presets, including built-in ones, are unaffected. Preset links shared from an earlier version no longer open.
+- Set Android version code 43 and version name 3.0.1.
+
+## 3.0.0
+
+- Make Travel Journal the main Android experience, building a private on-device Journal from an imported `Timeline.json` that grows with later exports.
+- Use detailed route observations where available and fill remaining periods with the best available Timeline history.
+- Find trips, save projects, create monthly or yearly recaps, and reuse preserved route detail.
+- Add optional quiet reminders that help preserve recent detail before it disappears from later exports.
+- Show the current phase during long route preparation after a short wait.
+- Give meaningful local arrivals more room in close-up camera timing while keeping the total adjustment bounded.
+- Exclude the Travel Journal from Android backup and device transfer.
+- Set Android version code 42 and version name 3.0.0.
+
+## 2.4.2
+
+- Restore map backgrounds after CARTO began requiring authenticated basemap requests.
+- Use the project's CARTO key for official Android and web releases.
+- Remove cached map tiles automatically after 30 days on Android.
+- Set Android version code 41 and version name 2.4.2.
+
+## 2.4.1
+
+- Show clearer Raw Data availability text for a project covering a single date or a single location.
+- Show the effective Raw date range in the web app.
+- Add explicit frame rate controls to the web app.
+- Set Android version code 40 and version name 2.4.1.
+
+## 2.4.0
+
+- Add the Trips and Recaps workflow with local trip detection, saved projects, and Library thumbnails.
+- Create trip and recap videos from detected trips, a custom recap period, or the available raw location range.
+- Allow recap titles to include the owner name.
+- Use the available recent range with a fixed 100 m accuracy filter for Raw videos.
+- Add advanced video settings and presets to the creation flow.
+- Set Android version code 39 and version name 2.4.0.
+
+## 2.3.5
+
+- Add flexible export quality settings with 480p, 720p, 1080p, 1440p, 2160p, and custom resolutions.
+- Add 24, 30, 60, and custom frame rate choices.
+- Check the device's H.264 encoders, prefer hardware encoding, and retry compatible alternatives.
+- Block unsupported export formats before encoding starts.
+- Set Android version code 38 and version name 2.3.5.
+
+## 2.3.4
+
+- Fix generated videos running 1.5 seconds longer than the selected duration.
+- Include the 1.5-second route overview ending within the selected total, so a 90-second selection creates a 90-second video.
+- Set Android version code 37 and version name 2.3.4.
+
+## 2.3.3
+
+- Fix the Watch screen going black after switching to another app and back while a video was playing.
 - Embed the resolved video title in exported MP4 metadata for media players and galleries.
+- Upgrade the desktop Python CLI to match the Android feature set.
+- Set Android version code 36 and version name 2.3.3.
+
+## 2.3.2
+
+- Deliver completed video notifications on a normal alert channel while progress updates stay quiet.
+- Make Watch and Share in the system notification open the app's playback and sharing flows.
+- Dismiss the completion notification after either action.
+- Set Android version code 35 and version name 2.3.2.
+
+## 2.3.1
+
+- Save the five camera and aspect-ratio choices from Video defaults as a reusable preset.
+- Show saved presets in Create video, applying them to the current draft until Set as default is chosen.
+- Rename, delete, and share saved presets from the same flow.
+- Share compact HTTPS preset links that carry only those five settings, never Timeline data, locations, dates, owner names, titles, filenames, or resolution.
+- Show every value from an opened preset link for confirmation before anything is applied or saved.
+- Preserve preset drafts across recreation.
+- Set Android version code 34 and version name 2.3.1.
+
+## 2.3.0
+
+- Group aspect ratio, zoom style, long-trip detection, local trip framing, and long-trip pacing into one coherent set of video defaults.
+- Separate export resolution, regional preferences, and Timeline cleanup into their own settings sections.
+- Apply the Camera Lab results, including earlier destination framing and grouped long transfers.
+- Remove the experimental zoom slowdown.
+- Set Android version code 33 and version name 2.3.0.
 
 ## 2.2.13
 

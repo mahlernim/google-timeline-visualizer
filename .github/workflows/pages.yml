@@ -36,7 +36,12 @@ jobs:
           cache-dependency-path: web/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
-      - run: pnpm build
+      - name: Build web app with CARTO project key
+        env:
+          VITE_CARTO_BASEMAP_API_KEY: ${{ secrets.CARTO_BASEMAP_API_KEY }}
+        run: |
+          test -n "$VITE_CARTO_BASEMAP_API_KEY"
+          pnpm build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

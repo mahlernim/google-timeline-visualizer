@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" width="960" height="640" role="img" aria-label="A Timeline JSON document flowing into a complete journal with a finished route">
+<g>
+<path d="M96,214 a6,6 0 0 1 6,-6 H260 L286,234 V448 a6,6 0 0 1 -6,6 H102 a6,6 0 0 1 -6,-6 Z" fill="#F7EBE4" stroke="#1E1220" stroke-width="6"></path>
+<path d="M260,208 L286,234 H260 Z" fill="#A98A9C" stroke="#1E1220" stroke-width="6" stroke-linejoin="round"></path>
+<rect x="116" y="256" width="75" height="5" rx="2.5" fill="#A98A9C" opacity="0.6"></rect>
+<rect x="116" y="276" width="117" height="5" rx="2.5" fill="#D01A63" opacity="1"></rect>
+<rect x="116" y="296" width="93" height="5" rx="2.5" fill="#A98A9C" opacity="0.6"></rect>
+<rect x="116" y="316" width="54" height="5" rx="2.5" fill="#A98A9C" opacity="0.6"></rect>
+<rect x="116" y="424" width="66" height="5" rx="2.5" fill="#A98A9C" opacity="0.6"></rect>
+</g><path d="M298,332 C356,332 372,300 424,300" fill="none" stroke="#D01A63" stroke-width="7" stroke-linecap="round" stroke-dasharray="3 13"></path>
+<circle cx="302" cy="332" r="5" fill="#D01A63"></circle><circle cx="348" cy="330" r="5" fill="#D01A63"></circle><circle cx="392" cy="306" r="5" fill="#D01A63"></circle><g>
+<rect x="406" y="474" width="458" height="10" rx="3" fill="#A98A9C"></rect>
+<rect x="400" y="178" width="470" height="300" rx="6" fill="#F7EBE4" stroke="#1E1220" stroke-width="6"></rect>
+<path d="M635,186 V470" stroke="#1E1220" stroke-width="4" stroke-linecap="round"></path>
+</g><rect x="436" y="222" width="168" height="4" rx="2" fill="#A98A9C" opacity="0.55"></rect>
+<rect x="436" y="242" width="168" height="4" rx="2" fill="#A98A9C" opacity="0.55"></rect>
+<rect x="436" y="262" width="168" height="4" rx="2" fill="#A98A9C" opacity="0.55"></rect>
+<rect x="436" y="282" width="168" height="4" rx="2" fill="#A98A9C" opacity="0.55"></rect>
+<path d="M452,414 C492,360 524,382 556,336 C592,286 636,314 672,272 C706,232 758,254 806,228" fill="none" stroke="#D01A63" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path>
+<circle cx="452" cy="414" r="7" fill="#1E1220"></circle>
+<path d="M556,328 L545,309 A13,13 0 1 1 567,309 Z" fill="#D01A63"></path>
+<circle cx="556" cy="307" r="4.5" fill="#F7EBE4"></circle><path d="M672,264 L661,245 A13,13 0 1 1 683,245 Z" fill="#D01A63"></path>
+<circle cx="672" cy="243" r="4.5" fill="#F7EBE4"></circle><path d="M806,220 L795,201 A13,13 0 1 1 817,201 Z" fill="#D01A63"></path>
+<circle cx="806" cy="199" r="4.5" fill="#F7EBE4"></circle>
+<circle cx="500" cy="382" r="5" fill="#A98A9C"></circle><circle cx="614" cy="296" r="5" fill="#A98A9C"></circle><circle cx="736" cy="248" r="5" fill="#A98A9C"></circle>
+<rect x="436" y="436" width="200" height="5" rx="2.5" fill="#A98A9C" opacity="0.5"></rect>
+<rect x="436" y="452" width="132" height="5" rx="2.5" fill="#A98A9C" opacity="0.35"></rect>
+</svg>

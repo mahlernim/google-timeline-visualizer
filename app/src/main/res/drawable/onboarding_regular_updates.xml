@@ -1,0 +1,237 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="960dp"
+    android:height="640dp"
+    android:viewportWidth="960"
+    android:viewportHeight="640">
+  <path
+      android:pathData="M112,196L308,196A8,8 0,0 1,316 204L316,384A8,8 0,0 1,308 392L112,392A8,8 0,0 1,104 384L104,204A8,8 0,0 1,112 196z"
+      android:strokeWidth="6"
+      android:fillColor="@color/onboarding_paper"
+      android:strokeColor="@color/onboarding_ink"/>
+  <path
+      android:fillColor="#00000000"
+      android:pathData="M104,246H316"
+      android:strokeWidth="6"
+      android:strokeColor="@color/onboarding_ink"/>
+  <path
+      android:pathData="M151,176L151,176A5,5 0,0 1,156 181L156,201A5,5 0,0 1,151 206L151,206A5,5 0,0 1,146 201L146,181A5,5 0,0 1,151 176z"
+      android:fillColor="@color/onboarding_ink"/>
+  <path
+      android:pathData="M269,176L269,176A5,5 0,0 1,274 181L274,201A5,5 0,0 1,269 206L269,206A5,5 0,0 1,264 201L264,181A5,5 0,0 1,269 176z"
+      android:fillColor="@color/onboarding_ink"/>
+  <path
+      android:pathData="M132,268m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M170,268m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M208,268m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M246,268m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M284,268m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M132,298m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M170,298m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M208,298m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M246,298m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M284,298m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M132,328m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M170,328m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M208,328m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M246,328m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M284,328m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M132,358m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M170,358m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M208,358m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M246,358m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M284,358m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:fillColor="#00000000"
+      android:pathData="M336,294H384"
+      android:strokeWidth="5"
+      android:strokeColor="@color/onboarding_ink"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M382,285L398,294L382,303Z"
+      android:fillColor="@color/onboarding_ink"/>
+  <path
+      android:pathData="M410,188a6,6 0,0 1,6 -6H554L580,208V402a6,6 0,0 1,-6 6H416a6,6 0,0 1,-6 -6Z"
+      android:strokeWidth="6"
+      android:fillColor="@color/onboarding_paper"
+      android:strokeColor="@color/onboarding_ink"/>
+  <path
+      android:pathData="M554,182L580,208H554Z"
+      android:strokeLineJoin="round"
+      android:strokeWidth="6"
+      android:fillColor="@color/onboarding_muted"
+      android:strokeColor="@color/onboarding_ink"/>
+  <path
+      android:pathData="M432.5,230L492.5,230A2.5,2.5 0,0 1,495 232.5L495,232.5A2.5,2.5 0,0 1,492.5 235L432.5,235A2.5,2.5 0,0 1,430 232.5L430,232.5A2.5,2.5 0,0 1,432.5 230z"
+      android:strokeAlpha="0.6"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.6"/>
+  <path
+      android:pathData="M432.5,250L528.9,250A2.5,2.5 0,0 1,531.4 252.5L531.4,252.5A2.5,2.5 0,0 1,528.9 255L432.5,255A2.5,2.5 0,0 1,430 252.5L430,252.5A2.5,2.5 0,0 1,432.5 250z"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M432.5,270L508.1,270A2.5,2.5 0,0 1,510.6 272.5L510.6,272.5A2.5,2.5 0,0 1,508.1 275L432.5,275A2.5,2.5 0,0 1,430 272.5L430,272.5A2.5,2.5 0,0 1,432.5 270z"
+      android:strokeAlpha="0.6"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.6"/>
+  <path
+      android:pathData="M432.5,290L474.3,290A2.5,2.5 0,0 1,476.8 292.5L476.8,292.5A2.5,2.5 0,0 1,474.3 295L432.5,295A2.5,2.5 0,0 1,430 292.5L430,292.5A2.5,2.5 0,0 1,432.5 290z"
+      android:strokeAlpha="0.6"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.6"/>
+  <path
+      android:pathData="M432.5,378L484.7,378A2.5,2.5 0,0 1,487.2 380.5L487.2,380.5A2.5,2.5 0,0 1,484.7 383L432.5,383A2.5,2.5 0,0 1,430 380.5L430,380.5A2.5,2.5 0,0 1,432.5 378z"
+      android:strokeAlpha="0.6"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.6"/>
+  <path
+      android:pathData="M410,182m-14,0a14,14 0,1 1,28 0a14,14 0,1 1,-28 0"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:fillColor="#00000000"
+      android:pathData="M600,294H646"
+      android:strokeWidth="5"
+      android:strokeColor="@color/onboarding_ink"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M644,285L660,294L644,303Z"
+      android:fillColor="@color/onboarding_ink"/>
+  <path
+      android:pathData="M669,404L891,404A3,3 0,0 1,894 407L894,411A3,3 0,0 1,891 414L669,414A3,3 0,0 1,666 411L666,407A3,3 0,0 1,669 404z"
+      android:fillColor="@color/onboarding_muted"/>
+  <path
+      android:pathData="M666,244L894,244A6,6 0,0 1,900 250L900,402A6,6 0,0 1,894 408L666,408A6,6 0,0 1,660 402L660,250A6,6 0,0 1,666 244z"
+      android:strokeWidth="6"
+      android:fillColor="@color/onboarding_paper"
+      android:strokeColor="@color/onboarding_ink"/>
+  <path
+      android:fillColor="#00000000"
+      android:pathData="M780,252V400"
+      android:strokeWidth="4"
+      android:strokeColor="@color/onboarding_ink"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M688,278L758,278A2,2 0,0 1,760 280L760,280A2,2 0,0 1,758 282L688,282A2,2 0,0 1,686 280L686,280A2,2 0,0 1,688 278z"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M688,294L758,294A2,2 0,0 1,760 296L760,296A2,2 0,0 1,758 298L688,298A2,2 0,0 1,686 296L686,296A2,2 0,0 1,688 294z"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M688,310L758,310A2,2 0,0 1,760 312L760,312A2,2 0,0 1,758 314L688,314A2,2 0,0 1,686 312L686,312A2,2 0,0 1,688 310z"
+      android:strokeAlpha="0.55"
+      android:fillColor="@color/onboarding_muted"
+      android:fillAlpha="0.55"/>
+  <path
+      android:pathData="M700,368C734,336 758,352 786,320"
+      android:strokeWidth="7"
+      android:fillColor="#00000000"
+      android:strokeColor="@color/onboarding_muted"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M786,320C812,290 848,296 882,268"
+      android:strokeWidth="7"
+      android:fillColor="#00000000"
+      android:strokeColor="@color/onboarding_route"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M700,368m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0"
+      android:fillColor="@color/onboarding_muted"/>
+  <path
+      android:pathData="M786,312L775,293A13,13 0,1 1,797 293Z"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M786,291m-4.5,0a4.5,4.5 0,1 1,9 0a4.5,4.5 0,1 1,-9 0"
+      android:fillColor="@color/onboarding_paper"/>
+  <path
+      android:pathData="M882,260L871,241A13,13 0,1 1,893 241Z"
+      android:fillColor="@color/onboarding_route"/>
+  <path
+      android:pathData="M882,239m-4.5,0a4.5,4.5 0,1 1,9 0a4.5,4.5 0,1 1,-9 0"
+      android:fillColor="@color/onboarding_paper"/>
+  <path
+      android:pathData="M892,238C906,224 908,212 904,200"
+      android:strokeWidth="5"
+      android:fillColor="#00000000"
+      android:strokeColor="@color/onboarding_route"
+      android:strokeLineCap="round"/>
+</vector>

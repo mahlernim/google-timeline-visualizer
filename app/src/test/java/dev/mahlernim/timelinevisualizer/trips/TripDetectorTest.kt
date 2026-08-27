@@ -137,6 +137,27 @@ class TripDetectorTest {
         assertTrue(suggestions[0].startDate.isBefore(suggestions[1].startDate))
     }
 
+    @Test
+    fun detectionIsPointBasedAndDoesNotDependOnAdjacentRouteConnections() {
+        val points = listOf(
+            point("2026-01-01", 37.56, 126.97),
+            point("2026-01-02", 37.57, 126.98),
+            point("2026-01-03", 35.68, 139.76),
+            point("2026-01-04", 35.69, 139.75),
+            point("2026-01-05", 35.67, 139.77),
+            point("2026-01-06", 37.56, 126.97),
+            point("2026-01-07", 37.57, 126.98),
+        )
+
+        val chronological = TripDetector.detect(Timeline(points), ZoneOffset.UTC).single()
+        val adjacencyChanged = TripDetector.detect(Timeline(points.reversed()), ZoneOffset.UTC).single()
+
+        assertEquals(chronological.startDate, adjacencyChanged.startDate)
+        assertEquals(chronological.endDate, adjacencyChanged.endDate)
+        assertEquals(chronological.confidence, adjacencyChanged.confidence)
+        assertEquals(chronological.distanceFromHomeKm, adjacencyChanged.distanceFromHomeKm, 0.001)
+    }
+
     private fun point(date: String, latitude: Double, longitude: Double) = GeoPoint(
         Instant.parse("${date}T12:00:00Z"),
         latitude,

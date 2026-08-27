@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="JournalAutomaticSourceMessage">
+        <item name="android:layout_marginBottom">10dp</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">4dp</item>
+        <item name="android:text">@string/journal_automatic_source_summary</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:visibility">visible</item>
+    </style>
+
+    <style name="JournalRawDataChoice">
+        <item name="android:visibility">gone</item>
+    </style>
+</resources>

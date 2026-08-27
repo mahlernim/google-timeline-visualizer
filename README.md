@@ -81,10 +81,12 @@ restore it directly.
 
 ## Create and share a video
 
-1. Open **Create video**, select **Choose file**, and choose your Timeline file.
-2. Choose a month range or use **Exact dates** for a trip lasting only a few days.
-   The latest full year is selected by default, and ranges may cross year boundaries.
-3. Confirm the name and title template, then choose a preset or a custom journey
+1. Open **Create video** and set up your Travel Journal by choosing `Timeline.json`.
+   The app saves useful journey history locally and adds new detail when you import
+   a newer export later.
+2. Choose a saved trip, find a trip in your Journal, create a monthly or yearly
+   recap, or enter exact dates. Ranges may cross year boundaries.
+3. Confirm the title, then choose a preset or a custom journey
    duration from 10 through 300 seconds. The template is saved for next time and
    supports `{year}` and `{name}`. Durations over 60 seconds show a rendering-time
    and storage reminder.
@@ -97,10 +99,11 @@ restore it directly.
 6. When the video is saved, watch or share it, use **Save as** to copy it elsewhere,
    optionally save or share the 1080 × 1080 Journey overview, or create another video.
 
-After a Timeline is loaded successfully, the app remembers its document reference
-and reopens it when New video opens and the storage provider retains access. It does
-not copy the Timeline data. If the file was moved or permission was lost, the app
-returns to the normal loading flow.
+The selected JSON file is not copied. Useful journey history is stored in the
+app-private Travel Journal so later exports can add new detailed route sections.
+Import an updated Timeline regularly if you want to preserve recent detail. The
+Journal remains only on this device and is excluded from Android backup and device
+transfer. Clearing app storage or uninstalling the app removes it.
 
 Older travel fades behind the moving marker so long, detailed Timelines remain
 clear and efficient to render. After the selected journey duration, the video adds
@@ -166,7 +169,8 @@ without changing or removing any Timeline points.
 
 No Google sign-in, location permission, account permission, analytics, or broad
 storage permission is used. The app reads only the JSON and video files you choose,
-and video rendering stays on the device.
+and video rendering stays on the device. The Travel Journal stores useful imported
+journey history in private app storage and is never uploaded.
 
 Google Sign-In could provide a profile name, but Google does not expose the
 phone's Timeline history through Sign-In. Requiring it would add account access
@@ -193,8 +197,12 @@ python visualizer.py --input Timeline.json --year 2025 --camera-movement steady 
 ## Build and test
 
 Android development requires JDK 17, Android SDK Platform 36, and Build Tools 36.0.0.
+Set `CARTO_BASEMAP_API_KEY` when building a copy that requests CARTO basemap tiles.
+Official Android and web releases inject the same project key from GitHub Actions.
+Local Python runs read the key from this environment variable as well.
 
 ```bash
+export CARTO_BASEMAP_API_KEY="your-project-key"
 ./gradlew test lint assembleGithubDebug assemblePlayDebug
 python -m pip install -r requirements-dev.txt
 python -m pytest

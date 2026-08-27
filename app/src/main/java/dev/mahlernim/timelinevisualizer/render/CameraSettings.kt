@@ -14,7 +14,7 @@ enum class CameraMovement(
     FIXED(0.10, 25.0, 350.0, 2.6, 0.00060, 0.0, 0.0, false, true),
     STEADY(1.00, 650.0, 650.0, 2.8, 0.00060, 0.14, 0.035, false, false),
     DYNAMIC(0.10, 100.0, 350.0, 2.2, 0.00045, 0.24, 0.06, true, false),
-    CLOSE_UP(0.035, 15.0, 120.0, 1.7, 0.00030, 0.30, 0.075, true, false),
+    CLOSE_UP(0.035, 6.0, 120.0, 1.7, 0.00030, 0.30, 0.075, true, false),
 }
 
 enum class LongTripCompression(val exponent: Double) {
@@ -174,6 +174,7 @@ data class CameraSettings(
     val exportFormat: ExportFormatSettings? = null,
     val tripDetection: TripDetection = TripDetection.BALANCED,
     val localFraming: LocalFraming = LocalFraming.BALANCED,
+    val keepPastRoutesVisible: Boolean = false,
 ) {
     val episodeFramingEnabled: Boolean get() = localFraming.enabled
 

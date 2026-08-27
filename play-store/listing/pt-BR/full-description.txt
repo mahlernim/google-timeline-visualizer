@@ -1,34 +1,41 @@
-Dê vida a um ano de viagens.
+Anos de viagens, guardados no seu telefone e ganhando vida.
 
-Timeline Visualizer transforma uma exportação Google Maps Timeline em um vídeo de mapa animado em seu telefone Android. Escolha datas exatas ou um intervalo de meses, visualize a rota e crie um MP4 pronto para assistir ou compartilhar.
+O Timeline Visualizer transforma uma exportação do Google Maps Timeline em um diário de viagem particular no seu telefone e cria vídeos de mapa animados a partir dele. Importe o Timeline.json uma vez, volte com exportações mais recentes, e o diário mantém o melhor detalhe de rota disponível para cada período.
+
+Crie seu diário de viagem
+• Importe o Timeline.json para criar um diário que fica neste aparelho
+• Volte com exportações mais recentes para preservar detalhes que uma posterior perderia
+• Os vídeos usam suas rotas mais detalhadas e preenchem as lacunas com o histórico da Timeline
+• Lembretes discretos opcionais quando vale a pena importar uma exportação nova
 
 Crie sua história
-• Escolha um arquivo Timeline exportado de Android ou iPhone
-• Selecione datas exatas ou um intervalo de meses inclusivo em vários anos
-• Personalize um título reutilizável, como “2026 Mina's Timeline”
-• Visualize a animação antes de criar o vídeo com qualidade total
-• Escolha movimento de câmera Fixo, Estável ou Dinâmico
-• Equilibre viagens longas com compressão de cronometragem opcional para viagens longas
-• Exportar em 480p, 720p ou 1080p
-• Escolha uma duração predefinida ou personalizada de 10 a 300 segundos
-• Ignore de forma conservadora pontos GPS atípicos isolados ou desative o filtro
-• Termine com um zoom suave e uma visão geral completa da rota
-• Continue criando em segundo plano com notificações de progresso e conclusão
-• Reabrir o arquivo Timeline usado mais recentemente quando Android retém o acesso
-• Salve vídeos automaticamente no Movies/Timeline Visualizer no Android 10 e posterior
+• Encontre viagens automaticamente ou informe as datas manualmente
+• Crie recapitulações mensais, anuais ou de um período personalizado
+• Desenhe uma rota mais detalhada a partir de amostras de localização brutas, quando houver
+• Salve um título reutilizável como “Timeline de Mina 2026”
+• Veja a animação antes de criar o vídeo em qualidade total
+• Escolha a visualização do mapa: Escala fixa, Ampla, Equilibrada ou Aproximada
+• Equilibre viagens longas com o ritmo de viagens longas e o enquadramento da viagem local
+• Exporte de 480p a 2160p em quadrado, retrato ou paisagem, com resolução e taxa de quadros próprias
+• Escolha de 10 a 300 segundos e salve suas predefinições com um padrão
+• Ignore de forma conservadora valores atípicos isolados de GPS, ou desligue o filtro
+• Termine com um afastamento suave e uma visão geral da rota completa
+• Continue criando em segundo plano, com notificações
+• Salve os vídeos automaticamente em Movies/Timeline Visualizer no Android 10 e posteriores
 • Salve ou compartilhe a visão geral final da rota em 1080 × 1080
 
 Precisa restaurar viagens mais antigas primeiro?
 Abra o guia de restauração localizado no aplicativo. Ele explica como importar um backup Timeline criptografado existente em Google Maps e, em seguida, exportar um novo arquivo JSON para Timeline Visualizer. O aplicativo nunca acessa sua conta Google ou backup criptografado.
 
-Mantenha seus vídeos juntos
-Os vídeos concluídos aparecem em Meus vídeos com miniatura, título, data, duração e período selecionado. Adicione arquivos MP4 mais antigos, reproduza-os dentro do aplicativo, compartilhe-os ou exclua toda a biblioteca com confirmação.
+Sua Biblioteca
+Viagens salvas, recapitulações e cada vídeo criado aparecem na Biblioteca com miniatura, título, data, duração e período. Adicione arquivos MP4 mais antigos, reproduza-os dentro do aplicativo, compartilhe-os ou exclua toda a biblioteca com confirmação.
 
 Navegação simples
-Mova-se entre Meus vídeos, Criar vídeo e Configurações na barra de navegação inferior. O movimento da câmera, a compactação de longa viagem e a qualidade do vídeo são armazenados como padrões para a próxima visualização e exportação.
+Mova-se entre Biblioteca, Criar e Configurações na barra de navegação inferior. A visualização do mapa, o ritmo e a qualidade do vídeo são armazenados como padrões para o próximo vídeo.
 
 Projetado para privacidade
-Seu arquivo Timeline nunca é carregado. A jornada, os títulos e os vídeos gerados são processados ​​no seu dispositivo. Nenhum login, análise, publicidade ou permissão de localização do Google é usado.
+Seu arquivo Timeline e seu diário de viagem nunca são enviados, e o diário fica fora do backup e da transferência do Android. As rotas, os títulos e os vídeos gerados são processados no seu aparelho. Nenhum login, análise, publicidade ou permissão de localização do Google é usado.
+
 
 Para desenhar o mapa, o aplicativo solicita blocos de mapa do CARTO. Essas solicitações incluem coordenadas de blocos de áreas do mapa e informações normais de rede, que podem revelar locais em seu Timeline a CARTO. O aplicativo explica isso antes do primeiro Timeline ser carregado e permite cancelar.
 

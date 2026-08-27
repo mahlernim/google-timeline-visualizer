@@ -37,29 +37,47 @@ object TripCoverageCalculator {
         startDate: LocalDate,
         endDate: LocalDate,
         zone: ZoneId = ZoneId.systemDefault(),
+    ): TripCoverage = calculateConnected(
+        timelines = listOfNotNull(timeline),
+        startDate = startDate,
+        endDate = endDate,
+        zone = zone,
+    )
+
+    /** Calculates coverage without joining independently connected route components. */
+    fun calculateConnected(
+        timelines: List<Timeline>,
+        startDate: LocalDate,
+        endDate: LocalDate,
+        zone: ZoneId = ZoneId.systemDefault(),
     ): TripCoverage {
-        val points = timeline?.points.orEmpty().filter { point ->
-            val date = point.instant.atZone(zone).toLocalDate()
-            !date.isBefore(startDate) && !date.isAfter(endDate)
+        val components = timelines.map { timeline ->
+            timeline.points.filter { point ->
+                val date = point.instant.atZone(zone).toLocalDate()
+                !date.isBefore(startDate) && !date.isAfter(endDate)
+            }
         }
-        if (points.size < 2) return TripCoverage(0.0, points.size, 0, 0)
+        val usablePointCount = components.sumOf(List<GeoPoint>::size)
+        if (usablePointCount < 2) return TripCoverage(0.0, usablePointCount, 0, 0)
 
         val movementByDay = mutableMapOf<LocalDate, Double>()
         var totalMovement = 0.0
         var segmentCount = 0
-        points.zipWithNext().forEach { (from, to) ->
-            val fromDate = from.instant.atZone(zone).toLocalDate()
-            val toDate = to.instant.atZone(zone).toLocalDate()
-            if (fromDate != toDate) return@forEach
-            val distance = distanceKm(from, to)
-            if (distance < MIN_MOVEMENT_KM || distance > MAX_LOCAL_SEGMENT_KM) return@forEach
-            totalMovement += distance
-            segmentCount += 1
-            movementByDay[toDate] = movementByDay.getOrDefault(toDate, 0.0) + distance
+        components.forEach { points ->
+            points.zipWithNext().forEach { (from, to) ->
+                val fromDate = from.instant.atZone(zone).toLocalDate()
+                val toDate = to.instant.atZone(zone).toLocalDate()
+                if (fromDate != toDate) return@forEach
+                val distance = distanceKm(from, to)
+                if (distance < MIN_MOVEMENT_KM || distance > MAX_LOCAL_SEGMENT_KM) return@forEach
+                totalMovement += distance
+                segmentCount += 1
+                movementByDay[toDate] = movementByDay.getOrDefault(toDate, 0.0) + distance
+            }
         }
         return TripCoverage(
             recordedMovementKm = totalMovement,
-            usablePointCount = points.size,
+            usablePointCount = usablePointCount,
             activeDayCount = movementByDay.values.count { it >= MIN_ACTIVE_DAY_KM },
             movementSegmentCount = segmentCount,
         )

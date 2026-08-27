@@ -19,6 +19,37 @@ import java.time.YearMonth
 @Config(sdk = [35])
 class JourneyTest {
     @Test
+    fun sectionsPreserveRouteBreaksWithoutAddingMissingDistance() {
+        val firstSection = listOf(
+            GeoPoint(Instant.parse("2025-01-01T00:00:00Z"), 0.0, 0.0),
+            GeoPoint(Instant.parse("2025-01-01T01:00:00Z"), 0.0, 0.1),
+        )
+        val secondSection = listOf(
+            GeoPoint(Instant.parse("2025-01-02T00:00:00Z"), 40.0, 120.0),
+            GeoPoint(Instant.parse("2025-01-02T01:00:00Z"), 40.0, 120.1),
+        )
+
+        val journey = Journey.fromSections(listOf(firstSection, emptyList(), secondSection), TimelinePeriod.sameYear(2025))
+        val separatelyMeasuredDistance = Journey.from(firstSection, 2025).totalDistanceKm +
+            Journey.from(secondSection, 2025).totalDistanceKm
+
+        assertEquals(listOf(2), journey.breakBeforePointIndices)
+        assertTrue(journey.isConnectedToPrevious(1))
+        assertEquals(false, journey.isConnectedToPrevious(2))
+        assertTrue(journey.isConnectedToPrevious(3))
+        assertEquals(separatelyMeasuredDistance, journey.totalDistanceKm, 0.001)
+        assertEquals(secondSection.first(), journey.positionAtDistance(journey.cumulativeDistanceKm[2]).point)
+    }
+
+    @Test
+    fun ordinaryJourneyRemainsFullyConnected() {
+        val journey = Journey.from(listOf(seoul, bohol), 2025)
+
+        assertEquals(emptyList<Int>(), journey.breakBeforePointIndices)
+        assertTrue(journey.isConnectedToPrevious(1))
+    }
+
+    @Test
     fun exactDateRangeIncludesOnlyPointsOnSelectedDates() {
         val timeline = Timeline(
             listOf(
