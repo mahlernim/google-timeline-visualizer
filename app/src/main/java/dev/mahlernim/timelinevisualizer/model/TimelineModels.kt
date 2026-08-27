@@ -248,12 +248,29 @@ data class JourneyLeg(
     val lengthKm: Double get() = endKm - startKm
 }
 
+/**
+ * A semantic activity projected onto the detailed journey distance axis.
+ *
+ * The activity endpoints provide global trip context while the points between [startKm] and
+ * [endKm] remain the authoritative local geometry followed by the marker and route trail.
+ */
+data class JourneySemanticEpisode(
+    val startKm: Double,
+    val endKm: Double,
+    val origin: GeoPoint,
+    val destination: GeoPoint,
+) {
+    val lengthKm: Double get() = endKm - startKm
+    val displacementKm: Double get() = haversineKm(origin, destination)
+}
+
 data class Journey(
     val period: TimelinePeriod,
     val points: List<GeoPoint>,
     val cumulativeDistanceKm: DoubleArray,
     val breakBeforePointIndices: List<Int> = emptyList(),
     val inferredTransferBeforePointIndices: List<Int> = emptyList(),
+    val semanticEpisodes: List<JourneySemanticEpisode> = emptyList(),
 ) {
     private val breakIndexSet = breakBeforePointIndices.toSet()
     private val inferredTransferIndexSet = inferredTransferBeforePointIndices.toSet()
@@ -288,6 +305,10 @@ data class Journey(
         require(inferredTransferBeforePointIndices == inferredTransferBeforePointIndices.distinct().sorted())
         require(inferredTransferBeforePointIndices.all { it in 1..points.lastIndex })
         require(inferredTransferBeforePointIndices.none(breakIndexSet::contains))
+        require(semanticEpisodes.all { episode ->
+            episode.startKm >= 0.0 && episode.endKm > episode.startKm && episode.endKm <= totalDistanceKm
+        })
+        require(semanticEpisodes.zipWithNext().all { (before, after) -> before.startKm <= after.startKm })
     }
 
     fun isConnectedToPrevious(pointIndex: Int): Boolean =
@@ -402,22 +423,40 @@ data class Journey(
     private fun buildLegs(thresholdKm: Double): List<JourneyLeg> {
         if (points.size < 2 || totalDistanceKm <= 0.0) return emptyList()
         val cutoff = thresholdKm.coerceAtLeast(1.0)
-        var transferCount = 0
+        val transferRanges = ArrayList<TransferRange>()
         for (index in 1..points.lastIndex) {
-            if (cumulativeDistanceKm[index] - cumulativeDistanceKm[index - 1] >= cutoff) transferCount += 1
+            val startKm = cumulativeDistanceKm[index - 1]
+            val endKm = cumulativeDistanceKm[index]
+            if (index in inferredTransferIndexSet || endKm - startKm >= cutoff) {
+                transferRanges += TransferRange(startKm, endKm)
+            }
         }
-        val capacity = (transferCount.toLong() * 2L + 1L).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-        val result = ArrayList<JourneyLeg>(capacity)
+        semanticEpisodes.forEach { episode ->
+            if (episode.displacementKm >= cutoff) {
+                transferRanges += TransferRange(episode.startKm, episode.endKm)
+            }
+        }
+        if (transferRanges.isEmpty()) return listOf(JourneyLeg(0.0, totalDistanceKm, false))
+
+        transferRanges.sortWith(compareBy<TransferRange> { it.startKm }.thenBy { it.endKm })
+        val merged = ArrayList<TransferRange>(transferRanges.size)
+        transferRanges.forEach { next ->
+            val previous = merged.lastOrNull()
+            if (previous == null || next.startKm > previous.endKm) {
+                merged += next
+            } else if (next.endKm > previous.endKm) {
+                merged[merged.lastIndex] = previous.copy(endKm = next.endKm)
+            }
+        }
+
+        val result = ArrayList<JourneyLeg>(merged.size * 2 + 1)
         var localStartKm = 0.0
-        for (index in 1..points.lastIndex) {
-            val transferStartKm = cumulativeDistanceKm[index - 1]
-            val transferEndKm = cumulativeDistanceKm[index]
-            if (index !in inferredTransferIndexSet && transferEndKm - transferStartKm < cutoff) continue
-            if (transferStartKm > localStartKm) result.add(JourneyLeg(localStartKm, transferStartKm, false))
-            result.add(JourneyLeg(transferStartKm, transferEndKm, true))
-            localStartKm = transferEndKm
+        merged.forEach { transfer ->
+            if (transfer.startKm > localStartKm) result += JourneyLeg(localStartKm, transfer.startKm, false)
+            result += JourneyLeg(transfer.startKm, transfer.endKm, true)
+            localStartKm = transfer.endKm
         }
-        if (totalDistanceKm > localStartKm) result.add(JourneyLeg(localStartKm, totalDistanceKm, false))
+        if (totalDistanceKm > localStartKm) result += JourneyLeg(localStartKm, totalDistanceKm, false)
         return result
     }
 
@@ -450,11 +489,13 @@ data class Journey(
             period: TimelinePeriod,
             breakBeforePointIndices: List<Int>,
             inferredTransferBeforePointIndices: List<Int> = emptyList(),
+            semanticEpisodes: List<JourneySemanticEpisode> = emptyList(),
         ): Journey = fromFlattened(
             points,
             period,
             breakBeforePointIndices,
             inferredTransferBeforePointIndices,
+            semanticEpisodes,
         )
 
         private fun fromFlattened(
@@ -462,6 +503,7 @@ data class Journey(
             period: TimelinePeriod,
             breakBeforePointIndices: List<Int>,
             inferredTransferBeforePointIndices: List<Int> = emptyList(),
+            semanticEpisodes: List<JourneySemanticEpisode> = emptyList(),
         ): Journey {
             val breaks = breakBeforePointIndices.distinct().sorted()
             require(breaks.all { it in 1..points.lastIndex })
@@ -477,7 +519,7 @@ data class Journey(
                     haversineKm(points[index - 1], points[index])
                 }
             }
-            return Journey(period, points, distances, breaks, inferredTransfers)
+            return Journey(period, points, distances, breaks, inferredTransfers, semanticEpisodes)
         }
 
         internal fun interpolate(a: GeoPoint, b: GeoPoint, fraction: Double): GeoPoint {
@@ -525,6 +567,8 @@ data class Journey(
                 sorted[middle]
             }
         }
+
+        private data class TransferRange(val startKm: Double, val endKm: Double)
     }
 }
 

@@ -91,6 +91,32 @@ class JournalJourneySelectionTest {
         assertEquals(0.0, journey.knownDistanceKm, 0.0)
     }
 
+    @Test
+    fun semanticActivityProjectsOntoDetailedGeometryAsOneCameraEpisode() {
+        val points = (0..120).map { index -> point(index.toLong(), index / 10.0) }
+        val route = JournalRoute(
+            timeline = Timeline(points),
+            spans = listOf(span(RouteSource.DETAILED, *points.toTypedArray())),
+            detailedInputCount = points.size,
+            detailedUsableCount = points.size,
+            semanticUsableCount = 2,
+            cameraEpisodes = listOf(
+                SemanticCameraEpisode(
+                    start = points.first().instant,
+                    end = points.last().instant,
+                    origin = points.first(),
+                    destination = points.last(),
+                ),
+            ),
+        )
+
+        val journey = route.journeyForRange(TimelinePeriod.sameYear(2026), ZoneOffset.UTC)
+
+        assertEquals(1, journey.semanticEpisodes.size)
+        assertTrue(journey.semanticEpisodes.single().displacementKm > 1_000.0)
+        assertEquals(listOf(true), journey.legs.map { it.isTransfer })
+    }
+
     private fun span(source: RouteSource, vararg points: GeoPoint) = RouteSpan(
         start = points.first().instant,
         end = points.last().instant,

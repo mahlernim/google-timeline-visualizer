@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
+import dev.mahlernim.timelinevisualizer.model.JourneySemanticEpisode
 import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
 import dev.mahlernim.timelinevisualizer.render.RenderText
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
@@ -152,6 +153,33 @@ class VideoExportRequestStoreTest {
         assertEquals(listOf(1), restored.journey.inferredTransferBeforePointIndices)
         assertEquals(request.journey.totalDistanceKm, restored.journey.totalDistanceKm, 0.001)
         assertEquals(request.journey.knownDistanceKm, restored.journey.knownDistanceKm, 0.001)
+    }
+
+    @Test
+    fun semanticCameraEpisodesSurvivePendingExportRestart() {
+        val points = listOf(
+            GeoPoint(Instant.parse("2026-01-01T00:00:00Z"), 37.5, 127.0),
+            GeoPoint(Instant.parse("2026-01-01T04:00:00Z"), 35.7, 139.8),
+            GeoPoint(Instant.parse("2026-01-01T05:00:00Z"), 35.71, 139.81),
+        )
+        val base = Journey.from(points, 2026)
+        val episode = JourneySemanticEpisode(
+            startKm = 0.0,
+            endKm = base.cumulativeDistanceKm[1],
+            origin = points[0],
+            destination = points[1],
+        )
+        val request = VideoExportRequest(
+            outputUri = "content://documents/semantic-camera.mp4",
+            journey = base.copy(semanticEpisodes = listOf(episode)),
+            title = "Semantic camera",
+            durationSeconds = 30,
+            dataSource = VideoDataSource.JOURNAL,
+        )
+
+        store.save(request)
+
+        assertEquals(listOf(episode), store.load()!!.journey.semanticEpisodes)
     }
 
     @Test

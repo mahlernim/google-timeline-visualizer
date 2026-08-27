@@ -9,17 +9,17 @@ on:
       release_tag:
         description: Existing immutable Journal Lab tag
         required: true
-        default: journal-lab-20
+        default: journal-lab-21
         type: string
       expected_version_code:
         description: Expected Journal Lab version code
         required: true
-        default: "20"
+        default: "21"
         type: string
       expected_version_name:
         description: Expected Journal Lab version name
         required: true
-        default: 3.0.0-journal-lab.20
+        default: 3.0.4-journal-lab.21
         type: string
       previous_lab_commit:
         description: Signed Journal Lab commit used for upgrade verification
@@ -35,8 +35,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LAB_RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
-      EXPECTED_VERSION_CODE: ${{ inputs.expected_version_code || '20' }}
-      EXPECTED_VERSION_NAME: ${{ inputs.expected_version_name || '3.0.0-journal-lab.20' }}
+      EXPECTED_VERSION_CODE: ${{ inputs.expected_version_code || '21' }}
+      EXPECTED_VERSION_NAME: ${{ inputs.expected_version_name || '3.0.4-journal-lab.21' }}
       PREVIOUS_LAB_COMMIT: ${{ inputs.previous_lab_commit || 'c3b58c198459bfd1c09a9406e4b1892de19083fa' }}
     steps:
       - uses: actions/checkout@v5

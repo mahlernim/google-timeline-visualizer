@@ -20,10 +20,10 @@ def test_journal_lab_has_a_separate_installation_identity() -> None:
     )
     assert lab_flavor is not None
     assert 'applicationId = "dev.mahlernim.timelinevisualizer.journallab"' in lab_flavor.group("body")
-    assert 'versionCode = 20' in lab_flavor.group("body")
-    assert 'versionName = "3.0.0-journal-lab.20"' in lab_flavor.group("body")
+    assert 'versionCode = 21' in lab_flavor.group("body")
+    assert 'versionName = "3.0.4-journal-lab.21"' in lab_flavor.group("body")
     assert 'buildConfigField("boolean", "IS_JOURNAL_LAB", "true")' in lab_flavor.group("body")
-    assert 'releases/tag/journal-lab-20' in lab_flavor.group("body")
+    assert 'releases/tag/journal-lab-21' in lab_flavor.group("body")
     assert 'manifestPlaceholders["appLabel"] = "Journal Lab"' in lab_flavor.group("body")
     assert 'android:label="${appLabel}"' in manifest
 
@@ -68,8 +68,8 @@ def test_lab_release_is_immutable_verified_and_coinstallable() -> None:
         "--tests dev.mahlernim.timelinevisualizer.journal.JournalSetupNavigationTest",
         'test "$package_name" = "dev.mahlernim.timelinevisualizer.journallab"',
         'test "$application_label" = "Journal Lab"',
-        "EXPECTED_VERSION_CODE: ${{ inputs.expected_version_code || '20' }}",
-        "EXPECTED_VERSION_NAME: ${{ inputs.expected_version_name || '3.0.0-journal-lab.20' }}",
+        "EXPECTED_VERSION_CODE: ${{ inputs.expected_version_code || '21' }}",
+        "EXPECTED_VERSION_NAME: ${{ inputs.expected_version_name || '3.0.4-journal-lab.21' }}",
         'test "$LAB_RELEASE_TAG" = "journal-lab-$EXPECTED_VERSION_CODE"',
         'test "$version_name" = "$EXPECTED_VERSION_NAME"',
         'test "$lab_cert" = "$production_cert"',

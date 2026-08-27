@@ -22,7 +22,20 @@ data class JournalRoute(
     val detailedInputCount: Int,
     val detailedUsableCount: Int,
     val semanticUsableCount: Int,
+    val cameraEpisodes: List<SemanticCameraEpisode> = emptyList(),
 )
+
+/** Global activity context retained separately from the detailed route geometry. */
+data class SemanticCameraEpisode(
+    val start: Instant,
+    val end: Instant,
+    val origin: GeoPoint,
+    val destination: GeoPoint,
+) {
+    init {
+        require(end >= start)
+    }
+}
 
 enum class RouteDetail {
     DETAILED,
@@ -58,14 +71,19 @@ class JournalRouteService(
         val usesCanonicalSettings = maximumAccuracyMeters == RawSignalProcessor.DEFAULT_MAXIMUM_ACCURACY_METERS &&
             discontinuity == JournalRouteFusion.DEFAULT_DISCONTINUITY && routeDetail == RouteDetail.DETAILED
         if (!usesCanonicalSettings) {
-            return reconstructWithContext(
+            return attachCameraEpisodes(
                 journalId,
                 start,
                 endExclusive,
-                maximumAccuracyMeters,
-                discontinuity,
-                routeDetail,
-                onPreparationStage,
+                reconstructWithContext(
+                    journalId,
+                    start,
+                    endExclusive,
+                    maximumAccuracyMeters,
+                    discontinuity,
+                    routeDetail,
+                    onPreparationStage,
+                ),
             )
         }
 
@@ -120,7 +138,12 @@ class JournalRouteService(
             previous != null && cachedRangeContainsRequest && cacheMatchesAlgorithm &&
             (cacheIsCurrent || dirtyDoesNotAffectRequest)
         ) {
-            return previous.clippedTo(start, endExclusive)
+            return attachCameraEpisodes(
+                journalId,
+                start,
+                endExclusive,
+                previous.clippedTo(start, endExclusive),
+            )
         }
 
         val rebuilt = if (
@@ -193,7 +216,47 @@ class JournalRouteService(
             )
             if (!stored) throw StaleJournalRouteBuildException()
         }
-        return rebuilt.clippedTo(start, endExclusive)
+        return attachCameraEpisodes(
+            journalId,
+            start,
+            endExclusive,
+            rebuilt.clippedTo(start, endExclusive),
+        )
+    }
+
+    private suspend fun attachCameraEpisodes(
+        journalId: String,
+        start: Instant,
+        endExclusive: Instant,
+        route: JournalRoute,
+    ): JournalRoute {
+        val rows = repository.activeSemanticActivitySegments(
+            journalId,
+            start.toEpochMilli(),
+            endExclusive.toEpochMilli(),
+        )
+        if (rows.isEmpty()) return route
+
+        val coveredByNewerSnapshots = MergedMillisIntervals()
+        val episodes = mutableListOf<SemanticCameraEpisode>()
+        rows.groupBy { it.snapshotCapturedAtEpochMillis to it.snapshotId }.forEach { (_, snapshotRows) ->
+            val records = snapshotRecords(snapshotRows).filter { record ->
+                record.kind == STRUCTURED_ACTIVITY_KIND || record.kind == STRUCTURED_ACTIVITY_AND_VISIT_KIND
+            }
+            records.forEach recordLoop@ { record ->
+                if (coveredByNewerSnapshots.overlaps(record.interval)) return@recordLoop
+                val origin = record.points.firstOrNull() ?: return@recordLoop
+                val destination = record.points.lastOrNull() ?: return@recordLoop
+                episodes += SemanticCameraEpisode(
+                    start = Instant.ofEpochMilli(record.startEpochMillis),
+                    end = Instant.ofEpochMilli(record.endEpochMillis),
+                    origin = origin,
+                    destination = destination,
+                )
+            }
+            coveredByNewerSnapshots.addAll(records.map(StoredSemanticRecord::interval))
+        }
+        return route.copy(cameraEpisodes = episodes.sortedBy(SemanticCameraEpisode::start))
     }
 
     private suspend fun reconstructWithContext(
@@ -824,6 +887,8 @@ class JournalRouteService(
         const val LEGACY_FLATTENED_PARSER_VERSION = 1
         const val LEGACY_PATH_KIND = "TIMELINE_PATH"
         const val STRUCTURED_PATH_KIND = "PATH"
+        const val STRUCTURED_ACTIVITY_KIND = "ACTIVITY"
+        const val STRUCTURED_ACTIVITY_AND_VISIT_KIND = "ACTIVITY_AND_VISIT"
         const val MINIMUM_STRONG_CONFLICTS = 2
         const val STRONG_CONFLICT_DISTANCE_METERS = 5_000.0
         const val MINIMUM_DIRECTIONAL_ANCHOR_DISTANCE_METERS = 1_000.0

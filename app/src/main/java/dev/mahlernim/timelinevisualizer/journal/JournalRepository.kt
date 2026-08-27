@@ -197,6 +197,15 @@ class JournalRepository(
         return dao.activeSemanticSegmentsNewestFirst(journalId, startEpochMillis, endExclusiveEpochMillis)
     }
 
+    suspend fun activeSemanticActivitySegments(
+        journalId: String,
+        startEpochMillis: Long,
+        endExclusiveEpochMillis: Long,
+    ): List<ActiveSemanticSegment> {
+        require(endExclusiveEpochMillis > startEpochMillis) { "The route range must not be empty" }
+        return dao.activeSemanticActivitySegmentsNewestFirst(journalId, startEpochMillis, endExclusiveEpochMillis)
+    }
+
     suspend fun activeSemanticSegmentsForSnapshots(
         journalId: String,
         snapshotIds: Collection<String>,

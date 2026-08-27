@@ -201,6 +201,32 @@ interface JournalDao {
             ON import_batches.id = semantic_snapshots.importBatchId
         WHERE import_batches.journalId = :journalId
           AND import_batches.status = 'COMMITTED'
+          AND semantic_segments.kind IN ('ACTIVITY', 'ACTIVITY_AND_VISIT')
+          AND semantic_segments.endEpochMillis >= :startEpochMillis
+          AND semantic_segments.startEpochMillis < :endExclusiveEpochMillis
+        ORDER BY semantic_snapshots.capturedAtEpochMillis DESC,
+                 semantic_snapshots.id DESC,
+                 semantic_segments.sourceOrdinal ASC
+        """,
+    )
+    suspend fun activeSemanticActivitySegmentsNewestFirst(
+        journalId: String,
+        startEpochMillis: Long,
+        endExclusiveEpochMillis: Long,
+    ): List<ActiveSemanticSegment>
+
+    @Query(
+        """
+        SELECT semantic_segments.*,
+               import_batches.parserVersion AS parserVersion,
+               semantic_snapshots.capturedAtEpochMillis AS snapshotCapturedAtEpochMillis
+        FROM semantic_segments
+        INNER JOIN semantic_snapshots
+            ON semantic_snapshots.id = semantic_segments.snapshotId
+        INNER JOIN import_batches
+            ON import_batches.id = semantic_snapshots.importBatchId
+        WHERE import_batches.journalId = :journalId
+          AND import_batches.status = 'COMMITTED'
           AND semantic_snapshots.id IN (:snapshotIds)
         ORDER BY semantic_snapshots.capturedAtEpochMillis DESC,
                  semantic_snapshots.id DESC,

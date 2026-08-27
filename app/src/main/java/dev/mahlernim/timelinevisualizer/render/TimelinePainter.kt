@@ -249,8 +249,13 @@ class TimelinePainter {
         val movement = cameraSettings.cameraMovement
         val proportionalContextKm = (journey.totalDistanceKm * movement.contextFraction)
             .coerceIn(movement.minimumContextKm, movement.maximumContextKm)
-        val tail = journey.positionAtDistance(max(0.0, current.distanceKm - proportionalContextKm)).point
-        val lookahead = journey.positionAtDistance(min(journey.totalDistanceKm, current.distanceKm + proportionalContextKm)).point
+        val episodeLegs = cameraEpisodeLegs(journey, cameraSettings)
+        val leg = journey.legAt(current.distanceKm, episodeLegs).takeIf { movement.legAware }
+        val contextKm = if (leg?.isTransfer == true) leg.lengthKm else proportionalContextKm
+        val rangeStartKm = leg?.startKm ?: 0.0
+        val rangeEndKm = leg?.endKm ?: journey.totalDistanceKm
+        val tail = journey.positionAtDistance(max(rangeStartKm, current.distanceKm - contextKm)).point
+        val lookahead = journey.positionAtDistance(min(rangeEndKm, current.distanceKm + contextKm)).point
         val center = WebMercator.project(current.point)
         val before = WebMercator.project(tail)
         val after = WebMercator.project(lookahead)

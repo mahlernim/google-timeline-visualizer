@@ -9,6 +9,7 @@ import androidx.test.core.app.ApplicationProvider
 import dev.mahlernim.timelinevisualizer.R
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
+import dev.mahlernim.timelinevisualizer.model.JourneySemanticEpisode
 import dev.mahlernim.timelinevisualizer.model.WebMercator
 import java.time.Instant
 import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
@@ -374,6 +375,54 @@ class TimelinePainterTest {
 
         assertEquals(0, balancedTransfers)
         assertEquals(2, sensitiveTransfers)
+    }
+
+    @Test
+    fun semanticLongTripStaysWideThenTightensForDestinationDetail() {
+        val points = (0..100).map { index ->
+            timedPoint(index, 0.02 * kotlin.math.sin(index / 5.0), index * 0.05)
+        } + (101..115).map { index ->
+            timedPoint(index, (index - 100) * 0.0005, 5.0 + (index - 100) * 0.0005)
+        }
+        val base = Journey.from(points, 2025)
+        val semantic = base.copy(
+            semanticEpisodes = listOf(
+                JourneySemanticEpisode(
+                    startKm = 0.0,
+                    endKm = base.cumulativeDistanceKm[100],
+                    origin = points.first(),
+                    destination = points[100],
+                ),
+            ),
+        )
+        val settings = CameraSettings(
+            cameraMovement = CameraMovement.CLOSE_UP,
+            longTripCompression = LongTripCompression.OFF,
+            localFraming = LocalFraming.BALANCED,
+        )
+        val legs = semantic.legsForThreshold(
+            semantic.transferThresholdKm * settings.tripDetection.thresholdMultiplier,
+        )
+        val transfer = legs.first()
+        val local = legs.last()
+        val painter = TimelinePainter()
+        fun spanAt(distanceKm: Double): Double {
+            val viewport = painter.rawViewportForTest(
+                semantic,
+                (distanceKm / semantic.totalDistanceKm).toFloat(),
+                SIZE,
+                SIZE,
+                settings,
+                useRangeIndex = true,
+            )
+            return viewport.maxY - viewport.minY
+        }
+
+        val tripSpan = spanAt(transfer.startKm + transfer.lengthKm * 0.50)
+        val destinationSpan = spanAt(local.startKm + local.lengthKm * 0.50)
+
+        assertEquals(listOf(true, false), legs.map { it.isTransfer })
+        assertTrue("Semantic trip span $tripSpan did not stay wider than destination span $destinationSpan", tripSpan > destinationSpan * 8)
     }
 
     @Test

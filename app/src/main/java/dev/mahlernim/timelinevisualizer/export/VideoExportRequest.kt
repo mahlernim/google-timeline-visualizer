@@ -3,6 +3,7 @@ package dev.mahlernim.timelinevisualizer.export
 import android.content.Context
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
+import dev.mahlernim.timelinevisualizer.model.JourneySemanticEpisode
 import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
 import dev.mahlernim.timelinevisualizer.render.RenderText
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
@@ -81,6 +82,17 @@ class VideoExportRequestStore(context: Context) {
             request.journey.breakBeforePointIndices.forEach(output::writeInt)
             output.writeInt(request.journey.inferredTransferBeforePointIndices.size)
             request.journey.inferredTransferBeforePointIndices.forEach(output::writeInt)
+            output.writeInt(request.journey.semanticEpisodes.size)
+            request.journey.semanticEpisodes.forEach { episode ->
+                output.writeDouble(episode.startKm)
+                output.writeDouble(episode.endKm)
+                output.writeLong(episode.origin.instant.toEpochMilli())
+                output.writeDouble(episode.origin.latitude)
+                output.writeDouble(episode.origin.longitude)
+                output.writeLong(episode.destination.instant.toEpochMilli())
+                output.writeDouble(episode.destination.latitude)
+                output.writeDouble(episode.destination.longitude)
+            }
         }
         if (!temporaryFile.renameTo(requestFile)) {
             temporaryFile.copyTo(requestFile, overwrite = true)
@@ -215,6 +227,27 @@ class VideoExportRequestStore(context: Context) {
                 } else {
                     emptyList()
                 }
+                val semanticEpisodes = if (version >= 15) {
+                    val episodeCount = input.readInt().coerceIn(0, MAX_SEMANTIC_EPISODE_COUNT)
+                    List(episodeCount) {
+                        JourneySemanticEpisode(
+                            startKm = input.readDouble(),
+                            endKm = input.readDouble(),
+                            origin = GeoPoint(
+                                instant = Instant.ofEpochMilli(input.readLong()),
+                                latitude = input.readDouble(),
+                                longitude = input.readDouble(),
+                            ),
+                            destination = GeoPoint(
+                                instant = Instant.ofEpochMilli(input.readLong()),
+                                latitude = input.readDouble(),
+                                longitude = input.readDouble(),
+                            ),
+                        )
+                    }
+                } else {
+                    emptyList()
+                }
                 VideoExportRequest(
                     outputUri = outputUri,
                     journey = Journey.fromBreakIndices(
@@ -225,6 +258,7 @@ class VideoExportRequestStore(context: Context) {
                         ),
                         breakBeforePointIndices,
                         inferredTransferBeforePointIndices,
+                        semanticEpisodes,
                     ),
                     title = title,
                     durationSeconds = durationSeconds,
@@ -245,8 +279,9 @@ class VideoExportRequestStore(context: Context) {
     }
 
     companion object {
-        private const val CURRENT_FILE_VERSION = 14
+        private const val CURRENT_FILE_VERSION = 15
         private const val MAX_POINT_COUNT = 2_000_000
+        private const val MAX_SEMANTIC_EPISODE_COUNT = 100_000
         private const val REQUEST_FILE = "pending-video-export.bin"
         private const val TEMPORARY_FILE = "pending-video-export.tmp"
 

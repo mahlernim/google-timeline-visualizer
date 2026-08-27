@@ -2,6 +2,7 @@ package dev.mahlernim.timelinevisualizer.journal.route
 
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
+import dev.mahlernim.timelinevisualizer.model.JourneySemanticEpisode
 import dev.mahlernim.timelinevisualizer.model.TimelinePeriod
 import java.time.LocalDate
 import java.time.YearMonth
@@ -58,7 +59,45 @@ private fun JournalRoute.journeyFromSpans(
         }
     }
     if (current.isNotEmpty()) sections.add(current)
-    return Journey.fromSections(sections, period, inferredTransferBeforePointIndices)
+    val journey = Journey.fromSections(sections, period, inferredTransferBeforePointIndices)
+    if (journey.points.size < 2 || cameraEpisodes.isEmpty()) return journey
+
+    val projectedEpisodes = cameraEpisodes.mapNotNull { episode ->
+        val startIndex = journey.points.lowerBound(episode.start)
+        val endIndex = journey.points.upperBound(episode.end) - 1
+        if (startIndex !in journey.points.indices || endIndex <= startIndex) return@mapNotNull null
+        if (journey.breakBeforePointIndices.any { it in (startIndex + 1)..endIndex }) return@mapNotNull null
+        val startKm = journey.cumulativeDistanceKm[startIndex]
+        val endKm = journey.cumulativeDistanceKm[endIndex]
+        if (endKm <= startKm) return@mapNotNull null
+        JourneySemanticEpisode(
+            startKm = startKm,
+            endKm = endKm,
+            origin = episode.origin,
+            destination = episode.destination,
+        )
+    }.sortedBy(JourneySemanticEpisode::startKm)
+    return journey.copy(semanticEpisodes = projectedEpisodes)
+}
+
+private fun List<GeoPoint>.lowerBound(instant: java.time.Instant): Int {
+    var low = 0
+    var high = size
+    while (low < high) {
+        val middle = (low + high) ushr 1
+        if (this[middle].instant < instant) low = middle + 1 else high = middle
+    }
+    return low
+}
+
+private fun List<GeoPoint>.upperBound(instant: java.time.Instant): Int {
+    var low = 0
+    var high = size
+    while (low < high) {
+        val middle = (low + high) ushr 1
+        if (this[middle].instant <= instant) low = middle + 1 else high = middle
+    }
+    return low
 }
 
 private fun pointKey(point: GeoPoint): Triple<Long, Long, Long> = Triple(
