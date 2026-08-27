@@ -24,7 +24,7 @@ on:
       previous_lab_commit:
         description: Signed Journal Lab commit used for upgrade verification
         required: true
-        default: c3b58c198459bfd1c09a9406e4b1892de19083fa
+        default: 778a2698ade1cd1aa1ec77f4b7a489a29f49dc14
         type: string
 
 permissions:
@@ -37,7 +37,7 @@ jobs:
       LAB_RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
       EXPECTED_VERSION_CODE: ${{ inputs.expected_version_code || '21' }}
       EXPECTED_VERSION_NAME: ${{ inputs.expected_version_name || '3.0.4-journal-lab.21' }}
-      PREVIOUS_LAB_COMMIT: ${{ inputs.previous_lab_commit || 'c3b58c198459bfd1c09a9406e4b1892de19083fa' }}
+      PREVIOUS_LAB_COMMIT: ${{ inputs.previous_lab_commit || '778a2698ade1cd1aa1ec77f4b7a489a29f49dc14' }}
     steps:
       - uses: actions/checkout@v5
         with:

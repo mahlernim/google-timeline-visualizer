@@ -28,6 +28,12 @@ def test_journal_lab_has_a_separate_installation_identity() -> None:
     assert 'android:label="${appLabel}"' in manifest
 
 
+def test_journal_lab_upgrade_check_uses_lab_20_as_its_predecessor() -> None:
+    workflow = LAB_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "778a2698ade1cd1aa1ec77f4b7a489a29f49dc14" in workflow
+
+
 def test_travel_journal_is_enabled_for_production_flavors() -> None:
     build_file = BUILD_FILE.read_text(encoding="utf-8")
 
