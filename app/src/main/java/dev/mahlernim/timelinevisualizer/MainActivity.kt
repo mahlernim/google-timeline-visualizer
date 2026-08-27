@@ -6039,7 +6039,6 @@ class MainActivity : AppCompatActivity() {
         private const val TAG = "TimelineVisualizer"
         private const val JOURNAL_PROGRESS_MAX = 1_000
         private const val JOURNAL_ROUTE_PROGRESS_DELAY_MILLIS = 2_000L
-        private const val DAY_MILLIS = 24L * 60L * 60L * 1_000L
 
         internal fun playbackIntent(context: Context, uri: Uri): Intent =
             Intent(context, MainActivity::class.java).apply {
