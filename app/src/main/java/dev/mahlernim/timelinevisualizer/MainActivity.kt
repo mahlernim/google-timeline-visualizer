@@ -1127,7 +1127,7 @@ class MainActivity : AppCompatActivity() {
             val format = working.activeVideoFormat
             resolutionLabels += getString(R.string.custom_resolution_selected, format.width, format.height)
         }
-        val presetFrameRates = listOf(24, 30, 60)
+        val presetFrameRates = listOf(24, 30, 60, 120)
         val frameRateLabels = presetFrameRates.map { getString(R.string.frame_rate_value, it) }.toMutableList()
         val currentFrameRateIndex = presetFrameRates.indexOf(working.effectiveExportFormat.frameRate)
         if (currentFrameRateIndex < 0 || working.effectiveExportFormat.customFrameRate) {
@@ -3205,7 +3205,7 @@ class MainActivity : AppCompatActivity() {
             R.string.resolution_1440,
             R.string.resolution_2160,
         ).map(::getString) + getString(R.string.custom_action)
-        val frameRateLabels = listOf(24, 30, 60).map { getString(R.string.frame_rate_value, it) } +
+        val frameRateLabels = listOf(24, 30, 60, 120).map { getString(R.string.frame_rate_value, it) } +
             getString(R.string.custom_action)
         val tripDetectionLabels = listOf(
             R.string.trip_detection_conservative,
@@ -3267,7 +3267,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         settingsScreen.frameRateDropdown.setOnItemClickListener { _, _, position, _ ->
-            val presetRates = listOf(24, 30, 60)
+            val presetRates = listOf(24, 30, 60, 120)
             if (position == presetRates.size) {
                 showCustomFrameRateDialog()
             } else {

@@ -33,8 +33,8 @@ class VideoQualityTest {
         assertEquals(2160, ExportFormatSettings.parseShortEdge("2160"))
         assertEquals(null, ExportFormatSettings.parseShortEdge("479"))
         assertEquals(15, ExportFormatSettings.parseFrameRate("15"))
-        assertEquals(60, ExportFormatSettings.parseFrameRate("60"))
-        assertEquals(null, ExportFormatSettings.parseFrameRate("61"))
+        assertEquals(120, ExportFormatSettings.parseFrameRate("120"))
+        assertEquals(null, ExportFormatSettings.parseFrameRate("121"))
     }
 
     @Test

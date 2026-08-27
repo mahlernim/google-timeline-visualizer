@@ -93,7 +93,7 @@ data class ExportFormatSettings(
         const val MIN_SHORT_EDGE = 480
         const val MAX_SHORT_EDGE = 2160
         const val MIN_FRAME_RATE = 15
-        const val MAX_FRAME_RATE = 60
+        const val MAX_FRAME_RATE = 120
         const val DEFAULT_SHORT_EDGE = 480
         const val DEFAULT_FRAME_RATE = 30
 

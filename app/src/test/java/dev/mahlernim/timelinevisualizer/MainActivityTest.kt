@@ -625,22 +625,22 @@ class MainActivityTest {
     }
 
     @Test
-    fun settingsSelect2160pAnd60FramesPerSecondWithoutChangingAspect() {
+    fun settingsSelect2160pAnd120FramesPerSecondWithoutChangingAspect() {
         val activity = launchActivity()
         activity.findViewById<View>(R.id.navigationSettings).performClick()
         val resolution = activity.findViewById<AutoCompleteTextView>(R.id.videoQualityDropdown)
         val frameRate = activity.findViewById<AutoCompleteTextView>(R.id.frameRateDropdown)
 
         resolution.onItemClickListener?.onItemClick(null, null, 4, 4)
-        frameRate.onItemClickListener?.onItemClick(null, null, 2, 2)
+        frameRate.onItemClickListener?.onItemClick(null, null, 3, 3)
 
         assertEquals(
             activity.getString(R.string.preset_resolution_selected, 2160, 2160, 2160),
             resolution.text.toString(),
         )
-        assertEquals(activity.getString(R.string.frame_rate_value, 60), frameRate.text.toString())
+        assertEquals(activity.getString(R.string.frame_rate_value, 120), frameRate.text.toString())
         assertEquals(2160, CameraSettingsPreferences(context).load().activeVideoFormat.width)
-        assertEquals(60, CameraSettingsPreferences(context).load().activeVideoFormat.frameRate)
+        assertEquals(120, CameraSettingsPreferences(context).load().activeVideoFormat.frameRate)
     }
 
     @Test
