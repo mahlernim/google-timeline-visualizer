@@ -1,6 +1,6 @@
 # Timeline Visualizer web app privacy
 
-**Effective date:** August 26, 2026
+**Effective date:** August 28, 2026
 
 **Developer:** MahlerLab
 
@@ -45,6 +45,29 @@ developer's behalf, truncates IP addresses when requests arrive, and stores the
 resulting request logs in the United States for 30 days. CARTO may also process
 this information under its privacy notice and data-processing agreement.
 
+## Advertising status and consent
+
+Production advertising is not currently active in the web app. The page does not
+load an AdSense advertising script or request an advertisement.
+
+The site is prepared for a possible future AdSense release. Before advertising is
+enabled, the site will use a Google-certified consent management platform where
+required. The consent message will explain advertising cookies or local storage,
+personalized and non-personalized advertising choices, and how to withdraw or
+change a choice. Declining advertising consent will not prevent use of the video
+creation workflow.
+
+If advertising is enabled, Google and its advertising partners may receive normal
+web request information such as an IP address, user agent, page URL, and consent
+signals. They may use cookies or local storage for advertising, frequency limits,
+fraud prevention, and measurement according to the user's consent and applicable
+law. The application will not add Timeline file contents, route coordinates,
+selected dates, titles, video frames, or generated media to advertising requests.
+
+Users can review or change personalized advertising choices through
+[Google's My Ad Center](https://myadcenter.google.com/) and, after advertising is
+enabled, through the consent controls displayed on the site.
+
 ## Browser storage
 
 Selected Timeline data and generated videos remain in the current browser page.
@@ -65,3 +88,5 @@ browser storage.
 - [CARTO Privacy Notice](https://carto.com/privacy/)
 - [CARTO Basemap Terms](https://carto.com/legal/basemap-terms/)
 - [OpenStreetMap Privacy Policy](https://osmfoundation.org/wiki/Privacy_Policy)
+- [Google Advertising Policies and Terms](https://policies.google.com/technologies/ads)
+- [Google Privacy Policy](https://policies.google.com/privacy)
