@@ -76,12 +76,21 @@ jobs:
           apk="TimelineVisualizer-${RELEASE_TAG}.apk"
           cp app/build/outputs/apk/github/release/app-github-release.apk "$apk"
           sha256sum "$apk" > "$apk.sha256"
+          version_code="$(sed -nE 's/^[[:space:]]*versionCode = ([0-9]+).*$/\1/p' app/build.gradle.kts | head -n 1)"
+          version_name="$(sed -nE 's/^[[:space:]]*versionName = "([^"]+)".*$/\1/p' app/build.gradle.kts | head -n 1)"
+          jq -n \
+            --argjson versionCode "$version_code" \
+            --arg versionName "$version_name" \
+            --arg releaseUrl "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${RELEASE_TAG}" \
+            '{versionCode: $versionCode, versionName: $versionName, releaseUrl: $releaseUrl}' \
+            > update.json
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" "$apk" "$apk.sha256" --clobber
+            gh release upload "$RELEASE_TAG" "$apk" "$apk.sha256" update.json --clobber
           else
             gh release create "$RELEASE_TAG" \
               "$apk" \
               "$apk.sha256" \
+              update.json \
               --title "Timeline Visualizer ${RELEASE_TAG#v}" \
               --notes-file "docs/release-notes-${RELEASE_TAG}.md" \
               --verify-tag

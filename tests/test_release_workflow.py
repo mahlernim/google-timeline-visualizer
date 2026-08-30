@@ -32,7 +32,21 @@ def test_release_workflow_can_update_an_existing_release() -> None:
     assert "Existing release tag to build and update" in workflow
     assert 'ref: ${{ env.RELEASE_TAG }}' in workflow
     assert 'gh release view "$RELEASE_TAG"' in workflow
-    assert 'gh release upload "$RELEASE_TAG" "$apk" "$apk.sha256" --clobber' in workflow
+    assert 'gh release upload "$RELEASE_TAG" "$apk" "$apk.sha256" update.json --clobber' in workflow
+
+
+def test_release_workflow_publishes_update_metadata() -> None:
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+
+    for required in (
+        '--argjson versionCode "$version_code"',
+        '--arg versionName "$version_name"',
+        '--arg releaseUrl "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${RELEASE_TAG}"',
+        "'{versionCode: $versionCode, versionName: $versionName, releaseUrl: $releaseUrl}'",
+        'gh release upload "$RELEASE_TAG" "$apk" "$apk.sha256" update.json --clobber',
+        "              update.json \\",
+    ):
+        assert required in workflow
 
 
 def test_release_workflow_uses_production_version_when_flavors_override_it() -> None:

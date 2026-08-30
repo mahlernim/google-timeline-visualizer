@@ -9,6 +9,15 @@
 - Add distance-unit selection to the web app.
 - Document the web app's distance units and close-up mode.
 
+## 3.0.9
+
+- Added an automatic, dismissible update prompt for GitHub APK and Google Play installations.
+- Added Google Play flexible in-app updates and a release-specific update link for GitHub APK users.
+- Added daily check throttling and a seven-day reminder delay after choosing Not now.
+- Added localized update messaging without sending Timeline data.
+- Added `update.json` to GitHub releases for reliable version discovery.
+- Set Android version code 51 and version name 3.0.9.
+
 ## 3.0.8
 
 - Alert when background video creation fails and explain common causes without exposing export data.

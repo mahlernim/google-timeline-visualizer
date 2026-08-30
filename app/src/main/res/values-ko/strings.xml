@@ -64,7 +64,6 @@
     <string name="video_creation_cancelled">동영상 만들기를 취소했습니다</string>
     <string name="cancel">취소</string>
     <string name="retry">다시 시도</string>
-    <string name="not_now">나중에</string>
     <string name="background_video_title">백그라운드에서 동영상 계속 만들기</string>
     <string name="background_video_message">앱을 나간 뒤에도 동영상 진행률을 확인하고 생성 완료 또는 실패 알림을 받으려면 알림을 허용하세요. 알림을 허용하지 않아도 동영상 만들기는 계속됩니다.</string>
     <string name="video_request_unavailable">동영상 만들기를 시작할 수 없습니다. 저장 위치를 다시 선택해 주세요.</string>
@@ -128,6 +127,12 @@
     </plurals>
     <string name="unknown_duration">길이 정보 없음</string>
     <string name="check_for_updates">업데이트 확인</string>
+    <string name="update_available_title">좋은 소식이에요!</string>
+    <string name="update_available_message">새로운 버전의 Timeline Visualizer를 사용할 수 있습니다.</string>
+    <string name="get_update">받기</string>
+    <string name="not_now">나중에</string>
+    <string name="update_ready">업데이트를 설치할 준비가 되었습니다.</string>
+    <string name="restart_to_update">다시 시작</string>
     <string name="project_on_github">GitHub 프로젝트</string>
     <string name="update_page_unavailable">업데이트 페이지를 열 수 없습니다</string>
     <string name="web_page_unavailable">웹페이지를 열 수 없습니다</string>
