@@ -129,6 +129,11 @@
     </plurals>
     <string name="unknown_duration">长度未知</string>
     <string name="check_for_updates">检查更新</string>
+    <string name="update_available_title">好消息！</string>
+    <string name="update_available_message">Timeline Visualizer 有新版本可用。</string>
+    <string name="get_update">获取</string>
+    <string name="update_ready">更新已准备好安装。</string>
+    <string name="restart_to_update">重新启动</string>
     <string name="project_on_github">GitHub 上的项目</string>
     <string name="update_page_unavailable">无法打开更新页面</string>
     <string name="web_page_unavailable">无法打开网页</string>

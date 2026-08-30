@@ -67,7 +67,6 @@
     <string name="video_creation_cancelled">Criação de vídeo cancelada</string>
     <string name="cancel">Cancelar</string>
     <string name="retry">Tentar novamente</string>
-    <string name="not_now">Agora não</string>
     <string name="background_video_title">Continue criando em segundo plano</string>
     <string name="background_video_message">Permita notificações para acompanhar o progresso após sair do aplicativo e receber um alerta quando a criação terminar ou falhar. A criação do vídeo continua mesmo sem permissão para notificações.</string>
     <string name="video_request_unavailable">Não foi possível iniciar a criação do vídeo. Escolha um local para salvar novamente.</string>
@@ -137,6 +136,12 @@
     </plurals>
     <string name="unknown_duration">Comprimento desconhecido</string>
     <string name="check_for_updates">Verifique se há atualizações</string>
+    <string name="update_available_title">Boas notícias!</string>
+    <string name="update_available_message">Uma nova versão do Timeline Visualizer está disponível.</string>
+    <string name="get_update">Obter</string>
+    <string name="not_now">Agora não</string>
+    <string name="update_ready">A atualização está pronta para ser instalada.</string>
+    <string name="restart_to_update">Reiniciar</string>
     <string name="project_on_github">Projeto em GitHub</string>
     <string name="update_page_unavailable">Não foi possível abrir a página de atualização</string>
     <string name="web_page_unavailable">Não foi possível abrir a página da web</string>

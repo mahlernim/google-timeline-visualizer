@@ -64,7 +64,6 @@
     <string name="video_creation_cancelled">動画作成をキャンセルしました</string>
     <string name="cancel">キャンセル</string>
     <string name="retry">再試行</string>
-    <string name="not_now">後で</string>
     <string name="background_video_title">バックグラウンドで作成を続ける</string>
     <string name="background_video_message">アプリを閉じた後も進行状況を確認し、作成の完了時または失敗時に通知を受け取るには、通知を許可してください。通知を許可しなくても動画作成は続きます。</string>
     <string name="video_request_unavailable">動画作成を開始できませんでした。保存先をもう一度選択してください。</string>
@@ -128,6 +127,12 @@
     </plurals>
     <string name="unknown_duration">長さ不明</string>
     <string name="check_for_updates">更新を確認</string>
+    <string name="update_available_title">お知らせです！</string>
+    <string name="update_available_message">Timeline Visualizer の新しいバージョンを利用できます。</string>
+    <string name="get_update">入手する</string>
+    <string name="not_now">後で</string>
+    <string name="update_ready">アップデートをインストールできます。</string>
+    <string name="restart_to_update">再起動</string>
     <string name="project_on_github">GitHubのプロジェクト</string>
     <string name="update_page_unavailable">更新ページを開けませんでした</string>
     <string name="web_page_unavailable">ウェブページを開けませんでした</string>

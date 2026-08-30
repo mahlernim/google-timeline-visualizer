@@ -17,8 +17,8 @@ android {
         applicationId = "dev.mahlernim.timelinevisualizer"
         minSdk = 26
         targetSdk = 36
-        versionCode = 50
-        versionName = "3.0.8"
+        versionCode = 51
+        versionName = "3.0.9"
         manifestPlaceholders["appLabel"] = "@string/app_name"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -110,6 +110,8 @@ dependencies {
     implementation("androidx.room:room-ktx:2.8.4")
     implementation("androidx.work:work-runtime:2.11.2")
     implementation("androidx.viewpager2:viewpager2:1.1.0")
+    "playImplementation"("com.google.android.play:app-update:2.1.0")
+    "playImplementation"("com.google.android.play:app-update-ktx:2.1.0")
     ksp("androidx.room:room-compiler:2.8.4")
 
     testImplementation("junit:junit:4.13.2")

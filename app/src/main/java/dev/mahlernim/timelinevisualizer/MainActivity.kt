@@ -29,8 +29,10 @@ import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.PopupMenu
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.addCallback
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
@@ -169,6 +171,10 @@ import dev.mahlernim.timelinevisualizer.trips.TripKind
 import dev.mahlernim.timelinevisualizer.trips.TripProject
 import dev.mahlernim.timelinevisualizer.trips.TripSuggestion
 import dev.mahlernim.timelinevisualizer.trips.TripsStore
+import dev.mahlernim.timelinevisualizer.update.AvailableAppUpdate
+import dev.mahlernim.timelinevisualizer.update.DistributionUpdateManager
+import dev.mahlernim.timelinevisualizer.update.UpdatePromptPolicy
+import dev.mahlernim.timelinevisualizer.update.UpdatePromptStateStore
 import dev.mahlernim.timelinevisualizer.trips.OfflineDestinationNameResolver
 import dev.mahlernim.timelinevisualizer.trips.TripCoverage
 import dev.mahlernim.timelinevisualizer.trips.TripCoverageCalculator
@@ -231,6 +237,7 @@ class MainActivity : AppCompatActivity() {
     private val monthNames by lazy { DateFormatSymbols.getInstance().months.take(12) }
     private val shortMonthNames by lazy { DateFormatSymbols.getInstance().shortMonths.take(12) }
     private val preferences by lazy { getSharedPreferences("display", MODE_PRIVATE) }
+    private val updatePromptState by lazy { UpdatePromptStateStore(applicationContext) }
     private val videoMedia by lazy { VideoMedia(applicationContext) }
     private val generatedMedia by lazy { GeneratedMediaRepository(applicationContext) }
     private val timelineLoader by lazy { CachedTimelineLoader(applicationContext) }
@@ -284,6 +291,10 @@ class MainActivity : AppCompatActivity() {
     private var playerPlayWhenReady = true
     private var syncingBottomNavigation = false
     private var exportingVideo = false
+    private lateinit var distributionUpdateManager: DistributionUpdateManager
+    private var pendingAppUpdate: AvailableAppUpdate? = null
+    private var updatePromptDialog: AlertDialog? = null
+    private var updateReadyShown = false
     private var pendingImportCompletionUri: Uri? = null
     private var activePresetId: String? = null
     private var presetOriginId: String? = null
@@ -380,6 +391,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val appUpdateLauncher = registerForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult(),
+    ) { }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -389,6 +404,11 @@ class MainActivity : AppCompatActivity() {
         onboarding = ScreenJournalOnboardingBinding.bind(findViewById(R.id.journalOnboardingScreen))
         settingsScreen = ScreenSettingsBinding.bind(findViewById(R.id.settingsScreen))
         playerScreen = ScreenPlayerBinding.bind(findViewById(R.id.playerScreen))
+        distributionUpdateManager = DistributionUpdateManager(
+            activity = this,
+            updateLauncher = appUpdateLauncher,
+            onUpdateDownloaded = ::showDownloadedUpdate,
+        )
         val lightSystemBars = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK !=
             Configuration.UI_MODE_NIGHT_YES
         WindowInsetsControllerCompat(window, binding.root).apply {
@@ -850,6 +870,8 @@ class MainActivity : AppCompatActivity() {
         updateHomeJournalCard()
         renderVideos()
         renderTrips()
+        maybeCheckForAutomaticUpdate()
+        maybeShowPendingUpdate()
         if (BuildConfig.IS_JOURNAL_LAB) {
             loadJournalIfNeeded()
             return
@@ -1539,6 +1561,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        distributionUpdateManager.onStart()
         if (currentScreen == Screen.PLAYER) initializeVideoPlayer()
     }
 
@@ -1555,9 +1578,11 @@ class MainActivity : AppCompatActivity() {
         ) {
             activeJournal?.takeIf { it.reminderEnabled }?.let { disableJournalReminders(it.id) }
         }
+        maybeShowPendingUpdate()
     }
 
     override fun onStop() {
+        distributionUpdateManager.onStop()
         releaseVideoPlayer()
         super.onStop()
     }
@@ -5708,6 +5733,61 @@ class MainActivity : AppCompatActivity() {
         } else if (!opened) {
             Snackbar.make(binding.root, R.string.update_page_unavailable, Snackbar.LENGTH_LONG).show()
         }
+    }
+
+    private fun maybeCheckForAutomaticUpdate(nowMillis: Long = System.currentTimeMillis()) {
+        if (Build.FINGERPRINT.equals("robolectric", ignoreCase = true)) return
+        if (!UpdatePromptPolicy.shouldCheck(nowMillis, updatePromptState.lastCheckMillis)) return
+        updatePromptState.recordCheck(nowMillis)
+        distributionUpdateManager.checkForUpdate { update ->
+            if (
+                update != null &&
+                UpdatePromptPolicy.shouldPrompt(
+                    update = update,
+                    installedVersionCode = BuildConfig.VERSION_CODE,
+                    dismissedVersionCode = updatePromptState.dismissedVersionCode,
+                    dismissedAtMillis = updatePromptState.dismissedAtMillis,
+                    nowMillis = System.currentTimeMillis(),
+                )
+            ) {
+                pendingAppUpdate = update
+                maybeShowPendingUpdate()
+            }
+        }
+    }
+
+    private fun maybeShowPendingUpdate() {
+        val update = pendingAppUpdate ?: return
+        if (updatePromptDialog != null) return
+        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
+        if (currentScreen != Screen.VIDEOS || exportingVideo || isFinishing) return
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.update_available_title)
+            .setMessage(R.string.update_available_message)
+            .setNegativeButton(R.string.not_now) { _, _ ->
+                updatePromptState.dismiss(update.versionCode, System.currentTimeMillis())
+                pendingAppUpdate = null
+            }
+            .setPositiveButton(R.string.get_update) { _, _ ->
+                pendingAppUpdate = null
+                if (!distributionUpdateManager.startUpdate(update)) openUpdates()
+            }
+            .setCancelable(false)
+            .create()
+        updatePromptDialog = dialog
+        dialog.setOnDismissListener {
+            if (updatePromptDialog === dialog) updatePromptDialog = null
+        }
+        dialog.show()
+    }
+
+    private fun showDownloadedUpdate() {
+        if (updateReadyShown || !::binding.isInitialized) return
+        updateReadyShown = true
+        Snackbar.make(binding.root, R.string.update_ready, Snackbar.LENGTH_INDEFINITE)
+            .setAction(R.string.restart_to_update) { distributionUpdateManager.completeUpdate() }
+            .show()
     }
 
     private fun openPrivacyPolicy() {

@@ -66,7 +66,6 @@
     <string name="video_creation_cancelled">Videoerstellung abgebrochen</string>
     <string name="cancel">Stornieren</string>
     <string name="retry">Erneut versuchen</string>
-    <string name="not_now">Nicht jetzt</string>
     <string name="background_video_title">Erstellen Sie im Hintergrund weiter</string>
     <string name="background_video_message">Erlauben Sie Benachrichtigungen, um den Videofortschritt nach dem Verlassen der App zu sehen und eine Benachrichtigung zu erhalten, wenn die Erstellung abgeschlossen wird oder fehlschlägt. Die Videoerstellung wird auch dann fortgesetzt, wenn Benachrichtigungen nicht zulässig sind.</string>
     <string name="video_request_unavailable">Die Videoerstellung konnte nicht gestartet werden. Bitte wählen Sie erneut einen Speicherort.</string>
@@ -133,6 +132,12 @@
     </plurals>
     <string name="unknown_duration">Unbekannte Länge</string>
     <string name="check_for_updates">Suchen Sie nach Updates</string>
+    <string name="update_available_title">Gute Neuigkeiten!</string>
+    <string name="update_available_message">Eine neue Version von Timeline Visualizer ist verfügbar.</string>
+    <string name="get_update">Herunterladen</string>
+    <string name="not_now">Nicht jetzt</string>
+    <string name="update_ready">Das Update kann installiert werden.</string>
+    <string name="restart_to_update">Neu starten</string>
     <string name="project_on_github">Projekt auf GitHub</string>
     <string name="update_page_unavailable">Die Update-Seite konnte nicht geöffnet werden</string>
     <string name="web_page_unavailable">Die Webseite konnte nicht geöffnet werden</string>
