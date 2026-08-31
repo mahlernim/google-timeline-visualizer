@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.ExportFormatSettings
+import dev.mahlernim.timelinevisualizer.render.FrameRate
 import dev.mahlernim.timelinevisualizer.render.VideoAspectRatio
 import dev.mahlernim.timelinevisualizer.render.VideoFormat
 import org.junit.Assert.assertTrue
@@ -20,8 +21,13 @@ class VideoFormatDeviceTest {
         val profiles = VideoEncoderSupport.deviceProfiles()
         assertTrue("The device exposed no H.264 encoder", profiles.isNotEmpty())
 
+        val fractionalFormat = ExportFormatSettings(
+            1080,
+            FrameRate.of(30_000, 1_001),
+        ).format(VideoAspectRatio.LANDSCAPE)
         val formats = VideoQuality.values().map(VideoQuality::format) + listOf(
             CameraSettings.DEFAULT.activeVideoFormat,
+            fractionalFormat,
             ExportFormatSettings(1440, 30).format(VideoAspectRatio.LANDSCAPE),
             ExportFormatSettings(2160, 60).format(VideoAspectRatio.LANDSCAPE),
         )
@@ -34,6 +40,10 @@ class VideoFormatDeviceTest {
         assertTrue(
             "The device cannot encode the default square format",
             VideoEncoderSupport.select(VideoQuality.STANDARD, profiles) is EncoderSupport.Supported,
+        )
+        assertTrue(
+            "The device cannot encode 1080p at 29.97 fps",
+            VideoEncoderSupport.select(fractionalFormat, profiles) is EncoderSupport.Supported,
         )
     }
 
