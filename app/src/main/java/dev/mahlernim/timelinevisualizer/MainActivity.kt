@@ -142,6 +142,7 @@ import dev.mahlernim.timelinevisualizer.render.DistanceUnit
 import dev.mahlernim.timelinevisualizer.render.DistanceUnitPreference
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.ExportFormatSettings
+import dev.mahlernim.timelinevisualizer.render.FrameRate
 import dev.mahlernim.timelinevisualizer.render.ExportResolution
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
 import dev.mahlernim.timelinevisualizer.render.LocalFraming
@@ -769,7 +770,8 @@ class MainActivity : AppCompatActivity() {
         outState.putString(STATE_DRAFT_QUALITY, cameraSettings.videoQuality.name)
         val exportFormat = cameraSettings.effectiveExportFormat
         outState.putInt(STATE_DRAFT_EXPORT_SHORT_EDGE, exportFormat.shortEdge)
-        outState.putInt(STATE_DRAFT_EXPORT_FRAME_RATE, exportFormat.frameRate)
+        outState.putInt(STATE_DRAFT_EXPORT_FRAME_RATE, exportFormat.frameRate.numerator)
+        outState.putInt(STATE_DRAFT_EXPORT_FRAME_RATE_DENOMINATOR, exportFormat.frameRate.denominator)
         outState.putBoolean(STATE_DRAFT_CUSTOM_RESOLUTION, exportFormat.customResolution)
         outState.putBoolean(STATE_DRAFT_CUSTOM_FRAME_RATE, exportFormat.customFrameRate)
         outState.putString(STATE_DRAFT_TRIP_DETECTION, cameraSettings.tripDetection.name)
@@ -1159,13 +1161,15 @@ class MainActivity : AppCompatActivity() {
             val format = working.activeVideoFormat
             resolutionLabels += getString(R.string.custom_resolution_selected, format.width, format.height)
         }
-        val presetFrameRates = listOf(24, 30, 60, 120)
-        val frameRateLabels = presetFrameRates.map { getString(R.string.frame_rate_value, it) }.toMutableList()
+        val presetFrameRates = listOf(24, 30, 60).map(FrameRate::of)
+        val frameRateLabels = presetFrameRates.map {
+            getString(R.string.frame_rate_value, it.displayValue)
+        }.toMutableList()
         val currentFrameRateIndex = presetFrameRates.indexOf(working.effectiveExportFormat.frameRate)
         if (currentFrameRateIndex < 0 || working.effectiveExportFormat.customFrameRate) {
             frameRateLabels += getString(
                 R.string.custom_frame_rate_selected,
-                working.effectiveExportFormat.frameRate,
+                working.effectiveExportFormat.frameRate.displayValue,
             )
         }
 
@@ -3255,7 +3259,7 @@ class MainActivity : AppCompatActivity() {
             R.string.resolution_1440,
             R.string.resolution_2160,
         ).map(::getString) + getString(R.string.custom_action)
-        val frameRateLabels = listOf(24, 30, 60, 120).map { getString(R.string.frame_rate_value, it) } +
+        val frameRateLabels = listOf(24, 30, 60).map { getString(R.string.frame_rate_value, it.toString()) } +
             getString(R.string.custom_action)
         val tripDetectionLabels = listOf(
             R.string.trip_detection_conservative,
@@ -3317,7 +3321,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         settingsScreen.frameRateDropdown.setOnItemClickListener { _, _, position, _ ->
-            val presetRates = listOf(24, 30, 60, 120)
+            val presetRates = listOf(24, 30, 60).map(FrameRate::of)
             if (position == presetRates.size) {
                 showCustomFrameRateDialog()
             } else {
@@ -3402,7 +3406,10 @@ class MainActivity : AppCompatActivity() {
     private fun restoredExportFormat(savedState: Bundle): ExportFormatSettings? = runCatching {
         ExportFormatSettings(
             shortEdge = savedState.getInt(STATE_DRAFT_EXPORT_SHORT_EDGE),
-            frameRate = savedState.getInt(STATE_DRAFT_EXPORT_FRAME_RATE),
+            frameRate = FrameRate.of(
+                savedState.getInt(STATE_DRAFT_EXPORT_FRAME_RATE),
+                savedState.getInt(STATE_DRAFT_EXPORT_FRAME_RATE_DENOMINATOR, 1),
+            ),
             customResolution = savedState.getBoolean(STATE_DRAFT_CUSTOM_RESOLUTION),
             customFrameRate = savedState.getBoolean(STATE_DRAFT_CUSTOM_FRAME_RATE),
         )
@@ -3945,9 +3952,9 @@ class MainActivity : AppCompatActivity() {
         )
         settingsScreen.frameRateDropdown.setText(
             if (settings.effectiveExportFormat.customFrameRate) {
-                getString(R.string.custom_frame_rate_selected, settings.effectiveExportFormat.frameRate)
+                getString(R.string.custom_frame_rate_selected, settings.effectiveExportFormat.frameRate.displayValue)
             } else {
-                getString(R.string.frame_rate_value, settings.effectiveExportFormat.frameRate)
+                getString(R.string.frame_rate_value, settings.effectiveExportFormat.frameRate.displayValue)
             },
             false,
         )
@@ -4044,8 +4051,8 @@ class MainActivity : AppCompatActivity() {
         val existing = cameraSettings.effectiveExportFormat
         val input = TextInputEditText(this).apply {
             id = R.id.customFrameRateInput
-            inputType = InputType.TYPE_CLASS_NUMBER
-            setText(String.format(Locale.ROOT, "%d", existing.frameRate))
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+            setText(existing.frameRate.displayValue)
             selectAll()
         }
         val inputLayout = TextInputLayout(this).apply {
@@ -4139,7 +4146,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun chooseExportDestination() {
         val format = cameraSettings.activeVideoFormat
-        if (format.width.coerceAtLeast(format.height) > 1920 || format.frameRate > 30) {
+        if (format.width.coerceAtLeast(format.height) > 1920 || format.frameRate > FrameRate.of(30)) {
             MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.demanding_format_title)
                 .setMessage(
@@ -4147,7 +4154,7 @@ class MainActivity : AppCompatActivity() {
                         R.string.demanding_format_message,
                         format.width,
                         format.height,
-                        format.frameRate,
+                        format.frameRate.displayValue,
                     ),
                 )
                 .setNegativeButton(R.string.cancel, null)
@@ -5510,7 +5517,7 @@ class MainActivity : AppCompatActivity() {
                 resolution = cameraSettings.videoQuality.resolution,
                 dataSource = currentVideoDataSource(),
                 exportShortEdge = cameraSettings.effectiveExportFormat.shortEdge,
-                exportFrameRate = cameraSettings.effectiveExportFormat.frameRate,
+                exportFrameRate = cameraSettings.effectiveExportFormat.frameRate.toString(),
             ),
         ),
     )
@@ -5562,7 +5569,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun snapshotResolutionLabel(snapshot: VideoSettingsSnapshot): String {
         val shortEdge = snapshot.exportShortEdge ?: return resolutionLabel(snapshot.resolution)
-        val frameRate = snapshot.exportFrameRate ?: ExportFormatSettings.DEFAULT_FRAME_RATE
+        val frameRate = snapshot.exportFrameRate?.let(FrameRate::parse) ?: ExportFormatSettings.DEFAULT_FRAME_RATE
         val format = ExportFormatSettings(shortEdge, frameRate).format(snapshot.aspectRatio)
         val dimensions = if (ExportResolution.entries.any { it.shortEdge == shortEdge }) {
             getString(R.string.preset_resolution_selected, shortEdge, format.width, format.height)
@@ -5570,7 +5577,7 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.custom_resolution_selected, format.width, format.height)
         }
         return snapshot.exportFrameRate?.let {
-            "$dimensions · ${getString(R.string.frame_rate_value, it)}"
+            "$dimensions · ${getString(R.string.frame_rate_value, frameRate.displayValue)}"
         } ?: dimensions
     }
 
@@ -6099,6 +6106,7 @@ class MainActivity : AppCompatActivity() {
         private const val STATE_DRAFT_QUALITY = "draft_quality_v1"
         private const val STATE_DRAFT_EXPORT_SHORT_EDGE = "draft_export_short_edge_v1"
         private const val STATE_DRAFT_EXPORT_FRAME_RATE = "draft_export_frame_rate_v1"
+        private const val STATE_DRAFT_EXPORT_FRAME_RATE_DENOMINATOR = "draft_export_frame_rate_denominator_v1"
         private const val STATE_DRAFT_CUSTOM_RESOLUTION = "draft_custom_resolution_v1"
         private const val STATE_DRAFT_CUSTOM_FRAME_RATE = "draft_custom_frame_rate_v1"
         private const val STATE_DRAFT_TRIP_DETECTION = "draft_trip_detection_v1"

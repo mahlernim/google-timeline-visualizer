@@ -18,6 +18,7 @@ import androidx.media3.muxer.SeekableMuxerOutput
 import dev.mahlernim.timelinevisualizer.data.TileRepository
 import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
+import dev.mahlernim.timelinevisualizer.render.FrameRate
 import dev.mahlernim.timelinevisualizer.render.RenderText
 import dev.mahlernim.timelinevisualizer.render.TimelineAnimation
 import dev.mahlernim.timelinevisualizer.render.TimelineFrame
@@ -30,6 +31,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
 import kotlin.coroutines.coroutineContext
+import kotlin.math.roundToInt
 
 enum class ExportPhase { PREPARING_MAP, CREATING_VIDEO, FINISHING_VIDEO, COMPLETE }
 
@@ -197,11 +199,11 @@ class Mp4Exporter(
                 input.clear()
                 check(input.capacity() >= yuv.size) { "Encoder input buffer is too small" }
                 input.put(yuv)
-                codec.queueInputBuffer(inputIndex, 0, yuv.size, frame * 1_000_000L / fps, 0)
+                codec.queueInputBuffer(inputIndex, 0, yuv.size, fps.timestampUs(frame), 0)
                 drain(false)
                 val phase = if (frame < journeyFrameCount) ExportPhase.CREATING_VIDEO else ExportPhase.FINISHING_VIDEO
                 val phaseChanged = frame == journeyFrameCount
-                if (frame % fps == 0 || phaseChanged || frame == frameCount - 1) {
+                if (frame % fps.value.roundToInt().coerceAtLeast(1) == 0 || phaseChanged || frame == frameCount - 1) {
                     val phaseCompleted = if (phase == ExportPhase.CREATING_VIDEO) {
                         frame + 1
                     } else {
@@ -229,7 +231,7 @@ class Mp4Exporter(
             while (!eosQueued) {
                 val inputIndex = codec.dequeueInputBuffer(10_000)
                 if (inputIndex >= 0) {
-                    codec.queueInputBuffer(inputIndex, 0, 0, frameCount * 1_000_000L / fps, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                    codec.queueInputBuffer(inputIndex, 0, 0, fps.timestampUs(frameCount), MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                     eosQueued = true
                 } else {
                     drain(false)
@@ -286,7 +288,7 @@ class Mp4Exporter(
                 ).apply {
                     setInteger(MediaFormat.KEY_COLOR_FORMAT, candidate.colorFormat)
                     setInteger(MediaFormat.KEY_BIT_RATE, videoFormat.bitrate)
-                    setInteger(MediaFormat.KEY_FRAME_RATE, videoFormat.frameRate)
+                    setFloat(MediaFormat.KEY_FRAME_RATE, videoFormat.frameRate.value.toFloat())
                     setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
                 }
                 codec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
@@ -337,10 +339,10 @@ class Mp4Exporter(
         private const val JOURNEY_PROGRESS_WEIGHT = 0.80f
         private const val FINISHING_PROGRESS_WEIGHT = 0.10f
 
-        internal fun videoFrameCounts(durationSeconds: Int, fps: Int): Pair<Int, Int> {
-            val frameCount = durationSeconds.coerceAtLeast(1) * fps.coerceAtLeast(1)
+        internal fun videoFrameCounts(durationSeconds: Int, fps: FrameRate): Pair<Int, Int> {
+            val frameCount = fps.frameCount(durationSeconds)
             val outroFrameCount = minOf(
-                (TimelineAnimation.OUTRO_SECONDS * fps).toInt(),
+                (TimelineAnimation.OUTRO_SECONDS * fps.value).roundToInt(),
                 frameCount - 1,
             )
             return frameCount - outroFrameCount to outroFrameCount
@@ -371,7 +373,7 @@ class Mp4Exporter(
             height: Int,
             journeyFrameCount: Int,
             outroFrameCount: Int,
-            fps: Int,
+            fps: FrameRate,
             overviewWidth: Int,
             overviewHeight: Int,
             cameraSettings: CameraSettings,
@@ -402,12 +404,12 @@ class Mp4Exporter(
             )
         }
 
-        internal fun animationFrame(frame: Int, journeyFrameCount: Int, fps: Int): TimelineFrame =
+        internal fun animationFrame(frame: Int, journeyFrameCount: Int, fps: FrameRate): TimelineFrame =
             if (frame < journeyFrameCount) {
                 val progress = if (journeyFrameCount == 1) 1f else frame.toFloat() / (journeyFrameCount - 1)
                 TimelineFrame(progress, 0f)
             } else {
-                val outroElapsed = (frame - journeyFrameCount).toFloat() / fps
+                val outroElapsed = (frame - journeyFrameCount).toFloat() / fps.value.toFloat()
                 TimelineFrame(
                     1f,
                     (outroElapsed / TimelineAnimation.OUTRO_TRANSITION_SECONDS).coerceIn(0f, 1f),

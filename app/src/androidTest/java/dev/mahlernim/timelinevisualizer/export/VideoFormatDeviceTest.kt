@@ -45,7 +45,7 @@ class VideoFormatDeviceTest {
         ).apply {
             setInteger(MediaFormat.KEY_COLOR_FORMAT, support.colorFormat)
             setInteger(MediaFormat.KEY_BIT_RATE, preset.bitrate)
-            setInteger(MediaFormat.KEY_FRAME_RATE, preset.frameRate)
+            setFloat(MediaFormat.KEY_FRAME_RATE, preset.frameRate.value.toFloat())
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
         }
         val codec = MediaCodec.createByCodecName(support.name)

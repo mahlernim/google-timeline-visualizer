@@ -1,5 +1,9 @@
 package dev.mahlernim.timelinevisualizer.render
 
+import java.math.BigDecimal
+import java.math.RoundingMode
+import kotlin.math.roundToLong
+
 enum class CameraMovement(
     val contextFraction: Double,
     val minimumContextKm: Double,
@@ -59,24 +63,104 @@ enum class ExportResolution(val shortEdge: Int) {
     UHD(2160),
 }
 
+class FrameRate private constructor(
+    val numerator: Int,
+    val denominator: Int,
+) : Comparable<FrameRate> {
+    val value: Double get() = numerator.toDouble() / denominator
+
+    val displayValue: String
+        get() = DISPLAY_ALIASES[this] ?: BigDecimal(numerator).divide(
+            BigDecimal(denominator),
+            3,
+            RoundingMode.HALF_UP,
+        ).stripTrailingZeros().toPlainString()
+
+    fun frameCount(durationSeconds: Int): Int =
+        ((durationSeconds.coerceAtLeast(1).toLong() * numerator + denominator / 2) / denominator).toInt()
+
+    fun timestampUs(frame: Int): Long = frame.toLong() * denominator * 1_000_000L / numerator
+
+    override fun compareTo(other: FrameRate): Int =
+        (numerator.toLong() * other.denominator).compareTo(other.numerator.toLong() * denominator)
+
+    override fun equals(other: Any?): Boolean =
+        other is FrameRate && numerator == other.numerator && denominator == other.denominator
+
+    override fun hashCode(): Int = 31 * numerator + denominator
+
+    override fun toString(): String = displayValue
+
+    companion object {
+        private val INPUT_ALIASES = mapOf(
+            "23.976" to of(24_000, 1_001),
+            "29.97" to of(30_000, 1_001),
+            "59.94" to of(60_000, 1_001),
+            "119.88" to of(120_000, 1_001),
+        )
+        private val DISPLAY_ALIASES = INPUT_ALIASES.entries.associate { (label, rate) -> rate to label }
+
+        fun of(framesPerSecond: Int): FrameRate = of(framesPerSecond, 1)
+
+        fun of(numerator: Int, denominator: Int): FrameRate {
+            require(numerator > 0 && denominator > 0)
+            val divisor = gcd(numerator, denominator)
+            return FrameRate(numerator / divisor, denominator / divisor)
+        }
+
+        fun parse(raw: CharSequence?): FrameRate? {
+            val value = raw?.toString()?.trim().orEmpty()
+            INPUT_ALIASES[value]?.let { return it }
+            if (!value.matches(Regex("[0-9]+(?:\\.[0-9]{1,3})?"))) return null
+            val scale = value.substringAfter('.', "").length
+            val denominator = TEN_POWERS.getOrNull(scale) ?: return null
+            val numerator = value.replace(".", "").toIntOrNull() ?: return null
+            return of(numerator, denominator)
+        }
+
+        private fun gcd(first: Int, second: Int): Int {
+            var a = first
+            var b = second
+            while (b != 0) {
+                val remainder = a % b
+                a = b
+                b = remainder
+            }
+            return a
+        }
+
+        private val TEN_POWERS = intArrayOf(1, 10, 100, 1_000)
+    }
+}
+
 data class VideoFormat(
     val width: Int,
     val height: Int,
-    val frameRate: Int,
+    val frameRate: FrameRate,
     val bitrate: Int,
 ) {
+    constructor(width: Int, height: Int, frameRate: Int, bitrate: Int) :
+        this(width, height, FrameRate.of(frameRate), bitrate)
+
     val aspectRatio: Float get() = width.toFloat() / height
 }
 
 data class ExportFormatSettings(
     val shortEdge: Int,
-    val frameRate: Int,
+    val frameRate: FrameRate,
     val customResolution: Boolean = false,
     val customFrameRate: Boolean = false,
 ) {
+    constructor(
+        shortEdge: Int,
+        frameRate: Int,
+        customResolution: Boolean = false,
+        customFrameRate: Boolean = false,
+    ) : this(shortEdge, FrameRate.of(frameRate), customResolution, customFrameRate)
+
     init {
         require(shortEdge in MIN_SHORT_EDGE..MAX_SHORT_EDGE)
-        require(frameRate in MIN_FRAME_RATE..MAX_FRAME_RATE)
+        require(frameRate >= MIN_FRAME_RATE && frameRate <= MAX_FRAME_RATE)
     }
 
     fun format(aspectRatio: VideoAspectRatio): VideoFormat {
@@ -92,14 +176,15 @@ data class ExportFormatSettings(
     companion object {
         const val MIN_SHORT_EDGE = 480
         const val MAX_SHORT_EDGE = 2160
-        const val MIN_FRAME_RATE = 15
-        const val MAX_FRAME_RATE = 120
+        val MIN_FRAME_RATE = FrameRate.of(15)
+        val MAX_FRAME_RATE = FrameRate.of(240)
         const val DEFAULT_SHORT_EDGE = 480
-        const val DEFAULT_FRAME_RATE = 30
+        val DEFAULT_FRAME_RATE = FrameRate.of(30)
 
         fun parseShortEdge(raw: CharSequence?): Int? = parseBoundedInt(raw, MIN_SHORT_EDGE, MAX_SHORT_EDGE)
 
-        fun parseFrameRate(raw: CharSequence?): Int? = parseBoundedInt(raw, MIN_FRAME_RATE, MAX_FRAME_RATE)
+        fun parseFrameRate(raw: CharSequence?): FrameRate? =
+            FrameRate.parse(raw)?.takeIf { it >= MIN_FRAME_RATE && it <= MAX_FRAME_RATE }
 
         fun fromLegacy(quality: VideoQuality): ExportFormatSettings = ExportFormatSettings(
             shortEdge = quality.resolution.shortEdge,
@@ -117,7 +202,7 @@ data class ExportFormatSettings(
         private fun bitrate(
             width: Int,
             height: Int,
-            frameRate: Int,
+            frameRate: FrameRate,
             aspectRatio: VideoAspectRatio,
         ): Int {
             val legacyBase = when (width.coerceAtMost(height)) {
@@ -127,9 +212,10 @@ data class ExportFormatSettings(
                 else -> null
             }
             val legacyRate = if (aspectRatio == VideoAspectRatio.SQUARE) 24 else 30
-            val calculated = legacyBase?.let { it.toLong() * frameRate / legacyRate }
-                ?: (width.toLong() * height * frameRate * 19 / 100)
-            return calculated.coerceIn(1_500_000L, 40_000_000L).toInt()
+            val calculated = legacyBase?.let { (it * frameRate.value / legacyRate).roundToLong() }
+                ?: (width.toLong() * height * frameRate.value * 19 / 100).roundToLong()
+            val maximum = (40_000_000L * maxOf(frameRate.value, 60.0) / 60.0).roundToLong()
+            return calculated.coerceIn(1_500_000L, maximum).toInt()
         }
     }
 }
@@ -154,7 +240,7 @@ enum class VideoQuality(
 
     val aspectRatio: Float get() = width.toFloat() / height
 
-    val format: VideoFormat get() = VideoFormat(width, height, frameRate, bitrate)
+    val format: VideoFormat get() = VideoFormat(width, height, FrameRate.of(frameRate), bitrate)
 
     fun withAspectRatio(aspectRatio: VideoAspectRatio): VideoQuality = of(aspectRatio, resolution)
 

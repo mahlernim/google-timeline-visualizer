@@ -25,7 +25,7 @@ data class VideoSettingsSnapshot(
     val resolution: VideoResolution,
     val dataSource: VideoDataSource = VideoDataSource.SEMANTIC,
     val exportShortEdge: Int? = null,
-    val exportFrameRate: Int? = null,
+    val exportFrameRate: String? = null,
 )
 
 data class VideoRecord(
@@ -164,7 +164,7 @@ class VideoStore(private val context: Context) : VideoRecordRepository {
                 VideoDataSource.valueOf(optString("dataSource"))
             }.getOrDefault(VideoDataSource.SEMANTIC),
             exportShortEdge = optionalPositiveInt("exportShortEdge"),
-            exportFrameRate = optionalPositiveInt("exportFrameRate"),
+            exportFrameRate = optString("exportFrameRate").takeIf(String::isNotBlank),
         )
     }.getOrNull()
 

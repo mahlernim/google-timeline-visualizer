@@ -10,6 +10,7 @@ import dev.mahlernim.timelinevisualizer.render.RenderText
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.ExportFormatSettings
+import dev.mahlernim.timelinevisualizer.render.FrameRate
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
 import dev.mahlernim.timelinevisualizer.render.LocalFraming
 import dev.mahlernim.timelinevisualizer.render.TripDetection
@@ -201,7 +202,12 @@ class VideoExportRequestStoreTest {
 
     @Test
     fun restoresCustomResolutionAndFrameRate() {
-        val format = ExportFormatSettings(2000, 25, customResolution = true, customFrameRate = true)
+        val format = ExportFormatSettings(
+            2000,
+            FrameRate.of(30_000, 1_001),
+            customResolution = true,
+            customFrameRate = true,
+        )
         val request = VideoExportRequest(
             outputUri = "content://documents/custom.mp4",
             journey = Journey.from(emptyList(), 2026),
@@ -228,7 +234,7 @@ class VideoExportRequestStoreTest {
         val restored = store.load()!!
 
         assertEquals(1440, restored.cameraSettings.effectiveExportFormat.shortEdge)
-        assertEquals(60, restored.cameraSettings.effectiveExportFormat.frameRate)
+        assertEquals(FrameRate.of(60), restored.cameraSettings.effectiveExportFormat.frameRate)
         assertNull(restored.projectId)
         assertEquals(VideoDataSource.SEMANTIC, restored.dataSource)
     }
@@ -274,7 +280,7 @@ class VideoExportRequestStoreTest {
         assertEquals(YearMonth.of(2025, 11), restored.period.endInclusive)
         assertEquals(RenderText.ENGLISH, restored.renderText)
         assertEquals(VideoQuality.STANDARD, restored.cameraSettings.videoQuality)
-        assertEquals(24, restored.cameraSettings.effectiveExportFormat.frameRate)
+        assertEquals(FrameRate.of(24), restored.cameraSettings.effectiveExportFormat.frameRate)
         assertEquals(LocalFraming.OFF, restored.cameraSettings.localFraming)
         assertEquals(1, restored.journey.points.size)
     }

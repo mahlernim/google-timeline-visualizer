@@ -46,6 +46,7 @@ import dev.mahlernim.timelinevisualizer.model.VideoDuration
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
+import dev.mahlernim.timelinevisualizer.render.FrameRate
 import dev.mahlernim.timelinevisualizer.render.LocalFraming
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
 import dev.mahlernim.timelinevisualizer.render.TripDetection
@@ -630,22 +631,26 @@ class MainActivityTest {
     }
 
     @Test
-    fun settingsSelect2160pAnd120FramesPerSecondWithoutChangingAspect() {
+    fun settingsKeepCommonRatesSimpleAndAcceptFractionalCustomRates() {
         val activity = launchActivity()
         activity.findViewById<View>(R.id.navigationSettings).performClick()
         val resolution = activity.findViewById<AutoCompleteTextView>(R.id.videoQualityDropdown)
         val frameRate = activity.findViewById<AutoCompleteTextView>(R.id.frameRateDropdown)
 
         resolution.onItemClickListener?.onItemClick(null, null, 4, 4)
+        assertEquals(4, frameRate.adapter.count)
         frameRate.onItemClickListener?.onItemClick(null, null, 3, 3)
+        val dialog = ShadowDialog.getLatestDialog() as AlertDialog
+        dialog.findViewById<TextView>(R.id.customFrameRateInput)!!.text = "119.88"
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick()
 
         assertEquals(
             activity.getString(R.string.preset_resolution_selected, 2160, 2160, 2160),
             resolution.text.toString(),
         )
-        assertEquals(activity.getString(R.string.frame_rate_value, 120), frameRate.text.toString())
+        assertEquals(activity.getString(R.string.custom_frame_rate_selected, "119.88"), frameRate.text.toString())
         assertEquals(2160, CameraSettingsPreferences(context).load().activeVideoFormat.width)
-        assertEquals(120, CameraSettingsPreferences(context).load().activeVideoFormat.frameRate)
+        assertEquals(FrameRate.of(120_000, 1_001), CameraSettingsPreferences(context).load().activeVideoFormat.frameRate)
     }
 
     @Test

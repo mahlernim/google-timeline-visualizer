@@ -102,7 +102,7 @@ class VideoStoreTest {
             resolution = VideoResolution.HIGH,
             dataSource = VideoDataSource.JOURNAL,
             exportShortEdge = 1440,
-            exportFrameRate = 60,
+            exportFrameRate = "59.94",
         )
         store.upsert(record("content://trip", "Tokyo", 300L).copy(settingsSnapshot = snapshot))
 

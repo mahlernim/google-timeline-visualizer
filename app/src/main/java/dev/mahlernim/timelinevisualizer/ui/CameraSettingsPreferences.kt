@@ -5,6 +5,7 @@ import androidx.core.content.edit
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.ExportFormatSettings
+import dev.mahlernim.timelinevisualizer.render.FrameRate
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
 import dev.mahlernim.timelinevisualizer.render.LocalFraming
 import dev.mahlernim.timelinevisualizer.render.TripDetection
@@ -20,11 +21,20 @@ class CameraSettingsPreferences(context: Context) {
         val exportFormat = when {
             preferences.contains(KEY_EXPORT_FORMAT_PRESENT) &&
                 !preferences.getBoolean(KEY_EXPORT_FORMAT_PRESENT, false) -> null
-            preferences.contains(KEY_EXPORT_SHORT_EDGE) && preferences.contains(KEY_EXPORT_FRAME_RATE) -> {
+            preferences.contains(KEY_EXPORT_SHORT_EDGE) && (
+                preferences.contains(KEY_EXPORT_FRAME_RATE_NUMERATOR) || preferences.contains(KEY_EXPORT_FRAME_RATE)
+            ) -> {
                 runCatching {
                     ExportFormatSettings(
                         shortEdge = preferences.getInt(KEY_EXPORT_SHORT_EDGE, ExportFormatSettings.DEFAULT_SHORT_EDGE),
-                        frameRate = preferences.getInt(KEY_EXPORT_FRAME_RATE, ExportFormatSettings.DEFAULT_FRAME_RATE),
+                        frameRate = if (preferences.contains(KEY_EXPORT_FRAME_RATE_NUMERATOR)) {
+                            FrameRate.of(
+                                preferences.getInt(KEY_EXPORT_FRAME_RATE_NUMERATOR, ExportFormatSettings.DEFAULT_FRAME_RATE.numerator),
+                                preferences.getInt(KEY_EXPORT_FRAME_RATE_DENOMINATOR, 1),
+                            )
+                        } else {
+                            FrameRate.of(preferences.getInt(KEY_EXPORT_FRAME_RATE, ExportFormatSettings.DEFAULT_FRAME_RATE.numerator))
+                        },
                         customResolution = preferences.getBoolean(KEY_EXPORT_CUSTOM_RESOLUTION, false),
                         customFrameRate = preferences.getBoolean(KEY_EXPORT_CUSTOM_FRAME_RATE, false),
                     )
@@ -53,12 +63,16 @@ class CameraSettingsPreferences(context: Context) {
             putBoolean(KEY_EXPORT_FORMAT_PRESENT, settings.exportFormat != null)
             settings.exportFormat?.let { format ->
                 putInt(KEY_EXPORT_SHORT_EDGE, format.shortEdge)
-                putInt(KEY_EXPORT_FRAME_RATE, format.frameRate)
+                putInt(KEY_EXPORT_FRAME_RATE_NUMERATOR, format.frameRate.numerator)
+                putInt(KEY_EXPORT_FRAME_RATE_DENOMINATOR, format.frameRate.denominator)
+                remove(KEY_EXPORT_FRAME_RATE)
                 putBoolean(KEY_EXPORT_CUSTOM_RESOLUTION, format.customResolution)
                 putBoolean(KEY_EXPORT_CUSTOM_FRAME_RATE, format.customFrameRate)
             } ?: run {
                 remove(KEY_EXPORT_SHORT_EDGE)
                 remove(KEY_EXPORT_FRAME_RATE)
+                remove(KEY_EXPORT_FRAME_RATE_NUMERATOR)
+                remove(KEY_EXPORT_FRAME_RATE_DENOMINATOR)
                 remove(KEY_EXPORT_CUSTOM_RESOLUTION)
                 remove(KEY_EXPORT_CUSTOM_FRAME_RATE)
             }
@@ -111,6 +125,8 @@ class CameraSettingsPreferences(context: Context) {
         const val KEY_EXPORT_SHORT_EDGE = "export-short-edge-v1"
         const val KEY_EXPORT_FORMAT_PRESENT = "export-format-present-v1"
         const val KEY_EXPORT_FRAME_RATE = "export-frame-rate-v1"
+        const val KEY_EXPORT_FRAME_RATE_NUMERATOR = "export-frame-rate-numerator-v2"
+        const val KEY_EXPORT_FRAME_RATE_DENOMINATOR = "export-frame-rate-denominator-v2"
         const val KEY_EXPORT_CUSTOM_RESOLUTION = "export-custom-resolution-v1"
         const val KEY_EXPORT_CUSTOM_FRAME_RATE = "export-custom-frame-rate-v1"
         const val KEY_ZOOM_IN_TRAVEL_SLOWDOWN = "zoom-in-travel-slowdown"

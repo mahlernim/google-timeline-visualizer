@@ -382,13 +382,13 @@
     <string name="preset_overwritten">프리셋을 업데이트했습니다</string>
     <string name="view_in_library">라이브러리에서 보기</string>
     <plurals name="recent_day_recap"><item quantity="other">최근 %d일 리캡</item></plurals>
-    <string name="format_not_supported_with_rate">이 기기에서는 %1$d × %2$d, %3$d fps 동영상을 만들 수 없습니다. 해상도나 프레임 속도를 낮추세요.</string>
+    <string name="format_not_supported_with_rate">이 기기에서는 %1$d × %2$d, %3$s fps 동영상을 만들 수 없습니다. 해상도나 프레임 속도를 낮추세요.</string>
     <string name="resolution_1440">1440p</string><string name="resolution_2160">2160p</string>
-    <string name="frame_rate">프레임 속도</string><string name="frame_rate_value">%1$d fps</string><string name="custom_action">사용자 지정…</string>
-    <string name="preset_resolution_selected">%1$dp · %2$d × %3$d</string><string name="custom_resolution_selected">사용자 지정 · %1$d × %2$d</string><string name="custom_frame_rate_selected">사용자 지정 · %1$d fps</string>
+    <string name="frame_rate">프레임 속도</string><string name="frame_rate_value">%1$s fps</string><string name="custom_action">사용자 지정…</string>
+    <string name="preset_resolution_selected">%1$dp · %2$d × %3$d</string><string name="custom_resolution_selected">사용자 지정 · %1$d × %2$d</string><string name="custom_frame_rate_selected">사용자 지정 · %1$s fps</string>
     <string name="custom_resolution_title">사용자 지정 해상도</string><string name="custom_resolution_short_edge">짧은 변 픽셀 수</string><string name="custom_resolution_range">%1$d에서 %2$d 사이의 정수를 입력하세요.</string><string name="output_dimensions">출력 · %1$d × %2$d</string>
-    <string name="custom_frame_rate_title">사용자 지정 프레임 속도</string><string name="custom_frame_rate_range">%1$d에서 %2$d 사이의 정수를 입력하세요.</string>
-    <string name="demanding_format_title">기기에 부담이 될 수 있는 형식입니다</string><string name="demanding_format_message">%1$d × %2$d, %3$d fps 동영상을 만듭니다. 내보내기가 훨씬 오래 걸리거나 메모리를 더 사용하거나 완료 전에 실패할 수 있습니다. 고해상도에서는 위치 세부 정보가 더 많이 보일 수 있으므로 공유하기 전에 동영상을 확인하세요.</string><string name="export_anyway">그래도 내보내기</string>
+    <string name="custom_frame_rate_title">사용자 지정 프레임 속도</string><string name="custom_frame_rate_range">%1$s에서 %2$s 사이의 값을 소수점 셋째 자리까지 입력하세요. 일반적인 값은 23.976, 29.97, 59.94입니다.</string>
+    <string name="demanding_format_title">기기에 부담이 될 수 있는 형식입니다</string><string name="demanding_format_message">%1$d × %2$d, %3$s fps 동영상을 만듭니다. 내보내기가 훨씬 오래 걸리거나 메모리를 더 사용하거나 완료 전에 실패할 수 있습니다. 고해상도에서는 위치 세부 정보가 더 많이 보일 수 있으므로 공유하기 전에 동영상을 확인하세요.</string><string name="export_anyway">그래도 내보내기</string>
     <string name="apply">적용</string>
     <string name="confirm_and_create">확인하고 만들기</string>
     <string name="confirmed_trips">내 여행</string>

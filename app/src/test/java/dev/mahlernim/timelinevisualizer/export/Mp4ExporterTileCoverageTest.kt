@@ -3,6 +3,7 @@ package dev.mahlernim.timelinevisualizer.export
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
+import dev.mahlernim.timelinevisualizer.render.FrameRate
 import dev.mahlernim.timelinevisualizer.render.TimelineFrame
 import dev.mahlernim.timelinevisualizer.render.TimelinePainter
 import java.time.Instant
@@ -17,11 +18,20 @@ import org.robolectric.annotation.Config
 class Mp4ExporterTileCoverageTest {
     @Test
     fun selectedDurationIncludesTheOutroFrames() {
-        val (journeyFrames, outroFrames) = Mp4Exporter.videoFrameCounts(90, 30)
+        val (journeyFrames, outroFrames) = Mp4Exporter.videoFrameCounts(90, FrameRate.of(30))
 
         assertEquals(2_655, journeyFrames)
         assertEquals(45, outroFrames)
         assertEquals(2_700, journeyFrames + outroFrames)
+    }
+
+    @Test
+    fun fractionalFrameRateUsesItsExactTimebase() {
+        val fps = FrameRate.of(30_000, 1_001)
+        val (journeyFrames, outroFrames) = Mp4Exporter.videoFrameCounts(120, fps)
+
+        assertEquals(3_596, journeyFrames + outroFrames)
+        assertEquals(1_001_000L, fps.timestampUs(30))
     }
 
     @Test
@@ -37,7 +47,7 @@ class Mp4ExporterTileCoverageTest {
         val painter = TimelinePainter()
         val journeyFrames = 9
         val outroFrames = 4
-        val fps = 3
+        val fps = FrameRate.of(3)
         val settings = CameraSettings.DEFAULT
         val expected = buildSet {
             for (frame in 0 until journeyFrames + outroFrames) {

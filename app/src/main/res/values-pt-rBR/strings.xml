@@ -330,13 +330,13 @@
     <string name="preset_overwritten">Predefinição atualizada</string>
     <string name="view_in_library">Ver na biblioteca</string>
     <plurals name="recent_day_recap"><item quantity="one">Retrospectiva do último %d dia</item><item quantity="other">Retrospectiva dos últimos %d dias</item></plurals>
-    <string name="format_not_supported_with_rate">Este dispositivo não consegue criar vídeo de %1$d × %2$d a %3$d fps. Escolha uma resolução ou taxa de quadros menor.</string>
+    <string name="format_not_supported_with_rate">Este dispositivo não consegue criar vídeo de %1$d × %2$d a %3$s fps. Escolha uma resolução ou taxa de quadros menor.</string>
     <string name="resolution_1440">1440p</string><string name="resolution_2160">2160p</string>
-    <string name="frame_rate">Taxa de quadros</string><string name="frame_rate_value">%1$d fps</string><string name="custom_action">Personalizado…</string>
-    <string name="preset_resolution_selected">%1$dp · %2$d × %3$d</string><string name="custom_resolution_selected">Personalizado · %1$d × %2$d</string><string name="custom_frame_rate_selected">Personalizado · %1$d fps</string>
+    <string name="frame_rate">Taxa de quadros</string><string name="frame_rate_value">%1$s fps</string><string name="custom_action">Personalizado…</string>
+    <string name="preset_resolution_selected">%1$dp · %2$d × %3$d</string><string name="custom_resolution_selected">Personalizado · %1$d × %2$d</string><string name="custom_frame_rate_selected">Personalizado · %1$s fps</string>
     <string name="custom_resolution_title">Resolução personalizada</string><string name="custom_resolution_short_edge">Lado menor em pixels</string><string name="custom_resolution_range">Digite um número inteiro entre %1$d e %2$d.</string><string name="output_dimensions">Saída · %1$d × %2$d</string>
-    <string name="custom_frame_rate_title">Taxa de quadros personalizada</string><string name="custom_frame_rate_range">Digite um número inteiro entre %1$d e %2$d.</string>
-    <string name="demanding_format_title">Este formato pode exigir mais do aparelho</string><string name="demanding_format_message">Você está criando um vídeo de %1$d × %2$d a %3$d fps. A exportação pode demorar muito mais, usar mais memória ou falhar antes de terminar. Uma resolução maior pode revelar mais detalhes de localização. Revise o vídeo antes de compartilhar.</string><string name="export_anyway">Exportar mesmo assim</string>
+    <string name="custom_frame_rate_title">Taxa de quadros personalizada</string><string name="custom_frame_rate_range">Digite um valor entre %1$s e %2$s com até três casas decimais. Valores comuns incluem 23.976, 29.97 e 59.94.</string>
+    <string name="demanding_format_title">Este formato pode exigir mais do aparelho</string><string name="demanding_format_message">Você está criando um vídeo de %1$d × %2$d a %3$s fps. A exportação pode demorar muito mais, usar mais memória ou falhar antes de terminar. Uma resolução maior pode revelar mais detalhes de localização. Revise o vídeo antes de compartilhar.</string><string name="export_anyway">Exportar mesmo assim</string>
     <string name="add_end_month">Adicionar mês final</string>
     <string name="add_end_period">Adicionar período final</string>
     <string name="add_end_year">Adicionar ano final</string>

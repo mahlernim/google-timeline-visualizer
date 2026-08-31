@@ -9,6 +9,7 @@ import dev.mahlernim.timelinevisualizer.render.RenderText
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.ExportFormatSettings
+import dev.mahlernim.timelinevisualizer.render.FrameRate
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
 import dev.mahlernim.timelinevisualizer.render.LocalFraming
 import dev.mahlernim.timelinevisualizer.render.TripDetection
@@ -62,7 +63,8 @@ class VideoExportRequestStore(context: Context) {
             output.writeBoolean(request.cameraSettings.exportFormat != null)
             request.cameraSettings.exportFormat?.let { exportFormat ->
                 output.writeInt(exportFormat.shortEdge)
-                output.writeInt(exportFormat.frameRate)
+                output.writeInt(exportFormat.frameRate.numerator)
+                output.writeInt(exportFormat.frameRate.denominator)
                 output.writeBoolean(exportFormat.customResolution)
                 output.writeBoolean(exportFormat.customFrameRate)
             }
@@ -159,7 +161,11 @@ class VideoExportRequestStore(context: Context) {
                                 runCatching {
                                     ExportFormatSettings(
                                         shortEdge = input.readInt(),
-                                        frameRate = input.readInt(),
+                                        frameRate = if (version >= 16) {
+                                            FrameRate.of(input.readInt(), input.readInt())
+                                        } else {
+                                            FrameRate.of(input.readInt())
+                                        },
                                         customResolution = input.readBoolean(),
                                         customFrameRate = input.readBoolean(),
                                     )
@@ -279,7 +285,7 @@ class VideoExportRequestStore(context: Context) {
     }
 
     companion object {
-        private const val CURRENT_FILE_VERSION = 15
+        private const val CURRENT_FILE_VERSION = 16
         private const val MAX_POINT_COUNT = 2_000_000
         private const val MAX_SEMANTIC_EPISODE_COUNT = 100_000
         private const val REQUEST_FILE = "pending-video-export.bin"
