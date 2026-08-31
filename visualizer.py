@@ -17,6 +17,7 @@ Description:
 
 import argparse
 import bisect
+import calendar
 import io
 import json
 import math
@@ -25,7 +26,7 @@ import statistics
 import sys
 import urllib.request
 import urllib.parse
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -561,6 +562,72 @@ def _date_in_range(
     return True
 
 
+SEGMENT_DIRECTION_SIGNAL = timedelta(hours=36)
+
+
+def _parse_timeline_timestamp(value: Any) -> Optional[Tuple[datetime, bool]]:
+    """Parse an instant and retain whether its source omitted a timezone.
+
+    A timezone-less wall time is represented with a UTC tzinfo so mixed exports
+    remain arithmetically safe. The Boolean prevents that placeholder timezone
+    from being treated as proof that separate records share an absolute clock.
+    """
+    if isinstance(value, datetime):
+        parsed = value
+    elif not value:
+        return None
+    else:
+        try:
+            parsed = dateutil.parser.parse(value)
+        except (TypeError, ValueError, OverflowError):
+            return None
+    timezone_missing = parsed.utcoffset() is None
+    if timezone_missing:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed, timezone_missing
+
+
+def _normalize_segment_direction(segments: List[Any]) -> List[Any]:
+    """Reverse clearly descending exports without sorting ambiguous wall times."""
+    anchors = []
+    for segment in segments:
+        if not isinstance(segment, dict):
+            continue
+        parsed = _parse_timeline_timestamp(segment.get('startTime'))
+        if parsed is not None:
+            anchors.append(parsed[0])
+    ascending_signals = 0
+    descending_signals = 0
+    for previous, current in zip(anchors, anchors[1:]):
+        delta = current - previous
+        if abs(delta) < SEGMENT_DIRECTION_SIGNAL:
+            continue
+        if delta > timedelta(0):
+            ascending_signals += 1
+        else:
+            descending_signals += 1
+    if len(anchors) >= 2:
+        endpoint_delta = anchors[-1] - anchors[0]
+        if abs(endpoint_delta) >= SEGMENT_DIRECTION_SIGNAL:
+            if endpoint_delta > timedelta(0):
+                ascending_signals += 2
+            else:
+                descending_signals += 2
+    return list(reversed(segments)) if descending_signals > ascending_signals else segments
+
+
+def _ordered_timeline_points(points: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    if any(point.get('time_zone_missing', False) for point in points):
+        return sorted(points, key=lambda point: point.get('_source_order', (0, 0, 0)))
+    return sorted(points, key=lambda point: point['dt'])
+
+
+def _without_internal_point_fields(points: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    for point in points:
+        point.pop('_source_order', None)
+    return points
+
+
 def extract_timeline_points(
     data: Any,
     year: Optional[int] = None,
@@ -579,18 +646,8 @@ def extract_timeline_points(
     standalone_path_points = []
     semantic_intervals = []
 
-    def parse_timestamp(time_value: Any) -> Optional[datetime]:
-        if isinstance(time_value, datetime):
-            return time_value
-        if not time_value:
-            return None
-        try:
-            return dateutil.parser.parse(time_value)
-        except (TypeError, ValueError, OverflowError):
-            return None
-
-    def path_timestamp(path_point: Dict[str, Any], start_value: Any, end_value: Any) -> Optional[datetime]:
-        absolute = parse_timestamp(path_point.get('time'))
+    def path_timestamp(path_point: Dict[str, Any], start_value: Any, end_value: Any) -> Optional[Tuple[datetime, bool]]:
+        absolute = _parse_timeline_timestamp(path_point.get('time'))
         if absolute is not None:
             return absolute
         offset_value = path_point.get('durationMinutesOffsetFromStartTime')
@@ -602,26 +659,44 @@ def extract_timeline_points(
             return None
         if offset < 0:
             return None
-        start = parse_timestamp(start_value)
+        start = _parse_timeline_timestamp(start_value)
         if start is None:
             return None
         try:
-            timestamp = start + timedelta(minutes=offset)
+            timestamp = start[0] + timedelta(minutes=offset)
         except OverflowError:
             return None
-        end = parse_timestamp(end_value)
-        if end is not None and timestamp > end + timedelta(minutes=1):
+        end = _parse_timeline_timestamp(end_value)
+        if (
+            end is not None
+            and not start[1]
+            and not end[1]
+            and timestamp > end[0] + timedelta(minutes=1)
+        ):
             return None
-        return timestamp
+        return timestamp, start[1]
 
-    def add_point(output: List[Dict[str, Any]], timestamp: Optional[datetime], coordinate: Optional[Tuple[float, float]]) -> bool:
+    def add_point(
+        output: List[Dict[str, Any]],
+        timestamp: Optional[Tuple[datetime, bool]],
+        coordinate: Optional[Tuple[float, float]],
+        source_order: Tuple[int, int, int],
+    ) -> bool:
         if timestamp is None or coordinate is None:
             return False
-        if _date_in_range(timestamp, year=year, start_date=start_date, end_date=end_date):
-            output.append({'dt': timestamp, 'lat': coordinate[0], 'lon': coordinate[1]})
+        instant, timezone_missing = timestamp
+        if _date_in_range(instant, year=year, start_date=start_date, end_date=end_date):
+            output.append({
+                'dt': instant,
+                'lat': coordinate[0],
+                'lon': coordinate[1],
+                'time_zone_missing': timezone_missing,
+                '_source_order': source_order,
+            })
         return True
 
-    for seg in segments:
+    normalized_segments = _normalize_segment_direction(segments)
+    for segment_index, seg in enumerate(normalized_segments):
         if not isinstance(seg, dict):
             continue
         start_time = seg.get('startTime')
@@ -642,32 +717,33 @@ def extract_timeline_points(
         )
         path_output = canonical_points if has_usable_semantic_record else standalone_path_points
 
-        for path_point in seg.get('timelinePath', []):
+        for path_index, path_point in enumerate(seg.get('timelinePath', [])):
             if isinstance(path_point, dict):
                 add_point(
                     path_output,
                     path_timestamp(path_point, start_time, end_time),
                     parse_coordinate(path_point.get('point')),
+                    (segment_index, 1, path_index),
                 )
 
-        start = parse_timestamp(start_time) if has_usable_semantic_record else None
-        end = parse_timestamp(end_time) if has_usable_semantic_record else None
+        start = _parse_timeline_timestamp(start_time) if has_usable_semantic_record else None
+        end = _parse_timeline_timestamp(end_time) if has_usable_semantic_record else None
         if isinstance(activity, dict):
-            add_point(canonical_points, start, activity_start_coordinate)
-            add_point(canonical_points, end, activity_end_coordinate)
+            add_point(canonical_points, start, activity_start_coordinate, (segment_index, 0, 0))
+            add_point(canonical_points, end, activity_end_coordinate, (segment_index, 2, 0))
 
         if isinstance(candidate, dict):
-            add_point(canonical_points, start, visit_coordinate)
+            add_point(canonical_points, start, visit_coordinate, (segment_index, 0, 1))
 
         if has_usable_semantic_record:
             if (
                 start is not None
                 and end is not None
-                and start.utcoffset() is not None
-                and end.utcoffset() is not None
-                and end >= start
+                and not start[1]
+                and not end[1]
+                and end[0] >= start[0]
             ):
-                semantic_intervals.append((start, end))
+                semantic_intervals.append((start[0], end[0]))
 
     semantic_intervals.sort(key=lambda interval: interval[0])
     merged_intervals = []
@@ -678,9 +754,9 @@ def extract_timeline_points(
             merged_intervals[-1][1] = end
 
     interval_index = 0
-    for point in sorted(standalone_path_points, key=lambda item: item['dt']):
+    for point in _ordered_timeline_points(standalone_path_points):
         timestamp = point['dt']
-        if timestamp.utcoffset() is None:
+        if point.get('time_zone_missing', False):
             canonical_points.append(point)
             continue
         while interval_index < len(merged_intervals) and merged_intervals[interval_index][1] < timestamp:
@@ -696,7 +772,7 @@ def extract_timeline_points(
         (point['dt'], point['lat'], point['lon']): point
         for point in canonical_points
     }
-    return sorted(unique.values(), key=lambda point: point['dt'])
+    return _without_internal_point_fields(_ordered_timeline_points(list(unique.values())))
 
 
 def extract_journal_route_points(
@@ -716,13 +792,16 @@ def extract_journal_route_points(
     raw_signals = data.get('rawSignals', []) if isinstance(data, dict) else []
     detailed = []
     accuracy_rejected = 0
-    for raw_signal in raw_signals:
+    for source_index, raw_signal in enumerate(raw_signals):
         position = raw_signal.get('position') if isinstance(raw_signal, dict) else None
         if not isinstance(position, dict):
             continue
         coordinate = parse_coordinate(position.get('LatLng') or position.get('latLng'))
         try:
-            timestamp = dateutil.parser.parse(position.get('timestamp'))
+            parsed_timestamp = _parse_timeline_timestamp(position.get('timestamp'))
+            if parsed_timestamp is None:
+                continue
+            timestamp, timezone_missing = parsed_timestamp
             accuracy = float(position.get('accuracyMeters'))
         except (TypeError, ValueError, OverflowError):
             continue
@@ -738,8 +817,13 @@ def extract_journal_route_points(
             'lat': coordinate[0],
             'lon': coordinate[1],
             'accuracy': accuracy,
+            'time_zone_missing': timezone_missing,
+            '_source_order': (source_index, 0, 0),
         })
 
+    # Raw signals are a separate chronological stream. As in the web parser,
+    # timezone-less values use their wall time as a stable placeholder so the
+    # detail filters and semantic fusion can still operate deterministically.
     detailed.sort(key=lambda point: point['dt'])
     normalized = []
     group_start = 0
@@ -822,7 +906,7 @@ def extract_journal_route_points(
             semantic_backup.append(point)
 
     combined = sorted(stabilized + semantic_backup, key=lambda point: point['dt'])
-    return combined, {
+    return _without_internal_point_fields(combined), {
         'detailed_input': len(detailed) + accuracy_rejected,
         'detailed_usable': len(stabilized),
         'detailed_islands': len(islands),
@@ -1229,7 +1313,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def parse_date_argument(value: Optional[str]) -> Optional[date]:
+def parse_date_argument(value: Optional[str], *, end_of_month: bool = False) -> Optional[date]:
     if not value:
         return None
     cleaned = value.strip()
@@ -1237,7 +1321,10 @@ def parse_date_argument(value: Optional[str]) -> Optional[date]:
         if len(cleaned) == 7 and '-' in cleaned:
             # YYYY-MM
             parts = cleaned.split('-')
-            return date(int(parts[0]), int(parts[1]), 1)
+            year = int(parts[0])
+            month = int(parts[1])
+            day = calendar.monthrange(year, month)[1] if end_of_month else 1
+            return date(year, month, day)
         parsed = dateutil.parser.parse(cleaned)
         return parsed.date()
     except Exception as err:
@@ -1257,7 +1344,7 @@ def _main_inner(argv: Optional[List[str]] = None) -> int:
     args = parser.parse_args(argv)
 
     start_date = parse_date_argument(args.start_date)
-    end_date = parse_date_argument(args.end_date)
+    end_date = parse_date_argument(args.end_date, end_of_month=True)
     target_year = args.year
     if target_year is None and start_date is None and end_date is None:
         target_year = datetime.now().year
