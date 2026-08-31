@@ -8,6 +8,23 @@ DATABASE_FILES = {
     "travel-journal.db-shm",
     "travel-journal.db-wal",
 }
+SENSITIVE_PREFERENCES = {
+    "creations.xml",
+    "timeline_source.xml",
+    "video_export_state.xml",
+    "journal_reminders.xml",
+    "video-presets.xml",
+    "display.xml",
+    "trips_lab.xml",
+}
+SENSITIVE_FILES = {
+    "timeline-imports/",
+    "creation-thumbnails/",
+    "pending-video-export.bin",
+    "pending-video-export.tmp",
+    "pending-video-destination.bin",
+    "pending-video-destination.tmp",
+}
 
 
 def database_exclusions(path: Path):
@@ -19,9 +36,29 @@ def database_exclusions(path: Path):
     }
 
 
+def shared_preference_exclusions(root):
+    return {
+        element.attrib["path"]
+        for element in root.iter("exclude")
+        if element.attrib.get("domain") == "sharedpref"
+    }
+
+
+def file_exclusions(root):
+    return {
+        element.attrib["path"]
+        for element in root.iter("exclude")
+        if element.attrib.get("domain") == "file"
+    }
+
+
 def test_journal_database_is_excluded_from_legacy_cloud_backup():
-    exclusions = database_exclusions(ROOT / "app/src/main/res/xml/backup_rules.xml")
+    path = ROOT / "app/src/main/res/xml/backup_rules.xml"
+    exclusions = database_exclusions(path)
     assert DATABASE_FILES <= exclusions
+    root = ET.parse(path).getroot()
+    assert SENSITIVE_PREFERENCES <= shared_preference_exclusions(root)
+    assert SENSITIVE_FILES <= file_exclusions(root)
 
 
 def test_journal_database_is_excluded_from_cloud_backup_and_device_transfer():
@@ -34,3 +71,5 @@ def test_journal_database_is_excluded_from_cloud_backup_and_device_transfer():
             if element.attrib.get("domain") == "database"
         }
         assert DATABASE_FILES <= exclusions
+        assert SENSITIVE_PREFERENCES <= shared_preference_exclusions(section)
+        assert SENSITIVE_FILES <= file_exclusions(section)

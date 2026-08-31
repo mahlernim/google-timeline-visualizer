@@ -19,10 +19,10 @@ class DistributionUpdateManager(
     @Suppress("UNUSED_PARAMETER") updateLauncher: ActivityResultLauncher<IntentSenderRequest>,
     @Suppress("UNUSED_PARAMETER") onUpdateDownloaded: () -> Unit,
 ) {
-    fun checkForUpdate(onResult: (AvailableAppUpdate?) -> Unit) {
+    fun checkForUpdate(onResult: (UpdateCheckResult) -> Unit) {
         activity.lifecycleScope.launch {
-            val update = withContext(Dispatchers.IO) { fetchLatestUpdate() }
-            onResult(update)
+            val result = withContext(Dispatchers.IO) { fetchLatestUpdate() }
+            onResult(result)
         }
     }
 
@@ -39,7 +39,7 @@ class DistributionUpdateManager(
 
     fun completeUpdate() = Unit
 
-    private fun fetchLatestUpdate(): AvailableAppUpdate? = runCatching {
+    private fun fetchLatestUpdate(): UpdateCheckResult = runCatching {
         val connection = URL(UPDATE_MANIFEST_URL).openConnection() as HttpURLConnection
         connection.connectTimeout = TIMEOUT_MILLIS
         connection.readTimeout = TIMEOUT_MILLIS
@@ -48,14 +48,17 @@ class DistributionUpdateManager(
         connection.setRequestProperty("Accept", "application/json")
         connection.setRequestProperty("Cache-Control", "no-cache")
         try {
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) return@runCatching null
+            check(connection.responseCode == HttpURLConnection.HTTP_OK) { "Update manifest request failed" }
             connection.inputStream.bufferedReader().use { reader ->
-                GithubUpdateManifest.parse(reader.readText())?.toAvailableUpdate()
+                val update = checkNotNull(GithubUpdateManifest.parse(reader.readText())) {
+                    "Update manifest was invalid"
+                }.toAvailableUpdate()
+                UpdateCheckResult.Success(update)
             }
         } finally {
             connection.disconnect()
         }
-    }.getOrNull()
+    }.getOrElse { UpdateCheckResult.Failure }
 
     internal data class GithubUpdateManifest(
         val versionCode: Int,

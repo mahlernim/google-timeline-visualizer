@@ -9,14 +9,53 @@ class UpdatePromptPolicyTest {
     fun checksOnFirstRunAndOncePerDay() {
         val now = 10L * UpdatePromptPolicy.CHECK_INTERVAL_MILLIS
 
-        assertTrue(UpdatePromptPolicy.shouldCheck(now, 0L))
-        assertFalse(UpdatePromptPolicy.shouldCheck(now, now - UpdatePromptPolicy.CHECK_INTERVAL_MILLIS + 1L))
-        assertTrue(UpdatePromptPolicy.shouldCheck(now, now - UpdatePromptPolicy.CHECK_INTERVAL_MILLIS))
+        assertTrue(UpdatePromptPolicy.shouldCheck(now, 0L, 0L))
+        assertFalse(
+            UpdatePromptPolicy.shouldCheck(
+                now,
+                now - UpdatePromptPolicy.CHECK_INTERVAL_MILLIS + 1L,
+                now - UpdatePromptPolicy.CHECK_INTERVAL_MILLIS + 1L,
+            ),
+        )
+        assertTrue(
+            UpdatePromptPolicy.shouldCheck(
+                now,
+                now - UpdatePromptPolicy.CHECK_INTERVAL_MILLIS,
+                now - UpdatePromptPolicy.CHECK_INTERVAL_MILLIS,
+            ),
+        )
+    }
+
+    @Test
+    fun failedChecksUseAShortBoundedRetryInterval() {
+        val now = 10L * UpdatePromptPolicy.CHECK_INTERVAL_MILLIS
+        val lastSuccess = now - UpdatePromptPolicy.CHECK_INTERVAL_MILLIS
+
+        assertFalse(
+            UpdatePromptPolicy.shouldCheck(
+                now,
+                lastSuccess,
+                now - UpdatePromptPolicy.FAILURE_RETRY_INTERVAL_MILLIS + 1L,
+            ),
+        )
+        assertTrue(
+            UpdatePromptPolicy.shouldCheck(
+                now,
+                lastSuccess,
+                now - UpdatePromptPolicy.FAILURE_RETRY_INTERVAL_MILLIS,
+            ),
+        )
     }
 
     @Test
     fun clockMovingBackwardDoesNotSuppressChecksIndefinitely() {
-        assertTrue(UpdatePromptPolicy.shouldCheck(nowMillis = 1_000L, lastCheckMillis = 2_000L))
+        assertTrue(
+            UpdatePromptPolicy.shouldCheck(
+                nowMillis = 1_000L,
+                lastSuccessfulCheckMillis = 2_000L,
+                lastAttemptMillis = 2_000L,
+            ),
+        )
     }
 
     @Test

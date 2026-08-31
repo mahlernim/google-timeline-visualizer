@@ -33,9 +33,13 @@ import dev.mahlernim.timelinevisualizer.videos.VideoDataSource
 class VideoExportRequestStoreTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val store = VideoExportRequestStore(context).also(VideoExportRequestStore::clear)
+    private val pendingStore = PendingVideoExportRequestStore(context).also(PendingVideoExportRequestStore::clear)
 
     @After
-    fun tearDown() = store.clear()
+    fun tearDown() {
+        store.clear()
+        pendingStore.clear()
+    }
 
     @Test
     fun restoresEverythingNeededToRestartVideoCreation() {
@@ -100,6 +104,36 @@ class VideoExportRequestStoreTest {
         store.clear()
 
         assertNull(store.load())
+    }
+
+    @Test
+    fun pendingDestinationStoreRestoresAndClearsOnlyBlankOutputRequests() {
+        val request = VideoExportRequest(
+            outputUri = "",
+            journey = Journey.from(emptyList(), 2026),
+            title = "Timeline",
+            durationSeconds = 30,
+        )
+        pendingStore.save(request)
+
+        assertEquals(request.title, pendingStore.load()?.title)
+
+        pendingStore.clear()
+        assertNull(pendingStore.load())
+    }
+
+    @Test
+    fun pendingDestinationStoreRejectsACompletedExportRequest() {
+        val request = VideoExportRequest(
+            outputUri = "content://documents/timeline.mp4",
+            journey = Journey.from(emptyList(), 2026),
+            title = "Timeline",
+            durationSeconds = 30,
+        )
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            pendingStore.save(request)
+        }
+        assertNull(pendingStore.load())
     }
 
     @Test

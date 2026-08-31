@@ -28,7 +28,7 @@ class JournalReminderReceiver : BroadcastReceiver() {
                 } ?: return@launch
                 when (intent.action) {
                     ACTION_SNOOZE -> {
-                        if (!journal.reminderEnabled || journal.detailedUsableThroughEpochMillis != anchor) {
+                        if (!journal.reminderEnabled || journal.detailedCapturedThroughEpochMillis != anchor) {
                             return@launch
                         }
                         val until = System.currentTimeMillis() + Duration.ofDays(SNOOZE_DAYS).toMillis()

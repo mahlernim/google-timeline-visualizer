@@ -5,6 +5,8 @@
         <exclude domain="file" path="creation-thumbnails/" />
         <exclude domain="file" path="pending-video-export.bin" />
         <exclude domain="file" path="pending-video-export.tmp" />
+        <exclude domain="file" path="pending-video-destination.bin" />
+        <exclude domain="file" path="pending-video-destination.tmp" />
         <exclude domain="database" path="travel-journal.db" />
         <exclude domain="database" path="travel-journal.db-shm" />
         <exclude domain="database" path="travel-journal.db-wal" />
@@ -12,12 +14,17 @@
         <exclude domain="sharedpref" path="timeline_source.xml" />
         <exclude domain="sharedpref" path="video_export_state.xml" />
         <exclude domain="sharedpref" path="journal_reminders.xml" />
+        <exclude domain="sharedpref" path="video-presets.xml" />
+        <exclude domain="sharedpref" path="display.xml" />
+        <exclude domain="sharedpref" path="trips_lab.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="file" path="timeline-imports/" />
         <exclude domain="file" path="creation-thumbnails/" />
         <exclude domain="file" path="pending-video-export.bin" />
         <exclude domain="file" path="pending-video-export.tmp" />
+        <exclude domain="file" path="pending-video-destination.bin" />
+        <exclude domain="file" path="pending-video-destination.tmp" />
         <exclude domain="database" path="travel-journal.db" />
         <exclude domain="database" path="travel-journal.db-shm" />
         <exclude domain="database" path="travel-journal.db-wal" />
@@ -25,5 +32,8 @@
         <exclude domain="sharedpref" path="timeline_source.xml" />
         <exclude domain="sharedpref" path="video_export_state.xml" />
         <exclude domain="sharedpref" path="journal_reminders.xml" />
+        <exclude domain="sharedpref" path="video-presets.xml" />
+        <exclude domain="sharedpref" path="display.xml" />
+        <exclude domain="sharedpref" path="trips_lab.xml" />
     </device-transfer>
 </data-extraction-rules>

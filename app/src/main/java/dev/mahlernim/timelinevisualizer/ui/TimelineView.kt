@@ -161,11 +161,14 @@ class TimelineView @JvmOverloads constructor(
             }
         }
         tilesToLoad.forEach { tile ->
-            if (tiles.cached(tile) == null && loading.add(tile)) {
+            if (tiles.peekMemory(tile) == null && loading.add(tile)) {
                 scope.launch {
-                    tiles.load(tile)
-                    loading.remove(tile)
-                    markFrameDirty()
+                    try {
+                        tiles.load(tile)
+                    } finally {
+                        loading.remove(tile)
+                        markFrameDirty()
+                    }
                 }
             }
         }
@@ -182,7 +185,7 @@ class TimelineView @JvmOverloads constructor(
             renderText,
             cameraSettings,
             allowCameraTrackBuild = isCameraReady,
-            tiles = tiles::cached,
+            tiles = tiles::peekMemory,
         )
         frameDirty = false
         canvas.drawBitmap(target, 0f, 0f, null)

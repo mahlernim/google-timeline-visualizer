@@ -136,6 +136,127 @@ def test_path_detail_inside_the_same_semantic_segment_is_preserved():
     assert [point["lat"] for point in points] == [10.0, 15.0, 20.0]
 
 
+def test_timezone_less_activity_keeps_start_path_end_order():
+    data = [{
+        "startTime": "2026-01-02T10:00:00",
+        "endTime": "2026-01-01T16:00:00",
+        "activity": {"start": "10,179", "end": "10,-178"},
+        "timelinePath": [
+            {"point": "10,-179", "durationMinutesOffsetFromStartTime": 120},
+        ],
+    }]
+
+    points = extract_timeline_points(data)
+
+    assert [point["lon"] for point in points] == [179.0, -179.0, -178.0]
+    assert all(point["time_zone_missing"] for point in points)
+
+
+def test_timezone_less_date_line_crossing_preserves_export_order():
+    data = [
+        {
+            "startTime": "2026-01-02T10:00:00",
+            "visit": {"topCandidate": {"placeLocation": "10,179"}},
+        },
+        {
+            "startTime": "2026-01-01T15:00:00",
+            "visit": {"topCandidate": {"placeLocation": "10,-179"}},
+        },
+    ]
+
+    points = extract_timeline_points(data)
+
+    assert [point["lon"] for point in points] == [179.0, -179.0]
+
+
+def test_reverse_ordered_mixed_timezone_export_is_normalized_without_crashing():
+    data = [
+        {
+            "startTime": "2026-03-10T10:00:00Z",
+            "visit": {"topCandidate": {"placeLocation": "35,129"}},
+        },
+        {
+            "startTime": "2026-02-10T10:00:00",
+            "visit": {"topCandidate": {"placeLocation": "37,127"}},
+        },
+        {
+            "startTime": "2026-01-10T10:00:00+09:00",
+            "visit": {"topCandidate": {"placeLocation": "33,126"}},
+        },
+    ]
+
+    points = extract_timeline_points(data)
+
+    assert [point["lat"] for point in points] == [33.0, 37.0, 35.0]
+
+
+def test_journal_route_accepts_mixed_timezone_sources_without_crashing():
+    data = {
+        "rawSignals": [
+            {"position": {
+                "LatLng": "10,179",
+                "timestamp": "2026-01-02T10:00:00",
+                "accuracyMeters": 10,
+            }},
+            {"position": {
+                "LatLng": "10,-179",
+                "timestamp": "2026-01-01T15:00:00Z",
+                "accuracyMeters": 10,
+            }},
+        ],
+        "semanticSegments": [{
+            "startTime": "2026-01-01T02:00:00+09:00",
+            "visit": {"topCandidate": {"placeLocation": "36,128"}},
+        }],
+    }
+
+    points, stats = extract_journal_route_points(data, year=2026)
+
+    assert [point["lon"] for point in points] == [179.0, -179.0]
+    assert stats["detailed_usable"] == 2
+    assert stats["semantic_backup"] == 0
+
+
+def test_journal_timezone_less_raw_date_line_keeps_source_order():
+    data = {"rawSignals": [
+        {"position": {
+            "LatLng": "10,179",
+            "timestamp": "2026-01-02T10:00:00",
+            "accuracyMeters": 10,
+        }},
+        {"position": {
+            "LatLng": "10,-179",
+            "timestamp": "2026-01-01T15:00:00",
+            "accuracyMeters": 10,
+        }},
+    ]}
+
+    points, stats = extract_journal_route_points(data, year=2026)
+
+    assert [point["lon"] for point in points] == [179.0, -179.0]
+    assert all(point["time_zone_missing"] for point in points)
+    assert stats["semantic_backup"] == 0
+
+
+def test_journal_without_detail_keeps_timezone_less_semantic_source_order():
+    data = {"semanticSegments": [
+        {
+            "startTime": "2026-01-02T10:00:00",
+            "visit": {"topCandidate": {"placeLocation": "10,179"}},
+        },
+        {
+            "startTime": "2026-01-01T15:00:00",
+            "visit": {"topCandidate": {"placeLocation": "10,-179"}},
+        },
+    ]}
+
+    points, stats = extract_journal_route_points(data, year=2026)
+
+    assert [point["lon"] for point in points] == [179.0, -179.0]
+    assert stats["detailed_usable"] == 0
+    assert stats["semantic_backup"] == 2
+
+
 def test_coordinate_parser_supports_e7_and_rejects_invalid():
     assert parse_coordinate("375000000,1270000000") == (37.5, 127.0)
     assert parse_coordinate("geo:91,127") is None

@@ -20,6 +20,7 @@ import {
 } from './i18n';
 import { applyStrings, syncDocumentLang } from './i18n-dom';
 import { filterLocationOutliers } from './outlier';
+import { LatestPreparation } from './preparation-cache';
 import { formatRawDateRange } from './raw-range';
 import { drawFrame, prepareJourney, previewCanvasSize } from './renderer';
 import { selectTimelineModePoints } from './selection';
@@ -35,6 +36,7 @@ import {
 import type { I18n, LanguagePreference, TextKey } from './i18n';
 import type { DistanceUnit, DistanceUnitPreference } from './distance-unit';
 import type { LocationFilterMode } from './outlier';
+import type { PreparationToken } from './preparation-cache';
 import type { OverlayText } from './renderer';
 import type { RawSignalPoint, RawSignalProcessingResult, TimelineParseReason } from './timeline';
 import type {
@@ -171,6 +173,14 @@ type ProgressState =
   | { readonly kind: 'creating'; readonly fraction: number }
   | { readonly kind: 'ready'; readonly bytes: number };
 
+interface PreparationSnapshot {
+  readonly token: PreparationToken;
+  readonly points: GeoPoint[];
+  readonly format: VideoFormat;
+  readonly cameraMovement: CameraMovement;
+  readonly durationSeconds: number;
+}
+
 const PARSE_ERROR_KEYS: Readonly<Record<TimelineParseReason, TextKey>> = {
   'malformed-json': 'errorMalformedJson',
   'legacy-format': 'errorLegacyFormat',
@@ -187,7 +197,7 @@ let rawSignalProcessing: RawSignalProcessingResult | null = null;
 let pendingRawOnlyImport: { data: unknown; source: TimelineSource } | null = null;
 let months: MonthOption[] = [];
 let prepared: PreparedJourney | null = null;
-let selectedSignature = '';
+const preparationCache = new LatestPreparation<PreparedJourney>();
 let resultUrl: string | null = null;
 let resultFile: File | null = null;
 let previewAnimation = 0;
@@ -687,31 +697,44 @@ function updateSelection(): void {
   }
   prepared = null;
   lastPreviewFrame = null;
-  selectedSignature = '';
+  preparationCache.invalidate();
   renderSelection();
 }
 
-async function getPreparedJourney(signal?: AbortSignal): Promise<PreparedJourney> {
+function capturePreparationSnapshot(): PreparationSnapshot {
   const cameraMovement = cameraMovementSelect.value as CameraMovement;
   const durationSeconds = Number(durationSelect.value);
   const format = currentFormat();
   const signature = `${currentRangeSignature()}:camera:${cameraMovement}:duration:${durationSeconds}`;
-  if (prepared && signature === selectedSignature) return prepared;
+  return {
+    token: preparationCache.token(signature),
+    points: currentPoints(),
+    format,
+    cameraMovement,
+    durationSeconds,
+  };
+}
+
+async function getPreparedJourney(
+  snapshot: PreparationSnapshot,
+  signal?: AbortSignal,
+): Promise<PreparedJourney> {
+  const cached = preparationCache.cached(snapshot.token);
+  if (cached) return cached;
   if (signal?.aborted) throw new DOMException('Video creation was cancelled.', 'AbortError');
   setProgress({ kind: 'key', key: 'progressPreparingMap' });
   const nextJourney = await prepareJourney(
-    currentPoints(),
-    { width: format.width, height: format.height },
-    cameraMovement,
-    durationSeconds,
+    snapshot.points,
+    { width: snapshot.format.width, height: snapshot.format.height },
+    snapshot.cameraMovement,
+    snapshot.durationSeconds,
     signal,
     (completed, total) => {
       setProgress({ kind: 'preparing', completed, total });
     },
   );
   if (signal?.aborted) throw new DOMException('Video creation was cancelled.', 'AbortError');
-  prepared = nextJourney;
-  selectedSignature = signature;
+  if (preparationCache.commit(snapshot.token, nextJourney)) prepared = nextJourney;
   return nextJourney;
 }
 
@@ -990,6 +1013,7 @@ rawOnlyDialog.addEventListener('cancel', () => {
 
 previewButton.addEventListener('click', async () => {
   if (!requireMapConsent()) return;
+  const preparation = capturePreparationSnapshot();
   stopPreview();
   // Only the CSS box, not the backing store: the preview size is measured after the await,
   // so bouncing the canvas back to the format size here would clear the bitmap for nothing.
@@ -1002,13 +1026,16 @@ previewButton.addEventListener('click', async () => {
   isPreparing = true;
   refreshActionAvailability();
   try {
-    const journey = await getPreparedJourney();
+    const journey = await getPreparedJourney(preparation);
+    // A range or route setting changed while tiles were loading. The completed
+    // journey is intentionally not cached or shown for the new selection.
+    if (!preparationCache.isCurrent(preparation.token)) return;
     // Measured here because the card is laid out, nothing has been drawn yet, and preparing
     // the map takes long enough that the device may have been rotated in the meantime.
     applyPreviewCanvasSize();
     previewSizeDirty = false;
     const started = performance.now();
-    const previewJourneyDuration = Math.min(8, Number(durationSelect.value));
+    const previewJourneyDuration = Math.min(8, preparation.durationSeconds);
     const previewDuration = totalDurationSeconds(previewJourneyDuration);
     const tick = (now: number): void => {
       if (previewSizeDirty) {
@@ -1044,11 +1071,12 @@ cancelButton.addEventListener('click', () => {
 
 createButton.addEventListener('click', async () => {
   if (!requireMapConsent()) return;
+  const preparation = capturePreparationSnapshot();
   const format = formatSupport === null
     ? null
-    : resolveVideoFormat(currentFormat(), formatSupport);
+    : resolveVideoFormat(preparation.format, formatSupport);
   if (!format) {
-    const unsupported = currentFormat();
+    const unsupported = preparation.format;
     setError({
       kind: 'text',
       text: i18n.t('errorFormatUnsupported', {
@@ -1075,14 +1103,16 @@ createButton.addEventListener('click', async () => {
   refreshActionAvailability();
   previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
   exportController = new AbortController();
+  const exportOverlay = overlayText();
   const wakeLock = await requestWakeLock();
   try {
-    const journey = await getPreparedJourney(exportController.signal);
+    const journey = await getPreparedJourney(preparation, exportController.signal);
     setProgress({ kind: 'key', key: 'progressCreating' });
     const blob = await createJourneyMp4(canvas, journey, {
-      durationSeconds: Number(durationSelect.value),
-      // Frozen here, so the whole video carries one language even if the select were unlocked.
-      overlay: overlayText(),
+      durationSeconds: preparation.durationSeconds,
+      // Captured before the first await so every frame uses one coherent title,
+      // period, unit and language even if an unlocked setting changes meanwhile.
+      overlay: exportOverlay,
       format,
       signal: exportController.signal,
       onProgress: (fraction) => {
