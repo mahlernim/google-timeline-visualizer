@@ -5,11 +5,13 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.net.Uri
+import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import dev.mahlernim.timelinevisualizer.MainActivity
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -73,12 +75,31 @@ class VideoExportServiceTest {
     }
 
     @Test
+    fun duplicateStartStopsTheLatestDeliveredCommandAfterTerminalCleanup() {
+        VideoExportRequestStore(context).clear()
+        val service = controller.get()
+        val shadowService = shadowOf(service)
+
+        controller.startCommand(0, 41)
+        assertEquals(Notification.VISIBILITY_PUBLIC, shadowService.lastForegroundNotification.visibility)
+        controller.startCommand(0, 42)
+
+        repeat(100) {
+            shadowOf(Looper.getMainLooper()).idle()
+            if (shadowService.stopSelfResultId == 42) return
+            Thread.sleep(10)
+        }
+        fail("Service did not stop the latest delivered start ID")
+    }
+
+    @Test
     fun completedNotificationUsesExplicitAppActions() {
         val uri = Uri.parse("content://example/video/completed")
         val notification = controller.get().buildCompletedNotification(uri, "Completed video")
 
         assertEquals("video_completion", notification.channelId)
         assertEquals(Notification.CATEGORY_STATUS, notification.category)
+        assertEquals(Notification.VISIBILITY_PRIVATE, notification.visibility)
         assertEquals(2, notification.actions.size)
 
         val watch = shadowOf(notification.actions[0].actionIntent).savedIntent
@@ -102,6 +123,7 @@ class VideoExportServiceTest {
 
         assertEquals("video_completion", notification.channelId)
         assertEquals(Notification.CATEGORY_ERROR, notification.category)
+        assertEquals(Notification.VISIBILITY_PRIVATE, notification.visibility)
         assertEquals(detail, notification.extras.getCharSequence(Notification.EXTRA_TEXT))
         assertEquals(1, notification.actions.size)
 

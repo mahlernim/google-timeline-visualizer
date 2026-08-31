@@ -45,13 +45,20 @@ class TileRepository internal constructor(
         override fun sizeOf(key: String, value: MemoryTile): Int = value.bitmap.byteCount / 1024
     }
 
-    fun cached(id: TileId): Bitmap? {
+    fun peekMemory(id: TileId): Bitmap? {
         val key = id.key()
         val now = nowMillis()
         memory.get(key)?.let { cached ->
             if (now <= cached.expiresAtMillis) return cached.bitmap
             memory.remove(key)
         }
+        return null
+    }
+
+    fun cached(id: TileId): Bitmap? {
+        peekMemory(id)?.let { return it }
+        val key = id.key()
+        val now = nowMillis()
         val file = File(cacheDirectory, "$key.png")
         if (!file.isFile) return null
         val expiresAt = expirationTime(file.lastModified())

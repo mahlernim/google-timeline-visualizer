@@ -27,9 +27,11 @@ import dev.mahlernim.timelinevisualizer.videos.VideoStore
 import dev.mahlernim.timelinevisualizer.data.TileRepository
 import dev.mahlernim.timelinevisualizer.render.TimelineAnimation
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -41,6 +43,7 @@ class VideoExportService : Service() {
     private lateinit var notificationManager: NotificationManager
     private lateinit var requestStore: VideoExportRequestStore
     private var exportJob: Job? = null
+    private var latestStartId = 0
     private var lastNotificationAt = 0L
     private var lastNotificationPhase: ExportPhase? = null
     private val etaEstimator = ExportEtaEstimator()
@@ -54,9 +57,10 @@ class VideoExportService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        latestStartId = startId
         when (intent?.action) {
-            ACTION_CANCEL -> cancelExport(startId)
-            else -> startExport(startId)
+            ACTION_CANCEL -> cancelExport()
+            else -> startExport()
         }
         return START_REDELIVER_INTENT
     }
@@ -69,36 +73,49 @@ class VideoExportService : Service() {
     }
 
     override fun onTimeout(startId: Int, fgsType: Int) {
-        exportJob?.cancel(CancellationException("Media processing time limit reached"))
-        stopSelf(startId)
-    }
-
-    private fun startExport(startId: Int) {
-        if (exportJob?.isActive == true) return
-        startVideoForeground(buildStartingNotification())
-        exportJob = serviceScope.launch {
-            val request = withContext(Dispatchers.IO) { requestStore.load() }
-            if (request == null) {
-                VideoExportStateStore(applicationContext).load().outputUri
-                    ?.toUri()
-                    ?.let { GeneratedMediaRepository(applicationContext).discard(it) }
-                finishWithFailure(
-                    null,
-                    VideoExportFailure(
-                        VideoExportFailureKind.OUTPUT_UNAVAILABLE,
-                        getString(R.string.video_request_unavailable),
-                    ),
-                    startId,
-                )
-                return@launch
-            }
-            runExport(request, startId)
+        val active = exportJob
+        if (active?.isActive == true) {
+            active.cancel(CancellationException("Media processing time limit reached"))
+        } else {
+            stopAfterTerminalCleanup()
         }
     }
 
-    private suspend fun runExport(request: VideoExportRequest, startId: Int) {
+    private fun startExport() {
+        if (exportJob?.isActive == true) return
+        startVideoForeground(buildStartingNotification())
+        launchTrackedOperation {
+            var request: VideoExportRequest? = null
+            var startedAtMillis: Long? = null
+            try {
+                request = withContext(Dispatchers.IO) { requestStore.load() }
+                if (request == null) {
+                    VideoExportStateStore(applicationContext).load().outputUri
+                        ?.toUri()
+                        ?.let { GeneratedMediaRepository(applicationContext).discard(it) }
+                    finishWithFailure(
+                        null,
+                        VideoExportFailure(
+                            VideoExportFailureKind.OUTPUT_UNAVAILABLE,
+                            getString(R.string.video_request_unavailable),
+                        ),
+                    )
+                    return@launchTrackedOperation
+                }
+                val startedAt = System.currentTimeMillis()
+                startedAtMillis = startedAt
+                runExport(request, startedAt)
+            } catch (_: CancellationException) {
+                val cancelledRequest = request ?: withContext(NonCancellable + Dispatchers.IO) {
+                    requestStore.load()
+                }
+                finishCancellation(cancelledRequest, startedAtMillis)
+            }
+        }
+    }
+
+    private suspend fun runExport(request: VideoExportRequest, startedAtMillis: Long) {
         val uri = request.outputUri.toUri()
-        val startedAtMillis = System.currentTimeMillis()
         etaEstimator.reset()
         publish(
             VideoExportSnapshot(
@@ -159,54 +176,43 @@ class VideoExportService : Service() {
             publish(completed)
             finishForeground()
             notificationManager.notify(NOTIFICATION_ID, buildCompletedNotification(uri, request.title))
-        } catch (_: CancellationException) {
-            GeneratedMediaRepository(applicationContext).discard(uri)
-            requestStore.clear()
-            publish(
-                VideoExportSnapshot(
-                    status = VideoExportStatus.CANCELLED,
-                    startedAtMillis = startedAtMillis,
-                    outputUri = request.outputUri,
-                    title = request.title,
-                ),
-            )
-            finishForeground()
-            notificationManager.notify(NOTIFICATION_ID, buildCancelledNotification())
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (error: Throwable) {
             Log.e(TAG, "Video export failed", error)
             GeneratedMediaRepository(applicationContext).discard(uri)
-            finishWithFailure(request, classifyVideoExportFailure(this, error), startId)
-            return
-        } finally {
-            exportJob = null
-            stopSelf(startId)
+            finishWithFailure(request, classifyVideoExportFailure(this, error))
         }
     }
 
-    private fun cancelExport(startId: Int) {
+    private fun finishCancellation(request: VideoExportRequest?, startedAtMillis: Long? = null) {
+        request?.let { GeneratedMediaRepository(applicationContext).discard(it.outputUri.toUri()) }
+        requestStore.clear()
+        publish(
+            VideoExportSnapshot(
+                status = VideoExportStatus.CANCELLED,
+                startedAtMillis = startedAtMillis ?: 0L,
+                outputUri = request?.outputUri,
+                title = request?.title,
+            ),
+        )
+        finishForeground()
+        notificationManager.notify(NOTIFICATION_ID, buildCancelledNotification())
+    }
+
+    private fun cancelExport() {
         val active = exportJob
         if (active?.isActive == true) {
             active.cancel()
             return
         }
-        serviceScope.launch {
+        launchTrackedOperation {
             val request = withContext(Dispatchers.IO) { requestStore.load() }
-            request?.let { GeneratedMediaRepository(applicationContext).discard(it.outputUri.toUri()) }
-            requestStore.clear()
-            publish(
-                VideoExportSnapshot(
-                    status = VideoExportStatus.CANCELLED,
-                    outputUri = request?.outputUri,
-                    title = request?.title,
-                ),
-            )
-            finishForeground()
-            notificationManager.notify(NOTIFICATION_ID, buildCancelledNotification())
-            stopSelf(startId)
+            finishCancellation(request)
         }
     }
 
-    private fun finishWithFailure(request: VideoExportRequest?, failure: VideoExportFailure, startId: Int) {
+    private fun finishWithFailure(request: VideoExportRequest?, failure: VideoExportFailure) {
         if (request == null) requestStore.clear()
         publish(
             VideoExportSnapshot(
@@ -219,8 +225,24 @@ class VideoExportService : Service() {
         )
         finishForeground()
         notificationManager.notify(NOTIFICATION_ID, buildFailedNotification(failure))
-        exportJob = null
-        stopSelf(startId)
+    }
+
+    private fun launchTrackedOperation(block: suspend () -> Unit) {
+        val job = serviceScope.launch(start = CoroutineStart.LAZY) {
+            try {
+                block()
+            } finally {
+                exportJob = null
+                stopAfterTerminalCleanup()
+            }
+        }
+        exportJob = job
+        job.start()
+    }
+
+    private fun stopAfterTerminalCleanup() {
+        val startId = latestStartId
+        if (startId != 0) stopSelfResult(startId)
     }
 
     private fun publish(snapshot: VideoExportSnapshot) {
@@ -353,7 +375,7 @@ class VideoExportService : Service() {
             .setContentIntent(openAppPendingIntent())
             .setCategory(category)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
 
     private fun progressText(progress: ExportProgress): String {
         val base = when (progress.phase) {
