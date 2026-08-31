@@ -821,10 +821,11 @@ def extract_journal_route_points(
             '_source_order': (source_index, 0, 0),
         })
 
-    # Raw signals are a separate chronological stream. As in the web parser,
-    # timezone-less values use their wall time as a stable placeholder so the
-    # detail filters and semantic fusion can still operate deterministically.
-    detailed.sort(key=lambda point: point['dt'])
+    # Raw signals are a separate chronological stream. When their clock is
+    # incomplete, preserve source order rather than treating the UTC placeholder
+    # as chronology. The placeholder remains useful only for bounded filtering
+    # within that already ordered stream.
+    detailed = _ordered_timeline_points(detailed)
     normalized = []
     group_start = 0
     while group_start < len(detailed):
@@ -892,7 +893,30 @@ def extract_journal_route_points(
             islands.append([point])
         else:
             islands[-1].append(point)
+    if not stabilized:
+        # With no detailed route there is no cross-stream comparison to make.
+        # The semantic parser has already preserved source order when needed.
+        return semantic, {
+            'detailed_input': len(detailed) + accuracy_rejected,
+            'detailed_usable': 0,
+            'detailed_islands': 0,
+            'semantic_backup': len(semantic),
+        }
     coverage = [(island[0]['dt'], island[-1]['dt']) for island in islands]
+    fusion_time_ambiguous = any(
+        point.get('time_zone_missing', False)
+        for point in stabilized + semantic
+    )
+    if fusion_time_ambiguous:
+        # The two arrays are independent streams, so a missing timezone leaves no
+        # safe way to interleave them or prove semantic coverage. Fail closed with
+        # the detailed stream instead of drawing a fabricated cross-stream route.
+        return _without_internal_point_fields(stabilized), {
+            'detailed_input': len(detailed) + accuracy_rejected,
+            'detailed_usable': len(stabilized),
+            'detailed_islands': len(islands),
+            'semantic_backup': 0,
+        }
     semantic_backup = []
     island_index = 0
     for point in semantic:

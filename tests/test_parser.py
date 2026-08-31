@@ -194,13 +194,13 @@ def test_journal_route_accepts_mixed_timezone_sources_without_crashing():
     data = {
         "rawSignals": [
             {"position": {
-                "LatLng": "37.0,127.0",
-                "timestamp": "2026-01-01T00:00:00",
+                "LatLng": "10,179",
+                "timestamp": "2026-01-02T10:00:00",
                 "accuracyMeters": 10,
             }},
             {"position": {
-                "LatLng": "37.1,127.1",
-                "timestamp": "2026-01-01T00:05:00Z",
+                "LatLng": "10,-179",
+                "timestamp": "2026-01-01T15:00:00Z",
                 "accuracyMeters": 10,
             }},
         ],
@@ -212,9 +212,49 @@ def test_journal_route_accepts_mixed_timezone_sources_without_crashing():
 
     points, stats = extract_journal_route_points(data, year=2026)
 
-    assert len(points) == 3
+    assert [point["lon"] for point in points] == [179.0, -179.0]
     assert stats["detailed_usable"] == 2
-    assert stats["semantic_backup"] == 1
+    assert stats["semantic_backup"] == 0
+
+
+def test_journal_timezone_less_raw_date_line_keeps_source_order():
+    data = {"rawSignals": [
+        {"position": {
+            "LatLng": "10,179",
+            "timestamp": "2026-01-02T10:00:00",
+            "accuracyMeters": 10,
+        }},
+        {"position": {
+            "LatLng": "10,-179",
+            "timestamp": "2026-01-01T15:00:00",
+            "accuracyMeters": 10,
+        }},
+    ]}
+
+    points, stats = extract_journal_route_points(data, year=2026)
+
+    assert [point["lon"] for point in points] == [179.0, -179.0]
+    assert all(point["time_zone_missing"] for point in points)
+    assert stats["semantic_backup"] == 0
+
+
+def test_journal_without_detail_keeps_timezone_less_semantic_source_order():
+    data = {"semanticSegments": [
+        {
+            "startTime": "2026-01-02T10:00:00",
+            "visit": {"topCandidate": {"placeLocation": "10,179"}},
+        },
+        {
+            "startTime": "2026-01-01T15:00:00",
+            "visit": {"topCandidate": {"placeLocation": "10,-179"}},
+        },
+    ]}
+
+    points, stats = extract_journal_route_points(data, year=2026)
+
+    assert [point["lon"] for point in points] == [179.0, -179.0]
+    assert stats["detailed_usable"] == 0
+    assert stats["semantic_backup"] == 2
 
 
 def test_coordinate_parser_supports_e7_and_rejects_invalid():
