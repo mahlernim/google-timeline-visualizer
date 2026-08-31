@@ -15,7 +15,7 @@ system integrations remain explicit instead of being hidden behind silent fallba
 | Total duration from 10 through 300 seconds | Yes | Yes | Yes |
 | Square, portrait, and landscape video | Yes | Yes | Yes |
 | Short-edge resolution from 480 through 2160 | Device-dependent | FFmpeg-dependent | WebCodecs-dependent |
-| Frame rate from 15 through 120 fps | Device-dependent | FFmpeg-dependent | WebCodecs-dependent |
+| Frame rate | Device-dependent, 15 through 240 fps with up to three decimals | FFmpeg-dependent, whole 15 through 120 fps | WebCodecs-dependent, whole 15 through 120 fps |
 | MP4 title metadata | Yes | Yes | Yes |
 | Capability check before export | Android codec probe | Argument and FFmpeg validation | Exact WebCodecs probe |
 | Timeline data stays local | Yes | Yes | Yes |
