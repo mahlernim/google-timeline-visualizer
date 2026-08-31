@@ -9,6 +9,16 @@
 - Add distance-unit selection to the web app.
 - Document the web app's distance units and close-up mode.
 
+## 3.0.10
+
+- Allow Android custom frame rates from 15 through 240 fps with up to three decimal places, preserving common fractional rates such as 23.976, 29.97, and 59.94 through export and recovery.
+- Recover legacy Save As video exports safely across activity recreation, keep large pending requests off the main thread, and remove temporary route data promptly after completion or cancellation.
+- Keep export result notifications private, exclude private presets and trip metadata from Android backup and device transfer, and preserve cached thumbnails when removal is undone.
+- Correct desktop Timeline month-end ranges and mixed-timezone handling without inventing chronology when timestamps are ambiguous.
+- Prevent stale web preparation results from replacing newer choices and generate an app-scoped offline cache that leaves unrelated caches untouched.
+- Harden Android export-service cancellation, tile loading, reminder anchors, and update-check retry behavior.
+- Set Android version code 52 and version name 3.0.10.
+
 ## 3.0.9
 
 - Added an automatic, dismissible update prompt for GitHub APK and Google Play installations.
