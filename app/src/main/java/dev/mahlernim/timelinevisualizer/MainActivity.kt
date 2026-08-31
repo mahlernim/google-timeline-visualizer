@@ -90,6 +90,7 @@ import dev.mahlernim.timelinevisualizer.export.ExportEtaEstimator
 import dev.mahlernim.timelinevisualizer.export.ExportPhase
 import dev.mahlernim.timelinevisualizer.export.VideoExportRequest
 import dev.mahlernim.timelinevisualizer.export.VideoExportRequestStore
+import dev.mahlernim.timelinevisualizer.export.PendingVideoExportRequestStore
 import dev.mahlernim.timelinevisualizer.export.VideoExportService
 import dev.mahlernim.timelinevisualizer.export.VideoExportFailureKind
 import dev.mahlernim.timelinevisualizer.export.VideoExportSnapshot
@@ -173,6 +174,7 @@ import dev.mahlernim.timelinevisualizer.trips.TripSuggestion
 import dev.mahlernim.timelinevisualizer.trips.TripsStore
 import dev.mahlernim.timelinevisualizer.update.AvailableAppUpdate
 import dev.mahlernim.timelinevisualizer.update.DistributionUpdateManager
+import dev.mahlernim.timelinevisualizer.update.UpdateCheckResult
 import dev.mahlernim.timelinevisualizer.update.UpdatePromptPolicy
 import dev.mahlernim.timelinevisualizer.update.UpdatePromptStateStore
 import dev.mahlernim.timelinevisualizer.trips.OfflineDestinationNameResolver
@@ -221,6 +223,7 @@ class MainActivity : AppCompatActivity() {
     private var selectedIgnoredCount = 0
     private var animation: ValueAnimator? = null
     private var pendingExport: VideoExportRequest? = null
+    private var pendingExportDestination = false
     private var lastVideoUri: Uri? = null
     private var lastVideoTitle: String? = null
     private var pendingOverviewVideoUri: Uri? = null
@@ -353,9 +356,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val createVideo = registerForActivityResult(ActivityResultContracts.CreateDocument("video/mp4")) { uri ->
-        val request = pendingExport
-        pendingExport = null
-        if (uri != null && request != null) startVideoExport(uri, request)
+        handleVideoDestinationResult(uri)
     }
 
     private val createOverviewImage = registerForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri ->
@@ -685,6 +686,9 @@ class MainActivity : AppCompatActivity() {
         journalSetupMode = savedInstanceState?.getBoolean(STATE_JOURNAL_SETUP_MODE) ?: false
         journalSetupReturnToCreate = savedInstanceState?.getBoolean(STATE_JOURNAL_SETUP_RETURN_TO_CREATE) ?: false
         pendingJournalReminderId = savedInstanceState?.getString(STATE_PENDING_JOURNAL_REMINDER_ID)
+        pendingExportDestination = savedInstanceState?.getBoolean(STATE_PENDING_EXPORT_DESTINATION) ?: false
+        pendingOverviewVideoUri = savedInstanceState?.getString(STATE_PENDING_OVERVIEW_VIDEO_URI)?.toUri()
+        pendingVideoCopyUri = savedInstanceState?.getString(STATE_PENDING_VIDEO_COPY_URI)?.toUri()
         onboardingPage = savedInstanceState?.getInt(STATE_JOURNAL_ONBOARDING_PAGE, 0) ?: 0
         onboardingReplay = savedInstanceState?.getBoolean(STATE_JOURNAL_ONBOARDING_REPLAY) ?: false
         customizationOriginalCamera = restoreCustomizationCamera(savedInstanceState)
@@ -697,6 +701,9 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) { videoMedia.pruneOverviewCache() }
         observeVideoExport()
         VideoExportService.resumeIfNeeded(applicationContext)
+        if (savedInstanceState == null) {
+            PendingVideoExportRequestStore(applicationContext).clear()
+        }
 
         playerUri = savedInstanceState?.getString(STATE_PLAYER_URI)?.toUri()
         playerPositionMs = savedInstanceState?.getLong(STATE_PLAYER_POSITION) ?: 0L
@@ -784,6 +791,9 @@ class MainActivity : AppCompatActivity() {
         outState.putBoolean(STATE_JOURNAL_SETUP_MODE, journalSetupMode)
         outState.putBoolean(STATE_JOURNAL_SETUP_RETURN_TO_CREATE, journalSetupReturnToCreate)
         outState.putString(STATE_PENDING_JOURNAL_REMINDER_ID, pendingJournalReminderId)
+        outState.putBoolean(STATE_PENDING_EXPORT_DESTINATION, pendingExportDestination)
+        outState.putString(STATE_PENDING_OVERVIEW_VIDEO_URI, pendingOverviewVideoUri?.toString())
+        outState.putString(STATE_PENDING_VIDEO_COPY_URI, pendingVideoCopyUri?.toString())
         outState.putInt(STATE_JOURNAL_ONBOARDING_PAGE, onboardingPage)
         outState.putBoolean(STATE_JOURNAL_ONBOARDING_REPLAY, onboardingReplay)
         customizationOriginalCamera?.let { original ->
@@ -2133,7 +2143,7 @@ class MainActivity : AppCompatActivity() {
         activeJournalRouteStart = routeStart
         activeJournalRouteEndExclusive = routeEndExclusive
         journalLoaded = true
-        loadedJournal.detailedUsableThroughEpochMillis?.takeIf { loadedJournal.reminderEnabled }?.let { anchor ->
+        loadedJournal.detailedCapturedThroughEpochMillis?.takeIf { loadedJournal.reminderEnabled }?.let { anchor ->
             val stateStore = JournalReminderStateStore(applicationContext)
             val anchorChanged = stateStore.state(loadedJournal.id).anchorEpochMillis != anchor
             if (anchorChanged) {
@@ -2550,7 +2560,7 @@ class MainActivity : AppCompatActivity() {
                     status
                 }
             }
-            val anchor = activeJournal?.takeIf { it.id == journalId }?.detailedUsableThroughEpochMillis
+            val anchor = activeJournal?.takeIf { it.id == journalId }?.detailedCapturedThroughEpochMillis
             if (anchor != null) {
                 val store = JournalReminderStateStore(applicationContext)
                 if (store.state(journalId).anchorEpochMillis != anchor) store.resetForAdvance(journalId, anchor)
@@ -2653,7 +2663,7 @@ class MainActivity : AppCompatActivity() {
                 JournalFreshnessState.OVERDUE -> getString(R.string.journal_status_overdue)
             }
             settingsScreen.journalFreshnessStatus.visibility = View.VISIBLE
-            val remindersAvailable = journal.reminderEligible && journal.detailedUsableThroughEpochMillis != null
+            val remindersAvailable = journal.reminderEligible && journal.detailedCapturedThroughEpochMillis != null
             settingsScreen.journalReminderSwitch.visibility = if (remindersAvailable) View.VISIBLE else View.GONE
             settingsScreen.journalReminderSummary.visibility = if (remindersAvailable) View.VISIBLE else View.GONE
             updateJournalReminderSwitch(journal.reminderEnabled)
@@ -4206,7 +4216,58 @@ class MainActivity : AppCompatActivity() {
                     Snackbar.make(binding.root, R.string.video_export_failed, Snackbar.LENGTH_LONG).show()
                 }
         } else {
-            createVideo.launch("${generatedMedia.fileBaseName(title, selected.period)}.mp4")
+            launchPendingVideoDestination("${generatedMedia.fileBaseName(title, selected.period)}.mp4")
+        }
+    }
+
+    private fun launchPendingVideoDestination(fileName: String) {
+        val request = pendingExport?.copy(outputUri = "") ?: return
+        val stored = runCatching { PendingVideoExportRequestStore(applicationContext).save(request) }.isSuccess
+        if (!stored) {
+            pendingExport = null
+            pendingExportDestination = false
+            editor.statusText.setText(R.string.video_request_unavailable)
+            Snackbar.make(binding.root, R.string.video_export_failed, Snackbar.LENGTH_LONG).show()
+            return
+        }
+        pendingExport = request
+        pendingExportDestination = true
+        runCatching { createVideo.launch(fileName) }.onFailure {
+            pendingExport = null
+            pendingExportDestination = false
+            PendingVideoExportRequestStore(applicationContext).clear()
+            editor.statusText.setText(R.string.video_request_unavailable)
+            Snackbar.make(binding.root, R.string.video_export_failed, Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    private fun handleVideoDestinationResult(uri: Uri?) {
+        val inMemoryRequest = pendingExport
+        val expectedResult = pendingExportDestination
+        pendingExport = null
+        pendingExportDestination = false
+        if (uri == null) {
+            PendingVideoExportRequestStore(applicationContext).clear()
+            return
+        }
+        if (!expectedResult) {
+            PendingVideoExportRequestStore(applicationContext).clear()
+            generatedMedia.discard(uri)
+            Snackbar.make(binding.root, R.string.video_request_unavailable, Snackbar.LENGTH_LONG).show()
+            return
+        }
+        lifecycleScope.launch {
+            val request = inMemoryRequest ?: withContext(Dispatchers.IO) {
+                PendingVideoExportRequestStore(applicationContext).load()
+            }
+            if (request == null || request.outputUri.isNotBlank()) {
+                PendingVideoExportRequestStore(applicationContext).clear()
+                generatedMedia.discard(uri)
+                Snackbar.make(binding.root, R.string.video_request_unavailable, Snackbar.LENGTH_LONG).show()
+                return@launch
+            }
+            PendingVideoExportRequestStore(applicationContext).clear()
+            startVideoExport(uri, request)
         }
     }
 
@@ -4434,7 +4495,7 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
         } else {
-            createVideo.launch("${generatedMedia.fileBaseName(request.title, request.journey.period)}.mp4")
+            launchPendingVideoDestination("${generatedMedia.fileBaseName(request.title, request.journey.period)}.mp4")
         }
     }
 
@@ -5432,6 +5493,7 @@ class MainActivity : AppCompatActivity() {
                     getString(R.string.watch),
                     getString(R.string.share),
                     getString(R.string.settings_details),
+                    getString(R.string.remove_from_list),
                     getString(R.string.delete_video),
                 ),
             ) { _, which ->
@@ -5439,7 +5501,8 @@ class MainActivity : AppCompatActivity() {
                     0 -> watchVideo(record.uri.toUri())
                     1 -> shareVideo(record.uri.toUri())
                     2 -> showVideoSettingsDetails(record)
-                    3 -> confirmDeleteVideo(record)
+                    3 -> removeVideo(record)
+                    4 -> confirmDeleteVideo(record)
                 }
             }
             .setNegativeButton(android.R.string.cancel, null)
@@ -5737,9 +5800,22 @@ class MainActivity : AppCompatActivity() {
 
     private fun maybeCheckForAutomaticUpdate(nowMillis: Long = System.currentTimeMillis()) {
         if (Build.FINGERPRINT.equals("robolectric", ignoreCase = true)) return
-        if (!UpdatePromptPolicy.shouldCheck(nowMillis, updatePromptState.lastCheckMillis)) return
-        updatePromptState.recordCheck(nowMillis)
-        distributionUpdateManager.checkForUpdate { update ->
+        if (
+            !UpdatePromptPolicy.shouldCheck(
+                nowMillis,
+                updatePromptState.lastSuccessfulCheckMillis,
+                updatePromptState.lastAttemptMillis,
+            )
+        ) return
+        updatePromptState.recordAttempt(nowMillis)
+        distributionUpdateManager.checkForUpdate { result ->
+            val update = when (result) {
+                is UpdateCheckResult.Success -> {
+                    updatePromptState.recordSuccess(System.currentTimeMillis())
+                    result.update
+                }
+                UpdateCheckResult.Failure -> return@checkForUpdate
+            }
             if (
                 update != null &&
                 UpdatePromptPolicy.shouldPrompt(
@@ -5987,6 +6063,10 @@ class MainActivity : AppCompatActivity() {
     internal fun selectedDurationSeconds(): Int = routeDurationSeconds
 
     internal fun pendingExportDurationSeconds(): Int? = pendingExport?.durationSeconds
+    internal fun hasPendingExportDestinationForTest(): Boolean = pendingExportDestination
+    internal fun pendingOverviewVideoUriForTest(): Uri? = pendingOverviewVideoUri
+    internal fun pendingVideoCopyUriForTest(): Uri? = pendingVideoCopyUri
+    internal fun cancelPendingVideoDestinationForTest() = handleVideoDestinationResult(null)
 
     internal fun currentJourneyPoints(): List<GeoPoint> = journey?.points.orEmpty()
 
@@ -6123,6 +6203,9 @@ class MainActivity : AppCompatActivity() {
         private const val STATE_JOURNAL_SETUP_MODE = "journal_setup_mode_v1"
         private const val STATE_JOURNAL_SETUP_RETURN_TO_CREATE = "journal_setup_return_to_create_v1"
         private const val STATE_PENDING_JOURNAL_REMINDER_ID = "pending_journal_reminder_id_v1"
+        private const val STATE_PENDING_EXPORT_DESTINATION = "pending_export_destination_v1"
+        private const val STATE_PENDING_OVERVIEW_VIDEO_URI = "pending_overview_video_uri_v1"
+        private const val STATE_PENDING_VIDEO_COPY_URI = "pending_video_copy_uri_v1"
         private const val STATE_JOURNAL_ONBOARDING_PAGE = "journal_onboarding_page_v1"
         private const val STATE_JOURNAL_ONBOARDING_REPLAY = "journal_onboarding_replay_v1"
         private const val STATE_CUSTOMIZATION_CAMERA = "customization_camera_v3"

@@ -33,9 +33,13 @@ data class VideoExportRequest(
     val period: TimelinePeriod get() = journey.period
 }
 
-class VideoExportRequestStore(context: Context) {
-    private val requestFile = File(context.filesDir, REQUEST_FILE)
-    private val temporaryFile = File(context.filesDir, TEMPORARY_FILE)
+class VideoExportRequestStore internal constructor(
+    context: Context,
+    requestFileName: String = REQUEST_FILE,
+    temporaryFileName: String = TEMPORARY_FILE,
+) {
+    private val requestFile = File(context.filesDir, requestFileName)
+    private val temporaryFile = File(context.filesDir, temporaryFileName)
 
     @Synchronized
     fun save(request: VideoExportRequest) {
@@ -293,5 +297,27 @@ class VideoExportRequestStore(context: Context) {
             exportFormat = ExportFormatSettings.fromLegacy(VideoQuality.STANDARD),
             localFraming = LocalFraming.OFF,
         )
+    }
+}
+
+class PendingVideoExportRequestStore(context: Context) {
+    private val delegate = VideoExportRequestStore(
+        context,
+        requestFileName = REQUEST_FILE,
+        temporaryFileName = TEMPORARY_FILE,
+    )
+
+    fun save(request: VideoExportRequest) {
+        require(request.outputUri.isBlank()) { "Pending video destination must not have an output URI" }
+        delegate.save(request)
+    }
+
+    fun load(): VideoExportRequest? = delegate.load()?.takeIf { it.outputUri.isBlank() }
+
+    fun clear() = delegate.clear()
+
+    private companion object {
+        const val REQUEST_FILE = "pending-video-destination.bin"
+        const val TEMPORARY_FILE = "pending-video-destination.tmp"
     }
 }

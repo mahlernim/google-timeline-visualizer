@@ -9,7 +9,7 @@ class DistributionUpdateManager(
     @Suppress("UNUSED_PARAMETER") updateLauncher: ActivityResultLauncher<IntentSenderRequest>,
     @Suppress("UNUSED_PARAMETER") onUpdateDownloaded: () -> Unit,
 ) {
-    fun checkForUpdate(onResult: (AvailableAppUpdate?) -> Unit) = onResult(null)
+    fun checkForUpdate(onResult: (UpdateCheckResult) -> Unit) = onResult(UpdateCheckResult.Success(null))
 
     fun startUpdate(@Suppress("UNUSED_PARAMETER") update: AvailableAppUpdate): Boolean = false
 

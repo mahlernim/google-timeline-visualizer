@@ -80,8 +80,9 @@ videos to CARTO or to the developer.
 The application has no analytics, advertising, crash-reporting, login, or
 developer-operated server.
 
-Video presets are stored only in private app storage. They are never shared off the
-device and are excluded from Android backup and device transfer.
+Video presets, automatic-title fields, and saved trip projects are stored only in
+private app storage. They are never shared off the device and are excluded from
+Android backup and device transfer.
 
 All network requests made by the app use encrypted HTTPS connections. Under
 CARTO's current Basemap Terms, CARTO processes request information on the

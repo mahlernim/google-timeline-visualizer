@@ -38,6 +38,7 @@ import dev.mahlernim.timelinevisualizer.export.VideoExportStatus
 import dev.mahlernim.timelinevisualizer.export.VideoExportService
 import dev.mahlernim.timelinevisualizer.export.VideoExportRequest
 import dev.mahlernim.timelinevisualizer.export.VideoExportRequestStore
+import dev.mahlernim.timelinevisualizer.export.PendingVideoExportRequestStore
 import dev.mahlernim.timelinevisualizer.journal.JournalOnboardingStore
 import dev.mahlernim.timelinevisualizer.model.GeoPoint
 import dev.mahlernim.timelinevisualizer.model.Journey
@@ -94,6 +95,7 @@ class MainActivityTest {
         store.clear()
         VideoExportStateStore(context).clear()
         VideoExportRequestStore(context).clear()
+        PendingVideoExportRequestStore(context).clear()
         VideoExportCoordinator.resetForTest()
         context.getSharedPreferences("display", Context.MODE_PRIVATE).edit().clear().commit()
         context.getSharedPreferences("camera-settings", Context.MODE_PRIVATE).edit().clear().commit()
@@ -285,6 +287,7 @@ class MainActivityTest {
         store.clear()
         VideoExportStateStore(context).clear()
         VideoExportRequestStore(context).clear()
+        PendingVideoExportRequestStore(context).clear()
         VideoExportCoordinator.resetForTest()
         timelineSourceStore.clearForTest()
         context.getSharedPreferences("video-presets", Context.MODE_PRIVATE).edit().clear().commit()
@@ -316,6 +319,79 @@ class MainActivityTest {
             "2026 Mina's Timeline",
             list.getChildAt(0).findViewById<android.widget.TextView>(R.id.videoTitle).text.toString(),
         )
+    }
+
+    @Test
+    fun removeFromListDoesNotRequireTheVideoFileToBeDeletable() {
+        val record = VideoRecord(
+            uri = "content://missing/video",
+            title = "Missing video",
+            fileName = "missing.mp4",
+            createdAtMillis = 1_786_900_000_000L,
+            durationSeconds = 30,
+        )
+        store.upsert(record)
+        val activity = launchActivity()
+        val card = activity.findViewById<LinearLayout>(R.id.videosList).getChildAt(0)
+
+        card.findViewById<View>(R.id.videoMoreButton).performClick()
+        val dialog = ShadowDialog.getLatestDialog() as AlertDialog
+        assertEquals(activity.getString(R.string.remove_from_list), dialog.listView.adapter.getItem(3))
+        dialog.listView.performItemClick(null, 3, 3L)
+
+        assertTrue(store.list().isEmpty())
+    }
+
+    @Test
+    fun activityResultSideStateSurvivesRecreationWithoutBundlingTheExportRequest() {
+        val request = VideoExportRequest(
+            outputUri = "",
+            journey = Journey.from(emptyList(), 2026),
+            title = "Pending video",
+            durationSeconds = 45,
+        )
+        val overview = Uri.parse("content://videos/overview-source")
+        val copy = Uri.parse("content://videos/copy-source")
+        val activity = launchActivity()
+        PendingVideoExportRequestStore(context).save(request)
+        setPrivateField(activity, "pendingExportDestination", true)
+        setPrivateField(activity, "pendingOverviewVideoUri", overview)
+        setPrivateField(activity, "pendingVideoCopyUri", copy)
+
+        controller.recreate()
+        val recreated = controller.get()
+
+        assertTrue(recreated.hasPendingExportDestinationForTest())
+        assertEquals(overview, recreated.pendingOverviewVideoUriForTest())
+        assertEquals(copy, recreated.pendingVideoCopyUriForTest())
+        val restoredRequest = requireNotNull(PendingVideoExportRequestStore(context).load())
+        assertEquals(request.outputUri, restoredRequest.outputUri)
+        assertEquals(request.title, restoredRequest.title)
+        assertEquals(request.durationSeconds, restoredRequest.durationSeconds)
+        assertEquals(request.period, restoredRequest.period)
+
+        recreated.cancelPendingVideoDestinationForTest()
+        assertEquals(null, PendingVideoExportRequestStore(context).load())
+    }
+
+    @Test
+    fun cancellingDestinationPickerKeepsAResumableFailedExportRequest() {
+        val resumable = VideoExportRequest(
+            outputUri = "content://documents/failed-export.mp4",
+            journey = Journey.from(emptyList(), 2026),
+            title = "Failed export",
+            durationSeconds = 30,
+        )
+        val pending = resumable.copy(outputUri = "", title = "New export")
+        VideoExportRequestStore(context).save(resumable)
+        val activity = launchActivity()
+        PendingVideoExportRequestStore(context).save(pending)
+        setPrivateField(activity, "pendingExportDestination", true)
+
+        activity.cancelPendingVideoDestinationForTest()
+
+        assertEquals(resumable.outputUri, VideoExportRequestStore(context).load()?.outputUri)
+        assertEquals(null, PendingVideoExportRequestStore(context).load())
     }
 
     @Test
@@ -1912,6 +1988,10 @@ class MainActivityTest {
             current = current.parentFile ?: error("Repository root unavailable")
         }
         return current
+    }
+
+    private fun setPrivateField(activity: MainActivity, name: String, value: Any?) {
+        MainActivity::class.java.getDeclaredField(name).apply { isAccessible = true }.set(activity, value)
     }
 
     private fun launchActivity(intent: Intent? = null): MainActivity {

@@ -29,7 +29,7 @@ class JournalReminderWorker(
         if (!JournalReminderDecision.shouldNotify(
                 reminderEligible = journal.reminderEligible,
                 reminderEnabled = journal.reminderEnabled,
-                currentAnchorEpochMillis = journal.detailedUsableThroughEpochMillis,
+                currentAnchorEpochMillis = journal.detailedCapturedThroughEpochMillis,
                 requestedAnchorEpochMillis = anchor,
                 stage = stage,
                 state = stateStore.state(journalId),

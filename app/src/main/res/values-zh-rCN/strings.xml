@@ -101,7 +101,7 @@
     <string name="no_creations">您创建或添加的视频将显示在此处。</string>
     <string name="show_all_creations">显示全部 (%1$d)</string>
     <string name="show_fewer_creations">显示较少</string>
-    <string name="watch">手表</string>
+    <string name="watch">观看</string>
     <string name="more">更多的</string>
     <string name="video_thumbnail">视频缩略图</string>
     <string name="save_overview_image">保存概览图像</string>

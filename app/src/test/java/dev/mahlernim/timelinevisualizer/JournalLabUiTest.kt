@@ -15,6 +15,7 @@ import dev.mahlernim.timelinevisualizer.journal.JournalOnboardingStore
 import dev.mahlernim.timelinevisualizer.journal.JournalDatabase
 import dev.mahlernim.timelinevisualizer.journal.JournalEntity
 import dev.mahlernim.timelinevisualizer.journal.JournalRepository
+import dev.mahlernim.timelinevisualizer.journal.reminder.JournalReminderStateStore
 import dev.mahlernim.timelinevisualizer.presets.PresetRepository
 import dev.mahlernim.timelinevisualizer.trips.SuggestionConfidence
 import dev.mahlernim.timelinevisualizer.trips.ProjectTitleMode
@@ -53,6 +54,8 @@ class JournalLabUiTest {
         context.getSharedPreferences(JournalOnboardingStore.PREFERENCES_NAME, Context.MODE_PRIVATE)
             .edit().clear().commit()
         context.getSharedPreferences("video-presets", Context.MODE_PRIVATE).edit().clear().commit()
+        context.getSharedPreferences(JournalReminderStateStore.PREFERENCES_NAME, Context.MODE_PRIVATE)
+            .edit().clear().commit()
         JournalOnboardingStore(context).complete()
     }
 
@@ -212,6 +215,39 @@ class JournalLabUiTest {
         val reminderEnabled = runBlocking { JournalRepository(database).primaryJournal()?.reminderEnabled }
         database.close()
         assertEquals(true, reminderEnabled)
+    }
+
+    @Test
+    @Config(sdk = [32])
+    fun enablingRemindersUsesCapturedDetailWhenFilteredRouteDetailIsOlder() {
+        val captured = Instant.now().minusSeconds(60).toEpochMilli()
+        val usable = captured - 60_000L
+        val database = JournalDatabase.open(context)
+        runBlocking {
+            JournalRepository(database).createJournal(
+                JournalEntity(
+                    id = "captured-reminder",
+                    name = "Travel Journal",
+                    isPrimary = true,
+                    createdAtEpochMillis = captured,
+                    detailedCapturedThroughEpochMillis = captured,
+                    detailedUsableThroughEpochMillis = usable,
+                    reminderEligible = true,
+                ),
+            )
+        }
+        database.close()
+        val activity = launchActivity()
+        waitUntil(activity::journalMetadataReady)
+        activity.findViewById<View>(R.id.navigationSettings).performClick()
+        val reminderSwitch = activity.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(
+            R.id.journalReminderSwitch,
+        )
+
+        reminderSwitch.performClick()
+        waitUntil { JournalReminderStateStore(context).state("captured-reminder").anchorEpochMillis != null }
+
+        assertEquals(captured, JournalReminderStateStore(context).state("captured-reminder").anchorEpochMillis)
     }
 
     @Test
