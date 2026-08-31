@@ -463,7 +463,20 @@ class MainActivityTest {
         activity.cancelPendingVideoDestinationForTest()
 
         assertEquals(resumable.outputUri, VideoExportRequestStore(context).load()?.outputUri)
-        waitUntil { PendingVideoExportRequestStore(context).load() == null }
+        assertEquals(null, PendingVideoExportRequestStore(context).load())
+    }
+
+    @Test
+    fun cancellingDestinationPickerClearsSensitiveRequestBeforeActivityDestroy() {
+        val request = pendingDestinationRequest("Cancelled export", 37.5)
+        val activity = launchActivity()
+        PendingVideoExportRequestStore(context).save(request)
+        setPrivateField(activity, "pendingExportDestination", true)
+
+        activity.cancelPendingVideoDestinationForTest()
+        controller.pause().stop().destroy()
+
+        assertEquals(null, PendingVideoExportRequestStore(context).load())
     }
 
     @Test

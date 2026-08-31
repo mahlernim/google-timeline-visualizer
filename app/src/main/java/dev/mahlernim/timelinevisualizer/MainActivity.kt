@@ -4255,7 +4255,7 @@ class MainActivity : AppCompatActivity() {
             runCatching { createVideo.launch(fileName) }.onFailure {
                 pendingExport = null
                 pendingExportDestination = false
-                schedulePendingExportStoreCleanup()
+                clearPendingExportStore()
                 editor.statusText.setText(R.string.video_request_unavailable)
                 Snackbar.make(binding.root, R.string.video_export_failed, Snackbar.LENGTH_LONG).show()
             }
@@ -4269,7 +4269,7 @@ class MainActivity : AppCompatActivity() {
             pendingExport = null
             pendingExportDestination = false
             pendingExportDestinationUri = null
-            schedulePendingExportStoreCleanup()
+            clearPendingExportStore()
             return
         }
         if (!expectedResult) {
@@ -4277,7 +4277,7 @@ class MainActivity : AppCompatActivity() {
             pendingExport = null
             pendingExportDestination = false
             pendingExportDestinationUri = null
-            schedulePendingExportStoreCleanup()
+            clearPendingExportStore()
             generatedMedia.discard(uri)
             Snackbar.make(binding.root, R.string.video_request_unavailable, Snackbar.LENGTH_LONG).show()
             return
@@ -4299,7 +4299,7 @@ class MainActivity : AppCompatActivity() {
                 pendingExport = null
                 pendingExportDestination = false
                 pendingExportDestinationUri = null
-                schedulePendingExportStoreCleanup()
+                clearPendingExportStore()
                 generatedMedia.discard(uri)
                 Snackbar.make(binding.root, R.string.video_request_unavailable, Snackbar.LENGTH_LONG).show()
                 return@launch
@@ -4308,7 +4308,7 @@ class MainActivity : AppCompatActivity() {
             pendingExport = null
             pendingExportDestination = false
             pendingExportDestinationUri = null
-            schedulePendingExportStoreCleanup()
+            clearPendingExportStore()
         }
     }
 
@@ -4318,10 +4318,10 @@ class MainActivity : AppCompatActivity() {
         return pendingExportOperationGeneration
     }
 
-    private fun schedulePendingExportStoreCleanup() {
-        pendingExportStoreCleanupJob = lifecycleScope.launch(Dispatchers.IO) {
-            pendingVideoExportRequestStore.clear()
-        }
+    private fun clearPendingExportStore() {
+        pendingExportStoreCleanupJob?.cancel()
+        pendingExportStoreCleanupJob = null
+        pendingVideoExportRequestStore.clear()
     }
 
     private fun startVideoExport(uri: Uri, request: VideoExportRequest) {
