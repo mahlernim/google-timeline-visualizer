@@ -224,6 +224,10 @@ class MainActivity : AppCompatActivity() {
     private var animation: ValueAnimator? = null
     private var pendingExport: VideoExportRequest? = null
     private var pendingExportDestination = false
+    private var pendingExportDestinationUri: Uri? = null
+    private var pendingExportOperationGeneration = 0L
+    private var pendingExportOperationJob: Job? = null
+    private var pendingExportStoreCleanupJob: Job? = null
     private var lastVideoUri: Uri? = null
     private var lastVideoTitle: String? = null
     private var pendingOverviewVideoUri: Uri? = null
@@ -241,6 +245,7 @@ class MainActivity : AppCompatActivity() {
     private val shortMonthNames by lazy { DateFormatSymbols.getInstance().shortMonths.take(12) }
     private val preferences by lazy { getSharedPreferences("display", MODE_PRIVATE) }
     private val updatePromptState by lazy { UpdatePromptStateStore(applicationContext) }
+    private val pendingVideoExportRequestStore by lazy { PendingVideoExportRequestStore(applicationContext) }
     private val videoMedia by lazy { VideoMedia(applicationContext) }
     private val generatedMedia by lazy { GeneratedMediaRepository(applicationContext) }
     private val timelineLoader by lazy { CachedTimelineLoader(applicationContext) }
@@ -687,6 +692,7 @@ class MainActivity : AppCompatActivity() {
         journalSetupReturnToCreate = savedInstanceState?.getBoolean(STATE_JOURNAL_SETUP_RETURN_TO_CREATE) ?: false
         pendingJournalReminderId = savedInstanceState?.getString(STATE_PENDING_JOURNAL_REMINDER_ID)
         pendingExportDestination = savedInstanceState?.getBoolean(STATE_PENDING_EXPORT_DESTINATION) ?: false
+        pendingExportDestinationUri = savedInstanceState?.getString(STATE_PENDING_EXPORT_DESTINATION_URI)?.toUri()
         pendingOverviewVideoUri = savedInstanceState?.getString(STATE_PENDING_OVERVIEW_VIDEO_URI)?.toUri()
         pendingVideoCopyUri = savedInstanceState?.getString(STATE_PENDING_VIDEO_COPY_URI)?.toUri()
         onboardingPage = savedInstanceState?.getInt(STATE_JOURNAL_ONBOARDING_PAGE, 0) ?: 0
@@ -701,8 +707,12 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) { videoMedia.pruneOverviewCache() }
         observeVideoExport()
         VideoExportService.resumeIfNeeded(applicationContext)
-        if (savedInstanceState == null) {
-            PendingVideoExportRequestStore(applicationContext).clear()
+        if (!pendingExportDestination) {
+            pendingExportStoreCleanupJob = lifecycleScope.launch(Dispatchers.IO) {
+                pendingVideoExportRequestStore.clear()
+            }
+        } else if (pendingExportDestinationUri != null) {
+            resumePendingVideoDestination()
         }
 
         playerUri = savedInstanceState?.getString(STATE_PLAYER_URI)?.toUri()
@@ -792,6 +802,7 @@ class MainActivity : AppCompatActivity() {
         outState.putBoolean(STATE_JOURNAL_SETUP_RETURN_TO_CREATE, journalSetupReturnToCreate)
         outState.putString(STATE_PENDING_JOURNAL_REMINDER_ID, pendingJournalReminderId)
         outState.putBoolean(STATE_PENDING_EXPORT_DESTINATION, pendingExportDestination)
+        outState.putString(STATE_PENDING_EXPORT_DESTINATION_URI, pendingExportDestinationUri?.toString())
         outState.putString(STATE_PENDING_OVERVIEW_VIDEO_URI, pendingOverviewVideoUri?.toString())
         outState.putString(STATE_PENDING_VIDEO_COPY_URI, pendingVideoCopyUri?.toString())
         outState.putInt(STATE_JOURNAL_ONBOARDING_PAGE, onboardingPage)
@@ -4222,52 +4233,94 @@ class MainActivity : AppCompatActivity() {
 
     private fun launchPendingVideoDestination(fileName: String) {
         val request = pendingExport?.copy(outputUri = "") ?: return
-        val stored = runCatching { PendingVideoExportRequestStore(applicationContext).save(request) }.isSuccess
-        if (!stored) {
-            pendingExport = null
-            pendingExportDestination = false
-            editor.statusText.setText(R.string.video_request_unavailable)
-            Snackbar.make(binding.root, R.string.video_export_failed, Snackbar.LENGTH_LONG).show()
-            return
-        }
+        val generation = beginPendingExportOperation()
         pendingExport = request
-        pendingExportDestination = true
-        runCatching { createVideo.launch(fileName) }.onFailure {
-            pendingExport = null
-            pendingExportDestination = false
-            PendingVideoExportRequestStore(applicationContext).clear()
-            editor.statusText.setText(R.string.video_request_unavailable)
-            Snackbar.make(binding.root, R.string.video_export_failed, Snackbar.LENGTH_LONG).show()
+        pendingExportDestination = false
+        pendingExportDestinationUri = null
+        pendingExportOperationJob = lifecycleScope.launch {
+            val stored = withContext(Dispatchers.IO) {
+                pendingExportStoreCleanupJob?.join()
+                runCatching { pendingVideoExportRequestStore.save(request) }
+                    .onFailure { runCatching { pendingVideoExportRequestStore.clear() } }
+                    .isSuccess
+            }
+            if (generation != pendingExportOperationGeneration) return@launch
+            if (!stored) {
+                pendingExport = null
+                editor.statusText.setText(R.string.video_request_unavailable)
+                Snackbar.make(binding.root, R.string.video_export_failed, Snackbar.LENGTH_LONG).show()
+                return@launch
+            }
+            pendingExportDestination = true
+            runCatching { createVideo.launch(fileName) }.onFailure {
+                pendingExport = null
+                pendingExportDestination = false
+                schedulePendingExportStoreCleanup()
+                editor.statusText.setText(R.string.video_request_unavailable)
+                Snackbar.make(binding.root, R.string.video_export_failed, Snackbar.LENGTH_LONG).show()
+            }
         }
     }
 
     private fun handleVideoDestinationResult(uri: Uri?) {
-        val inMemoryRequest = pendingExport
         val expectedResult = pendingExportDestination
-        pendingExport = null
-        pendingExportDestination = false
         if (uri == null) {
-            PendingVideoExportRequestStore(applicationContext).clear()
+            beginPendingExportOperation()
+            pendingExport = null
+            pendingExportDestination = false
+            pendingExportDestinationUri = null
+            schedulePendingExportStoreCleanup()
             return
         }
         if (!expectedResult) {
-            PendingVideoExportRequestStore(applicationContext).clear()
+            beginPendingExportOperation()
+            pendingExport = null
+            pendingExportDestination = false
+            pendingExportDestinationUri = null
+            schedulePendingExportStoreCleanup()
             generatedMedia.discard(uri)
             Snackbar.make(binding.root, R.string.video_request_unavailable, Snackbar.LENGTH_LONG).show()
             return
         }
-        lifecycleScope.launch {
-            val request = inMemoryRequest ?: withContext(Dispatchers.IO) {
-                PendingVideoExportRequestStore(applicationContext).load()
+        pendingExportDestinationUri = uri
+        resumePendingVideoDestination()
+    }
+
+    private fun resumePendingVideoDestination() {
+        val uri = pendingExportDestinationUri ?: return
+        if (!pendingExportDestination) return
+        val generation = beginPendingExportOperation()
+        pendingExportOperationJob = lifecycleScope.launch {
+            val request = pendingExport ?: withContext(Dispatchers.IO) {
+                pendingVideoExportRequestStore.load()
             }
+            if (generation != pendingExportOperationGeneration) return@launch
             if (request == null || request.outputUri.isNotBlank()) {
-                PendingVideoExportRequestStore(applicationContext).clear()
+                pendingExport = null
+                pendingExportDestination = false
+                pendingExportDestinationUri = null
+                schedulePendingExportStoreCleanup()
                 generatedMedia.discard(uri)
                 Snackbar.make(binding.root, R.string.video_request_unavailable, Snackbar.LENGTH_LONG).show()
                 return@launch
             }
-            PendingVideoExportRequestStore(applicationContext).clear()
             startVideoExport(uri, request)
+            pendingExport = null
+            pendingExportDestination = false
+            pendingExportDestinationUri = null
+            schedulePendingExportStoreCleanup()
+        }
+    }
+
+    private fun beginPendingExportOperation(): Long {
+        pendingExportOperationJob?.cancel()
+        pendingExportOperationGeneration += 1L
+        return pendingExportOperationGeneration
+    }
+
+    private fun schedulePendingExportStoreCleanup() {
+        pendingExportStoreCleanupJob = lifecycleScope.launch(Dispatchers.IO) {
+            pendingVideoExportRequestStore.clear()
         }
     }
 
@@ -5637,14 +5690,13 @@ class MainActivity : AppCompatActivity() {
         } ?: dimensions
     }
 
-    private fun removeVideo(record: VideoRecord) {
+    private fun removeVideo(record: VideoRecord): Snackbar {
         val uri = record.uri.toUri()
         videoLibraryViewModel.remove(record)
-        videoMedia.deleteThumbnail(uri)
         renderVideos()
         renderTrips()
         var restored = false
-        Snackbar.make(binding.root, R.string.video_removed, Snackbar.LENGTH_LONG)
+        return Snackbar.make(binding.root, R.string.video_removed, Snackbar.LENGTH_LONG)
             .setAction(R.string.undo) {
                 restored = true
                 videoLibraryViewModel.upsert(record)
@@ -5653,10 +5705,13 @@ class MainActivity : AppCompatActivity() {
             }
             .addCallback(object : Snackbar.Callback() {
                 override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                    if (!restored) releaseUriAccess(uri)
+                    if (!restored) {
+                        videoMedia.deleteThumbnail(uri)
+                        releaseUriAccess(uri)
+                    }
                 }
             })
-            .show()
+            .also { it.show() }
     }
 
     private fun confirmDeleteVideo(record: VideoRecord) {
@@ -6064,9 +6119,16 @@ class MainActivity : AppCompatActivity() {
 
     internal fun pendingExportDurationSeconds(): Int? = pendingExport?.durationSeconds
     internal fun hasPendingExportDestinationForTest(): Boolean = pendingExportDestination
+    internal fun pendingExportDestinationUriForTest(): Uri? = pendingExportDestinationUri
     internal fun pendingOverviewVideoUriForTest(): Uri? = pendingOverviewVideoUri
     internal fun pendingVideoCopyUriForTest(): Uri? = pendingVideoCopyUri
     internal fun cancelPendingVideoDestinationForTest() = handleVideoDestinationResult(null)
+    internal fun queuePendingVideoDestinationForTest(request: VideoExportRequest, fileName: String) {
+        pendingExport = request.copy(outputUri = "")
+        launchPendingVideoDestination(fileName)
+    }
+    internal fun deliverPendingVideoDestinationForTest(uri: Uri?) = handleVideoDestinationResult(uri)
+    internal fun removeVideoForTest(record: VideoRecord): Snackbar = removeVideo(record)
 
     internal fun currentJourneyPoints(): List<GeoPoint> = journey?.points.orEmpty()
 
@@ -6204,6 +6266,7 @@ class MainActivity : AppCompatActivity() {
         private const val STATE_JOURNAL_SETUP_RETURN_TO_CREATE = "journal_setup_return_to_create_v1"
         private const val STATE_PENDING_JOURNAL_REMINDER_ID = "pending_journal_reminder_id_v1"
         private const val STATE_PENDING_EXPORT_DESTINATION = "pending_export_destination_v1"
+        private const val STATE_PENDING_EXPORT_DESTINATION_URI = "pending_export_destination_uri_v1"
         private const val STATE_PENDING_OVERVIEW_VIDEO_URI = "pending_overview_video_uri_v1"
         private const val STATE_PENDING_VIDEO_COPY_URI = "pending_video_copy_uri_v1"
         private const val STATE_JOURNAL_ONBOARDING_PAGE = "journal_onboarding_page_v1"

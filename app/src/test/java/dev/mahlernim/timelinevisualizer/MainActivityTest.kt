@@ -343,13 +343,64 @@ class MainActivityTest {
     }
 
     @Test
-    fun activityResultSideStateSurvivesRecreationWithoutBundlingTheExportRequest() {
-        val request = VideoExportRequest(
-            outputUri = "",
-            journey = Journey.from(emptyList(), 2026),
-            title = "Pending video",
-            durationSeconds = 45,
+    fun undoingRemoveFromListPreservesTheCachedThumbnail() {
+        val uri = Uri.parse("content://example/undo-thumbnail")
+        val record = VideoRecord(
+            uri = uri.toString(),
+            title = "Undo thumbnail",
+            fileName = "undo-thumbnail.mp4",
+            createdAtMillis = 1_786_900_000_000L,
+            durationSeconds = 30,
         )
+        val media = VideoMedia(context)
+        val overview = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888).apply {
+            eraseColor(android.graphics.Color.BLUE)
+        }
+        media.saveGeneratedOverview(uri, overview)
+        overview.recycle()
+        store.upsert(record)
+
+        try {
+            val activity = launchActivity()
+            val snackbar = activity.removeVideoForTest(record)
+
+            assertNotNull(media.loadThumbnail(uri))
+            snackbar.view.findViewById<View>(com.google.android.material.R.id.snackbar_action).performClick()
+            shadowOf(Looper.getMainLooper()).idle()
+
+            assertTrue(store.list().any { it.uri == record.uri })
+            assertNotNull(media.loadThumbnail(uri))
+        } finally {
+            media.deleteThumbnail(uri)
+            media.deleteOverview(uri)
+        }
+    }
+
+    @Test
+    @Config(sdk = [28])
+    fun latestLegacyDestinationPreparationWinsAndKeepsItsNonEmptyJourney() {
+        val activity = launchActivity()
+        val first = pendingDestinationRequest("First", 37.5)
+        val second = pendingDestinationRequest("Second", 35.7)
+
+        activity.queuePendingVideoDestinationForTest(first, "first.mp4")
+        activity.queuePendingVideoDestinationForTest(second, "second.mp4")
+
+        waitUntil {
+            activity.hasPendingExportDestinationForTest() &&
+                PendingVideoExportRequestStore(context).load()?.title == second.title
+        }
+        val restored = requireNotNull(PendingVideoExportRequestStore(context).load())
+        assertEquals(second.journey.points, restored.journey.points)
+        val pickerIntent = shadowOf(activity).nextStartedActivity
+        assertEquals(Intent.ACTION_CREATE_DOCUMENT, pickerIntent.action)
+        assertEquals("second.mp4", pickerIntent.getStringExtra(Intent.EXTRA_TITLE))
+        assertEquals(null, shadowOf(activity).nextStartedActivity)
+    }
+
+    @Test
+    fun activityResultSideStateSurvivesRecreationWithoutBundlingTheExportRequest() {
+        val request = pendingDestinationRequest("Pending video", 37.5)
         val overview = Uri.parse("content://videos/overview-source")
         val copy = Uri.parse("content://videos/copy-source")
         val activity = launchActivity()
@@ -371,7 +422,28 @@ class MainActivityTest {
         assertEquals(request.period, restoredRequest.period)
 
         recreated.cancelPendingVideoDestinationForTest()
-        assertEquals(null, PendingVideoExportRequestStore(context).load())
+        waitUntil { PendingVideoExportRequestStore(context).load() == null }
+    }
+
+    @Test
+    fun destinationDeliveredDuringRestoredRequestLoadSurvivesAnotherRecreation() {
+        val request = pendingDestinationRequest("Restored destination", 37.5)
+        val destination = Uri.parse("content://documents/restored-destination.mp4")
+        val activity = launchActivity()
+        activity.queuePendingVideoDestinationForTest(request, "restored-destination.mp4")
+        waitUntil { activity.hasPendingExportDestinationForTest() }
+
+        controller.recreate()
+        var recreated = controller.get()
+        recreated.deliverPendingVideoDestinationForTest(destination)
+        assertEquals(destination, recreated.pendingExportDestinationUriForTest())
+
+        controller.recreate()
+        recreated = controller.get()
+        waitUntil { VideoExportRequestStore(context).load()?.outputUri == destination.toString() }
+
+        assertEquals(false, recreated.hasPendingExportDestinationForTest())
+        assertEquals(null, recreated.pendingExportDestinationUriForTest())
     }
 
     @Test
@@ -391,7 +463,7 @@ class MainActivityTest {
         activity.cancelPendingVideoDestinationForTest()
 
         assertEquals(resumable.outputUri, VideoExportRequestStore(context).load()?.outputUri)
-        assertEquals(null, PendingVideoExportRequestStore(context).load())
+        waitUntil { PendingVideoExportRequestStore(context).load() == null }
     }
 
     @Test
@@ -1980,6 +2052,19 @@ class MainActivityTest {
         ),
         title = "Retry test",
         durationSeconds = 30,
+    )
+
+    private fun pendingDestinationRequest(title: String, latitude: Double): VideoExportRequest = VideoExportRequest(
+        outputUri = "",
+        journey = Journey.from(
+            listOf(
+                GeoPoint(Instant.parse("2026-01-01T00:00:00Z"), latitude, 127.0),
+                GeoPoint(Instant.parse("2026-01-01T01:00:00Z"), latitude + 0.01, 127.01),
+            ),
+            2026,
+        ),
+        title = title,
+        durationSeconds = 45,
     )
 
     private fun repoRoot(): File {
