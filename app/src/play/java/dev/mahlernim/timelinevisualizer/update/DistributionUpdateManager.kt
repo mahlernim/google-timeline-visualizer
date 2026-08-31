@@ -24,19 +24,19 @@ class DistributionUpdateManager(
         if (state.installStatus() == InstallStatus.DOWNLOADED) onUpdateDownloaded()
     }
 
-    fun checkForUpdate(onResult: (AvailableAppUpdate?) -> Unit) {
+    fun checkForUpdate(onResult: (UpdateCheckResult) -> Unit) {
         appUpdateManager.appUpdateInfo
             .addOnSuccessListener(activity) { info ->
                 val available = info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
                     info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
                 availableUpdateInfo = info.takeIf { available }
-                onResult(
+                onResult(UpdateCheckResult.Success(
                     info.takeIf { available }?.let {
                         AvailableAppUpdate(versionCode = it.availableVersionCode())
                     },
-                )
+                ))
             }
-            .addOnFailureListener(activity) { onResult(null) }
+            .addOnFailureListener(activity) { onResult(UpdateCheckResult.Failure) }
     }
 
     fun startUpdate(@Suppress("UNUSED_PARAMETER") update: AvailableAppUpdate): Boolean {

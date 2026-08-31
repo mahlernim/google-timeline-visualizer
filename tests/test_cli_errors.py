@@ -1,6 +1,7 @@
 import json
 import shutil
 import subprocess
+from datetime import date
 
 import pytest
 
@@ -12,6 +13,7 @@ from visualizer import (
     build_argument_parser,
     ensure_ffmpeg_available,
     ffmpeg_writer,
+    parse_date_argument,
     parse_timeline,
 )
 
@@ -156,3 +158,21 @@ def test_main_reports_typed_parse_failure(monkeypatch, tmp_path, capsys):
 
     assert visualizer.main(['--input', str(timeline)]) == 1
     assert 'no matching points' in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(('value', 'expected'), [
+    ('2024-06', date(2024, 6, 1)),
+    ('2024-06-17', date(2024, 6, 17)),
+])
+def test_start_date_month_uses_first_day(value, expected):
+    assert parse_date_argument(value) == expected
+
+
+@pytest.mark.parametrize(('value', 'expected'), [
+    ('2024-06', date(2024, 6, 30)),
+    ('2024-02', date(2024, 2, 29)),
+    ('2025-02', date(2025, 2, 28)),
+    ('2024-06-17', date(2024, 6, 17)),
+])
+def test_end_date_month_uses_last_day(value, expected):
+    assert parse_date_argument(value, end_of_month=True) == expected

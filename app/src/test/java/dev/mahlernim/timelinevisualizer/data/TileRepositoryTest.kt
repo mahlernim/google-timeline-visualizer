@@ -59,6 +59,30 @@ class TileRepositoryTest {
     }
 
     @Test
+    fun memoryPeekDoesNotDecodeDiskCacheOnCallingThread() {
+        val now = 1_800_000_000_000L
+        val id = TileId(5, 1, 2)
+        writeTile(id, now)
+        val repository = repository(now)
+
+        assertNull(repository.peekMemory(id))
+        assertNotNull(repository.cached(id))
+        assertNotNull(repository.peekMemory(id))
+    }
+
+    @Test
+    fun backgroundLoadPopulatesMemoryFromDiskCache() = runBlocking {
+        val now = 1_800_000_000_000L
+        val id = TileId(5, 1, 2)
+        writeTile(id, now)
+        val repository = repository(now)
+
+        assertNull(repository.peekMemory(id))
+        assertNotNull(repository.load(id))
+        assertNotNull(repository.peekMemory(id))
+    }
+
+    @Test
     fun tileOlderThanThirtyDaysIsDeleted() {
         val now = 1_800_000_000_000L
         val id = TileId(5, 1, 2)

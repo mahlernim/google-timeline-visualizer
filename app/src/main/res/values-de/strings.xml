@@ -19,7 +19,7 @@
     <string name="start_month">Startmonat</string>
     <string name="end_month">Endmonat</string>
     <string name="owner_name">Name im automatischen Titel (optional)</string>
-    <string name="share">Aktie</string>
+    <string name="share">Teilen</string>
     <string name="share_travel_video">Teilen Sie Reisevideos</string>
     <string name="import_failed">Timeline konnte nicht geladen werden</string>
     <string name="import_failed_detail">Diese Datei konnte nicht gelesen werden. Wählen Sie einen unterstützten Timeline JSON-Export aus.</string>

@@ -283,12 +283,11 @@ export type TextKey = Exclude<StringKey, PluralKey>;
 /**
  * All nine catalogs are statically imported so they land in the entry chunk.
  *
- * They must never become dynamic `import()`. web/public/service-worker.js precaches only './'
- * and its fetch handler falls back to the cache for same-origin GETs, so no hashed chunk is
- * ever stored: a lazily loaded catalog would be a second network request issued after the
- * first paint, and offline it would leave a rendered page with no strings in it. Static
- * imports also keep applyStrings synchronous, so a non-English user never sees a frame of
- * English, and a language switch can never fail with an unrecoverable chunk load error.
+ * They must never become dynamic `import()`. The generated service worker precaches the
+ * complete static build, but keeping catalogs in the entry bundle also avoids a second
+ * request before translated first paint. Static imports keep applyStrings synchronous, so a
+ * non-English user never sees a frame of English, and a language switch cannot fail with an
+ * unrecoverable catalog chunk load error.
  */
 export const CATALOGS: Readonly<Record<LocaleTag, Strings>> = {
   en,
