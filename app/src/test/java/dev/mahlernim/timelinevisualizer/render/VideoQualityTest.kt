@@ -10,7 +10,7 @@ class VideoQualityTest {
         assertEquals(listOf(480, 720, 1080), VideoQuality.values().take(3).map(VideoQuality::width))
         assertTrue(VideoQuality.values().take(3).all { it.width == it.height && it.frameRate == 24 })
         assertEquals(VideoQuality.STANDARD, CameraSettings.DEFAULT.videoQuality)
-        assertEquals(30, CameraSettings.DEFAULT.activeVideoFormat.frameRate)
+        assertEquals(FrameRate.of(30), CameraSettings.DEFAULT.activeVideoFormat.frameRate)
     }
 
     @Test
@@ -25,6 +25,9 @@ class VideoQualityTest {
         }
         assertEquals(3840, ExportFormatSettings(2160, 60).format(VideoAspectRatio.LANDSCAPE).width)
         assertEquals(40_000_000, ExportFormatSettings(2160, 60).format(VideoAspectRatio.LANDSCAPE).bitrate)
+        assertEquals(60_000_000, ExportFormatSettings(2160, 90).format(VideoAspectRatio.LANDSCAPE).bitrate)
+        assertEquals(80_000_000, ExportFormatSettings(2160, 120).format(VideoAspectRatio.LANDSCAPE).bitrate)
+        assertEquals(160_000_000, ExportFormatSettings(2160, 240).format(VideoAspectRatio.LANDSCAPE).bitrate)
     }
 
     @Test
@@ -32,9 +35,13 @@ class VideoQualityTest {
         assertEquals(480, ExportFormatSettings.parseShortEdge("480"))
         assertEquals(2160, ExportFormatSettings.parseShortEdge("2160"))
         assertEquals(null, ExportFormatSettings.parseShortEdge("479"))
-        assertEquals(15, ExportFormatSettings.parseFrameRate("15"))
-        assertEquals(120, ExportFormatSettings.parseFrameRate("120"))
-        assertEquals(null, ExportFormatSettings.parseFrameRate("121"))
+        assertEquals(FrameRate.of(15), ExportFormatSettings.parseFrameRate("15"))
+        assertEquals(FrameRate.of(30_000, 1_001), ExportFormatSettings.parseFrameRate("29.97"))
+        assertEquals("29.97", ExportFormatSettings.parseFrameRate("29.97")?.displayValue)
+        assertEquals(FrameRate.of(240), ExportFormatSettings.parseFrameRate("240"))
+        assertEquals(null, ExportFormatSettings.parseFrameRate("240.001"))
+        assertEquals(null, ExportFormatSettings.parseFrameRate("241"))
+        assertEquals(null, ExportFormatSettings.parseFrameRate("29.9700"))
     }
 
     @Test

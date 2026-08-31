@@ -99,7 +99,7 @@ internal object VideoEncoderSupport {
         val maximumFrameRate = runCatching { profile.maxFrameRateFor(format.width, format.height) }
             .getOrDefault(0.0)
         if (maximumFrameRate <= 0.0) return EncoderSupport.Unsupported(EncoderSupport.Reason.SIZE)
-        if (format.frameRate > maximumFrameRate) {
+        if (format.frameRate.value > maximumFrameRate) {
             return EncoderSupport.Unsupported(EncoderSupport.Reason.FRAME_RATE)
         }
         if (format.bitrate !in profile.bitrateRange) {

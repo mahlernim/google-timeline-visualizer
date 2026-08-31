@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.CameraMovement
 import dev.mahlernim.timelinevisualizer.render.ExportFormatSettings
+import dev.mahlernim.timelinevisualizer.render.FrameRate
 import dev.mahlernim.timelinevisualizer.render.LongTripCompression
 import dev.mahlernim.timelinevisualizer.render.LocalFraming
 import dev.mahlernim.timelinevisualizer.render.TripDetection
@@ -131,7 +132,7 @@ class CameraSettingsPreferencesTest {
             .apply()
 
         assertEquals(LocalFraming.OFF, CameraSettingsPreferences(context).load().localFraming)
-        assertEquals(24, CameraSettingsPreferences(context).load().effectiveExportFormat.frameRate)
+        assertEquals(FrameRate.of(24), CameraSettingsPreferences(context).load().effectiveExportFormat.frameRate)
     }
 
     @Test
@@ -141,17 +142,22 @@ class CameraSettingsPreferencesTest {
             .putString("video-quality", VideoQuality.PORTRAIT.name)
             .apply()
 
-        assertEquals(30, CameraSettingsPreferences(context).load().effectiveExportFormat.frameRate)
+        assertEquals(FrameRate.of(30), CameraSettingsPreferences(context).load().effectiveExportFormat.frameRate)
     }
 
     @Test
     fun savesCustomExportFormatAndResetUsesThirtyFramesPerSecond() {
-        val custom = ExportFormatSettings(2000, 25, customResolution = true, customFrameRate = true)
+        val custom = ExportFormatSettings(
+            2000,
+            FrameRate.of(30_000, 1_001),
+            customResolution = true,
+            customFrameRate = true,
+        )
         preferences.save(CameraSettings.DEFAULT.copy(exportFormat = custom))
 
         assertEquals(custom, CameraSettingsPreferences(context).load().exportFormat)
 
         preferences.reset()
-        assertEquals(30, CameraSettingsPreferences(context).load().effectiveExportFormat.frameRate)
+        assertEquals(FrameRate.of(30), CameraSettingsPreferences(context).load().effectiveExportFormat.frameRate)
     }
 }

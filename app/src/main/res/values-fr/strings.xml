@@ -330,13 +330,13 @@
     <string name="preset_overwritten">Préréglage mis à jour</string>
     <string name="view_in_library">Voir dans la bibliothèque</string>
     <plurals name="recent_day_recap"><item quantity="one">Récapitulatif du dernier %d jour</item><item quantity="other">Récapitulatif des %d derniers jours</item></plurals>
-    <string name="format_not_supported_with_rate">Cet appareil ne peut pas créer une vidéo de %1$d × %2$d à %3$d ips. Choisissez une résolution ou une fréquence d’images inférieure.</string>
+    <string name="format_not_supported_with_rate">Cet appareil ne peut pas créer une vidéo de %1$d × %2$d à %3$s ips. Choisissez une résolution ou une fréquence d’images inférieure.</string>
     <string name="resolution_1440">1440p</string><string name="resolution_2160">2160p</string>
-    <string name="frame_rate">Fréquence d’images</string><string name="frame_rate_value">%1$d ips</string><string name="custom_action">Personnalisé…</string>
-    <string name="preset_resolution_selected">%1$dp · %2$d × %3$d</string><string name="custom_resolution_selected">Personnalisé · %1$d × %2$d</string><string name="custom_frame_rate_selected">Personnalisé · %1$d ips</string>
+    <string name="frame_rate">Fréquence d’images</string><string name="frame_rate_value">%1$s ips</string><string name="custom_action">Personnalisé…</string>
+    <string name="preset_resolution_selected">%1$dp · %2$d × %3$d</string><string name="custom_resolution_selected">Personnalisé · %1$d × %2$d</string><string name="custom_frame_rate_selected">Personnalisé · %1$s ips</string>
     <string name="custom_resolution_title">Résolution personnalisée</string><string name="custom_resolution_short_edge">Petit côté en pixels</string><string name="custom_resolution_range">Saisissez un nombre entier compris entre %1$d et %2$d.</string><string name="output_dimensions">Sortie · %1$d × %2$d</string>
-    <string name="custom_frame_rate_title">Fréquence personnalisée</string><string name="custom_frame_rate_range">Saisissez un nombre entier compris entre %1$d et %2$d.</string>
-    <string name="demanding_format_title">Ce format peut être exigeant</string><string name="demanding_format_message">Vous créez une vidéo de %1$d × %2$d à %3$d ips. L’exportation peut être beaucoup plus longue, utiliser plus de mémoire ou échouer avant la fin. Une résolution supérieure peut révéler davantage de détails de localisation. Vérifiez la vidéo avant de la partager.</string><string name="export_anyway">Exporter quand même</string>
+    <string name="custom_frame_rate_title">Fréquence personnalisée</string><string name="custom_frame_rate_range">Saisissez une valeur entre %1$s et %2$s avec jusqu’à trois décimales. Les valeurs courantes incluent 23.976, 29.97 et 59.94.</string>
+    <string name="demanding_format_title">Ce format peut être exigeant</string><string name="demanding_format_message">Vous créez une vidéo de %1$d × %2$d à %3$s ips. L’exportation peut être beaucoup plus longue, utiliser plus de mémoire ou échouer avant la fin. Une résolution supérieure peut révéler davantage de détails de localisation. Vérifiez la vidéo avant de la partager.</string><string name="export_anyway">Exporter quand même</string>
     <string name="add_end_month">Ajouter le mois de fin</string>
     <string name="add_end_period">Ajouter une période de fin</string>
     <string name="add_end_year">Ajouter l\'année de fin</string>

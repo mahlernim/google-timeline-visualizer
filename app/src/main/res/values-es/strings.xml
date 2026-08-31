@@ -330,13 +330,13 @@
     <string name="preset_overwritten">Ajuste actualizado</string>
     <string name="view_in_library">Ver en la biblioteca</string>
     <plurals name="recent_day_recap"><item quantity="one">Resumen del último %d día</item><item quantity="other">Resumen de los últimos %d días</item></plurals>
-    <string name="format_not_supported_with_rate">Este dispositivo no puede crear vídeo de %1$d × %2$d a %3$d fps. Elige una resolución o velocidad de fotogramas menor.</string>
+    <string name="format_not_supported_with_rate">Este dispositivo no puede crear vídeo de %1$d × %2$d a %3$s fps. Elige una resolución o velocidad de fotogramas menor.</string>
     <string name="resolution_1440">1440p</string><string name="resolution_2160">2160p</string>
-    <string name="frame_rate">Velocidad de fotogramas</string><string name="frame_rate_value">%1$d fps</string><string name="custom_action">Personalizado…</string>
-    <string name="preset_resolution_selected">%1$dp · %2$d × %3$d</string><string name="custom_resolution_selected">Personalizado · %1$d × %2$d</string><string name="custom_frame_rate_selected">Personalizado · %1$d fps</string>
+    <string name="frame_rate">Velocidad de fotogramas</string><string name="frame_rate_value">%1$s fps</string><string name="custom_action">Personalizado…</string>
+    <string name="preset_resolution_selected">%1$dp · %2$d × %3$d</string><string name="custom_resolution_selected">Personalizado · %1$d × %2$d</string><string name="custom_frame_rate_selected">Personalizado · %1$s fps</string>
     <string name="custom_resolution_title">Resolución personalizada</string><string name="custom_resolution_short_edge">Lado corto en píxeles</string><string name="custom_resolution_range">Introduce un número entero entre %1$d y %2$d.</string><string name="output_dimensions">Salida · %1$d × %2$d</string>
-    <string name="custom_frame_rate_title">Velocidad personalizada</string><string name="custom_frame_rate_range">Introduce un número entero entre %1$d y %2$d.</string>
-    <string name="demanding_format_title">Este formato puede ser exigente</string><string name="demanding_format_message">Vas a crear un vídeo de %1$d × %2$d a %3$d fps. La exportación puede tardar mucho más, usar más memoria o fallar antes de terminar. Una resolución mayor puede mostrar más detalles de ubicación. Revisa el vídeo antes de compartirlo.</string><string name="export_anyway">Exportar de todos modos</string>
+    <string name="custom_frame_rate_title">Velocidad personalizada</string><string name="custom_frame_rate_range">Introduce un valor entre %1$s y %2$s con hasta tres decimales. Los valores habituales incluyen 23.976, 29.97 y 59.94.</string>
+    <string name="demanding_format_title">Este formato puede ser exigente</string><string name="demanding_format_message">Vas a crear un vídeo de %1$d × %2$d a %3$s fps. La exportación puede tardar mucho más, usar más memoria o fallar antes de terminar. Una resolución mayor puede mostrar más detalles de ubicación. Revisa el vídeo antes de compartirlo.</string><string name="export_anyway">Exportar de todos modos</string>
     <string name="add_end_month">Añadir mes de fin</string>
     <string name="add_end_period">Agregar período de finalización</string>
     <string name="add_end_year">Añadir año de fin</string>

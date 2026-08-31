@@ -325,13 +325,13 @@
     <string name="preset_overwritten">Voreinstellung aktualisiert</string>
     <string name="view_in_library">In Bibliothek anzeigen</string>
     <plurals name="recent_day_recap"><item quantity="one">Rückblick auf den letzten %d Tag</item><item quantity="other">Rückblick auf die letzten %d Tage</item></plurals>
-    <string name="format_not_supported_with_rate">Dieses Gerät kann kein Video mit %1$d × %2$d bei %3$d fps erstellen. Wählen Sie eine niedrigere Auflösung oder Bildrate.</string>
+    <string name="format_not_supported_with_rate">Dieses Gerät kann kein Video mit %1$d × %2$d bei %3$s fps erstellen. Wählen Sie eine niedrigere Auflösung oder Bildrate.</string>
     <string name="resolution_1440">1440p</string><string name="resolution_2160">2160p</string>
-    <string name="frame_rate">Bildrate</string><string name="frame_rate_value">%1$d fps</string><string name="custom_action">Benutzerdefiniert…</string>
-    <string name="preset_resolution_selected">%1$dp · %2$d × %3$d</string><string name="custom_resolution_selected">Benutzerdefiniert · %1$d × %2$d</string><string name="custom_frame_rate_selected">Benutzerdefiniert · %1$d fps</string>
+    <string name="frame_rate">Bildrate</string><string name="frame_rate_value">%1$s fps</string><string name="custom_action">Benutzerdefiniert…</string>
+    <string name="preset_resolution_selected">%1$dp · %2$d × %3$d</string><string name="custom_resolution_selected">Benutzerdefiniert · %1$d × %2$d</string><string name="custom_frame_rate_selected">Benutzerdefiniert · %1$s fps</string>
     <string name="custom_resolution_title">Benutzerdefinierte Auflösung</string><string name="custom_resolution_short_edge">Kurze Kante in Pixeln</string><string name="custom_resolution_range">Geben Sie eine ganze Zahl von %1$d bis %2$d ein.</string><string name="output_dimensions">Ausgabe · %1$d × %2$d</string>
-    <string name="custom_frame_rate_title">Benutzerdefinierte Bildrate</string><string name="custom_frame_rate_range">Geben Sie eine ganze Zahl von %1$d bis %2$d ein.</string>
-    <string name="demanding_format_title">Dieses Format kann anspruchsvoll sein</string><string name="demanding_format_message">Sie erstellen ein Video mit %1$d × %2$d bei %3$d fps. Der Export kann deutlich länger dauern, mehr Speicher benötigen oder vorzeitig fehlschlagen. Eine höhere Auflösung kann mehr Standortdetails zeigen. Prüfen Sie das Video vor dem Teilen.</string><string name="export_anyway">Trotzdem exportieren</string>
+    <string name="custom_frame_rate_title">Benutzerdefinierte Bildrate</string><string name="custom_frame_rate_range">Geben Sie einen Wert von %1$s bis %2$s mit bis zu drei Dezimalstellen ein. Übliche Werte sind 23.976, 29.97 und 59.94.</string>
+    <string name="demanding_format_title">Dieses Format kann anspruchsvoll sein</string><string name="demanding_format_message">Sie erstellen ein Video mit %1$d × %2$d bei %3$s fps. Der Export kann deutlich länger dauern, mehr Speicher benötigen oder vorzeitig fehlschlagen. Eine höhere Auflösung kann mehr Standortdetails zeigen. Prüfen Sie das Video vor dem Teilen.</string><string name="export_anyway">Trotzdem exportieren</string>
     <string name="add_end_month">Endmonat hinzufügen</string>
     <string name="add_end_period">Endzeitraum hinzufügen</string>
     <string name="add_end_year">Endjahr hinzufügen</string>
