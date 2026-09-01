@@ -779,6 +779,28 @@ class MainActivityTest {
     }
 
     @Test
+    fun closeUpMapViewUsesBalancedTripDetectionAndCloseLocalFraming() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.navigationSettings).performClick()
+
+        activity.findViewById<AutoCompleteTextView>(R.id.cameraMovementDropdown)
+            .onItemClickListener?.onItemClick(null, null, CameraMovement.CLOSE_UP.ordinal, 3L)
+
+        assertEquals(
+            activity.getString(R.string.map_view_close_up),
+            activity.findViewById<AutoCompleteTextView>(R.id.cameraMovementDropdown).text.toString(),
+        )
+        assertEquals(
+            activity.getString(R.string.trip_detection_balanced),
+            activity.findViewById<AutoCompleteTextView>(R.id.tripDetectionDropdown).text.toString(),
+        )
+        assertEquals(
+            activity.getString(R.string.local_framing_close),
+            activity.findViewById<AutoCompleteTextView>(R.id.localFramingDropdown).text.toString(),
+        )
+    }
+
+    @Test
     fun cameraPreparationFailureIsReportedAsAPreviewProblem() {
         val activity = launchActivity()
         val timelineView = activity.findViewById<TimelineView>(R.id.timelineView)

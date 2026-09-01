@@ -174,7 +174,7 @@ class TimelinePainterTest {
     }
 
     @Test
-    fun closeUpZoomFramesDenseLocalTravelMoreTightlyThanActiveZoom() {
+    fun localMapViewsProduceWideBalancedAndCloseUpFraming() {
         val journey = Journey.from(
             listOf(
                 point(37.5665, 126.9780),
@@ -184,15 +184,15 @@ class TimelinePainterTest {
             ),
             2025,
         )
-        val active = CameraSettings(CameraMovement.DYNAMIC, LongTripCompression.OFF)
-        val closeUp = CameraSettings(CameraMovement.CLOSE_UP, LongTripCompression.OFF)
+        val spans = listOf(
+            CameraSettings(CameraMovement.STEADY, LongTripCompression.OFF, localFraming = LocalFraming.OFF),
+            balancedMapSettings(),
+            closeUpMapSettings(),
+        ).map { settings ->
+            TimelinePainter().viewport(journey, 0.65f, SIZE, SIZE, settings).let { it.maxY - it.minY }
+        }
 
-        val activeSpan = TimelinePainter().viewport(journey, 0.65f, SIZE, SIZE, active).maxY -
-            TimelinePainter().viewport(journey, 0.65f, SIZE, SIZE, active).minY
-        val closeUpViewport = TimelinePainter().viewport(journey, 0.65f, SIZE, SIZE, closeUp)
-        val closeUpSpan = closeUpViewport.maxY - closeUpViewport.minY
-
-        assertTrue("Close-up span $closeUpSpan was not tighter than active span $activeSpan", closeUpSpan < activeSpan)
+        assertTrue("Expected Wide > Balanced > Close-up, got $spans", spans[0] > spans[1] && spans[1] > spans[2])
     }
 
     @Test
@@ -252,84 +252,73 @@ class TimelinePainterTest {
     }
 
     @Test
-    fun closeUpHoldsTheTransferViewThenClosesDuringProtectedLocalTime() {
+    fun adaptiveMapViewsHoldTheTransferThenCloseUpSettlesTighter() {
         val journey = roundTripJourney()
         val inboundTransfer = journey.legs[1]
         val destination = journey.legs[2]
-        val settings = CameraSettings(
-            cameraMovement = CameraMovement.CLOSE_UP,
-            longTripCompression = LongTripCompression.OFF,
-            localFraming = LocalFraming.BALANCED,
-        )
-        val painter = TimelinePainter()
-        val track = painter.buildCameraTrackForBackground(journey, SIZE, SIZE, settings).track
-
-        fun trackSpanAt(distanceKm: Double): Double {
-            val viewport = track.viewportAt(track.timing.progressAtDistance(distanceKm))
-            return viewport.maxY - viewport.minY
+        val tracks = listOf(balancedMapSettings(), closeUpMapSettings()).map { settings ->
+            TimelinePainter().buildCameraTrackForBackground(journey, SIZE, SIZE, settings).track
         }
 
-        val earlyFlightSpan = trackSpanAt(inboundTransfer.startKm + inboundTransfer.lengthKm * 0.70)
-        val finalFlightSpan = trackSpanAt(inboundTransfer.startKm + inboundTransfer.lengthKm * 0.95)
-        val arrivalProgress = track.timing.progressAtDistance(destination.startKm)
-        val localEndProgress = track.timing.progressAtDistance(destination.endKm)
-        val localProgress = localEndProgress - arrivalProgress
-        val arrivalSpan = track.viewportAt(arrivalProgress).let { it.maxY - it.minY }
-        val closingSpan = track.viewportAt(arrivalProgress + localProgress * 0.25f).let { it.maxY - it.minY }
-        val settledSpan = track.viewportAt(arrivalProgress + localProgress * 0.60f).let { it.maxY - it.minY }
+        tracks.forEach { track ->
+            val earlyFlightSpan = trackSpanAt(track, inboundTransfer.startKm + inboundTransfer.lengthKm * 0.70)
+            val finalFlightSpan = trackSpanAt(track, inboundTransfer.startKm + inboundTransfer.lengthKm * 0.95)
+            val arrivalProgress = track.timing.progressAtDistance(destination.startKm)
+            val localEndProgress = track.timing.progressAtDistance(destination.endKm)
+            val localProgress = localEndProgress - arrivalProgress
+            val arrivalSpan = track.viewportAt(arrivalProgress).let { it.maxY - it.minY }
+            val closingSpan = track.viewportAt(arrivalProgress + localProgress * 0.25f).let { it.maxY - it.minY }
+            val settledSpan = track.viewportAt(arrivalProgress + localProgress * 0.60f).let { it.maxY - it.minY }
 
-        assertTrue(
-            "Final-flight span $finalFlightSpan closed early from $earlyFlightSpan",
-            finalFlightSpan >= earlyFlightSpan * 0.85,
-        )
-        assertTrue(
-            "Arrival span $arrivalSpan did not retain the final-flight view $finalFlightSpan",
-            arrivalSpan >= finalFlightSpan * 0.80,
-        )
-        assertTrue(
-            "Camera did not begin closing after arrival: $arrivalSpan to $closingSpan",
-            closingSpan < arrivalSpan * 0.80,
-        )
-        assertTrue(
-            "Camera did not reach the local view: $closingSpan to $settledSpan",
-            settledSpan < closingSpan * 0.75,
-        )
-        assertTrue("Protected local share was $localProgress", localProgress >= 0.079f)
+            assertTrue("Final-flight span $finalFlightSpan closed early from $earlyFlightSpan", finalFlightSpan >= earlyFlightSpan * 0.85)
+            assertTrue("Arrival span $arrivalSpan did not retain $finalFlightSpan", arrivalSpan >= finalFlightSpan * 0.80)
+            assertTrue("Camera did not begin closing: $arrivalSpan to $closingSpan", closingSpan < arrivalSpan * 0.80)
+            assertTrue("Camera did not reach its local view: $closingSpan to $settledSpan", settledSpan < closingSpan * 0.75)
+            assertTrue("Protected local share was $localProgress", localProgress >= 0.079f)
+        }
+
+        val settledDistance = destination.startKm + destination.lengthKm * 0.60
+        val balancedSpan = trackSpanAt(tracks[0], settledDistance)
+        val closeUpSpan = trackSpanAt(tracks[1], settledDistance)
+        assertTrue("Close-up $closeUpSpan was not tighter than Balanced $balancedSpan", closeUpSpan < balancedSpan)
     }
 
     @Test
-    fun closeUpSharesItsArrivalBudgetAcrossMultipleLongHaulTripsWithoutPausing() {
+    fun adaptiveMapViewsShareArrivalBudgetWithoutPausing() {
         val journey = multiLongHaulJourney()
-        val settings = CameraSettings(
-            cameraMovement = CameraMovement.CLOSE_UP,
-            longTripCompression = LongTripCompression.OFF,
-            tripDetection = TripDetection.SENSITIVE,
-            localFraming = LocalFraming.CLOSE,
-        )
-        val timing = TimelinePainter()
-            .buildCameraTrackForBackground(journey, SIZE, SIZE, settings)
-            .track
-            .timing
         val localArrivals = journey.legs.mapIndexedNotNull { index, leg ->
             leg.takeIf { !it.isTransfer && journey.legs.getOrNull(index - 1)?.isTransfer == true }
         }
 
         assertEquals(3, localArrivals.size)
-        val shares = localArrivals.map { leg ->
-            timing.progressAtDistance(leg.endKm) - timing.progressAtDistance(leg.startKm)
-        }
-        val meaningfulShares = listOf(shares[0], shares[2])
+        listOf(CameraMovement.DYNAMIC, CameraMovement.CLOSE_UP).forEach { movement ->
+            val timing = TimelinePainter().buildCameraTrackForBackground(
+                journey,
+                SIZE,
+                SIZE,
+                CameraSettings(
+                    cameraMovement = movement,
+                    longTripCompression = LongTripCompression.OFF,
+                    tripDetection = TripDetection.SENSITIVE,
+                    localFraming = if (movement == CameraMovement.CLOSE_UP) LocalFraming.CLOSE else LocalFraming.BALANCED,
+                ),
+            ).track.timing
+            val shares = localArrivals.map { leg ->
+                timing.progressAtDistance(leg.endKm) - timing.progressAtDistance(leg.startKm)
+            }
+            val meaningfulShares = listOf(shares[0], shares[2])
 
-        meaningfulShares.forEach { share -> assertTrue("Meaningful arrival share was $share", share >= 0.079f) }
-        assertTrue("Brief stop unexpectedly received the arrival budget: $shares", shares[1] < 0.02f)
-        assertTrue("Arrival budget exceeded its global bound: $shares", meaningfulShares.sum() <= 0.161f)
+            meaningfulShares.forEach { share -> assertTrue("Meaningful arrival share was $share", share >= 0.079f) }
+            assertTrue("Brief stop received the arrival budget: $shares", shares[1] < 0.02f)
+            assertTrue("Arrival budget exceeded its bound: $shares", meaningfulShares.sum() <= 0.161f)
 
-        listOf(localArrivals[0], localArrivals[2]).forEach { leg ->
-            val start = timing.progressAtDistance(leg.startKm)
-            val end = timing.progressAtDistance(leg.endKm)
-            val middle = timing.distanceAt((start + end) / 2f)
-            assertTrue("Close-up must keep moving after arrival", middle > leg.startKm)
-            assertTrue("Close-up must not jump to the end of the visit", middle < leg.endKm)
+            listOf(localArrivals[0], localArrivals[2]).forEach { leg ->
+                val start = timing.progressAtDistance(leg.startKm)
+                val end = timing.progressAtDistance(leg.endKm)
+                val middle = timing.distanceAt((start + end) / 2f)
+                assertTrue("Camera must keep moving after arrival", middle > leg.startKm)
+                assertTrue("Camera must not jump to the end of the visit", middle < leg.endKm)
+            }
         }
     }
 
@@ -383,51 +372,39 @@ class TimelinePainterTest {
     }
 
     @Test
-    fun semanticLongTripStaysWideThenTightensForDestinationDetail() {
-        val points = (0..100).map { index ->
-            timedPoint(index, 0.02 * kotlin.math.sin(index / 5.0), index * 0.05)
-        } + (101..115).map { index ->
-            timedPoint(index, (index - 100) * 0.0005, 5.0 + (index - 100) * 0.0005)
-        }
-        val base = Journey.from(points, 2025)
-        val semantic = base.copy(
-            semanticEpisodes = listOf(
-                JourneySemanticEpisode(
-                    startKm = 0.0,
-                    endKm = base.cumulativeDistanceKm[100],
-                    origin = points.first(),
-                    destination = points[100],
-                ),
-            ),
-        )
-        val settings = CameraSettings(
-            cameraMovement = CameraMovement.CLOSE_UP,
-            longTripCompression = LongTripCompression.OFF,
-            localFraming = LocalFraming.BALANCED,
-        )
+    fun semanticLongTripKeepsBothViewsWideThenCloseUpSettlesTighter() {
+        val semantic = semanticLongTripJourney()
+        val settings = balancedMapSettings()
         val legs = semantic.legsForThreshold(
             semantic.transferThresholdKm * settings.tripDetection.thresholdMultiplier,
         )
         val transfer = legs.first()
         val local = legs.last()
-        val painter = TimelinePainter()
-        fun spanAt(distanceKm: Double): Double {
-            val viewport = painter.rawViewportForTest(
-                semantic,
-                (distanceKm / semantic.totalDistanceKm).toFloat(),
-                SIZE,
-                SIZE,
-                settings,
-                useRangeIndex = true,
-            )
-            return viewport.maxY - viewport.minY
+        val tracks = listOf(settings, closeUpMapSettings()).map { cameraSettings ->
+            TimelinePainter().buildCameraTrackForBackground(semantic, SIZE, SIZE, cameraSettings).track
         }
-
-        val tripSpan = spanAt(transfer.startKm + transfer.lengthKm * 0.50)
-        val destinationSpan = spanAt(local.startKm + local.lengthKm * 0.50)
+        val middleDistance = transfer.startKm + transfer.lengthKm * 0.50
+        val lateDistance = transfer.startKm + transfer.lengthKm * 0.95
+        val arrivalDistance = local.startKm
+        val settledDistance = local.startKm + local.lengthKm * 0.60
+        val middleSpans = tracks.map { trackSpanAt(it, middleDistance) }
+        val lateSpans = tracks.map { trackSpanAt(it, lateDistance) }
+        val arrivalSpans = tracks.map { trackSpanAt(it, arrivalDistance) }
+        val settledSpans = tracks.map { trackSpanAt(it, settledDistance) }
 
         assertEquals(listOf(true, false), legs.map { it.isTransfer })
-        assertTrue("Semantic trip span $tripSpan did not stay wider than destination span $destinationSpan", tripSpan > destinationSpan * 8)
+        lateSpans.zip(middleSpans).forEach { (late, middle) ->
+            assertTrue("Semantic trip closed early from $middle to $late", late >= middle * 0.85)
+        }
+        arrivalSpans.zip(lateSpans).forEach { (arrival, late) ->
+            assertTrue("Arrival $arrival did not retain the trip view $late", arrival >= late * 0.80)
+        }
+        assertTrue("Balanced became tighter than Close-up before arrival: $lateSpans", lateSpans[0] >= lateSpans[1])
+        assertTrue("Balanced became tighter than Close-up at arrival: $arrivalSpans", arrivalSpans[0] >= arrivalSpans[1])
+        assertTrue("Close-up did not settle tighter than Balanced: $settledSpans", settledSpans[1] < settledSpans[0])
+        settledSpans.forEachIndexed { index, settled ->
+            assertTrue("Map view $index did not reveal destination detail: $middleSpans to $settledSpans", middleSpans[index] > settled * 8)
+        }
     }
 
     @Test
@@ -636,14 +613,15 @@ class TimelinePainterTest {
             )
         }
         val journey = Journey.from(points, 2025)
-        val painter = TimelinePainter()
+        listOf(balancedMapSettings(), closeUpMapSettings()).forEach { settings ->
+            val painter = TimelinePainter()
+            painter.viewport(journey, 0f, SIZE, SIZE, settings)
 
-        painter.viewport(journey, 0f, SIZE, SIZE)
-
-        assertTrue(
-            "Camera evaluated ${painter.cameraRoutePointEvaluations} route points",
-            painter.cameraRoutePointEvaluations < 100_000,
-        )
+            assertTrue(
+                "${settings.cameraMovement} evaluated ${painter.cameraRoutePointEvaluations} route points",
+                painter.cameraRoutePointEvaluations < 100_000,
+            )
+        }
     }
 
     @Test
@@ -768,6 +746,44 @@ class TimelinePainterTest {
         ),
         2025,
     )
+
+    private fun semanticLongTripJourney(): Journey {
+        val points = (0..100).map { index ->
+            timedPoint(index, 0.02 * kotlin.math.sin(index / 5.0), index * 0.05)
+        } + (101..115).map { index ->
+            timedPoint(index, (index - 100) * 0.0005, 5.0 + (index - 100) * 0.0005)
+        }
+        val base = Journey.from(points, 2025)
+        return base.copy(
+            semanticEpisodes = listOf(
+                JourneySemanticEpisode(
+                    startKm = 0.0,
+                    endKm = base.cumulativeDistanceKm[100],
+                    origin = points.first(),
+                    destination = points[100],
+                ),
+            ),
+        )
+    }
+
+    private fun balancedMapSettings() = CameraSettings(
+        cameraMovement = CameraMovement.DYNAMIC,
+        longTripCompression = LongTripCompression.OFF,
+        tripDetection = TripDetection.BALANCED,
+        localFraming = LocalFraming.BALANCED,
+    )
+
+    private fun closeUpMapSettings() = CameraSettings(
+        cameraMovement = CameraMovement.CLOSE_UP,
+        longTripCompression = LongTripCompression.OFF,
+        tripDetection = TripDetection.BALANCED,
+        localFraming = LocalFraming.CLOSE,
+    )
+
+    private fun trackSpanAt(track: TimelinePainter.CameraTrack, distanceKm: Double): Double {
+        val viewport = track.viewportAt(track.timing.progressAtDistance(distanceKm))
+        return viewport.maxY - viewport.minY
+    }
 
     private fun timedPoint(hour: Int, latitude: Double, longitude: Double) = GeoPoint(
         Instant.parse("2025-06-01T00:00:00Z").plusSeconds(hour * 3_600L),
