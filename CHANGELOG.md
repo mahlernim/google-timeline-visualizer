@@ -9,6 +9,12 @@
 - Add distance-unit selection to the web app.
 - Document the web app's distance units and close-up mode.
 
+## 3.0.11
+
+- Keep Balanced and Close-up map views wide through long trips, then let Close-up settle into tighter local detail after arrival.
+- Use consistent edge-to-edge layout across supported Android versions while keeping controls and system icons clear of system bars.
+- Set Android version code 53 and version name 3.0.11.
+
 ## 3.0.10
 
 - Allow Android custom frame rates from 15 through 240 fps with up to three decimal places, preserving common fractional rates such as 23.976, 29.97, and 59.94 through export and recovery.
