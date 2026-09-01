@@ -9,8 +9,6 @@
         <item name="colorOutline">@color/outline</item>
         <item name="android:colorAccent">@color/interactive</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:statusBarColor">@color/surface</item>
-        <item name="android:navigationBarColor">@color/surface_container</item>
         <item name="android:windowBackground">@color/surface</item>
         <item name="android:fontFamily">sans</item>
     </style>
