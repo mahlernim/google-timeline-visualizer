@@ -5650,7 +5650,7 @@ class MainActivity : AppCompatActivity() {
         tripDetection = when (movement) {
             CameraMovement.FIXED, CameraMovement.STEADY -> TripDetection.BALANCED
             CameraMovement.DYNAMIC -> TripDetection.BALANCED
-            CameraMovement.CLOSE_UP -> TripDetection.SENSITIVE
+            CameraMovement.CLOSE_UP -> TripDetection.BALANCED
         },
         localFraming = when (movement) {
             CameraMovement.FIXED, CameraMovement.STEADY -> LocalFraming.OFF
