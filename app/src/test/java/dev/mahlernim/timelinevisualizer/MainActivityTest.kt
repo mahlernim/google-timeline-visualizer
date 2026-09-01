@@ -1699,7 +1699,7 @@ class MainActivityTest {
     }
 
     @Test
-    @Config(sdk = [35], qualifiers = "w320dp-h640dp-port-xxhdpi")
+    @Config(sdk = [34, 35], qualifiers = "w320dp-h640dp-port-xxhdpi")
     fun bottomNavigationFitsGestureInsetOnACompactPortraitDisplay() {
         assumeFalse(BuildConfig.IS_JOURNAL_LAB)
         val activity = launchActivity()
@@ -1739,7 +1739,7 @@ class MainActivityTest {
     }
 
     @Test
-    @Config(sdk = [35], qualifiers = "w640dp-h360dp-land-xxhdpi")
+    @Config(sdk = [34, 35], qualifiers = "w640dp-h360dp-land-xxhdpi")
     fun bottomNavigationConsumesAThreeButtonInsetOnlyOnce() {
         assumeFalse(BuildConfig.IS_JOURNAL_LAB)
         val activity = launchActivity()
@@ -1764,6 +1764,59 @@ class MainActivityTest {
     }
 
     @Test
+    @Config(sdk = [34, 35], qualifiers = "notnight")
+    fun fullScreenPlayerUsesGestureAndThreeButtonInsetsWithReadableSystemBarIcons() {
+        assumeFalse(BuildConfig.IS_JOURNAL_LAB)
+        val uri = "content://example/generated-video"
+        store.upsert(
+            VideoRecord(
+                uri = uri,
+                title = "Trip",
+                fileName = "trip.mp4",
+                createdAtMillis = 1L,
+                durationSeconds = 30,
+            ),
+        )
+        val activity = launchActivity()
+        val root = activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
+        val density = activity.resources.displayMetrics.density
+        val gestureInset = (24 * density).toInt()
+        val threeButtonInset = (48 * density).toInt()
+        val gestureInsets = WindowInsetsCompat.Builder()
+            .setInsets(WindowInsetsCompat.Type.systemBars(), Insets.of(0, 0, 0, gestureInset))
+            .build()
+        ViewCompat.dispatchApplyWindowInsets(root, gestureInsets)
+        VideoExportCoordinator.publish(
+            context,
+            VideoExportSnapshot(status = VideoExportStatus.COMPLETE, outputUri = uri, title = "Trip"),
+        )
+        shadowOf(Looper.getMainLooper()).idle()
+
+        activity.findViewById<View>(R.id.exportTrayWatchButton).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        val controller = WindowInsetsControllerCompat(activity.window, activity.window.decorView)
+        assertEquals(gestureInset, activity.findViewById<View>(R.id.playerScreen).paddingBottom)
+        assertEquals(0, activity.findViewById<View>(R.id.bottomNavigation).paddingBottom)
+        assertEquals(false, controller.isAppearanceLightStatusBars)
+        assertEquals(false, controller.isAppearanceLightNavigationBars)
+
+        val threeButtonInsets = WindowInsetsCompat.Builder()
+            .setInsets(WindowInsetsCompat.Type.systemBars(), Insets.of(0, 0, 0, threeButtonInset))
+            .build()
+        ViewCompat.dispatchApplyWindowInsets(root, threeButtonInsets)
+
+        assertEquals(threeButtonInset, activity.findViewById<View>(R.id.playerScreen).paddingBottom)
+
+        activity.findViewById<View>(R.id.playerBackButton).performClick()
+
+        assertEquals(0, activity.findViewById<View>(R.id.playerScreen).paddingBottom)
+        assertEquals(threeButtonInset, activity.findViewById<View>(R.id.bottomNavigation).paddingBottom)
+        assertEquals(true, controller.isAppearanceLightStatusBars)
+        assertEquals(true, controller.isAppearanceLightNavigationBars)
+    }
+
+    @Test
     @Config(sdk = [35], qualifiers = "notnight")
     fun systemLightModeUsesLightThemeAndSystemBars() {
         val activity = launchActivity()
@@ -1772,8 +1825,6 @@ class MainActivityTest {
         assertEquals(activity.getColor(R.color.surface_container), resolvedColor(activity, com.google.android.material.R.attr.colorSurfaceContainer))
         assertEquals(true, resolvedBoolean(activity, android.R.attr.windowLightStatusBar))
         assertEquals(true, WindowInsetsControllerCompat(activity.window, activity.window.decorView).isAppearanceLightNavigationBars)
-        assertEquals(activity.getColor(R.color.surface), resolvedColor(activity, android.R.attr.statusBarColor))
-        assertEquals(activity.getColor(R.color.surface_container), resolvedColor(activity, android.R.attr.navigationBarColor))
     }
 
     @Test
@@ -1785,8 +1836,6 @@ class MainActivityTest {
         assertEquals(activity.getColor(R.color.surface_container), resolvedColor(activity, com.google.android.material.R.attr.colorSurfaceContainer))
         assertEquals(false, resolvedBoolean(activity, android.R.attr.windowLightStatusBar))
         assertEquals(false, WindowInsetsControllerCompat(activity.window, activity.window.decorView).isAppearanceLightNavigationBars)
-        assertEquals(activity.getColor(R.color.surface), resolvedColor(activity, android.R.attr.statusBarColor))
-        assertEquals(activity.getColor(R.color.surface_container), resolvedColor(activity, android.R.attr.navigationBarColor))
     }
 
     @Test

@@ -31,6 +31,7 @@ import android.widget.PopupMenu
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.addCallback
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -289,6 +290,7 @@ class MainActivity : AppCompatActivity() {
     private val videoCardJobs = mutableListOf<Job>()
     private var videosExpanded = false
     private var currentScreen = Screen.VIDEOS
+    private var systemBarInsets = Insets.NONE
     private var rememberedTimelineLoaded = false
     private var interruptedTimelineRecovered = false
     private var lastRenderedExportStatus = VideoExportStatus.IDLE
@@ -403,6 +405,7 @@ class MainActivity : AppCompatActivity() {
     ) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -416,12 +419,7 @@ class MainActivity : AppCompatActivity() {
             updateLauncher = appUpdateLauncher,
             onUpdateDownloaded = ::showDownloadedUpdate,
         )
-        val lightSystemBars = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK !=
-            Configuration.UI_MODE_NIGHT_YES
-        WindowInsetsControllerCompat(window, binding.root).apply {
-            isAppearanceLightStatusBars = lightSystemBars
-            isAppearanceLightNavigationBars = lightSystemBars
-        }
+        applySystemBarAppearance()
         if (!BuildConfig.IS_JOURNAL_LAB) {
             timelineSourceStore.recoverInterruptedImport()?.let { uri ->
                 releaseUriAccess(uri)
@@ -429,17 +427,12 @@ class MainActivity : AppCompatActivity() {
                 rememberedTimelineLoaded = true
             }
         }
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
-            val bars: Insets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(0, bars.top, 0, 0)
-            binding.bottomNavigation.setPadding(
-                binding.bottomNavigation.paddingLeft,
-                binding.bottomNavigation.paddingTop,
-                binding.bottomNavigation.paddingRight,
-                bars.bottom,
-            )
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+            systemBarInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            applySystemBarInsets()
             WindowInsetsCompat.CONSUMED
         }
+        ViewCompat.requestApplyInsets(binding.root)
 
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             if (syncingBottomNavigation) return@setOnItemSelectedListener true
@@ -884,7 +877,7 @@ class MainActivity : AppCompatActivity() {
         settingsScreen.root.visibility = View.GONE
         playerScreen.root.visibility = View.GONE
         onboarding.root.visibility = View.GONE
-        binding.bottomNavigation.visibility = View.VISIBLE
+        setBottomNavigationVisible(true)
         if (binding.bottomNavigation.selectedItemId != R.id.navigationVideos) {
             syncingBottomNavigation = true
             binding.bottomNavigation.selectedItemId = R.id.navigationVideos
@@ -946,7 +939,7 @@ class MainActivity : AppCompatActivity() {
         settingsScreen.root.visibility = View.GONE
         playerScreen.root.visibility = View.GONE
         onboarding.root.visibility = View.GONE
-        binding.bottomNavigation.visibility = View.VISIBLE
+        setBottomNavigationVisible(true)
         if (binding.bottomNavigation.selectedItemId != R.id.navigationCreate) {
             syncingBottomNavigation = true
             binding.bottomNavigation.selectedItemId = R.id.navigationCreate
@@ -983,7 +976,7 @@ class MainActivity : AppCompatActivity() {
         settingsScreen.root.visibility = View.VISIBLE
         playerScreen.root.visibility = View.GONE
         onboarding.root.visibility = View.GONE
-        binding.bottomNavigation.visibility = if (fromCreate) View.GONE else View.VISIBLE
+        setBottomNavigationVisible(!fromCreate)
         settingsScreen.customizeSettingsActions.visibility = if (fromCreate) View.VISIBLE else View.GONE
         settingsScreen.timelineDataCard.visibility = if (fromCreate) View.GONE else View.VISIBLE
         settingsScreen.settingsJournalHowItWorksButton.visibility =
@@ -1011,7 +1004,7 @@ class MainActivity : AppCompatActivity() {
         settingsScreen.root.visibility = View.VISIBLE
         playerScreen.root.visibility = View.GONE
         onboarding.root.visibility = View.GONE
-        binding.bottomNavigation.visibility = View.VISIBLE
+        setBottomNavigationVisible(true)
         settingsScreen.customizeSettingsActions.visibility = View.GONE
         settingsScreen.timelineDataCard.visibility = View.VISIBLE
         settingsScreen.settingsJournalHowItWorksButton.visibility =
@@ -1036,7 +1029,7 @@ class MainActivity : AppCompatActivity() {
         settingsScreen.root.visibility = View.GONE
         playerScreen.root.visibility = View.GONE
         onboarding.root.visibility = View.GONE
-        binding.bottomNavigation.visibility = View.GONE
+        setBottomNavigationVisible(false)
         binding.exportStatusTray.visibility = View.GONE
     }
 
@@ -1104,7 +1097,7 @@ class MainActivity : AppCompatActivity() {
             onboarding.onboardingFileDisclosureDetail,
             expanded = false,
         )
-        binding.bottomNavigation.visibility = View.GONE
+        setBottomNavigationVisible(false)
         binding.exportStatusTray.visibility = View.GONE
         onboarding.onboardingPager.setCurrentItem(onboardingPage, false)
         renderJournalOnboardingPage(announce = false)
@@ -1576,12 +1569,52 @@ class MainActivity : AppCompatActivity() {
         settingsScreen.root.visibility = View.GONE
         playerScreen.root.visibility = View.VISIBLE
         onboarding.root.visibility = View.GONE
-        binding.bottomNavigation.visibility = View.GONE
+        setBottomNavigationVisible(false)
         playerScreen.playerTitle.text =
             videoLibraryViewModel.records.value.firstOrNull { it.uri == uri.toString() }?.title
             ?: getString(R.string.timeline_video)
         playerScreen.playerErrorGroup.visibility = View.GONE
         initializeVideoPlayer()
+    }
+
+    private fun setBottomNavigationVisible(visible: Boolean) {
+        binding.bottomNavigation.visibility = if (visible) View.VISIBLE else View.GONE
+        applySystemBarAppearance()
+        applySystemBarInsets()
+    }
+
+    private fun applySystemBarAppearance() {
+        val lightSystemBars = currentScreen != Screen.PLAYER &&
+            resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK != Configuration.UI_MODE_NIGHT_YES
+        WindowInsetsControllerCompat(window, binding.root).apply {
+            isAppearanceLightStatusBars = lightSystemBars
+            isAppearanceLightNavigationBars = lightSystemBars
+        }
+    }
+
+    private fun applySystemBarInsets() {
+        binding.root.setPadding(
+            binding.root.paddingLeft,
+            systemBarInsets.top,
+            binding.root.paddingRight,
+            0,
+        )
+        val navigationVisible = binding.bottomNavigation.visibility == View.VISIBLE
+        binding.bottomNavigation.setPadding(
+            binding.bottomNavigation.paddingLeft,
+            binding.bottomNavigation.paddingTop,
+            binding.bottomNavigation.paddingRight,
+            if (navigationVisible) systemBarInsets.bottom else 0,
+        )
+        val contentBottomInset = if (navigationVisible) 0 else systemBarInsets.bottom
+        listOf(home.root, editor.root, settingsScreen.root, playerScreen.root, onboarding.root).forEach { screen ->
+            screen.setPadding(
+                screen.paddingLeft,
+                screen.paddingTop,
+                screen.paddingRight,
+                contentBottomInset,
+            )
+        }
     }
 
     override fun onStart() {
