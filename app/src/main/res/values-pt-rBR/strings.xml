@@ -2,12 +2,12 @@
 <resources>
     <string name="app_name">Timeline Visualizer</string>
     <string name="import_timeline">Escolha o arquivo</string>
-    <string name="how_to_export">Obtenha o arquivo Timeline</string>
-    <string name="restore_timeline_help">Restaurar Google Maps Timeline</string>
+    <string name="how_to_export">Obter o arquivo da Linha do tempo</string>
+    <string name="restore_timeline_help">Restaurar a Linha do tempo do Google Maps</string>
     <string name="export_help_title">Exporte seu Timeline.json</string>
-    <string name="export_help_message">No Android, abra Configurações do telefone → Localização → Serviços de localização → Timeline → Exportar dados Timeline. Salve o arquivo, geralmente denominado Timeline.json, em algum lugar fácil de encontrar. Volte aqui e escolha o arquivo.\n\nAs etiquetas exatas podem variar de acordo com o telefone. O botão abaixo abre as configurações de localização; Android não fornece um link padrão diretamente para a página Timeline.\n\nNo iPhone, use Google Maps → foto do perfil → Configurações → Conteúdo pessoal → Exportar dados Timeline.</string>
+    <string name="export_help_message">No Android, abra Configurações do telefone → Localização → Serviços de localização → Linha do tempo → Exportar dados da Linha do tempo. Salve o arquivo, geralmente chamado Timeline.json, em algum lugar fácil de encontrar. Volte aqui e escolha o arquivo.\n\nOs rótulos exatos podem variar de acordo com o telefone. O botão abaixo abre as configurações de localização; o Android não oferece um link padrão direto para a página da Linha do tempo.\n\nNo iPhone, use Google Maps → foto do perfil → Configurações → Conteúdo pessoal → Exportar dados da Linha do tempo.</string>
     <string name="open_location_settings">Abra as configurações de localização</string>
-    <string name="no_timeline">Escolha seu arquivo Timeline para começar.</string>
+    <string name="no_timeline">Escolha o arquivo da sua Linha do tempo para começar.</string>
     <string name="preview">Visualização</string>
     <string name="pause_preview">Pausar visualização</string>
     <string name="export_video">Criar vídeo</string>
@@ -21,14 +21,14 @@
     <string name="owner_name">Nome no título automático (opcional)</string>
     <string name="share">Compartilhar</string>
     <string name="share_travel_video">Compartilhe vídeo de viagem</string>
-    <string name="import_failed">Não foi possível carregar Timeline</string>
-    <string name="import_failed_detail">Este arquivo não pôde ser lido. Selecione uma exportação JSON Timeline compatível.</string>
+    <string name="import_failed">Não foi possível carregar a Linha do tempo</string>
+    <string name="import_failed_detail">Este arquivo não pôde ser lido. Selecione uma exportação JSON da Linha do tempo compatível.</string>
     <string name="preview_preparation_failed">Não foi possível preparar a prévia do vídeo.</string>
     <string name="timeline_error_malformed">Este arquivo não contém um JSON válido ou completo.</string>
-    <string name="timeline_error_legacy">Este é um formato antigo do Google Takeout. Exporte os dados do Timeline pelo telefone.</string>
+    <string name="timeline_error_legacy">Este é um formato antigo do Google Takeout. Exporte os dados da Linha do tempo pelo telefone.</string>
     <string name="timeline_error_raw_only">Este arquivo não contém visitas, trajetos nem localizações brutas que possam ser usados.</string>
-    <string name="timeline_error_no_locations">Esta exportação do Timeline não contém dados de localização. Talvez o Timeline não estivesse ativado e o Google não tivesse dados para exportar.</string>
-    <string name="remembered_timeline_unavailable">O Timeline usado anteriormente não está mais disponível.</string>
+    <string name="timeline_error_no_locations">Esta exportação da Linha do tempo não contém dados de localização. Talvez a Linha do tempo não estivesse ativada e o Google não tivesse dados para exportar.</string>
+    <string name="remembered_timeline_unavailable">A Linha do tempo usada anteriormente não está mais disponível.</string>
     <string name="choose_timeline_again">Escolha o arquivo Timeline.json novamente.</string>
     <string name="video_export_failed">Não foi possível criar o vídeo</string>
     <string name="video_export_encoder_temporary">O codificador de vídeo parou inesperadamente. Tente novamente.</string>
@@ -40,9 +40,9 @@
     <string name="map_tiles_unavailable">Não foi possível carregar o mapa por completo. Verifique sua conexão e tente novamente.</string>
     <string name="location_settings_unavailable">As configurações de localização não estão disponíveis neste telefone</string>
     <string name="traveler">Viajante</string>
-    <string name="tagline">Transforme seu arquivo Timeline em um vídeo animado de viagem.</string>
-    <string name="default_title">Meu Timeline</string>
-    <string name="default_title_template">{year} {name} Timeline</string>
+    <string name="tagline">Transforme o arquivo da sua Linha do tempo em um vídeo animado de viagem.</string>
+    <string name="default_title">Minha Linha do tempo</string>
+    <string name="default_title_template">Linha do tempo de {name} em {year}</string>
     <plurals name="duration_seconds">
         <item quantity="one">%1$d segundo</item>
         <item quantity="many">%1$d segundos</item>
@@ -54,11 +54,11 @@
     <string name="custom_duration_range">Digite um número inteiro entre 10 e 300.</string>
     <string name="long_duration_warning">Vídeos longos exigem mais tempo de processamento e armazenamento.</string>
     <string name="use_recommended_duration">Usar duração recomendada · %1$d segundos</string>
-    <string name="reading_timeline">Lendo arquivo Timeline</string>
+    <string name="reading_timeline">Lendo o arquivo da Linha do tempo</string>
     <string name="opening_timeline">Abrindo arquivo</string>
     <string name="opening_file">Abrindo arquivo</string>
     <string name="preparing_trips">Preparando a viagem</string>
-    <string name="loading_timeline">Carregando Timeline</string>
+    <string name="loading_timeline">Carregando a Linha do tempo</string>
     <string name="video_saved">Vídeo salvo</string>
     <string name="video_ready">Vídeo pronto</string>
     <string name="watch_video">Assista ao vídeo</string>
@@ -73,9 +73,9 @@
     <string name="creating_video_notification_title">Criando seu vídeo timeline</string>
     <string name="starting_video_creation">Iniciando a criação do vídeo…</string>
     <string name="video_creation_notification_channel">Criação de vídeo</string>
-    <string name="video_creation_notification_channel_description">Atualizações do progresso dos vídeos da linha do tempo</string>
+    <string name="video_creation_notification_channel_description">Atualizações do progresso dos vídeos da Linha do tempo</string>
     <string name="video_completion_notification_channel">Resultados do vídeo</string>
-    <string name="video_completion_notification_channel_description">Alertas quando os vídeos da linha do tempo estiverem prontos ou falharem</string>
+    <string name="video_completion_notification_channel_description">Alertas quando os vídeos da Linha do tempo estiverem prontos ou falharem</string>
     <string name="no_video_player">Nenhum aplicativo está disponível para reproduzir este vídeo</string>
     <string name="period_same_year">%1$s–%2$s %3$d</string>
     <string name="period_cross_year">%1$s %2$d–%3$s %4$d</string>
@@ -94,10 +94,10 @@
         <item quantity="other">%1$d minutos</item>
     </plurals>
     <string name="timeline_preview">Visualização do mapa animado do período selecionado</string>
-    <string name="playback_position">Posição de reprodução Timeline</string>
-    <string name="privacy_summary">Seu arquivo Timeline nunca é carregado. CARTO recebe solicitações para as áreas do mapa mostradas, que podem revelar locais. Nenhuma análise ou conta é usada.</string>
-    <string name="map_privacy_title">Antes de carregar seu Timeline</string>
-    <string name="map_privacy_message">Seu arquivo Timeline nunca é carregado.\n\nPara desenhar o mapa, Timeline Visualizer envia a CARTO as coordenadas do bloco para áreas em seu Timeline, juntamente com informações normais de rede, como seu endereço IP e agente de usuário. Isso pode revelar locais em seu Timeline a CARTO. A jornada, títulos e vídeos não são enviados para CARTO ou para o desenvolvedor.</string>
+    <string name="playback_position">Posição de reprodução da Linha do tempo</string>
+    <string name="privacy_summary">O arquivo da sua Linha do tempo nunca é enviado. O CARTO recebe solicitações para as áreas do mapa mostradas, que podem revelar locais. Nenhuma análise ou conta é usada.</string>
+    <string name="map_privacy_title">Antes de carregar sua Linha do tempo</string>
+    <string name="map_privacy_message">O arquivo da sua Linha do tempo nunca é enviado.\n\nPara desenhar o mapa, o Timeline Visualizer envia ao CARTO as coordenadas dos blocos das áreas da sua Linha do tempo, junto com informações normais de rede, como seu endereço IP e agente de usuário. Isso pode revelar ao CARTO locais da sua Linha do tempo. A jornada, os títulos e os vídeos não são enviados ao CARTO nem ao desenvolvedor.</string>
     <string name="continue_action">Continuar</string>
     <string name="privacy_policy">Política de Privacidade</string>
     <string name="creations">Vídeos</string>
@@ -145,15 +145,15 @@
     <string name="project_on_github">Projeto em GitHub</string>
     <string name="update_page_unavailable">Não foi possível abrir a página de atualização</string>
     <string name="web_page_unavailable">Não foi possível abrir a página da web</string>
-    <string name="timeline_video">Vídeo Timeline</string>
-    <string name="default_video_filename">Vídeo Timeline.mp4</string>
+    <string name="timeline_video">Vídeo da Linha do tempo</string>
+    <string name="default_video_filename">Video da Linha do tempo.mp4</string>
     <string name="videos">Vídeos</string>
     <string name="new_video">Novo vídeo</string>
     <string name="create_video">Criar vídeo</string>
     <string name="add_videos">Adicionar vídeos</string>
-    <string name="timeline_file">Arquivo Timeline</string>
+    <string name="timeline_file">Arquivo da Linha do tempo</string>
     <string name="choose_file">Escolha o arquivo</string>
-    <string name="get_timeline_file">Obtenha o arquivo Timeline</string>
+    <string name="get_timeline_file">Obter o arquivo da Linha do tempo</string>
     <string name="selected_period">Período selecionado</string>
     <string name="video_details">Detalhes do vídeo</string>
     <string name="journey">Jornada</string>
@@ -174,7 +174,7 @@
     <string name="selected_period_empty">Nenhum ponto de localização neste período</string>
     <string name="selected_period_one_point">1 ponto de localização · escolha um período mais amplo</string>
     <string name="selected_period_no_movement">Pontos %1$s · nenhum movimento detectado</string>
-    <string name="timeline_file_unavailable">Arquivo Timeline indisponível</string>
+    <string name="timeline_file_unavailable">Arquivo da Linha do tempo indisponível</string>
     <string name="video_file_unavailable">Arquivo de vídeo indisponível</string>
     <string name="save_as_failed">Não foi possível salvar uma cópia do vídeo</string>
     <string name="video_copy_saved">Cópia do vídeo salva</string>
@@ -260,10 +260,10 @@
     <string name="distance_unit_kilometers">Quilômetros</string>
     <string name="distance_unit_miles">Milhas</string>
     <string name="distance_unit_automatic_resolved">%1$s · %2$s</string>
-    <string name="timeline_processing">Processamento da Timeline</string>
-    <string name="timeline_data">Diário de viagem</string><string name="remove_impossible_jumps">Remover saltos impossíveis</string><string name="remove_impossible_jumps_summary">Remove saltos curtos e impossíveis das prévias e dos vídeos. O arquivo da Timeline não é alterado.</string>
+    <string name="timeline_processing">Processamento da Linha do tempo</string>
+    <string name="timeline_data">Diário de viagem</string><string name="remove_impossible_jumps">Remover saltos impossíveis</string><string name="remove_impossible_jumps_summary">Remove saltos curtos e impossíveis das prévias e dos vídeos. O arquivo da Linha do tempo não é alterado.</string>
     <string name="location_filter">Filtro de valores GPS atípicos</string>
-    <string name="location_filter_summary">O filtro conservador ignora apenas viagens curtas de ida e volta impossíveis. O arquivo da Timeline nunca é alterado.</string>
+    <string name="location_filter_summary">O filtro conservador ignora apenas viagens curtas de ida e volta impossíveis. O arquivo da Linha do tempo nunca é alterado.</string>
     <string name="location_filter_conservative">Conservador</string>
     <string name="location_filter_off">Desativado</string>
     <string name="preparing_preview">Preparando visualização…</string>
@@ -303,7 +303,7 @@
     <string name="recommend_trips">Detectar viagens</string>
     <string name="customize_settings">Configurações avançadas</string>
     <string name="trip_defaults">Padrões de viagem</string>
-    <string name="recap_defaults">Padrões de retrospectiva</string>
+    <string name="recap_defaults">Padrões de recapitulação</string>
     <string name="trip_to_destination">Viagem para %1$s</string>
     <string name="suggested_trip_title">Viagem sugerida</string>
     <string name="create_step_details_label">Detalhes</string>
@@ -352,21 +352,21 @@
     <string name="create_step_style">Etapa 2 de 3 · Estilo do vídeo</string>
     <string name="create_step_trip_source">Escolha uma viagem</string>
     <string name="create_step_type">Escolha um vídeo para o seu diário de viagem</string>
-    <string name="create_steps">1 Viagem ou recapitulação 2 Estilo de vídeo 3 Visualizar e criar</string>
+    <string name="create_steps">1  Viagem ou recapitulação     2  Estilo de vídeo     3  Visualizar e criar</string>
     <string name="create_trip_manually">Criar viagem manualmente</string>
     <string name="create_video_for_trip">Criar vídeo</string>
     <string name="custom_range">Intervalo personalizado</string>
     <string name="custom_recap">Recapitulação personalizada</string>
     <string name="custom_recap_badge">Recapitulação personalizada</string>
     <string name="custom_recap_summary">Escolha as datas exatas de início e término no seu diário de viagem.</string>
-    <string name="custom_recap_title">Recapitulação de %1$s – %2$s</string>
+    <string name="custom_recap_title">Recapitulação de %1$s–%2$s</string>
     <string name="customize_video">Personalizar vídeo</string>
     <string name="customize_video_summary">Essas alterações se aplicam ao rascunho de vídeo atual.</string>
     <string name="delete_all_library_content">Excluir todo o conteúdo da biblioteca</string>
     <string name="delete_all_library_message">Isso excluirá permanentemente %1$s e %2$s. Os dados, predefinições e configurações da linha do tempo permanecerão.</string>
     <string name="delete_all_library_title">Excluir a biblioteca inteira?</string>
     <string name="delete_project">Excluir</string>
-    <string name="delete_project_message">Isso excluirá permanentemente este projeto e seus %1$d arquivos de vídeo, miniaturas e imagens de visão geral. Os dados e as configurações da Timeline serão mantidos.</string>
+    <string name="delete_project_message">Isso excluirá permanentemente este projeto e seus %1$d arquivos de vídeo, miniaturas e imagens de visão geral. Os dados e as configurações da Linha do tempo serão mantidos.</string>
     <string name="delete_project_title">Excluir %1$s?</string>
     <string name="detecting_trips">Encontrando viagens…</string>
     <string name="detection_range">Alcance de detecção</string>
@@ -374,7 +374,7 @@
     <string name="edit_project">Editar</string>
     <string name="find_trips">Encontre viagens</string>
     <string name="geonames_attribution">Os nomes de destino offline usam dados GeoNames sob CC BY 4.0.</string>
-    <string name="import_or_update">Importar Timeline atualizado</string>
+    <string name="import_or_update">Importar Linha do tempo atualizada</string>
     <string name="library">Biblioteca</string>
     <string name="library_delete_partial">%1$d vídeos excluídos. %2$d não puderam ser excluídos e permanecem na biblioteca.</string>
     <string name="library_deleted">Conteúdo da biblioteca excluído</string>
@@ -382,10 +382,10 @@
     <string name="library_summary">Suas viagens salvas, recapitulações e versões em vídeo.</string>
     <string name="manage_presets">Gerenciar predefinições</string>
     <string name="manage_presets_summary">As predefinições integradas são somente leitura. Selecione uma predefinição de usuário para renomeá-la ou excluí-la.</string>
-    <string name="month_recap_cross_year_title">%1$s %2$d – %3$s %4$d recapitulação</string>
-    <string name="month_recap_same_year_title">Recapitulação de %1$s – %2$s %3$d</string>
+    <string name="month_recap_cross_year_title">Recapitulação de %1$s %2$d–%3$s %4$d</string>
+    <string name="month_recap_same_year_title">Recapitulação de %1$s–%2$s %3$d</string>
     <string name="month_recap_title">Recapitulação de %1$s %2$d</string>
-    <string name="monthly_recap_badge">Resumo mensal</string>
+    <string name="monthly_recap_badge">Recapitulação mensal</string>
     <string name="named_video_title">%1$s de {name}</string>
     <string name="new_trip">Nova viagem</string>
     <string name="no_user_presets">Nenhuma predefinição de usuário salva ainda.</string>
@@ -394,7 +394,7 @@
     <string name="preset_builtin_summary">Predefinição integrada · Resolução inalterada</string>
     <string name="preset_modified">%1$s · Modificado</string>
     <string name="preset_modified_summary">Use uma vez ou salve como uma nova predefinição</string>
-    <string name="previous_month_recap">Resumo do mês anterior</string>
+    <string name="previous_month_recap">Recapitulação do mês anterior</string>
     <string name="project_actions">Opções de viagem ou recapitulação</string>
     <string name="project_changes_saved">Alterações salvas</string>
     <string name="project_delete_partial">%1$d vídeos excluídos. %2$d não puderam ser excluídos, então o projeto foi mantido.</string>
@@ -449,9 +449,9 @@
     <string name="use_trip">Usar viagem</string>
     <string name="videos_count">%1$d vídeos</string>
     <string name="view_in_trip">Ver na viagem</string>
-    <string name="year_recap_range_title">Recapitulação de %1$d – %2$d</string>
+    <string name="year_recap_range_title">Recapitulação de %1$d–%2$d</string>
     <string name="year_recap_title">Recapitulação de %1$d</string>
-    <string name="yearly_recap_badge">Resumo anual</string>
+    <string name="yearly_recap_badge">Recapitulação anual</string>
     <plurals name="library_project_count"><item quantity="one">%d projeto</item><item quantity="other">%d projetos</item></plurals>
     <plurals name="library_video_count"><item quantity="one">%d vídeo</item><item quantity="other">%d vídeos</item></plurals>
     <string name="journal_reminders">Lembretes do diário de viagem</string>
@@ -567,14 +567,14 @@
     <string name="onboarding_v11_journal_title">Transforme seus trajetos em um diário de viagem</string>
     <string name="onboarding_v11_journal_body">A Linha do tempo do Google Maps registra discretamente por onde você passou.\n\nO Timeline Visualizer transforma uma cópia exportada desse histórico em um diário de viagem particular e em vídeos de viagem animados.</string>
     <string name="onboarding_v11_private_title">Seus trajetos, no seu aparelho</string>
-    <string name="onboarding_v11_private_body">O Timeline Visualizer não rastreia sua localização. Ele lê apenas a exportação da Timeline que você escolher. Seu arquivo da Timeline e seu diário de viagem ficam neste aparelho.</string>
+    <string name="onboarding_v11_private_body">O Timeline Visualizer não rastreia sua localização. Ele lê apenas a exportação da Linha do tempo que você escolher. O arquivo da sua Linha do tempo e seu diário de viagem ficam neste aparelho.</string>
     <string name="onboarding_v11_private_note">Se a Linha do tempo do Google Maps não estiver ativada, ative agora para começar a registrar os próximos trajetos.</string>
     <string name="onboarding_v11_start_title">Comece seu diário de viagem</string>
     <string name="onboarding_v11_start_body">Exporte um arquivo Timeline.json atualizado do Google Maps e escolha-o aqui. Com históricos grandes, a primeira vez pode demorar um pouco mais. As próximas importações adicionam novos detalhes ao mesmo diário.</string>
     <string name="settings_why_import_title">Por que importar um arquivo atualizado?</string>
-    <string name="settings_why_import_detail">Exportações recentes da Timeline podem conter rotas detalhadas que talvez não apareçam em uma exportação posterior. Importar um arquivo atualizado a cada poucas semanas permite que seu diário de viagem preserve neste aparelho cada novo trecho detalhado.</string>
+    <string name="settings_why_import_detail">Exportações recentes da Linha do tempo podem conter rotas detalhadas que talvez não apareçam em uma exportação posterior. Importar um arquivo atualizado a cada poucas semanas permite que seu diário de viagem preserve neste aparelho cada novo trecho detalhado.</string>
     <string name="simplify_route_detail">Simplificar detalhes da rota</string>
-    <string name="simplify_route_detail_summary">Usa a atividade resumida da Timeline para criar uma rota mais clara em vídeos de períodos longos. Quando desativado, usa a rota mais detalhada disponível.</string>
+    <string name="simplify_route_detail_summary">Usa a atividade resumida da Linha do tempo para criar uma rota mais clara em vídeos de períodos longos. Quando desativado, usa a rota mais detalhada disponível.</string>
     <string name="keep_past_routes_visible">Manter rotas anteriores visíveis</string>
     <string name="keep_past_routes_visible_summary">Mostra as rotas concluídas como um rastro discreto ao fundo. Quando desativado, os movimentos anteriores desaparecem.</string>
 </resources>

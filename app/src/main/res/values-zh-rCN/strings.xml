@@ -2,12 +2,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Timeline Visualizer</string>
     <string name="import_timeline">选择文件</string>
-    <string name="how_to_export">获取Timeline文件</string>
-    <string name="restore_timeline_help">恢复 Google Maps Timeline</string>
+    <string name="how_to_export">获取时间轴文件</string>
+    <string name="restore_timeline_help">恢复 Google 地图时间轴</string>
     <string name="export_help_title">导出您的 Timeline.json</string>
-    <string name="export_help_message">在Android上，打开手机设置→位置→位置服务→Timeline→导出Timeline数据。将文件保存在容易找到的地方，通常命名为 Timeline.json。返回此处并选择文件。\n\n 确切的标签可能因手机而异。下面的按钮打开位置设置； Android不提供直接到Timeline页面的标准链接。\n\n在iPhone上，使用Google Maps→个人资料图片→设置→个人内容→导出Timeline数据。</string>
+    <string name="export_help_message">在 Android 上，打开手机设置 → 位置 → 位置服务 → 时间轴 → 导出时间轴数据。将文件保存在容易找到的地方，通常名为 Timeline.json。返回此处并选择该文件。\n\n确切的标签可能因手机而异。下面的按钮会打开位置设置；Android 未提供直接前往时间轴页面的标准链接。\n\n在 iPhone 上，使用 Google 地图 → 个人资料照片 → 设置 → 个人内容 → 导出时间轴数据。</string>
     <string name="open_location_settings">打开位置设置</string>
-    <string name="no_timeline">选择您的 Timeline 文件开始。</string>
+    <string name="no_timeline">请选择您的时间轴文件以开始。</string>
     <string name="preview">预览</string>
     <string name="pause_preview">暂停预览</string>
     <string name="export_video">创建视频</string>
@@ -21,14 +21,14 @@
     <string name="owner_name">自动标题中的姓名（可选）</string>
     <string name="share">分享</string>
     <string name="share_travel_video">分享旅游视频</string>
-    <string name="import_failed">无法加载Timeline</string>
-    <string name="import_failed_detail">无法读取该文件。选择支持的 Timeline JSON 导出。</string>
+    <string name="import_failed">无法加载时间轴</string>
+    <string name="import_failed_detail">无法读取该文件。请选择受支持的时间轴 JSON 导出文件。</string>
     <string name="preview_preparation_failed">无法准备视频预览。</string>
     <string name="timeline_error_malformed">此文件不是有效或完整的 JSON。</string>
-    <string name="timeline_error_legacy">这是旧版 Google Takeout 格式。请改为从手机导出 Timeline 数据。</string>
+    <string name="timeline_error_legacy">这是旧版 Google Takeout 格式。请改为从手机导出时间轴数据。</string>
     <string name="timeline_error_raw_only">此文件不包含可用的访问地点、行程或原始位置信息。</string>
-    <string name="timeline_error_no_locations">此 Timeline 导出不包含位置数据。Timeline 可能未启用，因此 Google 没有可导出的数据。</string>
-    <string name="remembered_timeline_unavailable">之前使用的Timeline不再可用。</string>
+    <string name="timeline_error_no_locations">此时间轴导出文件不包含位置数据。时间轴可能未启用，因此 Google 没有可导出的数据。</string>
+    <string name="remembered_timeline_unavailable">之前使用的时间轴不再可用。</string>
     <string name="choose_timeline_again">再次选择 Timeline.json 文件。</string>
     <string name="video_export_failed">无法创建视频</string>
     <string name="video_export_encoder_temporary">视频编码器意外停止。请重试。</string>
@@ -40,9 +40,9 @@
     <string name="map_tiles_unavailable">地图未能完全加载。请检查网络连接后重试。</string>
     <string name="location_settings_unavailable">此手机上无法使用位置设置</string>
     <string name="traveler">游客</string>
-    <string name="tagline">将您的 Timeline 文件变成动画旅行视频。</string>
-    <string name="default_title">我的Timeline</string>
-    <string name="default_title_template">{year} {name} 的 Timeline</string>
+    <string name="tagline">将您的时间轴文件变成动画旅行视频。</string>
+    <string name="default_title">我的时间轴</string>
+    <string name="default_title_template">{name} {year} 年的时间轴</string>
     <plurals name="duration_seconds">
         <item quantity="other">%1$d秒</item>
     </plurals>
@@ -52,11 +52,11 @@
     <string name="custom_duration_range">请输入10到300之间的整数。</string>
     <string name="long_duration_warning">较长的视频需要更多渲染时间和存储空间。</string>
     <string name="use_recommended_duration">使用建议时长 · %1$d 秒</string>
-    <string name="reading_timeline">读取Timeline文件</string>
+    <string name="reading_timeline">正在读取时间轴文件</string>
     <string name="opening_timeline">打开文件</string>
     <string name="opening_file">打开文件</string>
     <string name="preparing_trips">准备旅程</string>
-    <string name="loading_timeline">正在加载Timeline</string>
+    <string name="loading_timeline">正在加载时间轴</string>
     <string name="video_saved">视频已保存</string>
     <string name="video_ready">视频准备就绪</string>
     <string name="watch_video">观看视频</string>
@@ -70,7 +70,7 @@
     <string name="background_video_message">允许通知后，离开应用时仍可查看视频进度，并在创建完成或失败时收到提醒。即使不允许通知，视频创建也会继续。</string>
     <string name="video_request_unavailable">无法开始视频创建。请重新选择保存位置。</string>
     <string name="creating_video_notification_title">创建您的 timeline 视频</string>
-    <string name="starting_video_creation">开始视频创作...</string>
+    <string name="starting_video_creation">开始创建视频…</string>
     <string name="video_creation_notification_channel">视频创作</string>
     <string name="video_creation_notification_channel_description">时间轴视频的生成进度</string>
     <string name="video_completion_notification_channel">视频结果</string>
@@ -89,15 +89,15 @@
         <item quantity="other">%1$d 分钟</item>
     </plurals>
     <string name="timeline_preview">所选时期的动画地图预览</string>
-    <string name="playback_position">Timeline 播放位置</string>
-    <string name="privacy_summary">您的 Timeline 文件从未上传。 CARTO 接收对所示地图区域的请求，这可以显示地点。不使用任何分析或帐户。</string>
-    <string name="map_privacy_title">加载 Timeline 之前</string>
-    <string name="map_privacy_message">您的 Timeline 文件从未上传。\n\n 为了绘制地图，Timeline Visualizer 向 CARTO 发送 Timeline 中区域的图块坐标，以及常规网络信息，例如您的 IP 地址和用户代理。这可能会揭示您的 Timeline 至 CARTO 中的位置。旅程、标题和视频不会上传到 CARTO 或开发者。</string>
+    <string name="playback_position">时间轴播放位置</string>
+    <string name="privacy_summary">您的时间轴文件绝不会上传。CARTO 会收到所显示地图区域的请求，这可能会暴露地点。本应用不使用任何分析工具或账号。</string>
+    <string name="map_privacy_title">加载时间轴之前</string>
+    <string name="map_privacy_message">您的时间轴文件绝不会上传。\n\n为了绘制地图，Timeline Visualizer 会将您时间轴中各区域的图块坐标，以及 IP 地址和用户代理等常规网络信息发送给 CARTO。这可能会向 CARTO 暴露您时间轴中的地点。行程、标题和视频不会上传到 CARTO 或开发者。</string>
     <string name="continue_action">继续</string>
     <string name="privacy_policy">隐私政策</string>
     <string name="creations">视频</string>
     <string name="add_existing_videos">添加视频</string>
-    <string name="adding_videos">添加...</string>
+    <string name="adding_videos">正在添加…</string>
     <string name="no_creations">您创建或添加的视频将显示在此处。</string>
     <string name="show_all_creations">显示全部 (%1$d)</string>
     <string name="show_fewer_creations">显示较少</string>
@@ -138,15 +138,15 @@
     <string name="update_page_unavailable">无法打开更新页面</string>
     <string name="web_page_unavailable">无法打开网页</string>
     <string name="render_date_pattern" tools:ignore="ExtraTranslation">yyyy年M月</string>
-    <string name="timeline_video">Timeline视频</string>
-    <string name="default_video_filename">Timeline 视频.mp4</string>
+    <string name="timeline_video">时间轴视频</string>
+    <string name="default_video_filename">时间轴视频.mp4</string>
     <string name="videos">视频</string>
     <string name="new_video">新视频</string>
     <string name="create_video">创建视频</string>
     <string name="add_videos">添加视频</string>
-    <string name="timeline_file">Timeline 文件</string>
+    <string name="timeline_file">时间轴文件</string>
     <string name="choose_file">选择文件</string>
-    <string name="get_timeline_file">获取Timeline文件</string>
+    <string name="get_timeline_file">获取时间轴文件</string>
     <string name="selected_period">所选期间</string>
     <string name="video_details">视频详情</string>
     <string name="journey">旅行</string>
@@ -167,7 +167,7 @@
     <string name="selected_period_empty">此期间没有位置点</string>
     <string name="selected_period_one_point">1个位置点·选择范围更广</string>
     <string name="selected_period_no_movement">%1$s 点 · 未检测到移动</string>
-    <string name="timeline_file_unavailable">Timeline 文件不可用</string>
+    <string name="timeline_file_unavailable">时间轴文件不可用</string>
     <string name="video_file_unavailable">视频文件不可用</string>
     <string name="save_as_failed">无法保存视频的副本</string>
     <string name="video_copy_saved">视频副本已保存</string>
@@ -236,7 +236,7 @@
     <string name="exact_date_range">%1$s – %2$s</string>
     <string name="delete_all_videos">删除所有视频</string>
     <string name="delete_all_videos_title">删除所有视频？</string>
-    <string name="delete_all_videos_message">这将从其保存位置永久删除列表中显示的每个视频。 Android 不允许此应用程序删除的文件将保留列出。</string>
+    <string name="delete_all_videos_message">这将从其保存位置永久删除列表中显示的每个视频。Android 不允许此应用删除的文件将保留在列表中。</string>
     <string name="all_videos_deleted">所有视频已删除</string>
     <string name="some_videos_not_deleted">已删除 %1$d 视频。无法删除 %2$d。</string>
     <string name="my_videos">我的视频</string>
@@ -291,12 +291,12 @@
     <string name="preset_deleted">预设已删除</string>
     <string name="preset_limit_reached">请先删除一个预设再保存新预设。</string>
     <string name="preset_value_format">%1$s · %2$s</string>
-    <string name="recommend_trips">检测旅行</string>
+    <string name="recommend_trips">检测行程</string>
     <string name="customize_settings">高级设置</string>
-    <string name="trip_defaults">旅行默认设置</string>
+    <string name="trip_defaults">行程默认设置</string>
     <string name="recap_defaults">回顾默认设置</string>
-    <string name="trip_to_destination">前往%1$s的旅行</string>
-    <string name="suggested_trip_title">建议的旅行</string>
+    <string name="trip_to_destination">前往%1$s的行程</string>
+    <string name="suggested_trip_title">建议的行程</string>
     <string name="create_step_details_label">详情</string>
     <string name="create_step_style_label">样式</string>
     <string name="create_step_create_label">创建</string>
@@ -341,7 +341,7 @@
     <string name="create_step_preview">第 3 步（共 3 步）·预览和创建</string>
     <string name="create_step_project">第 1 步（共 3 步）· 行程或回顾</string>
     <string name="create_step_style">第 2 步（共 3 步）·视频风格</string>
-    <string name="create_step_trip_source">选择旅行</string>
+    <string name="create_step_trip_source">选择行程</string>
     <string name="create_step_type">选择要为旅行记录创建的视频</string>
     <string name="create_steps">1  行程或回顾     2  视频风格     3  预览并创建</string>
     <string name="create_trip_manually">手动创建行程</string>
@@ -354,12 +354,12 @@
     <string name="customize_video">定制视频</string>
     <string name="customize_video_summary">这些更改适用于当前的视频草稿。</string>
     <string name="delete_all_library_content">删除媒体库全部内容</string>
-    <string name="delete_all_library_message">这将永久删除 %1$s 和 %2$s。时间线数据、预设和设置将保留。</string>
+    <string name="delete_all_library_message">这将永久删除 %1$s 和 %2$s。时间轴数据、预设和设置将保留。</string>
     <string name="delete_all_library_title">删除整个媒体库？</string>
     <string name="delete_project">删除</string>
     <string name="delete_project_message">这将永久删除该项目及其 %1$d 个视频文件、缩略图和概览图像。时间轴数据和设置将保留。</string>
     <string name="delete_project_title">删除%1$s？</string>
-    <string name="detecting_trips">寻找旅行…</string>
+    <string name="detecting_trips">正在查找行程…</string>
     <string name="detection_range">检测范围</string>
     <string name="dismiss_suggestion">忽略</string>
     <string name="edit_project">编辑</string>
@@ -378,7 +378,7 @@
     <string name="month_recap_title">%1$s %2$d 回顾</string>
     <string name="monthly_recap_badge">每月回顾</string>
     <string name="named_video_title">{name}的%1$s</string>
-    <string name="new_trip">新旅程</string>
+    <string name="new_trip">新行程</string>
     <string name="no_user_presets">尚未保存用户预设。</string>
     <string name="possible_match">可能的匹配</string>
     <string name="preset_already_exists">这些设置已经与 %1$s 匹配。</string>
@@ -386,7 +386,7 @@
     <string name="preset_modified">%1$s · 修改</string>
     <string name="preset_modified_summary">使用一次或另存为新预设</string>
     <string name="previous_month_recap">上个月回顾</string>
-    <string name="project_actions">旅行或回顾选项</string>
+    <string name="project_actions">行程或回顾选项</string>
     <string name="project_changes_saved">更改已保存</string>
     <string name="project_delete_partial">已删除 %1$d 个视频。%2$d 个无法删除，因此保留了该项目。</string>
     <string name="project_deleted">已删除项目和 %1$d 个视频</string>
@@ -412,7 +412,7 @@
     <string name="show_fewer_suggestions">显示较少</string>
     <string name="strong_match">高度匹配</string>
     <string name="suggested_trips">建议行程</string>
-    <string name="suggested_trips_empty">还没有旅行建议。新导入永远不会删除已确认的行程。</string>
+    <string name="suggested_trips_empty">还没有行程建议。新导入永远不会删除已确认的行程。</string>
     <string name="timeline_file_status">%1$s\n更新时间 %2$s\n旅行记录范围 %3$s\n详细范围 %4$s</string>
     <string name="timeline_not_imported">旅行记录已准备好扩充。导入 Timeline.json 以添加文件中的历史记录。</string>
     <string name="timeline_range_unavailable">无法使用</string>
@@ -422,7 +422,7 @@
     <string name="timeline_source">旅行记录</string>
     <string name="timeline_source_empty">导入 Timeline.json，让旅行记录不断丰富。</string>
     <string name="timeline_source_ready">旅行记录保存在本地。请定期导入 Timeline.json，让其中的详细路线不断增加。</string>
-    <string name="trip_badge">旅行</string>
+    <string name="trip_badge">行程</string>
     <string name="trip_confirmed">行程已确定。选择预设并创建视频。</string>
     <string name="trip_coverage_format">~%1$s %2$s 已记录 · %3$s 积分 · %4$s 活跃天数</string>
     <string name="trip_coverage_good">视频覆盖良好</string>
@@ -430,8 +430,8 @@
     <string name="trip_coverage_unavailable">载入旅行记录以查看视频覆盖范围。</string>
     <string name="trip_coverage_warning">仅记录到少量移动。视频中可能包含很少的动作。</string>
     <string name="trip_saved">行程已保存</string>
-    <string name="trip_suggestion_details">%1$s · %2$d 天 · 包括旅行</string>
-    <string name="trip_title">旅行或回顾标题</string>
+    <string name="trip_suggestion_details">%1$s · %2$d 天 · 包括往返路程</string>
+    <string name="trip_title">行程或回顾标题</string>
     <string name="trip_video">行程视频</string>
     <string name="trip_video_summary">使用已保存的行程、在旅行记录中查找行程，或手动输入日期。</string>
     <string name="trips">行程</string>
@@ -453,7 +453,7 @@
     <string name="journal_status_due">添加时间轴中的最近日期，让旅行记录继续增长。</string>
     <string name="journal_status_at_risk">一些尚未保留的详细路线可能很快会从未来的导出文件中消失。</string>
     <string name="journal_status_overdue">请在方便时更新旅行记录。应用无法恢复早期导出文件中缺失的详细信息。</string>
-    <string name="journal_status_detail">详细路线\n%1$s · %2$s · %3$s 个点\n\n旅程历史\n%4$s · %5$s · 最新时间线中的 %6$s 个条目\n\n上次更新 %7$s</string>
+    <string name="journal_status_detail">详细路线\n%1$s · %2$s · %3$s 个点\n\n旅程历史\n%4$s · %5$s · 最新时间轴中的 %6$s 个条目\n\n上次更新 %7$s</string>
     <plurals name="journal_coverage_days">
         <item quantity="other">%d天</item>
     </plurals>
@@ -509,9 +509,9 @@
     <string name="journal_setup_card_detail">导入 Google 地图时间轴导出文件，保留你的旅程历史并开始积累详细路线。</string>
     <string name="journal_setup_card_action">设置旅行记录</string>
     <string name="journal_update_added_detail">已添加 %1$s。\n\n%2$s</string>
-    <string name="import_timeline_to_journal">导入时间线</string>
-    <string name="import_updated_timeline">导入更新后的时间线</string>
-    <string name="get_updated_timeline_file">获取更新后的时间线文件</string>
+    <string name="import_timeline_to_journal">导入时间轴</string>
+    <string name="import_updated_timeline">导入更新后的时间轴</string>
+    <string name="get_updated_timeline_file">获取更新后的时间轴文件</string>
     <string name="journal_route_load_failed">您的旅行记录是安全的，但无法准备路线。请重试。</string>
     <string name="save_as_preset">另存为预设</string>
     <string name="preparing_your_journeys">正在准备行程…</string>
@@ -519,33 +519,33 @@
     <string name="combining_journey_history">正在合并行程记录</string>
     <string name="saving_for_faster_starts">正在保存以便下次更快启动</string>
     <string name="journal_route_action_waiting">正在准备行程。准备完成后将自动打开。</string>
-    <string name="journal_freshness_inline">详细路线已于%1$d天前更新。请导入更新的Timeline文件。</string>
+    <string name="journal_freshness_inline">详细路线已于 %1$d 天前更新。请导入更新后的时间轴文件。</string>
     <plurals name="journal_import_added"><item quantity="other">旅行记录新增了%d个详细位置。</item></plurals>
-    <string name="journal_import_added_timeline">旅行记录已加入现有Timeline历史。</string>
-    <string name="journal_import_duplicate">此Timeline文件已在旅行记录中。未进行任何更改。</string>
-    <string name="journal_import_failed_preserved">无法添加此Timeline文件。已保存的旅行记录未更改。</string>
+    <string name="journal_import_added_timeline">旅行记录已加入现有的时间轴历史。</string>
+    <string name="journal_import_duplicate">此时间轴文件已在旅行记录中。未进行任何更改。</string>
+    <string name="journal_import_failed_preserved">无法添加此时间轴文件。已保存的旅行记录未更改。</string>
     <string name="journal_import_checking">正在检查旅行记录</string>
     <string name="journal_import_saving">正在保存新详情</string>
     <string name="journal_import_updating">正在更新行程</string>
     <string name="journal_import_working_detail">完成期间，已保存的旅行记录会保持安全。</string>
     <string name="journal_import_read_progress">已读取%1$s，共%2$s</string>
-    <string name="journal_import_save_progress">已保存%1$d条旅行记录，共%2$d条</string>
+    <string name="journal_import_save_progress">已保存 %1$d 条记录，共 %2$d 条</string>
     <string name="journal_import_in_progress">正在更新旅行记录…</string>
     <string name="journal_import_creating">正在创建旅行记录…</string>
     <string name="journal_import_preparing">正在准备旅行记录…</string>
-    <string name="journal_import_created">旅行记录已创建。%1$s和%2$s已准备就绪。</string>
-    <string name="journal_import_created_timeline">已使用现有Timeline历史创建旅行记录。</string>
+    <string name="journal_import_created">旅行记录已创建。%1$s 和 %2$s 已准备就绪。</string>
+    <string name="journal_import_created_timeline">已使用现有的时间轴历史创建旅行记录。</string>
     <plurals name="journal_days_count"><item quantity="other">%d天</item></plurals>
     <plurals name="journal_detailed_locations_count"><item quantity="other">%d个详细位置</item></plurals>
     <plurals name="journal_preserved_observations_count"><item quantity="other">%d个已保留的详细观测</item></plurals>
     <string name="journal_import_no_changes">旅行记录中已有相同或更新的数据。无需更新。</string>
     <string name="journal_import_mismatch_title">这可能是另一份旅行记录</string>
-    <string name="journal_import_mismatch_message">此文件与已保存旅行记录共有的详细位置不足。未进行任何更改。无法将其他人的Timeline加入同一份旅行记录。</string>
+    <string name="journal_import_mismatch_message">此文件与已保存旅行记录共有的详细位置不足。未进行任何更改。无法将其他人的时间轴加入同一份旅行记录。</string>
     <string name="travel_journal">旅行记录</string>
     <string name="journal_setup_title">设置旅行记录</string>
     <string name="journal_setup_summary">旅行记录会在此设备上保留现有最佳行程历史。</string>
     <string name="journal_setup_intro_title">创建旅行记录</string>
-    <string name="journal_setup_intro_detail">选择Timeline.json以保存行程历史。请定期导入较新的导出文件，以增加旅行记录中的详细部分。</string>
+    <string name="journal_setup_intro_detail">选择 Timeline.json 以保存行程历史。请定期导入较新的导出文件，以增加旅行记录中的详细部分。</string>
     <string name="journal_automatic_source_summary">视频会自动使用已保存的最详细路线。旅行记录会用现有最佳时间轴记录补充缺失时段。</string>
     <string name="disclosure_collapsed">已收起</string>
     <string name="disclosure_expanded">已展开</string>
@@ -564,7 +564,7 @@
     <string name="settings_why_import_title">为什么要导入更新的文件？</string>
     <string name="settings_why_import_detail">较新的时间轴导出文件可能包含之后的导出文件中不再出现的详细路线。每隔几周导入一次更新的文件，就能把每段新的详细路线保留在本机的旅行记录中。</string>
     <string name="simplify_route_detail">简化路线细节</string>
-    <string name="simplify_route_detail_summary">在长时间跨度的视频中使用摘要后的 Timeline 活动来生成更清晰的路线。关闭时使用可用的最详细路线。</string>
+    <string name="simplify_route_detail_summary">在长时间跨度的视频中使用摘要后的时间轴活动来生成更清晰的路线。关闭时使用可用的最详细路线。</string>
     <string name="keep_past_routes_visible">保留过去的路线</string>
     <string name="keep_past_routes_visible_summary">将已完成的路线显示为淡色背景轨迹。关闭时，较早的移动会逐渐消失。</string>
 </resources>

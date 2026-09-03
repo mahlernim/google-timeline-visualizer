@@ -21,7 +21,7 @@
     <string name="share">共有</string>
     <string name="share_travel_video">旅行動画を共有</string>
     <string name="import_failed">読み込みに失敗しました</string>
-    <string name="import_failed_detail">このファイルを読み取れませんでした。対応する Timeline JSON の書き出しファイルを選択してください。</string>
+    <string name="import_failed_detail">このファイルを読み取れませんでした。対応するタイムラインの JSON 書き出しファイルを選択してください。</string>
     <string name="preview_preparation_failed">動画のプレビューを準備できませんでした。</string>
     <string name="timeline_error_malformed">有効または完全な JSON ファイルではありません。</string>
     <string name="timeline_error_legacy">以前の Google Takeout 形式です。端末からタイムライン データを書き出してください。</string>
@@ -301,7 +301,7 @@
     <string name="recommend_trips">旅行を検出</string>
     <string name="customize_settings">詳細設定</string>
     <string name="trip_defaults">旅行のデフォルト</string>
-    <string name="recap_defaults">まとめのデフォルト</string>
+    <string name="recap_defaults">要約のデフォルト</string>
     <string name="trip_to_destination">%1$sへの旅行</string>
     <string name="suggested_trip_title">旅行候補</string>
     <string name="create_step_details_label">詳細</string>
@@ -372,7 +372,7 @@
     <string name="edit_project">編集</string>
     <string name="find_trips">旅行を探す</string>
     <string name="geonames_attribution">オフラインの宛先名には、CC BY 4.0 に基づく GeoNames データが使用されます。</string>
-    <string name="import_or_update">最新のTimelineを読み込む</string>
+    <string name="import_or_update">最新のタイムラインを読み込む</string>
     <string name="library">ライブラリ</string>
     <string name="library_delete_partial">動画%1$d本を削除しました。%2$d本は削除できず、ライブラリに残っています。</string>
     <string name="library_deleted">ライブラリのコンテンツが削除されました</string>
@@ -383,16 +383,16 @@
     <string name="month_recap_cross_year_title">%1$s %2$d–%3$s %4$d の要約</string>
     <string name="month_recap_same_year_title">%1$s–%2$s %3$d の要約</string>
     <string name="month_recap_title">%1$s %2$d の要約</string>
-    <string name="monthly_recap_badge">月間まとめ</string>
+    <string name="monthly_recap_badge">月間要約</string>
     <string name="named_video_title">{name}の%1$s</string>
-    <string name="new_trip">新しい旅</string>
+    <string name="new_trip">新しい旅行</string>
     <string name="no_user_presets">ユーザー プリセットはまだ保存されていません。</string>
     <string name="possible_match">一致する可能性</string>
     <string name="preset_already_exists">これらの設定はすでに %1$s と一致しています。</string>
     <string name="preset_builtin_summary">内蔵プリセット・解像度は変更なし</string>
     <string name="preset_modified">%1$s · 変更されました</string>
     <string name="preset_modified_summary">一度使用するか、新しいプリセットとして保存します</string>
-    <string name="previous_month_recap">前月のまとめ</string>
+    <string name="previous_month_recap">前月の要約</string>
     <string name="project_actions">旅行または要約のオプション</string>
     <string name="project_changes_saved">変更が保存されました</string>
     <string name="project_delete_partial">動画%1$d本を削除しました。%2$d本は削除できなかったため、プロジェクトは保持されました。</string>
@@ -442,14 +442,14 @@
     <string name="trip_video">旅行動画</string>
     <string name="trip_video_summary">保存した旅行を使うか、旅の記録から探すか、日付を手動で入力します。</string>
     <string name="trips">旅行</string>
-    <string name="trips_lab_summary">おすすめの旅行や要約を動画のコレクションにまとめます。</string>
+    <string name="trips_lab_summary">おすすめの旅行や要約を動画のコレクションにします。</string>
     <string name="unassigned_videos">その他の動画</string>
     <string name="use_trip">この旅行を使う</string>
     <string name="videos_count">動画%1$d本</string>
     <string name="view_in_trip">旅行の中で表示</string>
     <string name="year_recap_range_title">%1$d–%2$d の要約</string>
     <string name="year_recap_title">%1$d の要約</string>
-    <string name="yearly_recap_badge">年間まとめ</string>
+    <string name="yearly_recap_badge">年間要約</string>
     <plurals name="library_project_count"><item quantity="other">プロジェクト%d件</item></plurals>
     <plurals name="library_video_count"><item quantity="other">動画%d本</item></plurals>
     <string name="journal_reminders">旅の記録のリマインダー</string>
@@ -505,7 +505,7 @@
     <string name="onboarding_preserve_body">最近のタイムラインのエクスポートには、より詳しい経路が含まれていることがあります。その詳細は、後のエクスポートには含まれなくなる可能性があります。\n\n新しいエクスポートを定期的に読み込むと、新たに得られた詳しい区間がこの端末の旅の記録に保存されます。</string>
     <string name="onboarding_preserve_note">詳しい経路の保存期間は Google から保証されていません。2～3週間ごとの更新は、実際に確認されたエクスポートに基づく慎重な目安です。</string>
     <string name="onboarding_start_title">旅の記録を始める</string>
-    <string name="onboarding_start_body">エクスポート済みですか？ Timeline.json、location-history.json、または対応している Google マップのタイムラインの JSON ファイルを選択してください。</string>
+    <string name="onboarding_start_body">エクスポート済みですか？Timeline.json、location-history.json、または対応している Google マップのタイムラインの JSON ファイルを選択してください。</string>
     <string name="onboarding_start_note">タイムラインがまだ有効でない場合は、先に設定してください。Google マップが新しい旅を記録できるのは、その時点からです。</string>
     <string name="onboarding_choose_export">タイムラインのエクスポートを選択</string>
     <string name="onboarding_setup_maps">Google マップのタイムラインを設定</string>
@@ -526,11 +526,11 @@
     <string name="combining_journey_history">移動履歴をまとめています</string>
     <string name="saving_for_faster_starts">次回すばやく開始できるよう保存しています</string>
     <string name="journal_route_action_waiting">移動経路を準備しています。準備ができると開きます。</string>
-    <string name="journal_freshness_inline">詳細なルートは%1$d日前に更新されました。最新のTimelineファイルを読み込んでください。</string>
+    <string name="journal_freshness_inline">詳細なルートは%1$d日前に更新されました。最新のタイムライン ファイルを読み込んでください。</string>
     <plurals name="journal_import_added"><item quantity="other">旅の記録に詳細な位置情報が%d件追加されました。</item></plurals>
-    <string name="journal_import_added_timeline">利用可能なTimeline履歴が旅の記録に追加されました。</string>
-    <string name="journal_import_duplicate">このTimelineファイルはすでに旅の記録に含まれています。変更はありません。</string>
-    <string name="journal_import_failed_preserved">このTimelineファイルを追加できませんでした。保存済みの旅の記録は変更されていません。</string>
+    <string name="journal_import_added_timeline">利用可能なタイムライン履歴が旅の記録に追加されました。</string>
+    <string name="journal_import_duplicate">このタイムライン ファイルはすでに旅の記録に含まれています。変更はありません。</string>
+    <string name="journal_import_failed_preserved">このタイムライン ファイルを追加できませんでした。保存済みの旅の記録は変更されていません。</string>
     <string name="journal_import_checking">旅の記録を確認しています</string>
     <string name="journal_import_saving">新しい詳細を保存しています</string>
     <string name="journal_import_updating">移動経路を更新しています</string>
@@ -541,13 +541,13 @@
     <string name="journal_import_creating">旅の記録を作成しています…</string>
     <string name="journal_import_preparing">旅の記録を準備しています…</string>
     <string name="journal_import_created">旅の記録を作成しました。%1$sと%2$sを利用できます。</string>
-    <string name="journal_import_created_timeline">利用可能なTimeline履歴から旅の記録を作成しました。</string>
+    <string name="journal_import_created_timeline">利用可能なタイムライン履歴から旅の記録を作成しました。</string>
     <plurals name="journal_days_count"><item quantity="other">%d日</item></plurals>
     <plurals name="journal_detailed_locations_count"><item quantity="other">詳細な位置情報%d件</item></plurals>
     <plurals name="journal_preserved_observations_count"><item quantity="other">保存済みの詳細な観測%d件</item></plurals>
     <string name="journal_import_no_changes">旅の記録には、同じデータまたはより新しいデータがすでに含まれています。更新は不要でした。</string>
     <string name="journal_import_mismatch_title">別の旅の記録の可能性があります</string>
-    <string name="journal_import_mismatch_message">このファイルには、保存済みの旅の記録と共通する詳細な位置情報が十分にありません。変更はありません。別の人のTimelineを同じ旅の記録に追加することはできません。</string>
+    <string name="journal_import_mismatch_message">このファイルには、保存済みの旅の記録と共通する詳細な位置情報が十分にありません。変更はありません。別の人のタイムラインを同じ旅の記録に追加することはできません。</string>
     <string name="travel_journal">旅の記録</string>
     <string name="journal_setup_title">旅の記録を設定</string>
     <string name="journal_setup_summary">この端末で利用できる最良の移動履歴を保存します。</string>
@@ -564,14 +564,14 @@
     <string name="onboarding_v11_journal_title">移動の記録を旅の記録に</string>
     <string name="onboarding_v11_journal_body">Google マップのタイムラインは、訪れた場所をそっと記録しています。\n\nTimeline Visualizer は、その履歴をエクスポートしたファイルから、自分だけの旅の記録とアニメーション旅行動画を作ります。</string>
     <string name="onboarding_v11_private_title">あなたの移動記録は、あなたの端末に</string>
-    <string name="onboarding_v11_private_body">Timeline Visualizer は位置情報を追跡しません。選択した Timeline のエクスポートだけを読み取ります。Timeline ファイルと旅の記録はこの端末に残ります。</string>
+    <string name="onboarding_v11_private_body">Timeline Visualizer は位置情報を追跡しません。選択したタイムラインのエクスポートだけを読み取ります。タイムラインのファイルと旅の記録はこの端末に残ります。</string>
     <string name="onboarding_v11_private_note">Google マップのタイムラインが有効でない場合は、今すぐ有効にして今後の移動を記録しましょう。</string>
     <string name="onboarding_v11_start_title">旅の記録を始める</string>
     <string name="onboarding_v11_start_body">Google マップから最新の Timeline.json をエクスポートし、ここで選択してください。履歴が大きい場合、初回は少し時間がかかることがあります。次回以降の読み込みでは、同じ記録に新しい詳細が追加されます。</string>
     <string name="settings_why_import_title">なぜ新しいファイルを読み込むのですか</string>
-    <string name="settings_why_import_detail">最近の Timeline のエクスポートには、後のエクスポートには現れない詳細なルートが含まれていることがあります。数週間ごとに新しいファイルを読み込むと、新たな詳細区間をこの端末の旅の記録に残せます。</string>
+    <string name="settings_why_import_detail">最近のタイムラインのエクスポートには、後のエクスポートには現れない詳細なルートが含まれていることがあります。数週間ごとに新しいファイルを読み込むと、新たな詳細区間をこの端末の旅の記録に残せます。</string>
     <string name="simplify_route_detail">ルートの詳細を簡略化</string>
-    <string name="simplify_route_detail_summary">長期間の動画では、要約された Timeline アクティビティを使って見やすいルートを作成します。オフの場合は、利用可能な最も詳細なルートを使います。</string>
+    <string name="simplify_route_detail_summary">長期間の動画では、要約されたタイムラインのアクティビティを使って見やすいルートを作成します。オフの場合は、利用可能な最も詳細なルートを使います。</string>
     <string name="keep_past_routes_visible">過去のルートを表示したままにする</string>
     <string name="keep_past_routes_visible_summary">移動済みのルートを薄い背景の軌跡として表示します。オフの場合、古い移動は消えていきます。</string>
 </resources>

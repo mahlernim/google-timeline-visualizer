@@ -21,7 +21,7 @@
     <string name="share">공유</string>
     <string name="share_travel_video">여행 동영상 공유</string>
     <string name="import_failed">파일을 불러오지 못했습니다</string>
-    <string name="import_failed_detail">이 파일을 읽을 수 없습니다. 지원되는 Timeline JSON 내보내기 파일을 선택해 주세요.</string>
+    <string name="import_failed_detail">이 파일을 읽을 수 없습니다. 지원되는 타임라인 JSON 내보내기 파일을 선택해 주세요.</string>
     <string name="preview_preparation_failed">동영상 미리보기를 준비하지 못했습니다.</string>
     <string name="timeline_error_malformed">올바르거나 완전한 JSON 파일이 아닙니다.</string>
     <string name="timeline_error_legacy">이 파일은 이전 Google 테이크아웃 형식입니다. 휴대전화에서 타임라인 데이터를 내보내 주세요.</string>
@@ -412,7 +412,7 @@
     <string name="dismiss_suggestion">숨기기</string>
     <string name="find_trips">여행 찾기</string>
     <string name="geonames_attribution">오프라인 목적지 이름은 CC BY 4.0에 따라 GeoNames 데이터를 사용합니다.</string>
-    <string name="import_or_update">최신 Timeline 가져오기</string>
+    <string name="import_or_update">최신 타임라인 가져오기</string>
     <string name="library">라이브러리</string>
     <string name="library_empty">아직 저장된 여행이나 요약이 없습니다. ‘만들기’에서 시작하세요.</string>
     <string name="library_summary">저장한 여행, 요약, 동영상 버전입니다.</string>
@@ -534,17 +534,17 @@
     <string name="import_updated_timeline">업데이트한 타임라인 가져오기</string>
     <string name="get_updated_timeline_file">업데이트한 타임라인 파일 받기</string>
     <string name="journal_route_load_failed">여행 기록은 안전하지만 경로를 준비하지 못했습니다. 다시 시도해 주세요.</string>
-    <string name="save_as_preset">사전 설정으로 저장</string>
+    <string name="save_as_preset">프리셋으로 저장</string>
     <string name="preparing_your_journeys">이동 경로 준비 중…</string>
     <string name="preparing_detailed_routes">상세 경로 준비 중</string>
     <string name="combining_journey_history">이동 기록 통합 중</string>
     <string name="saving_for_faster_starts">다음 실행을 빠르게 하도록 저장 중</string>
     <string name="journal_route_action_waiting">이동 경로를 준비하고 있습니다. 준비되면 열립니다.</string>
-    <string name="journal_freshness_inline">상세 경로를 마지막으로 업데이트한 지 %1$d일이 지났습니다. 최신 Timeline 파일을 가져오세요.</string>
+    <string name="journal_freshness_inline">상세 경로를 마지막으로 업데이트한 지 %1$d일이 지났습니다. 최신 타임라인 파일을 가져오세요.</string>
     <plurals name="journal_import_added"><item quantity="other">여행 기록에 상세 위치 %d개가 추가되었습니다.</item></plurals>
-    <string name="journal_import_added_timeline">사용 가능한 Timeline 기록이 여행 기록에 추가되었습니다.</string>
-    <string name="journal_import_duplicate">이 Timeline 파일은 이미 여행 기록에 있습니다. 변경된 내용이 없습니다.</string>
-    <string name="journal_import_failed_preserved">이 Timeline 파일을 추가할 수 없습니다. 저장된 여행 기록은 변경되지 않았습니다.</string>
+    <string name="journal_import_added_timeline">사용 가능한 타임라인 기록이 여행 기록에 추가되었습니다.</string>
+    <string name="journal_import_duplicate">이 타임라인 파일은 이미 여행 기록에 있습니다. 변경된 내용이 없습니다.</string>
+    <string name="journal_import_failed_preserved">이 타임라인 파일을 추가할 수 없습니다. 저장된 여행 기록은 변경되지 않았습니다.</string>
     <string name="journal_import_checking">여행 기록 확인 중</string>
     <string name="journal_import_saving">새로운 상세 정보 저장 중</string>
     <string name="journal_import_updating">이동 경로 업데이트 중</string>
@@ -555,13 +555,13 @@
     <string name="journal_import_creating">여행 기록 만드는 중…</string>
     <string name="journal_import_preparing">여행 기록 준비 중…</string>
     <string name="journal_import_created">여행 기록을 만들었습니다. %1$s 및 %2$s을(를) 사용할 수 있습니다.</string>
-    <string name="journal_import_created_timeline">사용 가능한 Timeline 기록으로 여행 기록을 만들었습니다.</string>
+    <string name="journal_import_created_timeline">사용 가능한 타임라인 기록으로 여행 기록을 만들었습니다.</string>
     <plurals name="journal_days_count"><item quantity="other">%d일</item></plurals>
     <plurals name="journal_detailed_locations_count"><item quantity="other">상세 위치 %d개</item></plurals>
     <plurals name="journal_preserved_observations_count"><item quantity="other">보존된 상세 관측 %d개</item></plurals>
     <string name="journal_import_no_changes">여행 기록에 같거나 더 최신인 데이터가 이미 있습니다. 업데이트할 내용이 없습니다.</string>
     <string name="journal_import_mismatch_title">다른 여행 기록일 수 있습니다</string>
-    <string name="journal_import_mismatch_message">이 파일은 저장된 여행 기록과 겹치는 상세 위치가 충분하지 않습니다. 변경된 내용이 없습니다. 다른 사람의 Timeline은 같은 여행 기록에 추가할 수 없습니다.</string>
+    <string name="journal_import_mismatch_message">이 파일은 저장된 여행 기록과 겹치는 상세 위치가 충분하지 않습니다. 변경된 내용이 없습니다. 다른 사람의 타임라인은 같은 여행 기록에 추가할 수 없습니다.</string>
     <string name="travel_journal">여행 기록</string>
     <string name="journal_setup_title">여행 기록 설정</string>
     <string name="journal_setup_summary">이 기기에 사용 가능한 최적의 이동 기록을 보관합니다.</string>
@@ -578,14 +578,14 @@
     <string name="onboarding_v11_journal_title">이동 기록을 여행 기록으로</string>
     <string name="onboarding_v11_journal_body">Google 지도 타임라인은 방문한 곳을 조용히 기억합니다.\n\nTimeline Visualizer는 이 기록을 내보낸 파일로 나만의 여행 기록과 애니메이션 여행 동영상을 만듭니다.</string>
     <string name="onboarding_v11_private_title">내 이동 기록, 내 기기에</string>
-    <string name="onboarding_v11_private_body">Timeline Visualizer는 위치를 추적하지 않습니다. 사용자가 선택한 Timeline 내보내기 파일만 읽습니다. Timeline 파일과 여행 기록은 이 기기에 남습니다.</string>
+    <string name="onboarding_v11_private_body">Timeline Visualizer는 위치를 추적하지 않습니다. 사용자가 선택한 타임라인 내보내기 파일만 읽습니다. 타임라인 파일과 여행 기록은 이 기기에 남습니다.</string>
     <string name="onboarding_v11_private_note">Google 지도 타임라인이 켜져 있지 않다면 지금 켜서 앞으로의 이동을 기록하세요.</string>
     <string name="onboarding_v11_start_title">여행 기록 시작하기</string>
     <string name="onboarding_v11_start_body">Google 지도에서 최신 Timeline.json 파일을 내보낸 뒤 여기에서 선택하세요. 기록이 많으면 처음에는 시간이 조금 더 걸릴 수 있습니다. 이후 가져오기는 같은 여행 기록에 새로운 정보를 더합니다.</string>
     <string name="settings_why_import_title">왜 최신 파일을 가져와야 하나요?</string>
-    <string name="settings_why_import_detail">최근에 내보낸 Timeline에는 나중에 내보낸 파일에는 없을 수 있는 상세 경로가 담겨 있습니다. 몇 주에 한 번씩 최신 파일을 가져오면 새로 생긴 상세 구간을 이 기기의 여행 기록에 계속 보관할 수 있습니다.</string>
+    <string name="settings_why_import_detail">최근에 내보낸 타임라인에는 나중에 내보낸 파일에는 없을 수 있는 상세 경로가 담겨 있습니다. 몇 주에 한 번씩 최신 파일을 가져오면 새로 생긴 상세 구간을 이 기기의 여행 기록에 계속 보관할 수 있습니다.</string>
     <string name="simplify_route_detail">경로 세부 정보 단순화</string>
-    <string name="simplify_route_detail_summary">긴 기간의 동영상에서 요약된 Timeline 활동을 사용해 경로를 더 간결하게 표시합니다. 끄면 사용 가능한 가장 자세한 경로를 사용합니다.</string>
+    <string name="simplify_route_detail_summary">긴 기간의 동영상에서 요약된 타임라인 활동을 사용해 경로를 더 간결하게 표시합니다. 끄면 사용 가능한 가장 자세한 경로를 사용합니다.</string>
     <string name="keep_past_routes_visible">지난 경로 계속 표시</string>
     <string name="keep_past_routes_visible_summary">지나온 경로를 흐린 배경 선으로 표시합니다. 끄면 오래된 이동 경로가 사라집니다.</string>
 </resources>
