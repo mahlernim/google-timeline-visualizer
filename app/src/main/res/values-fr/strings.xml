@@ -5,7 +5,7 @@
     <string name="how_to_export">Récupérer le fichier Timeline</string>
     <string name="restore_timeline_help">Restaurer Google Maps Timeline</string>
     <string name="export_help_title">Exportez votre Timeline.json</string>
-    <string name="export_help_message">Sur Android, ouvrez Paramètres du téléphone → Localisation → Services de localisation → Timeline → Exporter les données Timeline. Enregistrez le fichier, généralement nommé Timeline.json, dans un endroit facile à trouver. Revenez ici et choisissez le fichier.\n\nLes étiquettes exactes peuvent varier selon le téléphone. Le bouton ci-dessous ouvre les paramètres de localisation ; Android ne fournit pas de lien standard directement vers la page Timeline.\n\nOSur iPhone, utilisez Google Maps → photo de profil → Paramètres → Contenu personnel → Exporter les données Timeline.</string>
+    <string name="export_help_message">Sur Android, ouvrez Paramètres du téléphone → Localisation → Services de localisation → Timeline → Exporter les données Timeline. Enregistrez le fichier, généralement nommé Timeline.json, dans un endroit facile à trouver. Revenez ici et choisissez le fichier.\n\nLes étiquettes exactes peuvent varier selon le téléphone. Le bouton ci-dessous ouvre les paramètres de localisation ; Android ne fournit pas de lien standard directement vers la page Timeline.\n\nSur iPhone, utilisez Google Maps → photo de profil → Paramètres → Contenu personnel → Exporter les données Timeline.</string>
     <string name="open_location_settings">Ouvrir les paramètres de localisation</string>
     <string name="no_timeline">Choisissez votre fichier Timeline pour commencer.</string>
     <string name="preview">Aperçu</string>
@@ -21,14 +21,14 @@
     <string name="owner_name">Nom dans le titre automatique (facultatif)</string>
     <string name="share">Partager</string>
     <string name="share_travel_video">Partager une vidéo de voyage</string>
-    <string name="import_failed">Impossible de charger Timeline</string>
+    <string name="import_failed">Impossible de charger la Timeline</string>
     <string name="import_failed_detail">Ce fichier n\'a pas pu être lu. Sélectionnez une exportation JSON Timeline prise en charge.</string>
     <string name="preview_preparation_failed">L\'aperçu de la vidéo n\'a pas pu être préparé.</string>
     <string name="timeline_error_malformed">Ce fichier ne contient pas de JSON valide ou complet.</string>
     <string name="timeline_error_legacy">Il s\'agit d\'un ancien format Google Takeout. Exportez les données Timeline depuis votre téléphone.</string>
     <string name="timeline_error_raw_only">Ce fichier ne contient aucune visite, aucun trajet ni aucune position brute utilisable.</string>
-    <string name="timeline_error_no_locations">Cette exportation Timeline ne contient aucune donnée de localisation. Timeline n’était peut-être pas activé, donc Google n’avait aucune donnée à exporter.</string>
-    <string name="remembered_timeline_unavailable">Le Timeline précédemment utilisé n’est plus disponible.</string>
+    <string name="timeline_error_no_locations">Cette exportation Timeline ne contient aucune donnée de localisation. La Timeline n’était peut-être pas activée, donc Google n’avait aucune donnée à exporter.</string>
+    <string name="remembered_timeline_unavailable">La Timeline précédemment utilisée n’est plus disponible.</string>
     <string name="choose_timeline_again">Choisissez à nouveau le fichier Timeline.json.</string>
     <string name="video_export_failed">Impossible de créer une vidéo</string>
     <string name="video_export_encoder_temporary">L’encodeur vidéo s’est arrêté de façon inattendue. Réessayez.</string>
@@ -41,7 +41,7 @@
     <string name="location_settings_unavailable">Les paramètres de localisation ne sont pas disponibles sur ce téléphone</string>
     <string name="traveler">Voyageur</string>
     <string name="tagline">Transformez votre fichier Timeline en vidéo de voyage animée.</string>
-    <string name="default_title">Mon Timeline</string>
+    <string name="default_title">Ma Timeline</string>
     <string name="default_title_template">{year} {name} Timeline</string>
     <plurals name="duration_seconds">
         <item quantity="one">%1$d seconde</item>
@@ -49,7 +49,7 @@
         <item quantity="other">%1$d secondes</item>
     </plurals>
     <string name="custom_duration">Personnalisée…</string>
-    <string name="custom_duration_title">Durée personnalisée du trajet</string>
+    <string name="custom_duration_title">Durée personnalisée du parcours</string>
     <string name="custom_duration_hint">Secondes</string>
     <string name="custom_duration_range">Saisissez un nombre entier compris entre 10 et 300.</string>
     <string name="long_duration_warning">Les longues vidéos nécessitent plus de temps de traitement et d’espace de stockage.</string>
@@ -58,7 +58,7 @@
     <string name="opening_timeline">Ouverture du fichier</string>
     <string name="opening_file">Ouverture du fichier</string>
     <string name="preparing_trips">Préparation du voyage</string>
-    <string name="loading_timeline">Chargement de Timeline</string>
+    <string name="loading_timeline">Chargement de la Timeline</string>
     <string name="video_saved">Vidéo enregistrée</string>
     <string name="video_ready">Vidéo prête</string>
     <string name="watch_video">Regarder la vidéo</string>
@@ -73,9 +73,9 @@
     <string name="creating_video_notification_title">Création de votre vidéo timeline</string>
     <string name="starting_video_creation">Démarrage de la création vidéo…</string>
     <string name="video_creation_notification_channel">Création vidéo</string>
-    <string name="video_creation_notification_channel_description">Progression des vidéos de la chronologie</string>
+    <string name="video_creation_notification_channel_description">Progression des vidéos Timeline</string>
     <string name="video_completion_notification_channel">Résultats vidéo</string>
-    <string name="video_completion_notification_channel_description">Alertes lorsque les vidéos de la chronologie sont prêtes ou échouent</string>
+    <string name="video_completion_notification_channel_description">Alertes lorsque les vidéos Timeline sont prêtes ou échouent</string>
     <string name="no_video_player">Aucune application n\'est disponible pour lire cette vidéo</string>
     <string name="period_same_year">%1$s–%2$s %3$d</string>
     <string name="period_cross_year">%1$s %2$d–%3$s %4$d</string>
@@ -94,10 +94,10 @@
         <item quantity="other">%1$d minutes</item>
     </plurals>
     <string name="timeline_preview">Aperçu cartographique animé de la période sélectionnée</string>
-    <string name="playback_position">Position de lecture Timeline</string>
-    <string name="privacy_summary">Votre fichier Timeline n’est jamais téléchargé. CARTO reçoit des demandes pour les zones cartographiques affichées, qui peuvent révéler des lieux. Aucune analyse ou compte n\'est utilisé.</string>
+    <string name="playback_position">Position de lecture de la Timeline</string>
+    <string name="privacy_summary">Votre fichier Timeline n’est jamais envoyé. CARTO reçoit des demandes pour les zones cartographiques affichées, qui peuvent révéler des lieux. Aucune analyse ni aucun compte n’est utilisé.</string>
     <string name="map_privacy_title">Avant de charger votre Timeline</string>
-    <string name="map_privacy_message">Votre fichier Timeline n\'est jamais téléchargé.\n\nPour dessiner la carte, Timeline Visualizer envoie à CARTO les coordonnées des tuiles des zones de votre Timeline, ainsi que des informations réseau normales telles que votre adresse IP et votre agent utilisateur. Cela peut révéler des emplacements de votre Timeline à CARTO. Le voyage, les titres et les vidéos ne sont pas téléchargés sur CARTO ou sur le développeur.</string>
+    <string name="map_privacy_message">Votre fichier Timeline n’est jamais envoyé.\n\nPour dessiner la carte, Timeline Visualizer envoie à CARTO les coordonnées des tuiles des zones de votre Timeline, ainsi que des informations réseau normales telles que votre adresse IP et votre agent utilisateur. Cela peut révéler à CARTO des lieux de votre Timeline. Le voyage, les titres et les vidéos ne sont envoyés ni à CARTO ni au développeur.</string>
     <string name="continue_action">Continuer</string>
     <string name="privacy_policy">Politique de confidentialité</string>
     <string name="creations">Vidéos</string>
@@ -179,7 +179,7 @@
     <string name="save_as_failed">Impossible d\'enregistrer une copie de la vidéo</string>
     <string name="video_copy_saved">Copie vidéo enregistrée</string>
     <string name="advanced_settings">Paramètres avancés</string>
-    <string name="advanced_settings_summary">Choisissez la vue de la carte et le format d\'exportation. Le rythme du trajet s\'adapte automatiquement.</string>
+    <string name="advanced_settings_summary">Choisissez la vue de la carte et le format d\'exportation. Le rythme du parcours s\'adapte automatiquement.</string>
     <string name="map_view">Vue de la carte</string>
     <string name="map_view_fixed">Échelle fixe</string>
     <string name="map_view_wide">Large</string>
@@ -190,11 +190,11 @@
     <string name="camera_fixed">Fixe</string><string name="camera_steady">Équilibré</string><string name="camera_dynamic">Actif</string><string name="camera_close_up">Rapproché</string>
     <string name="camera_fixed_summary">Suit l\'itinéraire sans changer d\'échelle.</string>
     <string name="camera_steady_summary">Utilise des changements de zoom doux pour une vue stable.</string>
-    <string name="camera_dynamic_summary">Ajuste le zoom plus activement pour chaque partie du trajet.</string>
+    <string name="camera_dynamic_summary">Ajuste le zoom plus activement pour chaque partie du voyage.</string>
     <string name="camera_close_up_summary">Reste près de votre position chaque fois que possible.</string>
-    <string name="episode_framing">Cadrage du trajet local</string>
-    <string name="episode_framing_summary">Cadre uniquement le trajet local actuel entre les longs transferts. La caméra commence à se rapprocher avant l\'arrivée et s\'élargit de nouveau avant le prochain départ.</string>
-    <string name="trip_detection">Détection des longs trajets</string>
+    <string name="episode_framing">Cadrage du voyage local</string>
+    <string name="episode_framing_summary">Cadre uniquement le voyage local en cours entre les longs transferts. La caméra commence à se rapprocher avant l’arrivée et s’élargit de nouveau avant le prochain départ.</string>
+    <string name="trip_detection">Détection des longs voyages</string>
     <string name="trip_detection_conservative">Prudente</string>
     <string name="trip_detection_balanced">Équilibrée</string>
     <string name="trip_detection_sensitive">Sensible</string>
@@ -218,7 +218,7 @@
     <string name="hop_more_sensitive">Plus sensible</string>
     <string name="hop_automatic">Automatique</string>
     <string name="hop_less_sensitive">Moins sensible</string>
-    <string name="long_trip_compression">Rythme des longs trajets</string><string name="compression_off">Naturel</string><string name="compression_stronger">Le plus rapide</string><string name="compression_balanced">Équilibré</string><string name="compression_strong">Plus rapide</string>
+    <string name="long_trip_compression">Rythme des longs voyages</string><string name="compression_off">Naturel</string><string name="compression_stronger">Le plus rapide</string><string name="compression_balanced">Équilibré</string><string name="compression_strong">Plus rapide</string>
     <string name="video_format">Format vidéo</string>
     <string name="format_square_480">Carré · 480p</string>
     <string name="format_square_720">Carré · 720p</string>
@@ -236,7 +236,7 @@
     <string name="raw_accuracy_invalid">Saisissez zéro ou un nombre positif, ou laissez ce champ vide.</string>
     <string name="raw_location_summary">%1$s positions · %2$s %3$s estimés · %4$s exclues</string>
     <string name="raw_only_title">Seules des données de localisation brutes ont été trouvées</string>
-    <string name="raw_only_message">Ce fichier contient des données de localisation brutes, mais aucune visite ni aucun trajet traité. Vous pouvez continuer, mais l’itinéraire peut être imprécis ou incomplet, et la distance ne sera qu’une estimation.\n\nPour de meilleurs résultats, ouvrez Google Maps, vérifiez ou restaurez votre chronologie, puis assurez-vous que vos visites et trajets apparaissent. Exportez ensuite de nouveau votre chronologie et chargez le nouveau fichier dans cette application.</string>
+    <string name="raw_only_message">Ce fichier contient des données de localisation brutes, mais aucune visite ni aucun trajet traité. Vous pouvez continuer, mais l’itinéraire peut être imprécis ou incomplet, et la distance ne sera qu’une estimation.\n\nPour de meilleurs résultats, ouvrez Google Maps, vérifiez ou restaurez votre Timeline, puis assurez-vous que vos visites et trajets apparaissent. Exportez ensuite de nouveau votre Timeline et chargez le nouveau fichier dans cette application.</string>
     <string name="open_google_maps">Ouvrir Google Maps</string>
     <string name="continue_with_raw_data">Continuer avec les données brutes</string>
     <string name="choose_exact_dates">Sélectionnez une date de début et de fin</string>
@@ -317,7 +317,7 @@
     <string name="advanced_video_settings_summary">Ces choix s’appliquent uniquement au brouillon actuel.</string>
     <string name="apply_to_video">Appliquer à cette vidéo</string>
     <string name="timeline_file_name_size">%1$s · %2$s</string>
-    <string name="backup_restore_timeline">Sauvegarder et restaurer Timeline</string>
+    <string name="backup_restore_timeline">Sauvegarder et restaurer la Timeline</string>
     <string name="raw_data_retention_explanation">Seules les données les plus récentes, généralement jusqu’à 30 jours, restent sous forme brute avant que l’activité plus ancienne soit représentée au format Timeline.</string>
     <string name="raw_data_available_range">Données brutes disponibles du %1$s au %2$s</string>
     <string name="raw_data_available_one_day">Données brutes disponibles le %1$s</string>
@@ -346,13 +346,13 @@
     <string name="continue_label">Continuer</string>
     <string name="create">Créer</string>
     <string name="create_recap">Créer un récapitulatif</string>
-    <string name="create_step_discovery">Rechercher des voyages dans votre chronologie</string>
+    <string name="create_step_discovery">Rechercher des voyages dans votre Timeline</string>
     <string name="create_step_preview">Étape 3 sur 3 · Prévisualiser et créer</string>
-    <string name="create_step_project">Étape 1 sur 3 · Voyage ou récapitulation</string>
+    <string name="create_step_project">Étape 1 sur 3 · Voyage ou récapitulatif</string>
     <string name="create_step_style">Étape 2 sur 3 · Style vidéo</string>
     <string name="create_step_trip_source">Choisissez un voyage</string>
     <string name="create_step_type">Choisissez une vidéo pour votre carnet de voyage</string>
-    <string name="create_steps">1 Voyage ou récapitulation 2 Style vidéo 3 Prévisualiser et créer</string>
+    <string name="create_steps">1  Voyage ou récapitulatif     2  Style vidéo     3  Prévisualiser et créer</string>
     <string name="create_trip_manually">Créer un voyage manuellement</string>
     <string name="create_video_for_trip">Créer une vidéo</string>
     <string name="custom_range">Période personnalisée</string>
@@ -363,7 +363,7 @@
     <string name="customize_video">Personnaliser la vidéo</string>
     <string name="customize_video_summary">Ces modifications s\'appliquent au brouillon vidéo actuel.</string>
     <string name="delete_all_library_content">Supprimer tout le contenu de la bibliothèque</string>
-    <string name="delete_all_library_message">Cela supprimera définitivement %1$s et %2$s. Les données de la chronologie, les préréglages et les paramètres resteront.</string>
+    <string name="delete_all_library_message">Cela supprimera définitivement %1$s et %2$s. Les données Timeline, les préréglages et les paramètres seront conservés.</string>
     <string name="delete_all_library_title">Supprimer toute la bibliothèque ?</string>
     <string name="delete_project">Supprimer</string>
     <string name="delete_project_message">Cette action supprimera définitivement ce projet ainsi que ses %1$d fichiers vidéo, miniatures et images de synthèse. Les données et paramètres Timeline seront conservés.</string>
@@ -395,7 +395,7 @@
     <string name="preset_modified">%1$s · Modifié</string>
     <string name="preset_modified_summary">Utiliser une fois ou enregistrer en tant que nouveau préréglage</string>
     <string name="previous_month_recap">Récapitulatif du mois précédent</string>
-    <string name="project_actions">Options de voyage ou de récapitulation</string>
+    <string name="project_actions">Options du voyage ou du récapitulatif</string>
     <string name="project_changes_saved">Modifications enregistrées</string>
     <string name="project_delete_partial">%1$d vidéos supprimées. %2$d n\'ont pas pu être supprimées, le projet a donc été conservé.</string>
     <string name="project_deleted">Projet et %1$d vidéos supprimés</string>
@@ -426,8 +426,8 @@
     <string name="timeline_not_imported">Votre carnet de voyage est prêt à s\'enrichir. Importez Timeline.json pour ajouter l\'historique disponible dans le fichier.</string>
     <string name="timeline_range_unavailable">Pas disponible</string>
     <string name="timeline_raw_points_available">%1$s à %2$s</string>
-    <string name="timeline_setup_summary">Importez votre fichier principal de chronologie une fois. Vous pourrez le mettre à jour ultérieurement dans Paramètres.</string>
-    <string name="timeline_setup_title">Configurer la chronologie</string>
+    <string name="timeline_setup_summary">Importez une fois votre fichier Timeline principal. Vous pourrez le mettre à jour ultérieurement dans Paramètres.</string>
+    <string name="timeline_setup_title">Configurer la Timeline</string>
     <string name="timeline_source">Carnet de voyage</string>
     <string name="timeline_source_empty">Importez Timeline.json pour enrichir votre carnet de voyage.</string>
     <string name="timeline_source_ready">Votre carnet de voyage est enregistré sur cet appareil. Importez régulièrement Timeline.json pour enrichir ses itinéraires détaillés.</string>
@@ -462,7 +462,7 @@
     <string name="journal_status_due">Enrichissez votre carnet avec les derniers jours de Timeline.</string>
     <string name="journal_status_at_risk">Certains détails d’itinéraire non conservés pourraient bientôt disparaître des prochaines exportations.</string>
     <string name="journal_status_overdue">Mettez à jour votre carnet dès que possible. L’application ne peut pas récupérer les détails absents des exportations précédentes.</string>
-    <string name="journal_status_detail">Itinéraires détaillés\n%1$s · %2$s · %3$s points\n\nHistorique des trajets\n%4$s · %5$s · %6$s entrées dans la dernière chronologie\n\nDernière mise à jour %7$s</string>
+    <string name="journal_status_detail">Itinéraires détaillés\n%1$s · %2$s · %3$s points\n\nHistorique des trajets\n%4$s · %5$s · %6$s entrées dans la dernière Timeline\n\nDernière mise à jour %7$s</string>
     <plurals name="journal_coverage_days">
         <item quantity="one">%d jour</item>
         <item quantity="other">%d jours</item>
@@ -497,9 +497,9 @@
     <string name="journal_home_overdue_detail">Cela fait %1$d jours que votre carnet n’a pas enregistré de nouveaux détails d’itinéraire. Mettez-le à jour dès que possible. Les détails antérieurs manquants ne pourront peut-être pas être récupérés.</string>
     <string name="onboarding_skip_to_choices">Passer aux options</string>
     <string name="onboarding_journal_title">Créez votre carnet de voyage privé</string>
-    <string name="onboarding_journal_body">Timeline de Google Maps peut mémoriser les lieux que vous visitez et les itinéraires que vous parcourez.\n\nTimeline Visualizer transforme une copie exportée de cet historique en carnet de voyage privé et en vidéos de voyage animées.</string>
+    <string name="onboarding_journal_body">La Timeline de Google Maps peut mémoriser les lieux que vous visitez et les itinéraires que vous parcourez.\n\nTimeline Visualizer transforme une copie exportée de cet historique en carnet de voyage privé et en vidéos de voyage animées.</string>
     <string name="onboarding_source_title">Google Maps enregistre le voyage</string>
-    <string name="onboarding_source_body">Timeline Visualizer ne suit pas votre position. Vos voyages doivent d’abord être enregistrés par Timeline de Google Maps.\n\nTimeline est désactivé par défaut. Vous devez donc l’activer avant de pouvoir commencer à accumuler de nouveaux voyages.</string>
+    <string name="onboarding_source_body">Timeline Visualizer ne suit pas votre position. Vos voyages doivent d’abord être enregistrés par la Timeline de Google Maps.\n\nLa Timeline est désactivée par défaut. Vous devez donc l’activer avant de pouvoir accumuler de nouveaux voyages.</string>
     <string name="onboarding_source_note">Timeline Visualizer lit uniquement le fichier que vous choisissez. Votre exportation Timeline n’est pas envoyée au développeur.</string>
     <string name="onboarding_layers_title">Un voyage, deux niveaux de détail</string>
     <string name="onboarding_layers_body">Les détails d’itinéraire montrent point par point le trajet que vous avez parcouru. L’historique de voyage mémorise plus largement les visites, les activités et les voyages.\n\nVotre carnet utilise toujours les détails d’itinéraire lorsqu’ils sont disponibles et l’historique de voyage comme solution de secours.</string>
@@ -508,19 +508,19 @@
     <string name="onboarding_preserve_body">Les exportations Timeline récentes contiennent souvent des itinéraires plus détaillés. Ces détails peuvent ne plus figurer dans une exportation ultérieure.\n\nImportez régulièrement une nouvelle exportation. Votre carnet conservera chaque nouvelle section détaillée sur cet appareil.</string>
     <string name="onboarding_preserve_note">Google ne publie aucune durée de conservation garantie pour les détails d’itinéraire. Une mise à jour toutes les 2 à 3 semaines est une recommandation prudente fondée sur les exportations observées.</string>
     <string name="onboarding_start_title">Commencez votre carnet de voyage</string>
-    <string name="onboarding_start_body">Vous avez déjà une exportation ? Choisissez Timeline.json, location-history.json ou un autre fichier JSON Timeline de Google Maps compatible.</string>
-    <string name="onboarding_start_note">Si Timeline n’est pas encore activé, configurez-le d’abord. Google Maps ne peut enregistrer de nouveaux voyages qu’à partir de ce moment.</string>
+    <string name="onboarding_start_body">Vous avez déjà une exportation ? Choisissez Timeline.json, location-history.json ou un autre fichier JSON compatible de la Timeline de Google Maps.</string>
+    <string name="onboarding_start_note">Si la Timeline n’est pas encore activée, configurez-la d’abord. Google Maps ne peut enregistrer de nouveaux voyages qu’à partir de ce moment.</string>
     <string name="onboarding_choose_export">Choisir une exportation Timeline</string>
-    <string name="onboarding_setup_maps">Configurer Timeline de Google Maps</string>
+    <string name="onboarding_setup_maps">Configurer la Timeline de Google Maps</string>
     <string name="onboarding_page_position">%1$d sur %2$d</string>
     <string name="onboarding_page_announcement">Page %1$d sur %2$d. %3$s</string>
     <string name="journal_how_it_works">Fonctionnement du carnet de voyage</string>
     <string name="journal_setup_card_title">Commencez votre carnet de voyage</string>
-    <string name="journal_setup_card_detail">Importez une exportation Timeline de Google Maps pour conserver votre historique de voyage et commencer à créer des itinéraires détaillés.</string>
+    <string name="journal_setup_card_detail">Importez une exportation de la Timeline de Google Maps pour conserver votre historique de voyage et commencer à créer des itinéraires détaillés.</string>
     <string name="journal_setup_card_action">Configurer le carnet</string>
     <string name="journal_update_added_detail">%1$s ont été ajoutés.\n\n%2$s</string>
-    <string name="import_timeline_to_journal">Importer la chronologie</string>
-    <string name="import_updated_timeline">Importer la chronologie mise à jour</string>
+    <string name="import_timeline_to_journal">Importer la Timeline</string>
+    <string name="import_updated_timeline">Importer la Timeline mise à jour</string>
     <string name="get_updated_timeline_file">Obtenir le fichier Timeline mis à jour</string>
     <string name="journal_route_load_failed">Votre carnet est en sécurité, mais ses itinéraires n’ont pas pu être préparés. Veuillez réessayer.</string>
     <string name="save_as_preset">Enregistrer comme préréglage</string>
@@ -564,11 +564,11 @@
     <string name="onboarding_file_disclosure_detail">L\'export que vous choisissez est lu localement. Les informations de trajet utiles qu\'il contient sont ajoutées au carnet de voyage stocké sur votre appareil, et de futurs exports pourront l\'enrichir.</string>
     <string name="onboarding_file_name_hint">Généralement nommé Timeline.json ou location-history.json.</string>
     <string name="onboarding_skip">Pas maintenant</string>
-    <string name="onboarding_v11_journal_title">Transformez vos trajets en carnet de voyage</string>
-    <string name="onboarding_v11_journal_body">Timeline de Google Maps retient discrètement les endroits où vous êtes allé.\n\nTimeline Visualizer transforme une copie exportée de cet historique en carnet de voyage privé et en vidéos de voyage animées.</string>
-    <string name="onboarding_v11_private_title">Vos trajets, sur votre appareil</string>
+    <string name="onboarding_v11_journal_title">Transformez vos voyages en carnet de voyage</string>
+    <string name="onboarding_v11_journal_body">La Timeline de Google Maps retient discrètement les endroits où vous êtes allé.\n\nTimeline Visualizer transforme une copie exportée de cet historique en carnet de voyage privé et en vidéos de voyage animées.</string>
+    <string name="onboarding_v11_private_title">Vos voyages, sur votre appareil</string>
     <string name="onboarding_v11_private_body">Timeline Visualizer ne suit pas votre position. Il lit uniquement l\'export Timeline que vous choisissez. Votre fichier Timeline et votre carnet de voyage restent sur cet appareil.</string>
-    <string name="onboarding_v11_private_note">Si Timeline de Google Maps n\'est pas activé, activez-le maintenant pour enregistrer vos prochains trajets.</string>
+    <string name="onboarding_v11_private_note">Si la Timeline de Google Maps n’est pas activée, activez-la maintenant pour enregistrer vos prochains voyages.</string>
     <string name="onboarding_v11_start_title">Commencez votre carnet de voyage</string>
     <string name="onboarding_v11_start_body">Exportez un fichier Timeline.json à jour depuis Google Maps, puis choisissez-le ici. Avec un historique volumineux, la première fois peut prendre un peu plus de temps. Les imports suivants ajoutent de nouveaux détails au même carnet.</string>
     <string name="settings_why_import_title">Pourquoi importer un fichier à jour ?</string>
