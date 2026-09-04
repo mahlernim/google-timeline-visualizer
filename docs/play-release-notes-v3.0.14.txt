@@ -1,0 +1,27 @@
+<en-US>
+Fixed a crash when entering zero as a custom frame rate. Video export cancellation now responds while waiting for encoder input buffers, including when finishing a video.
+</en-US>
+<ko-KR>
+사용자 지정 프레임 속도에 0을 입력하면 앱이 종료되던 문제를 수정했습니다. 동영상 마무리 단계를 포함해 인코더 입력 버퍼를 기다리는 중에도 생성 취소가 반영됩니다.
+</ko-KR>
+<ja-JP>
+カスタムフレームレートに0を入力するとクラッシュする問題を修正しました。動画の仕上げ処理を含め、エンコーダーの入力バッファ待機中も動画作成のキャンセルが反映されるようになりました。
+</ja-JP>
+<zh-CN>
+修复了自定义帧率输入0时导致应用崩溃的问题。在等待编码器输入缓冲区时，包括视频收尾阶段，取消导出现在也能生效。
+</zh-CN>
+<zh-TW>
+修正了自訂影格率輸入0時導致應用程式當機的問題。在等待編碼器輸入緩衝區時，包括影片收尾階段，取消匯出現在也能生效。
+</zh-TW>
+<es-ES>
+Corregimos un cierre inesperado al introducir cero como tasa de fotogramas personalizada. Ahora se puede cancelar la exportación mientras se esperan búferes de entrada del codificador, incluso al finalizar el vídeo.
+</es-ES>
+<fr-FR>
+Correction d’un plantage lors de la saisie de zéro comme fréquence d’images personnalisée. L’annulation de l’exportation est désormais prise en compte pendant l’attente des tampons d’entrée de l’encodeur, y compris en fin de vidéo.
+</fr-FR>
+<de-DE>
+Ein Absturz bei der Eingabe von null als benutzerdefinierte Bildrate wurde behoben. Der Videoexport lässt sich jetzt auch beim Warten auf Eingabepuffer des Encoders abbrechen, einschließlich beim Fertigstellen des Videos.
+</de-DE>
+<pt-BR>
+Corrigimos uma falha ao inserir zero como taxa de quadros personalizada. Agora é possível cancelar a exportação enquanto o aplicativo aguarda os buffers de entrada do codificador, inclusive ao finalizar o vídeo.
+</pt-BR>
