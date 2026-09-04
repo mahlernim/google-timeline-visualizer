@@ -814,6 +814,27 @@ class MainActivityTest {
     }
 
     @Test
+    fun zeroCustomFrameRateShowsErrorAndKeepsDialogOpen() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.navigationSettings).performClick()
+        val frameRate = activity.findViewById<AutoCompleteTextView>(R.id.frameRateDropdown)
+        frameRate.onItemClickListener?.onItemClick(null, null, 3, 3)
+        val dialog = ShadowDialog.getLatestDialog() as AlertDialog
+        val input = dialog.findViewById<TextView>(R.id.customFrameRateInput)!!
+        input.text = "0"
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick()
+        assertTrue(dialog.isShowing)
+        val layout = input.parent.parent as com.google.android.material.textfield.TextInputLayout
+        assertEquals(
+            activity.getString(R.string.custom_frame_rate_range, 15, 240),
+            layout.error.toString(),
+        )
+        input.text = "30"
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick()
+        assertTrue(!dialog.isShowing)
+    }
+
+    @Test
     fun settingsKeepCommonRatesSimpleAndAcceptFractionalCustomRates() {
         val activity = launchActivity()
         activity.findViewById<View>(R.id.navigationSettings).performClick()

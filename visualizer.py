@@ -51,6 +51,7 @@ MIN_FPS = 15
 MAX_FPS = 120
 MIN_SHORT_EDGE = 480
 MAX_SHORT_EDGE = 2160
+MAX_LONG_EDGE = 3840
 DEFAULT_DURATION = 30
 DEFAULT_TAIL_KM = 500
 THEME_COLOR = '#e90064'
@@ -415,8 +416,8 @@ def meters_to_tile(mx: float, my: float, zoom: int) -> Tuple[int, int]:
     n = 2.0 ** zoom
     norm_x = (mx + MAX_EXTENT) / (2 * MAX_EXTENT)
     norm_y = 1.0 - (my + MAX_EXTENT) / (2 * MAX_EXTENT)
-    xtile = int(norm_x * n)
-    ytile = int(norm_y * n)
+    xtile = math.floor(norm_x * n)
+    ytile = math.floor(norm_y * n)
     return xtile, ytile
 
 
@@ -515,8 +516,11 @@ def get_map_image(
 
     for x in range(x_tiles):
         for y in range(y_tiles):
-            img = fetch_tile_img(xt_min + x, yt_min + y, zoom)
-            stitched.paste(img, (x * tile_w, y * tile_h))
+            world_y = yt_min + y
+            if 0 <= world_y < 2 ** zoom:
+                # Keep world-copy placement, but request the canonical longitude tile.
+                img = fetch_tile_img((xt_min + x) % (2 ** zoom), world_y, zoom)
+                stitched.paste(img, (x * tile_w, y * tile_h))
 
     return stitched, (final_min_x, final_max_x, final_min_y, final_max_y)
 
@@ -1280,10 +1284,27 @@ def bounded_int(name: str, minimum: int, maximum: int):
 
 
 def even_dimension(raw: str) -> int:
-    value = bounded_int("custom dimensions", MIN_SHORT_EDGE, MAX_SHORT_EDGE)(raw)
+    value = bounded_int("custom dimension (long-edge limit)", 2, MAX_LONG_EDGE)(raw)
     if value % 2:
         raise argparse.ArgumentTypeError("custom dimensions must be even for H.264 video")
     return value
+
+
+def resolve_video_dimensions(resolution: str, aspect_ratio: str,
+                             width: Optional[int] = None, height: Optional[int] = None) -> Tuple[int, int]:
+    short_edge = int(resolution)
+    long_edge = (short_edge * 16 // 9) // 2 * 2
+    preset = {'square': (short_edge, short_edge),
+              'portrait': (short_edge, long_edge),
+              'landscape': (long_edge, short_edge)}[aspect_ratio]
+    dimensions = (preset[0] if width is None else width, preset[1] if height is None else height)
+    if any(value % 2 for value in dimensions):
+        raise argparse.ArgumentTypeError("custom dimensions must be even for H.264 video")
+    if not MIN_SHORT_EDGE <= min(dimensions) <= MAX_SHORT_EDGE:
+        raise argparse.ArgumentTypeError("video short edge must be from 480 through 2160 pixels")
+    if max(dimensions) > MAX_LONG_EDGE:
+        raise argparse.ArgumentTypeError("video long edge must not exceed 3840 pixels")
+    return dimensions
 
 
 def frame_plan(total_duration: int, fps: int) -> Tuple[int, int, int]:
@@ -1327,8 +1348,8 @@ def build_argument_parser() -> argparse.ArgumentParser:
                         help="Aspect ratio: square (1:1), portrait (9:16), or landscape (16:9)")
     parser.add_argument('--resolution', '-r', choices=['480', '720', '1080', '1440', '2160'], default='720',
                         help="Short-edge resolution: 480p, 720p, 1080p, 1440p, or 2160p")
-    parser.add_argument('--width', type=even_dimension, default=None, help="Custom even video width (480 to 2160 pixels)")
-    parser.add_argument('--height', type=even_dimension, default=None, help="Custom even video height (480 to 2160 pixels)")
+    parser.add_argument('--width', type=even_dimension, default=None, help="Custom even width (480 to 3840 pixels; resolved short edge 480 to 2160)")
+    parser.add_argument('--height', type=even_dimension, default=None, help="Custom even height (480 to 3840 pixels; resolved short edge 480 to 2160)")
     parser.add_argument('--filter-outliers', '--gps-outlier-filter', dest='filter_outliers', choices=['conservative', 'off'], default='conservative',
                         help="GPS outlier filter: conservative or off")
     parser.add_argument('--route-source', choices=['semantic', 'journal'], default='semantic',
@@ -1366,6 +1387,10 @@ def main(argv: Optional[List[str]] = None) -> int:
 def _main_inner(argv: Optional[List[str]] = None) -> int:
     parser = build_argument_parser()
     args = parser.parse_args(argv)
+    try:
+        width_px, height_px = resolve_video_dimensions(args.resolution, args.aspect_ratio, args.width, args.height)
+    except argparse.ArgumentTypeError as error:
+        parser.error(str(error))
 
     start_date = parse_date_argument(args.start_date)
     end_date = parse_date_argument(args.end_date, end_of_month=True)
@@ -1390,20 +1415,6 @@ def _main_inner(argv: Optional[List[str]] = None) -> int:
     total_km = cum_dist[-1]
     print(f"Total distance: {format_distance(total_km, args.unit)}")
 
-    # Resolve dimensions and aspect ratio
-    aspect_map = {'square': 1.0, 'portrait': 9.0 / 16.0, 'landscape': 16.0 / 9.0}
-    aspect = aspect_map[args.aspect_ratio]
-
-    res_sizes = {
-        '480': {'square': (480, 480), 'portrait': (480, 854), 'landscape': (854, 480)},
-        '720': {'square': (720, 720), 'portrait': (720, 1280), 'landscape': (1280, 720)},
-        '1080': {'square': (1080, 1080), 'portrait': (1080, 1920), 'landscape': (1920, 1080)},
-        '1440': {'square': (1440, 1440), 'portrait': (1440, 2560), 'landscape': (2560, 1440)},
-        '2160': {'square': (2160, 2160), 'portrait': (2160, 3840), 'landscape': (3840, 2160)},
-    }
-    default_w, default_h = res_sizes[args.resolution][args.aspect_ratio]
-    width_px = args.width if args.width else default_w
-    height_px = args.height if args.height else default_h
     aspect = width_px / float(height_px)
 
     fps = args.fps

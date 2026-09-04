@@ -174,11 +174,10 @@ class Mp4Exporter(
             for (frame in 0 until frameCount) {
                 coroutineContext.ensureActive()
                 val animationFrame = animationFrame(frame, journeyFrameCount, fps)
-                var inputIndex: Int
-                do {
-                    inputIndex = codec.dequeueInputBuffer(10_000)
-                    drain(false)
-                } while (inputIndex < 0)
+                val inputIndex = awaitEncoderInputBuffer(
+                    dequeue = { codec.dequeueInputBuffer(10_000) },
+                    drain = { drain(false) },
+                )
 
                 val canvas = Canvas(bitmap)
                 painter.draw(
@@ -227,16 +226,11 @@ class Mp4Exporter(
                 }
             }
 
-            var eosQueued = false
-            while (!eosQueued) {
-                val inputIndex = codec.dequeueInputBuffer(10_000)
-                if (inputIndex >= 0) {
-                    codec.queueInputBuffer(inputIndex, 0, 0, fps.timestampUs(frameCount), MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-                    eosQueued = true
-                } else {
-                    drain(false)
-                }
-            }
+            val eosInputIndex = awaitEncoderInputBuffer(
+                dequeue = { codec.dequeueInputBuffer(10_000) },
+                drain = { drain(false) },
+            )
+            codec.queueInputBuffer(eosInputIndex, 0, 0, fps.timestampUs(frameCount), MediaCodec.BUFFER_FLAG_END_OF_STREAM)
             while (!drain(true)) coroutineContext.ensureActive()
             val overview = Bitmap.createBitmap(overviewWidth, overviewHeight, Bitmap.Config.ARGB_8888)
             painter.draw(
@@ -417,5 +411,16 @@ class Mp4Exporter(
             }
 
         private fun Int.toEven(): Int = if (this % 2 == 0) this else this + 1
+    }
+}
+
+/** Shared by frame submission and end-of-stream submission. */
+internal suspend fun awaitEncoderInputBuffer(dequeue: () -> Int, drain: () -> Unit): Int {
+    while (true) {
+        coroutineContext.ensureActive()
+        val index = dequeue()
+        drain()
+        coroutineContext.ensureActive()
+        if (index >= 0) return index
     }
 }
