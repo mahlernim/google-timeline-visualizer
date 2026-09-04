@@ -436,10 +436,18 @@ class MainActivityTest {
 
         controller.recreate()
         var recreated = controller.get()
-        recreated.deliverPendingVideoDestinationForTest(destination)
-        assertEquals(destination, recreated.pendingExportDestinationUriForTest())
-
-        controller.recreate()
+        // Hold the synchronized store read so this exercises recreation during loading,
+        // regardless of how quickly the IO dispatcher runs on the test machine.
+        val storeLazy = MainActivity::class.java.getDeclaredField("pendingVideoExportRequestStore\$delegate")
+            .apply { isAccessible = true }.get(recreated) as Lazy<*>
+        val pendingStore = requireNotNull(storeLazy.value)
+        val readLock = PendingVideoExportRequestStore::class.java.getDeclaredField("delegate")
+            .apply { isAccessible = true }.get(pendingStore)
+        synchronized(readLock) {
+            recreated.deliverPendingVideoDestinationForTest(destination)
+            assertEquals(destination, recreated.pendingExportDestinationUriForTest())
+            controller.recreate()
+        }
         recreated = controller.get()
         waitUntil { VideoExportRequestStore(context).load()?.outputUri == destination.toString() }
 
