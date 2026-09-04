@@ -1,8 +1,84 @@
 {
   "pointCount": 3,
-  "latitudes": [37.5, 37.55, 37.6],
+  "latitudes": [
+    37.5,
+    37.55,
+    37.6
+  ],
   "firstInstant": "2026-01-01T00:00:00Z",
   "lastInstant": "2026-01-01T01:00:00Z",
   "selectedDurationSeconds": 10,
-  "outroSeconds": 1.5
+  "outroSeconds": 1.5,
+  "videoDimensions": {
+    "480": {
+      "square": [
+        480,
+        480
+      ],
+      "portrait": [
+        480,
+        852
+      ],
+      "landscape": [
+        852,
+        480
+      ]
+    },
+    "720": {
+      "square": [
+        720,
+        720
+      ],
+      "portrait": [
+        720,
+        1280
+      ],
+      "landscape": [
+        1280,
+        720
+      ]
+    },
+    "1080": {
+      "square": [
+        1080,
+        1080
+      ],
+      "portrait": [
+        1080,
+        1920
+      ],
+      "landscape": [
+        1920,
+        1080
+      ]
+    },
+    "1440": {
+      "square": [
+        1440,
+        1440
+      ],
+      "portrait": [
+        1440,
+        2560
+      ],
+      "landscape": [
+        2560,
+        1440
+      ]
+    },
+    "2160": {
+      "square": [
+        2160,
+        2160
+      ],
+      "portrait": [
+        2160,
+        3840
+      ],
+      "landscape": [
+        3840,
+        2160
+      ]
+    }
+  }
 }

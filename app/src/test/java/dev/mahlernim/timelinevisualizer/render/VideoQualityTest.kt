@@ -3,8 +3,37 @@ package dev.mahlernim.timelinevisualizer.render
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
+import com.google.gson.JsonParser
 
 class VideoQualityTest {
+    @Test
+    fun zeroAndInvalidFrameRatesReturnNull() {
+        listOf("0", "00", "0.0", "0.00", "0.000", "", "-1", ".", "99999999999999999999").forEach {
+            assertEquals(it, null, FrameRate.parse(it))
+            assertEquals(it, null, ExportFormatSettings.parseFrameRate(it))
+        }
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun frameRateInvariantStillRejectsZero() {
+        FrameRate.of(0)
+    }
+
+    @Test
+    fun dimensionsMatchSharedPlatformFixture() {
+        val root = listOf(File("test-fixtures"), File("../test-fixtures")).first(File::isDirectory)
+        val formats = JsonParser.parseString(File(root, "platform-parity-expected.json").readText())
+            .asJsonObject.getAsJsonObject("videoDimensions")
+        formats.entrySet().forEach { (edge, aspects) ->
+            aspects.asJsonObject.entrySet().forEach { (aspect, dimensions) ->
+                val format = ExportFormatSettings(edge.toInt(), 30).format(VideoAspectRatio.valueOf(aspect.uppercase()))
+                assertEquals(dimensions.asJsonArray[0].asInt, format.width)
+                assertEquals(dimensions.asJsonArray[1].asInt, format.height)
+            }
+        }
+    }
+
     @Test
     fun squareDefaultsRemainCompatible() {
         assertEquals(listOf(480, 720, 1080), VideoQuality.values().take(3).map(VideoQuality::width))

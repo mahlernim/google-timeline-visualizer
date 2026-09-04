@@ -32,3 +32,9 @@ be treated as a separate product design and privacy review.
 When Android changes a portable parser, filter, camera, timing, overlay, export, or
 privacy behavior, update the corresponding Python and TypeScript tests and this table
 in the same change or record why the platform cannot support it.
+
+Preset pixel dimensions are checked against `test-fixtures/platform-parity-expected.json`.
+At a 480-pixel short edge, new portrait exports are 480x852 and landscape exports
+are 852x480. CLI custom dimensions must be even, with a short edge from 480
+through 2160 pixels and a long edge no larger than 3840 pixels. An omitted custom
+axis keeps the corresponding dimension from the selected preset.

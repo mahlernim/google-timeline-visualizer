@@ -115,6 +115,7 @@ class FrameRate private constructor(
             val scale = value.substringAfter('.', "").length
             val denominator = TEN_POWERS.getOrNull(scale) ?: return null
             val numerator = value.replace(".", "").toIntOrNull() ?: return null
+            if (numerator <= 0) return null
             return of(numerator, denominator)
         }
 

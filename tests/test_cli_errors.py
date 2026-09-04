@@ -176,3 +176,44 @@ def test_start_date_month_uses_first_day(value, expected):
 ])
 def test_end_date_month_uses_last_day(value, expected):
     assert parse_date_argument(value, end_of_month=True) == expected
+
+
+@pytest.mark.parametrize(('width', 'height'), [(3840, 2160), (2160, 3840), (3440, 1440)])
+def test_custom_large_dimensions_are_accepted(tmp_path, width, height):
+    timeline = tmp_path / 'Timeline.json'
+    timeline.write_text('[]', encoding='utf-8')
+    args = build_argument_parser().parse_args([
+        '--input', str(timeline), '--width', str(width), '--height', str(height)])
+    assert visualizer.resolve_video_dimensions(args.resolution, args.aspect_ratio, args.width, args.height) == (width, height)
+
+
+@pytest.mark.parametrize(('arguments', 'message'), [
+    (['--width', '478'], 'short edge'),
+    (['--width', '2162', '--height', '2162'], 'short edge'),
+    (['--width', '481'], 'even'),
+    (['--height', '2161'], 'even'),
+    (['--width', '3842'], 'long-edge limit'),
+    (['--resolution', '2160', '--aspect-ratio', 'portrait', '--width', '2560'], 'short edge'),
+])
+def test_invalid_resolved_dimensions_fail_before_rendering(tmp_path, monkeypatch, capsys, arguments, message):
+    timeline = tmp_path / 'Timeline.json'
+    timeline.write_text('[]', encoding='utf-8')
+    monkeypatch.setattr(visualizer, 'ensure_ffmpeg_available', lambda: pytest.fail('validation must precede rendering'))
+    with pytest.raises(SystemExit) as error:
+        visualizer.main(['--input', str(timeline), *arguments])
+    assert error.value.code == 2
+    assert message in capsys.readouterr().err
+
+
+def test_one_custom_axis_resolves_against_the_preset():
+    assert visualizer.resolve_video_dimensions('2160', 'landscape', height=1440) == (3840, 1440)
+    assert visualizer.resolve_video_dimensions('2160', 'portrait', width=1440) == (1440, 3840)
+
+
+def test_formats_match_shared_fixture_and_custom_pairs():
+    from pathlib import Path
+    expected = json.loads((Path(__file__).parents[1] / 'test-fixtures/platform-parity-expected.json').read_text())
+    for short_edge, aspects in expected['videoDimensions'].items():
+        for aspect, dimensions in aspects.items():
+            assert visualizer.resolve_video_dimensions(short_edge, aspect) == tuple(dimensions)
+            assert visualizer.resolve_video_dimensions('480', 'square', *dimensions) == tuple(dimensions)

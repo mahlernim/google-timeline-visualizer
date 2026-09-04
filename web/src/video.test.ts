@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ALL_VIDEO_FORMATS,
@@ -285,7 +286,7 @@ describe('createJourneyMp4', () => {
     overlay: {
       title: 'Trip',
       periodLabel: 'March 2026',
-      separator: ' · ',
+      separator: ' 쨌 ',
       formatDistance: (kilometers: number) => `${Math.round(kilometers)} km`,
     },
     format,
@@ -376,4 +377,15 @@ describe('createJourneyMp4', () => {
       .rejects.toThrow('The preview is not using the selected video format size.');
     expect(encoder.start).not.toHaveBeenCalled();
   });
+});
+
+
+it('matches shared cross-platform preset dimensions', () => {
+  const expected = JSON.parse(readFileSync(new URL('../../test-fixtures/platform-parity-expected.json', import.meta.url), 'utf8'));
+  for (const [edge, aspects] of Object.entries(expected.videoDimensions)) {
+    for (const [aspect, dimensions] of Object.entries(aspects as Record<string, number[]>)) {
+      const format = buildVideoFormat(aspect as 'square' | 'portrait' | 'landscape', Number(edge), 30);
+      expect([format.width, format.height]).toEqual(dimensions);
+    }
+  }
 });
