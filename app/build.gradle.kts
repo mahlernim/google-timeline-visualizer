@@ -17,8 +17,8 @@ android {
         applicationId = "dev.mahlernim.timelinevisualizer"
         minSdk = 26
         targetSdk = 36
-        versionCode = 53
-        versionName = "3.0.11"
+        versionCode = 54
+        versionName = "3.0.12"
         manifestPlaceholders["appLabel"] = "@string/app_name"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

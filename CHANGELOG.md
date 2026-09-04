@@ -9,6 +9,12 @@
 - Add distance-unit selection to the web app.
 - Document the web app's distance units and close-up mode.
 
+## 3.0.12
+
+- Improve translations across eight languages with consistent terminology and tone.
+- Correct Timeline import instructions, privacy wording, and mistranslated controls.
+- Set Android version code 54 and version name 3.0.12.
+
 ## 3.0.11
 
 - Keep Balanced and Close-up map views wide through long trips, then let Close-up settle into tighter local detail after arrival.
