@@ -1,5 +1,6 @@
 package dev.mahlernim.timelinevisualizer.render
 
+import dev.mahlernim.timelinevisualizer.BuildConfig
 import dev.mahlernim.timelinevisualizer.model.Journey
 import dev.mahlernim.timelinevisualizer.model.WebMercator
 import kotlin.math.abs
@@ -11,9 +12,23 @@ class JourneyTiming private constructor(
     private val distancesKm: DoubleArray,
     private val slopes: DoubleArray,
     private val linearDistanceKm: Double?,
+    private val recordedSections: List<RecordedSection>? = null,
 ) {
     fun distanceAt(progress: Float): Double {
         val elapsed = progress.coerceIn(0f, 1f).toDouble()
+        recordedSections?.let { sections ->
+            if (sections.isEmpty()) return 0.0
+            // Upper bound deliberately chooses the next supported section at a cut.
+            var low = 0
+            var high = sections.size
+            while (low < high) {
+                val middle = (low + high) ushr 1
+                if (sections[middle].end <= elapsed) low = middle + 1 else high = middle
+            }
+            val section = sections[low.coerceAtMost(sections.lastIndex)]
+            val local = ((elapsed - section.start) / (section.end - section.start)).coerceIn(0.0, 1.0)
+            return section.timing.distanceAt(local.toFloat())
+        }
         linearDistanceKm?.let { return it * elapsed }
         if (elapsedFractions.size < 2) return distancesKm.lastOrNull() ?: 0.0
         val exact = elapsedFractions.binarySearch(elapsed)
@@ -45,7 +60,41 @@ class JourneyTiming private constructor(
         return (low + high) / 2f
     }
 
+    private data class RecordedSection(val start: Double, val end: Double, val timing: JourneyTiming)
+
     companion object {
+        internal fun recorded(journey: Journey): JourneyTiming {
+            val movement = journey.recordedMovement
+            val sections = mutableListOf<RecordedSection>()
+            var elapsedSeconds = 0.0
+            var index = 0
+            while (index < movement.intervals.size) {
+                val first = index
+                var seconds = movement.intervals[index].seconds
+                while (index + 1 < movement.intervals.size &&
+                    movement.intervals[index].endKm == movement.intervals[index + 1].startKm) {
+                    index++
+                    seconds += movement.intervals[index].seconds
+                }
+                val count = index - first + 2
+                val elapsed = DoubleArray(count)
+                val distances = DoubleArray(count)
+                distances[0] = movement.intervals[first].startKm
+                for (k in first..index) {
+                    elapsed[k - first + 1] = elapsed[k - first] + movement.intervals[k].seconds / seconds
+                    distances[k - first + 1] = movement.intervals[k].endKm
+                }
+                elapsed[elapsed.lastIndex] = 1.0
+                sections += RecordedSection(elapsedSeconds / movement.totalSeconds,
+                    (elapsedSeconds + seconds) / movement.totalSeconds,
+                    JourneyTiming(elapsed, distances, monotoneSlopes(elapsed, distances), null))
+                elapsedSeconds += seconds
+                index++
+            }
+            return JourneyTiming(doubleArrayOf(), doubleArrayOf(0.0, journey.totalDistanceKm),
+                doubleArrayOf(), null, sections)
+        }
+
         fun create(
             journey: Journey,
             @Suppress("UNUSED_PARAMETER")
@@ -53,7 +102,7 @@ class JourneyTiming private constructor(
             @Suppress("UNUSED_PARAMETER")
             tripDetection: TripDetection = TripDetection.BALANCED,
         ): JourneyTiming {
-            return linear(journey)
+            return if (BuildConfig.IS_RECORDED_SPEED_LAB) recorded(journey) else linear(journey)
         }
 
         internal fun createViewportRelative(
@@ -65,6 +114,7 @@ class JourneyTiming private constructor(
             },
             minimumShares: List<TimingMinimumShare> = emptyList(),
         ): JourneyTiming {
+            if (BuildConfig.IS_RECORDED_SPEED_LAB) return recorded(journey)
             if (
                 journey.points.size < 2 ||
                 journey.totalDistanceKm <= 0.0 ||

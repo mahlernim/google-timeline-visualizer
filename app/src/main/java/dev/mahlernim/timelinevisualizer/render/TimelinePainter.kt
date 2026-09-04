@@ -241,7 +241,7 @@ class TimelinePainter {
         height: Int,
         cameraSettings: CameraSettings,
     ): Viewport {
-        val current = if (progress <= 0f) {
+        val current = if (progress <= 0f && !dev.mahlernim.timelinevisualizer.BuildConfig.IS_RECORDED_SPEED_LAB) {
             journey.positionAtDistance(0.0)
         } else {
             playbackPosition(journey, progress, cameraSettings)
@@ -1149,7 +1149,8 @@ class TimelinePainter {
         drawBackground(canvas, width, height)
         drawTiles(canvas, width, height, viewport, tiles)
 
-        val current = if (!allowCameraTrackBuild && frame.journeyProgress <= 0f) {
+        val current = if (!allowCameraTrackBuild && frame.journeyProgress <= 0f &&
+            !dev.mahlernim.timelinevisualizer.BuildConfig.IS_RECORDED_SPEED_LAB) {
             journey.positionAtDistance(0.0)
         } else {
             playbackPosition(journey, frame.journeyProgress, cameraSettings)

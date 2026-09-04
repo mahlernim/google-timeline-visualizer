@@ -42,6 +42,8 @@ data class ExportProgress(
     val total: Int,
 )
 
+internal class NoRecordedMovementException : IllegalArgumentException("No usable recorded movement")
+
 internal class InsufficientJourneyDataException :
     IllegalArgumentException("At least two location points are needed")
 
@@ -60,6 +62,7 @@ class Mp4Exporter(
         onProgress: (ExportProgress) -> Unit,
     ): Bitmap = withContext(Dispatchers.Default) {
         if (journey.points.size < 2) throw InsufficientJourneyDataException()
+        if (dev.mahlernim.timelinevisualizer.BuildConfig.IS_RECORDED_SPEED_LAB && !journey.recordedMovement.hasMovement) throw NoRecordedMovementException()
         val videoFormat = cameraSettings.activeVideoFormat
         val encoderProfiles = VideoEncoderSupport.deviceProfiles()
         val encoderCandidates = VideoEncoderSupport.candidates(videoFormat, encoderProfiles)

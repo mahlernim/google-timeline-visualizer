@@ -1,0 +1,121 @@
+name: Release Recorded Speed LAB
+
+on:
+  push:
+    tags:
+      - "recorded-speed-lab-*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check immutable experiment identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$RELEASE_TAG" = "recorded-speed-lab-1"
+          test "$(git rev-parse HEAD)" = "$(git rev-parse "$RELEASE_TAG^{commit}")"
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "The prerelease already exists. Its assets will not be overwritten."
+            exit 1
+          fi
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Restore signing key
+        env:
+          SIGNING_KEY_BASE64: ${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}
+        run: |
+          test -n "$SIGNING_KEY_BASE64"
+          echo "$SIGNING_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/recorded-speed-lab.jks"
+      - name: Test recorded timing and build signed experiment
+        env:
+          CARTO_BASEMAP_API_KEY: ${{ secrets.CARTO_BASEMAP_API_KEY }}
+          ANDROID_SIGNING_STORE_FILE: ${{ runner.temp }}/recorded-speed-lab.jks
+          ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+        run: |
+          test -n "$CARTO_BASEMAP_API_KEY"
+          ./gradlew testRecordedSpeedLabDebugUnitTest \
+            --tests '*RecordedJourneyTimingTest' --tests '*RecordedSpeedLabTest' \
+            --tests '*VideoExportRequestStoreTest' --tests '*TimelineAnimationTest' \
+            lintRecordedSpeedLabRelease assembleRecordedSpeedLabRelease bundleRecordedSpeedLabRelease --stacktrace
+          ./gradlew testGithubDebugUnitTest --tests '*JourneyTimingTest' --stacktrace
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Check device behavior and signed co-installation
+        uses: ReactiveCircus/android-emulator-runner@v2
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          api-level: 35
+          arch: x86_64
+          disable-animations: true
+          script: |
+            ./gradlew connectedRecordedSpeedLabDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.mahlernim.timelinevisualizer.RecordedSpeedLabDeviceTest --stacktrace
+            gh release download v3.0.14 --pattern '*.apk' --dir "$RUNNER_TEMP/stable"
+            adb install "$RUNNER_TEMP/stable/TimelineVisualizer-v3.0.14.apk"
+            adb uninstall dev.mahlernim.timelinevisualizer.recordedspeedlab || true
+            adb install app/build/outputs/apk/recordedSpeedLab/release/app-recordedSpeedLab-release.apk
+            adb shell pm path dev.mahlernim.timelinevisualizer
+            adb shell pm path dev.mahlernim.timelinevisualizer.recordedspeedlab
+            adb logcat -c
+            adb shell am start -W -n dev.mahlernim.timelinevisualizer.recordedspeedlab/dev.mahlernim.timelinevisualizer.MainActivity
+            sleep 3
+            adb shell pidof dev.mahlernim.timelinevisualizer.recordedspeedlab
+            test -z "$(adb logcat -d -b crash)"
+      - name: Verify published artifact identity and signature
+        run: |
+          apk=app/build/outputs/apk/recordedSpeedLab/release/app-recordedSpeedLab-release.apk
+          aab=app/build/outputs/bundle/recordedSpeedLabRelease/app-recordedSpeedLab-release.aab
+          build_tools_dir="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          "$build_tools_dir/apksigner" verify --verbose --print-certs "$apk"
+          "$build_tools_dir/aapt" dump badging "$apk" > "$RUNNER_TEMP/lab-badging.txt"
+          grep -q "package: name='dev.mahlernim.timelinevisualizer.recordedspeedlab' versionCode='1' versionName='3.0.14-recorded-speed-lab.1'" "$RUNNER_TEMP/lab-badging.txt"
+          grep -q "application-label:'Recorded Speed LAB'" "$RUNNER_TEMP/lab-badging.txt"
+          stable_cert="$("$build_tools_dir/apksigner" verify --print-certs "$RUNNER_TEMP/stable/TimelineVisualizer-v3.0.14.apk" | sed -n 's/^.*certificate SHA-256 digest: //p' | head -n 1)"
+          lab_cert="$("$build_tools_dir/apksigner" verify --print-certs "$apk" | sed -n 's/^.*certificate SHA-256 digest: //p' | head -n 1)"
+          test -n "$lab_cert"
+          test "$lab_cert" = "$stable_cert"
+          test -s "$aab"
+          jarsigner -verify "$aab" | grep -q 'jar verified'
+      - name: Retain experimental Play-compatible bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: recorded-speed-lab-1-play-bundle
+          path: app/build/outputs/bundle/recordedSpeedLabRelease/app-recordedSpeedLab-release.aab
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/recordedSpeedLab/release/app-recordedSpeedLab-release.apk RecordedSpeedLab-1.apk
+          sha256sum RecordedSpeedLab-1.apk > RecordedSpeedLab-1.apk.sha256
+          gh release create "$RELEASE_TAG" RecordedSpeedLab-1.apk RecordedSpeedLab-1.apk.sha256 \
+            docs/images/recorded-speed-lab-identity.png \
+            --title "Recorded Speed LAB 1 (experimental)" \
+            --notes-file docs/recorded-speed-lab-1.md --prerelease --latest=false --verify-tag
+      - name: Save test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recorded-speed-lab-1-checks
+          path: |
+            app/build/test-results/
+            app/build/reports/
+            app/build/outputs/androidTest-results/
+          if-no-files-found: ignore

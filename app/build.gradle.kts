@@ -15,6 +15,7 @@ android {
 
     defaultConfig {
         applicationId = "dev.mahlernim.timelinevisualizer"
+        buildConfigField("boolean", "IS_RECORDED_SPEED_LAB", "false")
         minSdk = 26
         targetSdk = 36
         versionCode = 56
@@ -56,6 +57,18 @@ android {
 
     flavorDimensions += "distribution"
     productFlavors {
+        create("recordedSpeedLab") {
+            dimension = "distribution"
+            applicationId = "dev.mahlernim.timelinevisualizer.recordedspeedlab"
+            versionCode = 1
+            versionName = "3.0.14-recorded-speed-lab.1"
+            manifestPlaceholders["appLabel"] = "Recorded Speed LAB"
+            buildConfigField("boolean", "IS_JOURNAL_LAB", "true")
+            buildConfigField("boolean", "IS_RECORDED_SPEED_LAB", "true")
+            buildConfigField("String", "UPDATE_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/tag/recorded-speed-lab-1\"")
+            buildConfigField("String", "UPDATE_FALLBACK_URL", "\"https://github.com/mahlernim/google-timeline-visualizer/releases/tag/recorded-speed-lab-1\"")
+        }
+
         create("github") {
             dimension = "distribution"
             buildConfigField("boolean", "IS_JOURNAL_LAB", "true")

@@ -2999,7 +2999,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     internal fun canCreateVideo(selected: Journey): Boolean =
-        selected.points.size >= 2 && selected.totalDistanceKm > 0
+        selected.points.size >= 2 && selected.totalDistanceKm > 0 &&
+            (!BuildConfig.IS_RECORDED_SPEED_LAB || selected.recordedMovement.hasMovement)
 
     private fun configureMonthDropdowns() {
         editor.startMonthDropdown.setAdapter(SelectionArrayAdapter(this, monthNames))
@@ -3294,6 +3295,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun configureAdvancedSettings() {
+        val labVisibility = if (BuildConfig.IS_RECORDED_SPEED_LAB) View.VISIBLE else View.GONE
+        settingsScreen.recordedSpeedNotice.visibility = labVisibility
+        editor.recordedSpeedNotice.visibility = labVisibility
+
         val aspectRatioLabels = listOf(
             R.string.aspect_square,
             R.string.aspect_portrait,
@@ -3898,12 +3903,15 @@ class MainActivity : AppCompatActivity() {
         editor.playButton.isEnabled = !exportingVideo && canCreate
         editor.exportButton.isEnabled = !exportingVideo && canCreate && videoFormatSupported
         editor.timelineSeek.isEnabled = !exportingVideo && ready
-        if (selected != null && !ready && !exportingVideo) {
+        if (BuildConfig.IS_RECORDED_SPEED_LAB && selected != null && !selected.recordedMovement.hasMovement) {
+            editor.statusText.setText(R.string.recorded_speed_no_movement)
+        } else if (selected != null && !ready && !exportingVideo) {
             editor.statusText.setText(R.string.preparing_preview)
         } else if (
             editor.statusText.text?.toString() in setOf(
                 getString(R.string.preparing_preview),
                 getString(R.string.preview_preparation_failed),
+                getString(R.string.recorded_speed_no_movement),
             )
         ) {
             editor.statusText.text = ""

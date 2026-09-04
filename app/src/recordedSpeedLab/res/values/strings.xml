@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Recorded Speed LAB</string>
+    <string name="advanced_settings_summary">Choose framing and export format. Movement timing always uses recorded speed.</string>
+    <string name="settings_summary">Experimental recorded-speed playback. Camera settings only change the view.</string>
+</resources>

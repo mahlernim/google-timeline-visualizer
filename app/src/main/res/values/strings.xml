@@ -638,4 +638,6 @@
     <string name="simplify_route_detail_summary">Use summarized Timeline activity for a cleaner route in long-history videos. When off, the most detailed available route is used.</string>
     <string name="keep_past_routes_visible">Keep past routes visible</string>
     <string name="keep_past_routes_visible_summary">Show completed routes as a faint background trail. When off, older movement fades out.</string>
+    <string name="recorded_speed_no_movement" translatable="false">No usable recorded movement in this range. Choose another range or import movement records with timestamps.</string>
+    <string name="recorded_speed_notice" translatable="false">EXPERIMENTAL · Recorded speed only\nCamera and presets do not change timing. Stationary and unsupported intervals are skipped.</string>
 </resources>

@@ -272,6 +272,7 @@ data class Journey(
     val inferredTransferBeforePointIndices: List<Int> = emptyList(),
     val semanticEpisodes: List<JourneySemanticEpisode> = emptyList(),
 ) {
+    val recordedMovement: RecordedMovement by lazy { RecordedMovement.from(this) }
     private val breakIndexSet = breakBeforePointIndices.toSet()
     private val inferredTransferIndexSet = inferredTransferBeforePointIndices.toSet()
     private val knownCumulativeDistanceKm = DoubleArray(points.size).also { distances ->

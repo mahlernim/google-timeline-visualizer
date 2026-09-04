@@ -13,4 +13,6 @@
     <color name="onboarding_paper">#F7EBE4</color>
     <color name="onboarding_ink">#1E1220</color>
     <color name="onboarding_muted">#A98A9C</color>
+    <color name="recorded_speed_notice_background">#FFF0D6</color>
+    <color name="recorded_speed_notice_text">#593100</color>
 </resources>

@@ -38,6 +38,10 @@ internal fun classifyVideoExportFailure(context: Context, error: Throwable): Vid
             context.getString(R.string.map_tiles_unavailable),
         )
     }
+    if (causes.any { it is NoRecordedMovementException }) {
+        return VideoExportFailure(VideoExportFailureKind.INSUFFICIENT_DATA,
+            context.getString(R.string.recorded_speed_no_movement))
+    }
     if (causes.any { it is InsufficientJourneyDataException }) {
         return VideoExportFailure(
             VideoExportFailureKind.INSUFFICIENT_DATA,
