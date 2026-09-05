@@ -14,30 +14,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  actionlint:
-    name: Workflow lint
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - name: Check out source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Install actionlint 1.7.12
-        shell: bash
-        run: |
-          tool_dir="$RUNNER_TEMP/actionlint"
-          mkdir -p "$tool_dir"
-          curl --fail --silent --show-error --location --retry 3 \
-            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
-            --output "$tool_dir/actionlint.tar.gz"
-          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $tool_dir/actionlint.tar.gz" | sha256sum --check --strict
-          tar -xzf "$tool_dir/actionlint.tar.gz" -C "$tool_dir" actionlint
-      - name: Check GitHub Actions workflows
-        shell: bash
-        # Keep scope consistent with local preflight; optional script linters are separate.
-        run: '"$RUNNER_TEMP/actionlint/actionlint" -shellcheck= -pyflakes='
-
   gitleaks:
     name: Secret scan
     runs-on: ubuntu-24.04
@@ -62,14 +38,26 @@ jobs:
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          if [[ "$EVENT_NAME" == "pull_request" ]]; then
-            base=$(git merge-base "$BASE_SHA" "$HEAD_SHA")
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            # Full-history audits are explicitly requested through Run workflow.
+            "$RUNNER_TEMP/gitleaks/gitleaks" git . --redact=100 --no-banner
+          else
+            if [[ "$EVENT_NAME" == "pull_request" ]]; then
+              base=$(git merge-base "$BASE_SHA" "$HEAD_SHA")
+            elif [[ "$EVENT_NAME" == "push" ]]; then
+              # Do not silently fall back to a full-history scan without a baseline.
+              if ! git cat-file -e "$BASE_SHA^{commit}"; then
+                echo "::error::Push baseline unavailable. Run a manual full-history audit."
+                exit 1
+              fi
+              base=$BASE_SHA
+            else
+              echo "::error::Unsupported scan event."
+              exit 1
+            fi
             "$RUNNER_TEMP/gitleaks/gitleaks" git . --redact=100 --no-banner \
               --log-opts="$base..$HEAD_SHA"
-          else
-            # Main and manually dispatched runs also check existing history.
-            "$RUNNER_TEMP/gitleaks/gitleaks" git . --redact=100 --no-banner
           fi
