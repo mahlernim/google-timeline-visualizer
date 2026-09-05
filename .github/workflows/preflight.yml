@@ -1,0 +1,75 @@
+name: Repository preflight
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preflight-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  actionlint:
+    name: Workflow lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install actionlint 1.7.12
+        shell: bash
+        run: |
+          tool_dir="$RUNNER_TEMP/actionlint"
+          mkdir -p "$tool_dir"
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
+            --output "$tool_dir/actionlint.tar.gz"
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $tool_dir/actionlint.tar.gz" | sha256sum --check --strict
+          tar -xzf "$tool_dir/actionlint.tar.gz" -C "$tool_dir" actionlint
+      - name: Check GitHub Actions workflows
+        shell: bash
+        # Keep scope consistent with local preflight; optional script linters are separate.
+        run: '"$RUNNER_TEMP/actionlint/actionlint" -shellcheck= -pyflakes='
+
+  gitleaks:
+    name: Secret scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out source and history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Gitleaks 8.30.1
+        shell: bash
+        run: |
+          tool_dir="$RUNNER_TEMP/gitleaks"
+          mkdir -p "$tool_dir"
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz \
+            --output "$tool_dir/gitleaks.tar.gz"
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $tool_dir/gitleaks.tar.gz" | sha256sum --check --strict
+          tar -xzf "$tool_dir/gitleaks.tar.gz" -C "$tool_dir" gitleaks
+      - name: Scan for secrets
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            base=$(git merge-base "$BASE_SHA" "$HEAD_SHA")
+            "$RUNNER_TEMP/gitleaks/gitleaks" git . --redact=100 --no-banner \
+              --log-opts="$base..$HEAD_SHA"
+          else
+            # Main and manually dispatched runs also check existing history.
+            "$RUNNER_TEMP/gitleaks/gitleaks" git . --redact=100 --no-banner
+          fi
