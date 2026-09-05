@@ -31,7 +31,7 @@ function generatedServiceWorker(): Plugin {
     name: 'generated-service-worker',
     generateBundle(_options, bundle) {
       const digest = createHash('sha256');
-      const urls = new Set(['./', './manifest.webmanifest', './icon.svg', './demo-poster.webp']);
+      const urls = new Set(['./', './manifest.webmanifest', './icon.svg', './demo-mahlerlab.webp']);
       const visit = (name: string): void => {
         const output = bundle[name];
         if (!output || urls.has('./' + name)) return;

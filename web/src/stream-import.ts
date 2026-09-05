@@ -9,7 +9,8 @@ import { RawSignalStream, RawBatch, compareRaw } from './raw-stream';
 import type { IndexedRawPoint } from './raw-stream';
 import type { GeoPoint } from './types';
 import { ImportError, MAX_SELECTED_POINTS } from './import-types';
-import type { TimelineScan, RangeRequest, ImportResult } from './import-types';
+import type { TimelineScan, RangeRequest, ImportResult, TimelineIndex } from './import-types';
+import { TimelineIndexBuilder } from './import-index';
 
 const CHUNK_BYTES = 64 * 1024;
 // Bounds unusually large single records and strings as well as the selected route.
@@ -18,7 +19,7 @@ type RecordKind = 'semantic' | 'raw';
 
 async function records(
   file: Blob,
-  receive: (kind: RecordKind, value: unknown) => void,
+  receive: (kind: RecordKind, value: unknown, span: { start: number; end: number; group: number }) => void,
   signal?: AbortSignal,
   progress?: (fraction: number) => void,
 ): Promise<void> {
@@ -31,6 +32,9 @@ async function records(
   let lastRecordOffset = 0;
   let supported = false;
   let legacy = false;
+  let recordStart = 0;
+  let group = 0;
+  let parserBase = 0;
   try {
     for (let position = 0; position < file.size; position += CHUNK_BYTES) {
       signal?.throwIfAborted();
@@ -41,20 +45,23 @@ async function records(
         rootArray = first === 91;
         if (!rootArray && first !== 123) throw new ImportError('unsupported-format');
         supported = rootArray;
+        parserBase = position;
+        lastRecordOffset = position;
         parser = new JSONParser({
           paths: rootArray ? ['$.*'] : ['$.semanticSegments.*', '$.rawSignals.*'],
           keepStack: false,
           stringBufferSize: 64 * 1024,
         });
         parser.onToken = ({ token, value, offset: at }) => {
-          offset = at;
+          offset = parserBase + at;
+          if (token === TokenType.LEFT_BRACE && depth === (rootArray ? 1 : 2)) recordStart = offset;
           if (!rootArray && depth === 1) {
             if (token === TokenType.STRING && rootExpectsKey) { rootKey = String(value); rootExpectsKey = false; }
             if (token === TokenType.COMMA) rootExpectsKey = true;
             if (token === TokenType.COLON && ['locations', 'timelineObjects'].includes(rootKey)) {
               legacy = true;
             }
-            if (token === TokenType.LEFT_BRACKET && ['semanticSegments', 'rawSignals'].includes(rootKey)) supported = true;
+            if (token === TokenType.LEFT_BRACKET && ['semanticSegments', 'rawSignals'].includes(rootKey)) { supported = true; group += 1; }
           }
           if (token === TokenType.LEFT_BRACE || token === TokenType.LEFT_BRACKET) {
             depth += 1;
@@ -65,7 +72,7 @@ async function records(
         parser.onValue = ({ value, stack }) => {
           lastRecordOffset = offset;
           const kind = rootArray || stack.at(-1)?.key === 'semanticSegments' ? 'semantic' : 'raw';
-          receive(kind, value);
+          receive(kind, value, { start: recordStart, end: offset + 1, group });
         };
       }
       if (position - lastRecordOffset > MAX_RECORD_BYTES) throw new ImportError('rangeTooLarge');
@@ -93,23 +100,40 @@ export async function scanTimeline(
   let hasSemantic = false;
   let hasRaw = false;
   let timezoneMissing = false;
-  await records(file, (kind, record) => {
+  const index = new TimelineIndexBuilder();
+  const direction = new Direction();
+  let preserveRecordedOrder = false;
+  await records(file, (kind, record, span) => {
+    const segment = kind === 'semantic' ? parseTimelineSegment(record) : null;
     const points = kind === 'semantic'
-      ? parseTimelineSegment(record)?.points ?? []
+      ? segment?.points ?? []
       : parseRawSignalsJson({ rawSignals: [record] });
     if (kind === 'semantic' && points.length) hasSemantic = true;
     if (kind === 'raw' && points.length) hasRaw = true;
+    let firstDate = '';
+    let lastDate = '';
     for (const point of points) {
       const date = pointDateKey(point);
+      if (!firstDate || date < firstDate) firstDate = date;
+      if (date > lastDate) lastDate = date;
       const target = kind === 'semantic' ? dates : rawDates;
       if (!target.first || date < target.first) target.first = date;
       if (date > target.last) target.last = date;
       (kind === 'semantic' ? months : rawMonths).add(date.slice(0, 7));
       timezoneMissing ||= point.timeZoneMissing === true;
+      if (kind === 'semantic') preserveRecordedOrder ||= point.timeZoneMissing === true;
+    }
+    if (segment) {
+      direction.add(segment.anchor);
+      index.add({ ...span, firstDate, lastDate,
+        intervalStart: segment.interval?.start ?? Infinity,
+        intervalEnd: segment.interval?.end ?? -Infinity });
     }
   }, signal, progress);
   if (!dates.first && !rawDates.first) throw new ImportError('no-usable-locations');
-  return { months: [...(hasSemantic ? months : rawMonths)].sort(), firstDate: dates.first || rawDates.first, lastDate: dates.last || rawDates.last, rawMonths: [...rawMonths].sort(), rawFirstDate: rawDates.first, rawLastDate: rawDates.last, hasSemantic, hasRaw, timezoneMissing };
+  const blocks = index.finish();
+  return { months: [...(hasSemantic ? months : rawMonths)].sort(), firstDate: dates.first || rawDates.first, lastDate: dates.last || rawDates.last, rawMonths: [...rawMonths].sort(), rawFirstDate: rawDates.first, rawLastDate: rawDates.last, hasSemantic, hasRaw, timezoneMissing,
+    index: blocks ? { fileSize: file.size, blocks, reversed: direction.reversed(), preserveRecordedOrder } : undefined };
 }
 
 function adjacentDate(value: string, days: number): string {
@@ -142,6 +166,7 @@ class Direction {
 
 export async function extractTimeline(
   file: Blob, range: RangeRequest, signal?: AbortSignal, progress?: (fraction: number) => void,
+  index?: TimelineIndex,
 ): Promise<ImportResult> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(range.start) || !/^\d{4}-\d{2}-\d{2}$/.test(range.end) || range.start > range.end) {
     throw new ImportError('invalidDates');
@@ -170,7 +195,7 @@ export async function extractTimeline(
     selected += points.filter(inRange).length;
     if (selected > MAX_SELECTED_POINTS || retained > MAX_SELECTED_POINTS * 2) throw new ImportError('rangeTooLarge');
   };
-  await records(file, (kind, record) => {
+  const receive = (kind: RecordKind, record: unknown): void => {
     if (kind !== 'semantic') return;
     const segment = parseTimelineSegment(record);
     if (!segment) return;
@@ -184,11 +209,29 @@ export async function extractTimeline(
     }
     segment.points = segment.points.filter(inContext);
     if (segment.points.length) { retain(segment.points); segments.push(segment); }
-  }, signal, progress);
+  };
+  if (index && index.fileSize === file.size) {
+    const blocks = index.blocks.filter((block) =>
+      (block.lastDate >= startContext && block.firstDate <= endContext)
+      || (block.intervalEnd >= contextStartMillis && block.intervalStart <= contextEndMillis));
+    const bytes = blocks.reduce((sum, block) => sum + block.end - block.start, 0);
+    let completed = 0;
+    for (const block of blocks) {
+      signal?.throwIfAborted();
+      const length = block.end - block.start;
+      // Blob slices reference the original bytes. Only selected blocks are decoded.
+      await records(new Blob(['[', file.slice(block.start, block.end), ']']), receive, signal,
+        (fraction) => progress?.((completed + fraction * length) / bytes));
+      completed += length;
+    }
+    progress?.(1);
+  } else await records(file, receive, signal, progress);
   signal?.throwIfAborted();
   if (!segments.length) return { points: [], rejected: 0 };
   let normalized: GeoPoint[];
-  try { normalized = reconcileTimelineSegments(segments, intervals, direction.reversed(), preserveRecordedOrder); }
+  try { normalized = reconcileTimelineSegments(segments, intervals,
+    index?.fileSize === file.size ? index.reversed : direction.reversed(),
+    index?.fileSize === file.size ? index.preserveRecordedOrder : preserveRecordedOrder); }
   catch (error) {
     if (error instanceof TimelineParseError && error.reason === 'no-usable-locations') return { points: [], rejected: 0 };
     throw error;

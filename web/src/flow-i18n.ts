@@ -3,7 +3,7 @@ export const FLOW_STRINGS = {
   "en": {
     "heroTitle": "Your places, in motion.",
     "heroBody": "Turn your Google Maps Timeline into a journey you can watch and share. Your Timeline stays on your device.",
-    "demoLabel": "A fictional journey. Made with Timeline Visualizer.",
+    "demoLabel": "A real journey. Made with Timeline Visualizer.",
     "playDemo": "Play example",
     "pauseDemo": "Pause example",
     "openWeb": "Open web app",
@@ -38,12 +38,16 @@ export const FLOW_STRINGS = {
     "previewHint": "The preview uses fewer pixels to keep your browser responsive.",
     "working": "Working…",
     "paused": "Paused",
-    "noAccount": "No account, location permission, or Timeline upload is required."
+    "noAccount": "No account, location permission, or Timeline upload is required.",
+    "originalCredit": "The original Timeline Visualizer by mahlerlab",
+    "feedback": "Feedback & suggestions",
+    "resolutionHelp": "Resolution is the short edge. Larger formats take longer and produce larger files.",
+    "invalidSettings": "Choose one of the available video settings."
   },
   "ko": {
     "heroTitle": "내가 다녀온 곳을 영상으로.",
     "heroBody": "Google Maps 타임라인을 보고 공유할 수 있는 여행 영상으로 만들어 보세요. 타임라인은 기기에만 남습니다.",
-    "demoLabel": "가상의 여행입니다. Timeline Visualizer로 만들었습니다.",
+    "demoLabel": "실제 여행입니다. Timeline Visualizer로 만들었습니다.",
     "playDemo": "예시 재생",
     "pauseDemo": "예시 일시정지",
     "openWeb": "웹 앱 열기",
@@ -78,12 +82,16 @@ export const FLOW_STRINGS = {
     "previewHint": "브라우저가 원활하게 작동하도록 미리보기는 낮은 해상도를 사용합니다.",
     "working": "작업 중…",
     "paused": "일시정지됨",
-    "noAccount": "계정, 위치 권한 또는 타임라인 업로드가 필요하지 않습니다."
+    "noAccount": "계정, 위치 권한 또는 타임라인 업로드가 필요하지 않습니다.",
+    "originalCredit": "mahlerlab이 만든 오리지널 Timeline Visualizer",
+    "feedback": "의견 및 제안",
+    "resolutionHelp": "해상도는 짧은 변의 픽셀 수입니다. 높을수록 제작 시간과 파일 크기가 늘어납니다.",
+    "invalidSettings": "제공되는 영상 설정 중에서 선택해 주세요."
   },
   "ja": {
     "heroTitle": "訪れた場所を、動画に。",
     "heroBody": "Google マップのタイムラインを、見て共有できる旅の動画に。タイムラインはお使いの端末内に保存されます。",
-    "demoLabel": "架空の旅です。Timeline Visualizerで作成しました。",
+    "demoLabel": "実際の旅です。Timeline Visualizerで作成しました。",
     "playDemo": "サンプルを再生",
     "pauseDemo": "サンプルを一時停止",
     "openWeb": "ウェブアプリを開く",
@@ -118,12 +126,16 @@ export const FLOW_STRINGS = {
     "previewHint": "ブラウザの動作を軽くするため、プレビューは低解像度で表示します。",
     "working": "処理中…",
     "paused": "一時停止中",
-    "noAccount": "アカウント、位置情報の権限、タイムラインのアップロードは不要です。"
+    "noAccount": "アカウント、位置情報の権限、タイムラインのアップロードは不要です。",
+    "originalCredit": "mahlerlabによるオリジナルのTimeline Visualizer",
+    "feedback": "ご意見・ご提案",
+    "resolutionHelp": "解像度は短辺のピクセル数です。高いほど作成時間とファイルサイズが増えます。",
+    "invalidSettings": "用意された動画設定から選択してください。"
   },
   "zh-CN": {
     "heroTitle": "让走过的地方动起来。",
     "heroBody": "将 Google 地图时间轴变成可观看和分享的旅程视频。时间轴始终留在您的设备上。",
-    "demoLabel": "虚构旅程，由 Timeline Visualizer 制作。",
+    "demoLabel": "真实旅程。使用 Timeline Visualizer 制作。",
     "playDemo": "播放示例",
     "pauseDemo": "暂停示例",
     "openWeb": "打开网页版",
@@ -158,12 +170,16 @@ export const FLOW_STRINGS = {
     "previewHint": "预览采用较低分辨率，保持浏览器流畅。",
     "working": "处理中…",
     "paused": "已暂停",
-    "noAccount": "无需账号、位置权限或上传时间轴。"
+    "noAccount": "无需账号、位置权限或上传时间轴。",
+    "originalCredit": "mahlerlab 出品的原创 Timeline Visualizer",
+    "feedback": "反馈与建议",
+    "resolutionHelp": "分辨率指短边像素数。越高，制作时间越长，文件越大。",
+    "invalidSettings": "请选择可用的视频设置。"
   },
   "zh-TW": {
     "heroTitle": "讓走過的地方動起來。",
     "heroBody": "將 Google 地圖時間軸變成可觀看及分享的旅程影片。時間軸始終留在您的裝置上。",
-    "demoLabel": "虛構旅程，由 Timeline Visualizer 製作。",
+    "demoLabel": "真實旅程。使用 Timeline Visualizer 製作。",
     "playDemo": "播放範例",
     "pauseDemo": "暫停範例",
     "openWeb": "開啟網頁版",
@@ -198,12 +214,16 @@ export const FLOW_STRINGS = {
     "previewHint": "預覽採用較低解析度，保持瀏覽器流暢。",
     "working": "處理中…",
     "paused": "已暫停",
-    "noAccount": "無需帳號、位置權限或上傳時間軸。"
+    "noAccount": "無需帳號、位置權限或上傳時間軸。",
+    "originalCredit": "mahlerlab 製作的原創 Timeline Visualizer",
+    "feedback": "意見與建議",
+    "resolutionHelp": "解析度指短邊像素數。越高，製作時間越長，檔案越大。",
+    "invalidSettings": "請選擇可用的影片設定。"
   },
   "es": {
     "heroTitle": "Tus lugares, en movimiento.",
     "heroBody": "Convierte tu cronología de Google Maps en un viaje que puedes ver y compartir. La cronología permanece en tu dispositivo.",
-    "demoLabel": "Un viaje ficticio. Creado con Timeline Visualizer.",
+    "demoLabel": "Un viaje real. Creado con Timeline Visualizer.",
     "playDemo": "Reproducir ejemplo",
     "pauseDemo": "Pausar ejemplo",
     "openWeb": "Abrir aplicación web",
@@ -238,12 +258,16 @@ export const FLOW_STRINGS = {
     "previewHint": "La vista previa usa menos píxeles para que el navegador responda mejor.",
     "working": "Procesando…",
     "paused": "En pausa",
-    "noAccount": "No se necesita cuenta, permiso de ubicación ni subir la cronología."
+    "noAccount": "No se necesita cuenta, permiso de ubicación ni subir la cronología.",
+    "originalCredit": "El Timeline Visualizer original de mahlerlab",
+    "feedback": "Comentarios y sugerencias",
+    "resolutionHelp": "La resolución indica el lado corto. Los formatos mayores tardan más y generan archivos más grandes.",
+    "invalidSettings": "Elige una de las opciones de vídeo disponibles."
   },
   "fr": {
     "heroTitle": "Vos lieux prennent vie.",
     "heroBody": "Transformez votre historique Google Maps en un voyage à regarder et à partager. Votre historique reste sur votre appareil.",
-    "demoLabel": "Un voyage fictif. Créé avec Timeline Visualizer.",
+    "demoLabel": "Un vrai voyage. Créé avec Timeline Visualizer.",
     "playDemo": "Lire l’exemple",
     "pauseDemo": "Mettre en pause",
     "openWeb": "Ouvrir l’application web",
@@ -278,12 +302,16 @@ export const FLOW_STRINGS = {
     "previewHint": "L’aperçu utilise moins de pixels pour garder le navigateur réactif.",
     "working": "Traitement…",
     "paused": "En pause",
-    "noAccount": "Aucun compte, accès à la localisation ni envoi de votre historique n’est nécessaire."
+    "noAccount": "Aucun compte, accès à la localisation ni envoi de votre historique n’est nécessaire.",
+    "originalCredit": "Le Timeline Visualizer original par mahlerlab",
+    "feedback": "Avis et suggestions",
+    "resolutionHelp": "La résolution correspond au côté court. Les grands formats prennent plus de temps et produisent des fichiers plus volumineux.",
+    "invalidSettings": "Choisissez un des réglages vidéo proposés."
   },
   "de": {
     "heroTitle": "Deine Orte in Bewegung.",
     "heroBody": "Verwandle deine Google Maps-Zeitachse in eine Reise zum Ansehen und Teilen. Deine Zeitachse bleibt auf deinem Gerät.",
-    "demoLabel": "Eine fiktive Reise. Erstellt mit Timeline Visualizer.",
+    "demoLabel": "Eine echte Reise. Erstellt mit Timeline Visualizer.",
     "playDemo": "Beispiel abspielen",
     "pauseDemo": "Beispiel pausieren",
     "openWeb": "Web-App öffnen",
@@ -318,12 +346,16 @@ export const FLOW_STRINGS = {
     "previewHint": "Die Vorschau nutzt weniger Pixel, damit der Browser flüssig bleibt.",
     "working": "Wird verarbeitet…",
     "paused": "Pausiert",
-    "noAccount": "Kein Konto, keine Standortberechtigung und kein Upload der Zeitachse erforderlich."
+    "noAccount": "Kein Konto, keine Standortberechtigung und kein Upload der Zeitachse erforderlich.",
+    "originalCredit": "Das Original Timeline Visualizer von mahlerlab",
+    "feedback": "Feedback und Vorschläge",
+    "resolutionHelp": "Die Auflösung bezeichnet die kurze Seite. Größere Formate dauern länger und erzeugen größere Dateien.",
+    "invalidSettings": "Wähle eine der verfügbaren Videoeinstellungen."
   },
   "pt-BR": {
     "heroTitle": "Seus lugares em movimento.",
     "heroBody": "Transforme sua Linha do tempo do Google Maps em uma viagem para assistir e compartilhar. Seus dados ficam no seu dispositivo.",
-    "demoLabel": "Uma viagem fictícia. Criada com Timeline Visualizer.",
+    "demoLabel": "Uma viagem real. Criada com Timeline Visualizer.",
     "playDemo": "Reproduzir exemplo",
     "pauseDemo": "Pausar exemplo",
     "openWeb": "Abrir aplicativo web",
@@ -358,7 +390,11 @@ export const FLOW_STRINGS = {
     "previewHint": "A prévia usa menos pixels para manter o navegador responsivo.",
     "working": "Processando…",
     "paused": "Pausado",
-    "noAccount": "Não é necessário ter conta, permitir localização ou enviar a Linha do tempo."
+    "noAccount": "Não é necessário ter conta, permitir localização ou enviar a Linha do tempo.",
+    "originalCredit": "O Timeline Visualizer original da mahlerlab",
+    "feedback": "Comentários e sugestões",
+    "resolutionHelp": "A resolução indica o lado menor. Formatos maiores levam mais tempo e geram arquivos maiores.",
+    "invalidSettings": "Escolha uma das configurações de vídeo disponíveis."
   }
 } as const;
 export type FlowKey = keyof typeof FLOW_STRINGS.en;

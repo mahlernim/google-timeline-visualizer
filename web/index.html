@@ -15,7 +15,7 @@
 <main class="landing">
   <header class="site-header">
     <a href="/google-timeline-visualizer/" class="brand"><img src="./icon.svg" alt="" width="28" height="28">Timeline Visualizer</a>
-    <label class="language"><span data-flow="language">Language</span><select id="landing-language" aria-label="Language"><option value="system">System default</option></select></label>
+    <label class="language"><span data-flow="language">Language</span><select id="landing-language" aria-label="Language"><option value="system">English</option></select></label>
   </header>
   <section class="hero" aria-labelledby="hero-title">
     <div class="hero-copy">
@@ -42,15 +42,16 @@
     </div>
     <figure class="demo">
       <div class="demo-frame">
-        <video id="demo-video" poster="./demo-poster.webp" width="480" height="480" muted loop playsinline preload="none" aria-describedby="demo-caption"></video>
+        <video id="demo-video" poster="./demo-mahlerlab.webp" width="480" height="480" muted loop playsinline preload="none" aria-describedby="demo-caption"></video>
         <button id="demo-toggle" class="demo-toggle" type="button" data-flow="playDemo">Play example</button>
       </div>
-      <figcaption id="demo-caption" data-flow="demoLabel">A fictional journey. Made with Timeline Visualizer.</figcaption>
+      <figcaption id="demo-caption" data-flow="demoLabel">A real journey. Made with Timeline Visualizer.</figcaption>
     </figure>
   </section>
   <footer>
     <p data-flow="noAccount">No account, location permission, or Timeline upload is required.</p>
-    <nav><a href="https://github.com/mahlernim/google-timeline-visualizer/blob/main/docs/privacy-web.md" data-flow="privacy">Privacy</a><a href="https://github.com/mahlernim/google-timeline-visualizer">GitHub</a></nav>
+    <p class="original-credit" data-flow="originalCredit">The original Timeline Visualizer by mahlerlab</p>
+    <nav><a href="https://github.com/mahlernim/google-timeline-visualizer/discussions" data-flow="feedback">Feedback &amp; suggestions</a><a href="https://github.com/mahlernim/google-timeline-visualizer/blob/main/docs/privacy-web.md" data-flow="privacy">Privacy</a><a href="https://github.com/mahlernim/google-timeline-visualizer">GitHub</a></nav>
   </footer>
 </main>
 <script type="module" src="/src/landing.ts"></script>

@@ -14,6 +14,7 @@ import {
   MIN_PREVIEW_SHORT_EDGE,
   previewCanvasSize,
   requiredTiles,
+  trailWindowDistance,
 } from './renderer';
 import type { GeoPoint, PreparedJourney, RenderSize, TimelineFrame, Viewport } from './types';
 
@@ -451,5 +452,27 @@ describe('CARTO project key', () => {
 
     expect(url.pathname).toBe('/light_all/13/6985/3172.png');
     expect(url.searchParams.get('key')).toBe('project key/value');
+  });
+});
+
+describe('fading travel trail', () => {
+  it('bounds the visible distance for short and very long journeys', () => {
+    expect(trailWindowDistance(20, 60)).toBe(20);
+    expect(trailWindowDistance(100, 60)).toBe(80);
+    expect(trailWindowDistance(100_000, 15)).toBe(2000);
+    expect(trailWindowDistance(1000, 31.5)).toBeCloseTo(1000 * 2.5 / 30);
+  });
+  it('draws only recent points during travel and restores the whole route in the overview', () => {
+    const base = preparedAt(FORMATS[0]);
+    const worldPoints = Array.from({ length: 1001 }, (_, i) => ({ x: 0.6 + i * 0.00001, y: 0.4 }));
+    const journey = { ...base, worldPoints, overviewRouteSegments: [worldPoints],
+      cumulativeDistanceKm: worldPoints.map((_, i) => i), totalDistanceKm: 1000, durationSeconds: 60 };
+    const text = { title: 'Journey', periodLabel: '2026', separator: ' · ', formatDistance: () => '900 km' };
+    const active = recordingCanvas(480, 480);
+    drawFrame(active.canvas, journey, { journeyProgress: 0.9, outroProgress: 0 }, text);
+    expect(active.calls.filter((call) => call.method === 'lineTo').length).toBeLessThan(100);
+    const overview = recordingCanvas(480, 480);
+    drawFrame(overview.canvas, journey, { journeyProgress: 1, outroProgress: 1 }, text);
+    expect(overview.calls.filter((call) => call.method === 'lineTo').length).toBeGreaterThan(1000);
   });
 });

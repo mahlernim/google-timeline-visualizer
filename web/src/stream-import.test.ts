@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { scanTimeline, extractTimeline } from './stream-import';
 import { parseTimelineJson, parseRawSignalsJson, processRawSignals, selectDateRange } from './timeline';
 import { filterLocationOutliers } from './outlier';
@@ -16,6 +16,9 @@ describe('streamed Timeline import', () => {
       const data = JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
       const result = await extractTimeline(blob(data), all);
       expect(result.points).toEqual(filterLocationOutliers(parseTimelineJson(data)).points);
+      const file = blob(data);
+      const scan = await scanTimeline(file);
+      expect(await extractTimeline(file, all, undefined, undefined, scan.index)).toEqual(result);
     }
   });
   it('keeps only the selected range while preserving cross-boundary semantic coverage', async () => {
@@ -103,5 +106,59 @@ describe('streamed Timeline import', () => {
   it('rejects old Takeout and unsupported structures', async () => {
     await expect(scanTimeline(blob({ locations: [] }))).rejects.toMatchObject({ code: 'legacy-format' });
     await expect(scanTimeline(blob({ unrelated: [] }))).rejects.toMatchObject({ code: 'unsupported-format' });
+  });
+  it('seeks indexed byte ranges across UTF-8, leading whitespace, reversed dates, and covering visits', async () => {
+    const data = [activity('2026-04-10'), {
+      startTime: '2026-01-01T00:00:00', endTime: '2026-04-01T00:00:00',
+      visit: { topCandidate: { placeLocation: 'geo:37,127' } },
+    }, activity('2026-02-01'), activity('2026-01-01')];
+    const filler = '\uD83C\uDF0F 서울 café '.repeat(30_000);
+    for (const wrapper of [data, { semanticSegments: data, rawSignals: [] }]) {
+      // The ignored record spans chunks and tests UTF-8 byte offsets rather than character offsets.
+      const expanded = Array.isArray(wrapper) ? [{ note: filler }, ...wrapper]
+        : { note: filler, ...wrapper };
+      const file = new Blob([' '.repeat(70_000), JSON.stringify(expanded)]);
+      const scan = await scanTimeline(file);
+      const range = { ...all, start: '2026-02-01', end: '2026-02-28' };
+      expect(await extractTimeline(file, range, undefined, undefined, scan.index))
+        .toEqual(await extractTimeline(file, range));
+    }
+  });
+  it('reads substantially fewer bytes on a selected-month pass without changing its output', async () => {
+    const data = Array.from({ length: 6000 }, (_, i) => ({
+      ...activity(new Date(Date.UTC(2020, 0, 1 + i)).toISOString().slice(0, 10)),
+      note: 'ignored metadata'.repeat(60),
+    }));
+    const file = blob({ rawSignals: [], semanticSegments: data });
+    const scan = await scanTimeline(file);
+    const range = { ...all, start: '2026-01-01', end: '2026-01-31' };
+    const expected = await extractTimeline(file, range);
+    const slices = vi.spyOn(file, 'slice');
+    expect(await extractTimeline(file, range, undefined, undefined, scan.index)).toEqual(expected);
+    const bytesRead = slices.mock.calls.reduce((total, [start, end]) => total + Number(end) - Number(start), 0);
+    expect(bytesRead).toBeLessThan(file.size / 4);
+    const controller = new AbortController();
+    await expect(extractTimeline(file, all, controller.signal, () => controller.abort(), scan.index))
+      .rejects.toMatchObject({ name: 'AbortError' });
+  });
+  it('keeps separate repeated semantic arrays separate in the index', async () => {
+    const file = new Blob(['{"semanticSegments":', JSON.stringify([activity('2026-01-01')]),
+      ',"rawSignals":[],"semanticSegments":', JSON.stringify([activity('2026-02-01')]), '}']);
+    const scan = await scanTimeline(file);
+    expect(scan.index?.blocks).toHaveLength(2);
+    expect(await extractTimeline(file, all, undefined, undefined, scan.index))
+      .toEqual(await extractTimeline(file, all));
+  });
+  it('reads a covering semantic block even when its recorded endpoints are outside the selection', async () => {
+    const cover = { startTime: '2026-01-01T00:00:00Z', endTime: '2026-04-01T00:00:00Z',
+      activity: { start: 'geo:37,127', end: 'geo:35,129' }, note: 'x'.repeat(270_000) };
+    const path = { startTime: '2026-02-05T00:00:00Z', endTime: '2026-02-06T00:00:00Z',
+      timelinePath: [{ time: '2026-02-05T12:00:00Z', point: 'geo:40,120' }] };
+    const file = blob([cover, path, activity('2026-02-10')]);
+    const scan = await scanTimeline(file);
+    expect(scan.index?.blocks.length).toBeGreaterThan(1);
+    const range = { ...all, start: '2026-02-01', end: '2026-02-28' };
+    expect(await extractTimeline(file, range, undefined, undefined, scan.index))
+      .toEqual(await extractTimeline(file, range));
   });
 });
