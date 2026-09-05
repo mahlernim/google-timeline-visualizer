@@ -328,6 +328,9 @@ next.addEventListener('click', async () => {
     supportedFormat = null;
     await job('working', async (signal, current) => {
       const format = currentFormat();
+      el('compatibility-status').textContent = '';
+      el('export-settings').textContent = format.width + ' × ' + format.height + ' · ' + format.frameRate + ' fps · '
+        + i18n.t('durationSeconds', { count: currentDuration() });
       if (estimatedOutputBytes(format, currentDuration()) > MAX_OUTPUT_BYTES) throw new Error('outputTooLarge');
       encoder = await import('./video');
       signal.throwIfAborted();
@@ -336,8 +339,6 @@ next.addEventListener('click', async () => {
       supportedFormat = codec ? { ...format, codec } : null;
       el('compatibility-status').textContent = codec ? i18n.t('compatibilityFull')
         : i18n.t('errorFormatUnsupported', { width: format.width, height: format.height, fps: format.frameRate });
-      el('export-settings').textContent = format.width + ' × ' + format.height + ' · ' + format.frameRate + ' fps · '
-        + i18n.t('durationSeconds', { count: currentDuration() });
       statusText = () => '';
     });
   }
