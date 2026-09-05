@@ -84,6 +84,43 @@ let resultFile: File | null = null;
 let statusText: () => string = () => '';
 let errorText: (() => string) | null = null;
 const probe = createFormatProbe();
+const QUICK_PREVIEW_SECONDS = 8;
+const workflowStatus = el('workflow-status');
+const errorMessage = el('error-message');
+
+function setHelpPlatform(ios: boolean): void {
+  el('guide-android').hidden = ios;
+  el('guide-ios').hidden = !ios;
+  el('help-android').setAttribute('aria-pressed', String(!ios));
+  el('help-ios').setAttribute('aria-pressed', String(ios));
+}
+el('help-android').addEventListener('click', () => setHelpPlatform(false));
+el('help-ios').addEventListener('click', () => setHelpPlatform(true));
+setHelpPlatform(/iPad|iPhone|iPod/i.test(navigator.userAgent)
+  || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1));
+
+function moveTo(node: HTMLElement, parent: HTMLElement): void {
+  if (node.parentElement !== parent) parent.append(node);
+}
+function focusStep(): void {
+  const target = step;
+  requestAnimationFrame(() => {
+    if (step !== target) return;
+    const heading = document.querySelector<HTMLElement>(`[data-panel="${target}"] h2`);
+    heading?.focus({ preventScroll: true });
+    heading?.scrollIntoView({ block: 'start' });
+  });
+}
+function updateProgress(fraction: number): void {
+  progress.value = fraction;
+  renderStatus();
+}
+function resetSource(): void {
+  file = null;
+  scan = null;
+  fileName = '';
+  sourceInput.value = '';
+}
 
 function currentDuration(): number { return Number(advanced.checked ? duration.value : simpleDuration.value); }
 function currentFormat() {
@@ -141,7 +178,7 @@ function releaseResult(): void {
   resultFile = null;
 }
 function renderStatus(): void {
-  el('progress-label').textContent = statusText();
+  el('progress-label').textContent = statusText() + (busy && step <= 1 ? ' · ' + i18n.formatPercent(progress.value) : '');
   el('error-message').hidden = errorText === null;
   el('error-message').textContent = errorText?.() ?? '';
 }
@@ -171,7 +208,23 @@ function refresh(): void {
   language.disabled = busy;
   unitSelect.disabled = busy;
   back.hidden = step === 0;
-  next.hidden = step === 0 || step === 3;
+  next.hidden = (step === 0 && !scan) || step === 3;
+  next.textContent = f(step === 0 ? 'datesStep' : step === 1 ? 'toPreview' : 'exportSettings');
+  const importing = step === 0 && busy;
+  el('file-picker').hidden = importing;
+  el('import-work').hidden = !importing;
+  el('file-status').hidden = importing;
+  el('import-filename').textContent = fileName;
+  el('choose-file-label').textContent = scan ? f('changeFile') : i18n.t('chooseFileButton');
+  el('file-status').textContent = scan ? [fileName, scan.firstDate, scan.lastDate].join(' · ') : i18n.t('fileStatusEmpty');
+  el('selected-file').textContent = fileName;
+  moveTo(workflowStatus, el(step === 0 ? 'import-status-slot' : 'workflow-status-slot'));
+  moveTo(cancel, el(step === 0 ? 'import-cancel-slot' : 'workflow-actions'));
+  moveTo(errorMessage, el(step === 0 ? 'import-error-slot' : 'workflow-error-slot'));
+  const estimate = estimatedOutputBytes(currentFormat(), currentDuration());
+  el('size-estimate').textContent = f('estimatedSize') + ' · ' + i18n.formatNumber(estimate / 1024 ** 2, { maximumFractionDigits: 1 }) + ' MiB';
+  el('format-warning').hidden = estimate <= MAX_OUTPUT_BYTES;
+  el('preview-export-duration').textContent = f('exportDuration') + ' · ' + i18n.t('durationSeconds', { count: currentDuration() });
   cancel.hidden = !busy;
   progress.hidden = !busy;
   createButton.disabled = busy || supportedFormat === null;
@@ -204,6 +257,8 @@ function populateDates(reset = false): void {
   for (const input of [startDate, endDate]) {
     input.min = raw.checked ? scan.rawFirstDate : scan.firstDate;
     input.max = raw.checked ? scan.rawLastDate : scan.lastDate;
+    if (input.value < input.min) input.value = input.min;
+    if (input.value > input.max) input.value = input.max;
   }
 }
 function localize(): void {
@@ -229,7 +284,7 @@ function stop(): void {
   generation += 1;
   controller?.abort();
   if (!busy) controller = null;
-  if (step === 0) { file = null; scan = null; sourceInput.value = ''; }
+  if (step === 0 && !scan) resetSource();
   releasePreview();
   statusText = () => f('paused');
   refresh();
@@ -246,7 +301,7 @@ async function job(label: FlowKey, work: (signal: AbortSignal, current: () => bo
   refresh();
   const current = () => id === generation && !ownController.signal.aborted;
   try { await work(ownController.signal, current); }
-  catch (error) { if (current()) { ownController.abort(); releasePreview(); statusText = () => ''; fail(error); } }
+  catch (error) { if (current()) { ownController.abort(); releasePreview(); if (step === 0 && !scan) resetSource(); statusText = () => ''; fail(error); } }
   finally {
     if (controller === ownController) { busy = false; controller = null; refresh(); }
   }
@@ -257,12 +312,12 @@ function showStep(target: number): void {
     releaseResult();
     supportedFormat = null;
     if (target <= 1) { points = []; distance = 0; }
-    if (target === 0) { file = null; scan = null; sourceInput.value = ''; fileName = ''; }
   }
   step = target;
   statusText = () => '';
   errorText = null;
   refresh();
+  focusStep();
 }
 async function load(fileToRead: Blob, name: string): Promise<void> {
   stop();
@@ -275,7 +330,7 @@ async function load(fileToRead: Blob, name: string): Promise<void> {
   await job('importScanning', async (signal, current) => {
     const { runImport } = await import('./import-client');
     signal.throwIfAborted();
-    const message = await runImport({ file: fileToRead }, signal, (fraction) => { progress.value = fraction; });
+    const message = await runImport({ file: fileToRead }, signal, updateProgress);
     if (!current() || message.kind !== 'scan') return;
     scan = message.scan;
     raw.checked = !scan.hasSemantic && scan.hasRaw;
@@ -285,7 +340,7 @@ async function load(fileToRead: Blob, name: string): Promise<void> {
     el('file-status').textContent = [name, scan.firstDate, scan.lastDate].join(' · ');
     if (raw.checked) {
       rawDialog.showModal();
-    } else { step = 1; }
+    } else { showStep(1); }
     statusText = () => '';
   });
 }
@@ -307,23 +362,24 @@ function requireConsent(): boolean {
   return false;
 }
 next.addEventListener('click', async () => {
-  if (step === 1 && file && validSettings()) {
+  if (step === 0 && scan && file) {
+    showStep(1);
+  } else if (step === 1 && file && validSettings()) {
     await job('extractReading', async (signal, current) => {
       const { runImport } = await import('./import-client');
       signal.throwIfAborted();
-      const message = await runImport({ file: file!, range: range(), index: scan?.index }, signal, (fraction) => { progress.value = fraction; });
+      const message = await runImport({ file: file!, range: range(), index: scan?.index }, signal, updateProgress);
       if (!current() || message.kind !== 'range') return;
       points = message.result.points;
       rejected = message.result.rejected;
       distance = cumulativeDistances(points).at(-1) ?? 0;
       if (points.length < 2 || distance <= 0) throw new AppError('errorTooFewPoints', 'Select a wider period.');
-      step = 2;
-      statusText = () => '';
+      showStep(2);
       localize();
     });
   } else if (step === 2 && requireConsent()) {
     releasePreview();
-    step = 3;
+    showStep(3);
     supportedFormat = null;
     await job('working', async (signal, current) => {
       const format = currentFormat();
@@ -357,11 +413,11 @@ previewButton.addEventListener('click', async () => {
     canvas.hidden = false;
     prepared = await renderer.prepareJourney(points, size, currentCamera(), currentDuration(), signal);
     const text = overlay();
-    const frames = 8 * 15;
+    const frames = QUICK_PREVIEW_SECONDS * 15;
     for (let frame = 0; frame <= frames; frame += 1) {
       signal.throwIfAborted();
       const started = performance.now();
-      await renderer.drawJourneyFrame(canvas, prepared, frameAtElapsedSeconds(frame / 15, 8), text, signal);
+      await renderer.drawJourneyFrame(canvas, prepared, frameAtElapsedSeconds(frame / 15, QUICK_PREVIEW_SECONDS), text, signal);
       if (!current()) return;
       progress.value = frame / frames;
       // Waiting only for the remaining frame time keeps map loading from creating a burst.
@@ -414,10 +470,10 @@ createButton.addEventListener('click', async () => {
     }
   });
 });
-sourceInput.addEventListener('change', () => { const selected = sourceInput.files?.[0]; if (selected) void load(selected, selected.name); });
-el('continue-raw-data').addEventListener('click', () => { rawDialog.close(); step = 1; refresh(); });
+sourceInput.addEventListener('change', () => { const selected = sourceInput.files?.[0]; if (selected) { sourceInput.value = ''; void load(selected, selected.name); } });
+el('continue-raw-data').addEventListener('click', () => { rawDialog.close(); showStep(1); });
 el('open-google-maps').addEventListener('click', () => { window.open('https://maps.google.com/', '_blank', 'noopener,noreferrer'); });
-rawDialog.addEventListener('cancel', () => { stop(); scan = null; file = null; });
+rawDialog.addEventListener('cancel', () => { stop(); resetSource(); refresh(); });
 cancel.addEventListener('click', stop);
 back.addEventListener('click', () => showStep(Math.max(0, step - 1)));
 document.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((button) => {
@@ -431,13 +487,18 @@ form.addEventListener('input', () => {
   releasePreview();
   releaseResult();
   errorText = null;
-});
-advanced.addEventListener('change', () => {
-  if (!advanced.checked) raw.checked = !scan?.hasSemantic && !!scan?.hasRaw;
-  populateDates(true);
   refresh();
 });
-raw.addEventListener('change', () => { populateDates(true); refresh(); });
+advanced.addEventListener('change', () => {
+  if (advanced.checked) duration.value = simpleDuration.value;
+  else {
+    simpleDuration.value = duration.value;
+    raw.checked = !scan?.hasSemantic && !!scan?.hasRaw;
+  }
+  populateDates();
+  refresh();
+});
+raw.addEventListener('change', () => { populateDates(); refresh(); });
 exact.addEventListener('change', refresh);
 language.addEventListener('change', () => {
   if (!isLanguagePreference(language.value)) return;
@@ -458,8 +519,8 @@ share.addEventListener('click', async () => {
 });
 document.addEventListener('visibilitychange', () => { if (document.hidden && step === 2 && busy) stop(); });
 window.addEventListener('languagechange', localize);
-window.addEventListener('pagehide', () => { stop(); releaseResult(); file = null; points = []; scan = null; });
-window.addEventListener('pageshow', (event) => { if (event.persisted) { step = 0; form.reset(); advanced.checked = false; localize(); } });
+window.addEventListener('pagehide', () => { stop(); releaseResult(); resetSource(); points = []; });
+window.addEventListener('pageshow', (event) => { if (event.persisted) { step = 0; form.reset(); unitSelect.value = unitPreference; advanced.checked = false; localize(); } });
 // Browsers may restore form values, including 4K settings. A fresh session always starts light.
 form.reset();
 advanced.checked = false;
