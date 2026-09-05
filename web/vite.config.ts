@@ -65,6 +65,10 @@ function generatedServiceWorker(): Plugin {
 
 export default defineConfig({
   base: '/google-timeline-visualizer/',
+  define: {
+    'import.meta.env.VITE_SW_VERSION': JSON.stringify(process.env.GITHUB_RUN_ID
+      ? `${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT ?? '1'}` : 'development'),
+  },
   plugins: [generatedServiceWorker(), {
     name: 'stable-apk-link',
     transformIndexHtml(html) {

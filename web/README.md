@@ -78,6 +78,8 @@ The Pages workflow deploys from main, resolves the latest stable GitHub APK duri
 the build, and also refreshes after a stable release or successful Android release
 workflow. No browser-side GitHub API request is needed. Local builds fall back to
 the stable release page unless `VITE_STABLE_APK_URL` is supplied.
+Service-worker registration includes the deployment run and attempt in its URL,
+preventing a CDN-cached older worker from preloading obsolete application modules.
 
 The build verifies the landing JavaScript's 30 KiB gzip budget, the demo's 750 KiB
 budget, poster size, fast-start metadata, and the service worker's deferred assets.

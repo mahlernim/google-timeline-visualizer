@@ -476,5 +476,8 @@ language.value = languagePreference;
 unitSelect.value = unitPreference;
 localize();
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => { void navigator.serviceWorker.register(import.meta.env.BASE_URL + 'service-worker.js').catch(() => undefined); });
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register(import.meta.env.BASE_URL + 'service-worker.js?v=' + import.meta.env.VITE_SW_VERSION,
+      { updateViaCache: 'none' }).catch(() => undefined);
+  });
 }
