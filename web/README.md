@@ -97,14 +97,15 @@ Keep the existing project base path.
 
 ## Demo provenance
 
-`public/demo-journey.mp4` contains the first ten seconds of the publisher's
+`public/demo-mahlerlab.mp4` contains the first ten seconds of the publisher's
 `timeline video.mp4`, supplied and explicitly authorized for public use by mahlerlab.
-`public/demo-poster.webp` is a frame from that excerpt. The source file is not
-included. The clip preserves the source pacing and existing map attribution.
+`public/demo-mahlerlab.webp` is a frame from that excerpt. The source file is not
+included. The new asset URLs prevent stale fictional media in browser or CDN caches.
+The clip preserves the source pacing and existing map attribution.
 
 ```sh
-ffmpeg -i "timeline video.mp4" -t 10 -vf "fps=15,scale=480:480" -c:v libx264 -crf 27 -preset slow -pix_fmt yuv420p -movflags +faststart -an -map_metadata -1 -metadata "title=Timeline Visualizer by mahlerlab" public/demo-journey.mp4
-ffmpeg -ss 2 -i public/demo-journey.mp4 -frames:v 1 -c:v libwebp -quality 75 public/demo-poster.webp
+ffmpeg -i "timeline video.mp4" -t 10 -vf "fps=15,scale=480:480" -c:v libx264 -crf 27 -preset slow -pix_fmt yuv420p -movflags +faststart -an -map_metadata -1 -metadata "title=Timeline Visualizer by mahlerlab" public/demo-mahlerlab.mp4
+ffmpeg -ss 2 -i public/demo-mahlerlab.mp4 -frames:v 1 -c:v libwebp -quality 75 public/demo-mahlerlab.webp
 ```
 
 The clip is H.264/yuv420p, 480×480, 150 frames, ten seconds, without audio.

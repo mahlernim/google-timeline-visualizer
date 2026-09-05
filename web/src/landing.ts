@@ -30,7 +30,7 @@ const androidFirst = preferAndroid(navigator.userAgent, navigator.maxTouchPoints
 document.documentElement.dataset.platform = androidFirst ? 'android' : 'web';
 if (androidFirst) choices.replaceChildren(android, web); else choices.replaceChildren(web, android);
 function attachVideo(): void {
-  if (!video.getAttribute('src')) video.src = import.meta.env.BASE_URL + 'demo-journey.mp4';
+  if (!video.getAttribute('src')) video.src = import.meta.env.BASE_URL + 'demo-mahlerlab.mp4';
 }
 function syncPlayback(): void {
   const allowed = mayAutoplay(reduced.matches, connection?.saveData === true);
