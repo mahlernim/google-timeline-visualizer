@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#fff7fa" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="description" data-i18n-attr="content:appDescription" content="Create a travel animation privately from a Google Maps Timeline export." />
+    <meta name="google-adsense-account" content="ca-pub-4628399954212784" />
+    <link rel="canonical" href="https://ahn-lab.org/google-timeline-visualizer/app/" />
+    <link rel="manifest" href="../manifest.webmanifest" />
+    <link rel="icon" href="../icon.svg" type="image/svg+xml" />
+    <title data-i18n="appName">Timeline Visualizer</title>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="app-header">
+        <a class="brand" href="../">Timeline Visualizer</a>
+        <a href="../" data-flow="home">Home</a>
+      </header>
+      <h1 data-i18n="headerTitle">Create video</h1>
+      <p id="mode-summary" class="status" data-flow="simpleHint">Light preview · 480p · 15 fps</p>
+      <div class="preferences">
+        <label><span data-i18n="languageLabel">Language</span><select id="app-language">
+            <option value="system" data-i18n="languageSystemDefault">System default</option>
+            <option value="en">English</option>
+            <option value="ko">한국어</option>
+            <option value="ja">日本語</option>
+            <option value="zh-CN">简体中文</option>
+            <option value="zh-TW">繁體中文</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="pt-BR">Português (Brasil)</option>
+          </select></label>
+        <label><span data-i18n="distanceUnitLabel">Distance unit</span><select id="distance-unit">
+            <option value="automatic" selected>Automatic · Kilometers</option>
+            <option value="kilometers" data-i18n="distanceUnitKilometers">Kilometers</option>
+            <option value="miles" data-i18n="distanceUnitMiles">Miles</option>
+          </select></label>
+      </div>
+      <nav aria-label="Progress"><ol class="steps">
+        <li><button type="button" data-step="0" aria-current="step"><span>1</span><span data-flow="importStep">Import</span></button></li>
+        <li><button type="button" data-step="1" disabled><span>2</span><span data-flow="datesStep">Choose dates</span></button></li>
+        <li><button type="button" data-step="2" disabled><span>3</span><span data-flow="previewStep">Preview</span></button></li>
+        <li><button type="button" data-step="3" disabled><span>4</span><span data-flow="exportStep">Export</span></button></li>
+      </ol></nav>
+      <form id="settings-form" autocomplete="off">
+      <section id="step-import" class="card" data-panel="0">
+        <h2 data-i18n="fileCardTitle">Timeline file</h2>
+        <p data-i18n="fileCardIntro">Choose your exported Timeline.json. The file stays on this device, and only map images are requested from the map provider.</p>
+        <details class="help-panel">
+          <summary data-i18n="exportHelpSummary">How to export Timeline on iPhone</summary>
+          <ol>
+            <li data-i18n="exportHelpStep1">Open Google Maps and tap your profile picture.</li>
+            <li data-i18n="exportHelpStep2">Open Settings, then Personal content.</li>
+            <li data-i18n="exportHelpStep3">Select Export Timeline data.</li>
+            <li data-i18n="exportHelpStep4">Save Timeline.json in the Files app, then return here.</li>
+          </ol>
+          <p data-i18n="addToHomeScreenHint">To keep this app on your iPhone, use Safari’s Share menu and choose Add to Home Screen.</p>
+        </details>
+        <div class="source-actions">
+          <label class="file-button">
+            <span data-i18n="chooseFileButton">Choose Timeline.json</span>
+            <input id="timeline-file" type="file" accept="application/json,.json" />
+          </label>
+          <button id="sample-button" class="secondary" type="button" data-i18n="sampleButton">Try a fictional sample journey</button>
+        </div>
+        <p id="file-status" class="status" role="status" data-i18n="fileStatusEmpty">No Timeline loaded</p>
+        <p data-flow="importReady">Choose the dates you want to preview.</p>
+      </section>
+      <section id="step-dates" class="card" data-panel="1" hidden>
+        <h2 data-flow="datesStep">Choose dates</h2>
+        <div id="period-controls">
+          <label class="checkbox-row">
+            <input id="exact-date-toggle" type="checkbox" />
+            <span data-i18n="exactDatesToggle">Select exact dates</span>
+          </label>
+          <div id="month-range-fields" class="field-grid">
+            <label>
+              <span data-i18n="fromLabel">From</span>
+              <select id="start-month"></select>
+            </label>
+            <label>
+              <span data-i18n="toLabel">To</span>
+              <select id="end-month"></select>
+            </label>
+          </div>
+          <div id="exact-date-fields" class="field-grid hidden">
+            <label>
+              <span data-i18n="startDateLabel">Start date</span>
+              <input id="start-date" type="date" />
+            </label>
+            <label>
+              <span data-i18n="endDateLabel">End date</span>
+              <input id="end-date" type="date" />
+            </label>
+          </div>
+        </div>
+        <label>
+          <span data-i18n="videoTitleLabel">Video title</span>
+          <input id="video-title" type="text" maxlength="80" data-i18n-attr="value:defaultVideoTitle" value="My Journey" />
+        </label>
+        <label>
+          <span data-i18n="aspectRatioLabel">Aspect ratio</span>
+          <select id="aspect-ratio" aria-describedby="format-warning">
+            <option value="square" selected data-i18n="aspectSquare">Square</option>
+            <option value="portrait" data-i18n="aspectPortrait">Portrait</option>
+            <option value="landscape" data-i18n="aspectLandscape">Landscape</option>
+          </select>
+        </label>
+        <label id="simple-duration-field"><span data-i18n="durationLabel">Duration</span>
+          <select id="duration-simple">
+            <option value="10" data-i18n="durationSeconds" data-i18n-count="10">10 seconds</option>
+            <option value="15" data-i18n="durationSeconds" data-i18n-count="15" selected>15 seconds</option>
+            <option value="30" data-i18n="durationSeconds" data-i18n-count="30">30 seconds</option>
+          </select>
+        </label>
+        <label class="checkbox-row"><input id="advanced-toggle" type="checkbox"><span data-flow="advanced">Advanced settings</span></label>
+        <div id="advanced-fields" hidden>
+        <label id="raw-signals-row" class="checkbox-row">
+          <input id="raw-signals-toggle" type="checkbox" />
+          <span data-i18n="rawSignalsToggle">Use raw location data</span>
+        </label>
+        <p id="raw-signals-description" class="status" data-i18n="rawSignalsDescription">Uses recent unprocessed location estimates. Noise is reduced, but the route and distance may still be inaccurate.</p>
+        <p id="raw-date-range" class="status" aria-live="polite"></p>
+        <label id="raw-accuracy-field" >
+          <span data-i18n="accuracyLimitLabel">Accuracy limit (meters)</span>
+          <input id="raw-accuracy-limit" type="number" min="0" step="1" inputmode="decimal" value="100" />
+          <span class="field-help" data-i18n="accuracyLimitHelp">Less accurate locations are excluded. Leave blank to include every usable location.</span>
+        </label>
+        <label id="location-filter-field">
+          <span data-i18n="locationFilterLabel">GPS outlier filtering</span>
+          <select id="location-filter">
+            <option value="conservative" selected data-i18n="locationFilterConservative">Conservative</option>
+            <option value="off" data-i18n="locationFilterOff">Off</option>
+          </select>
+          <span class="field-help" data-i18n="locationFilterHelp">Conservative filtering ignores only short, impossible round trips. Your Timeline file is never changed.</span>
+        </label>
+        <label>
+          <span data-i18n="durationLabel">Duration</span>
+          <input id="duration" type="number" min="10" max="300" step="1" inputmode="numeric" value="15" required />
+        </label>
+        <label>
+          <span data-i18n="cameraMovementLabel">Camera movement</span>
+          <select id="camera-movement">
+            <option value="fixed" data-i18n="cameraFixed">Fixed zoom</option>
+            <option value="steady" selected data-i18n="cameraSteady">Steady following</option>
+            <option value="dynamic" data-i18n="cameraDynamic">Dynamic following</option>
+            <option value="close-up" data-i18n="cameraCloseUp">Close-up</option>
+          </select>
+        </label>
+        <label>
+          <span data-i18n="resolutionLabel">Resolution</span>
+          <input id="resolution" type="number" min="480" max="2160" step="2" inputmode="numeric" value="480" aria-describedby="format-warning" required />
+          <span class="field-help" data-i18n="videoFormatHelp">Enter the short edge in pixels from 480 through 2160. Larger formats take longer and produce larger files.</span>
+        </label>
+        <label>
+          <span data-i18n="frameRateLabel">Frame rate</span>
+          <input id="frame-rate" type="number" min="15" max="120" step="1" inputmode="numeric" value="15" aria-describedby="format-warning" required />
+          <span class="field-help" data-i18n="frameRateHelp">Higher frame rates look smoother but take longer and create larger files.</span>
+        </label>
+        </div>
+      </section>
+      <section id="preview-card" class="card" data-panel="2" hidden>
+        <h2 data-flow="previewStep">Preview</h2>
+        <p id="selection-summary" class="status"></p>
+        <p data-flow="previewHint">The preview uses fewer pixels to keep your browser responsive.</p>
+        <div class="privacy-notice">
+          <strong data-i18n="privacyNoticeTitle">Before loading the map</strong>
+          <p data-i18n="privacyNoticeBody">Your Timeline file is never uploaded. CARTO receives the tile coordinates for map areas in the selected journey, along with normal network information such as your IP address. This may reveal places in your Timeline to CARTO.</p>
+          <label class="checkbox-row">
+            <input id="map-consent" type="checkbox" />
+            <span data-i18n="mapConsentLabel">I understand and want to load the map</span>
+          </label>
+          <a href="https://github.com/mahlernim/google-timeline-visualizer/blob/main/docs/privacy-web.md" target="_blank" rel="noopener noreferrer" data-i18n="privacyPolicyLink">Read the web app privacy policy</a>
+        </div>
+        <canvas id="journey-canvas" width="1" height="1" hidden></canvas>
+        <button id="preview-button" type="button" data-i18n="previewButton">Preview</button>
+      </section>
+      <section id="step-export" class="card" data-panel="3" hidden>
+        <h2 data-flow="exportStep">Export</h2>
+        <p id="export-settings" class="status"></p>
+        <p data-flow="exportHint">Keep this tab open while creating your video.</p>
+        <p id="compatibility-status" class="status"></p>
+        <button id="create-button" type="button" disabled data-i18n="createButton">Create MP4</button>
+        <video id="result-video" controls playsinline hidden></video>
+        <div id="result-actions" class="actions" hidden>
+          <button id="share-button" type="button" data-i18n="shareButton">Share video</button>
+          <a id="download-link" class="button secondary" download="timeline-journey.mp4" data-i18n="downloadButton">Download MP4</a>
+        </div>
+      </section>
+      <div class="workflow-status" role="status" aria-live="polite">
+        <p id="progress-label"></p><progress id="export-progress" value="0" max="1" hidden></progress>
+      </div>
+      <p id="error-message" class="error" role="alert" hidden></p>
+      <div class="actions workflow-actions">
+        <button id="back-button" class="secondary" type="button" data-flow="back" hidden>Back</button>
+        <button id="next-button" type="button" data-flow="next" hidden>Continue</button>
+        <button id="cancel-button" class="secondary" type="button" data-flow="cancel" hidden>Cancel</button>
+      </div>
+      </form>
+      <footer>
+        <p data-i18n="footerNoAccount">No account, location permission, or Timeline upload is required.</p>
+        <p data-i18n="footerMapAttribution">Map data © OpenStreetMap contributors and © CARTO.</p>
+        <p><a href="../third-party-notices.txt" data-i18n="footerThirdPartyNotices">Third-party notices</a></p>
+      </footer>
+    </main>
+    <dialog id="raw-only-dialog" aria-labelledby="raw-only-heading">
+      <form method="dialog" class="dialog-card">
+        <h2 id="raw-only-heading" data-i18n="rawOnlyDialogTitle">Only raw location data found</h2>
+        <p data-i18n="rawOnlyDialogBody1">This file contains raw location data but no processed visits or trips. You can continue, but the route may be noisy or incomplete, and its distance will only be an estimate.</p>
+        <p data-i18n="rawOnlyDialogBody2">For better results, open Google Maps, confirm or restore your Timeline, and make sure your visits and trips appear. Then export your Timeline again and load the new file in this app.</p>
+        <div class="dialog-actions">
+          <button id="open-google-maps" type="button" data-i18n="openGoogleMapsButton">Open Google Maps</button>
+          <button id="continue-raw-data" class="secondary" type="button" data-i18n="continueRawDataButton">Continue with raw data</button>
+        </div>
+      </form>
+    </dialog>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

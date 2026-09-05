@@ -6,6 +6,11 @@ on:
     paths:
       - "web/**"
       - ".github/workflows/pages.yml"
+  release:
+    types: [published]
+  workflow_run:
+    workflows: [Release Android app]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -19,12 +24,17 @@ concurrency:
 
 jobs:
   build:
+    if: >-
+      (github.event_name != 'release' || !github.event.release.prerelease) &&
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: web
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: main
       - uses: pnpm/action-setup@v4
         with:
           version: 11.19.0
@@ -36,8 +46,14 @@ jobs:
           cache-dependency-path: web/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
+      - name: Resolve latest stable APK
+        id: apk
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/resolve-apk.mjs >> "$GITHUB_OUTPUT"
       - name: Build web app with CARTO project key
         env:
+          VITE_STABLE_APK_URL: ${{ steps.apk.outputs.url }}
           VITE_CARTO_BASEMAP_API_KEY: ${{ secrets.CARTO_BASEMAP_API_KEY }}
         run: |
           test -n "$VITE_CARTO_BASEMAP_API_KEY"

@@ -27,7 +27,10 @@ def test_web_app_links_directly_to_public_play_enrollment() -> None:
 
     assert "https://play.google.com/apps/testing/dev.mahlernim.timelinevisualizer" in html
     assert "https://github.com/mahlernim/google-timeline-visualizer/discussions/165" not in html
-    assert 'data-i18n="openTestingLink"' in html
+    assert 'https://forms.gle/mmM1ErM8nwtxNHez9' in html
+    assert 'href="/google-timeline-visualizer/app/"' in html
+    app = (ROOT / 'web' / 'app' / 'index.html').read_text(encoding='utf-8')
+    assert 'docs/privacy-web.md' in app
 
 
 def test_web_advertising_is_prepared_but_not_enabled() -> None:

@@ -1,0 +1,17 @@
+[hidden]{display:none!important}
+.brand{font-weight:700;text-decoration:none;color:inherit}
+.app-header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.preferences{display:flex;gap:16px;flex-wrap:wrap;margin:16px 0}
+.preferences label{flex:1;min-width:140px}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;list-style:none;padding:0;margin:22px 0}
+.steps button{display:flex;align-items:center;justify-content:center;gap:7px;background:transparent;color:#78626b;border:1px solid #e5d7de;padding:10px 5px;font-size:12px;width:100%;min-height:42px}
+.steps button[aria-current=step]{background:#fff;color:#b5004d;border-color:#c3648d;font-weight:750}
+.steps button:disabled{opacity:.6;cursor:default}
+.steps button>span:first-child{font-variant-numeric:tabular-nums}
+#settings-form{margin:0}
+#advanced-fields{margin-top:16px;padding-top:12px;border-top:1px solid #eadde3}
+.workflow-status p:empty{display:none}
+.workflow-actions{margin-top:16px}
+canvas,video{max-width:100%}
+#journey-canvas,#result-video{display:block;width:min(100%,calc(60vh * var(--preview-aspect,1)));height:auto;aspect-ratio:var(--preview-aspect,1);margin:16px auto;border-radius:14px}
+@media(max-width:440px){.steps button{flex-direction:column;gap:2px;font-size:11px}.preferences{gap:10px}.preferences label{min-width:120px}.shell{padding:18px}}

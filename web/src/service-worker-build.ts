@@ -18,15 +18,24 @@ self.addEventListener('activate', (event) => {
       keys
         .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
         .map((key) => caches.delete(key)),
-    )),
+    )).then(() => self.clients.claim()),
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return;
   event.respondWith(
-    fetch(event.request).catch(async () => {
+    fetch(event.request).then((response) => {
+      const url = new URL(event.request.url);
+      const base = new URL('./', self.location.href).pathname;
+      const appAsset = url.pathname.startsWith(base + 'assets/') && /\\.(js|css)$/.test(url.pathname);
+      const shell = url.pathname === base || url.pathname === base + 'app/' || url.pathname === base + 'app/index.html';
+      if (response.ok && !url.search && (appAsset || shell)) {
+        const copy = response.clone();
+        event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => undefined));
+      }
+      return response;
+    }).catch(async () => {
       const cached = await caches.match(event.request);
       if (cached) return cached;
       if (event.request.mode === 'navigate') {

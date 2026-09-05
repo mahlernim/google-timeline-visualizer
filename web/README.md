@@ -1,33 +1,69 @@
-# Timeline Visualizer for iPhone and the web
+# Timeline Visualizer web preview
 
-This is the browser version of Timeline Visualizer. It loads a Google Maps
-`Timeline.json` export, renders the selected journey, and creates an H.264 MP4
-entirely in the browser.
+The public landing page is at <https://ahn-lab.org/google-timeline-visualizer/>.
+The browser application is at <https://ahn-lab.org/google-timeline-visualizer/app/>.
 
-## Privacy
+The landing page uses a small prerecorded fictional journey. Android visitors see
+compact Play testing and APK options first. PC, iPhone, iPad, and unknown devices
+see the web app first. Device detection changes the order, never redirects anyone.
 
-- The Timeline JSON is read locally and is not uploaded.
-- No account, location permission, or broad file permission is used.
-- The public site uses Cloudflare Web Analytics for aggregate site traffic. The
-  application does not add Timeline contents, coordinates, selected dates,
-  titles, or generated media to analytics events.
-- CARTO receives requests for the map tiles needed to render the selected route.
-- The browser tab must remain open while video creation is running.
+## Browser workflow
 
-## Browser support
+1. Import a current direct-array or semantic Timeline JSON, or try the fictional sample.
+2. Choose months or exact dates. The latest available month is selected initially.
+3. Accept the map notice and preview the journey.
+4. Check the selected browser codec, then create, share, or download an MP4.
 
-Video creation requires the WebCodecs API and H.264 encoding. The primary target
-is Safari 16.4 or newer on iPhone. The app detects browsers without WebCodecs and
-disables video creation while leaving Timeline loading available.
+Simple mode uses square 480p, 15 fps, 15 seconds, and the steady camera. It also
+offers portrait/landscape and 10- or 30-second duration. Advanced settings expose
+camera movement, location filtering, raw signals, accuracy, custom duration
+10–300 seconds, resolution 480–2160, and whole frame rates 15–120 fps.
+Every new session starts in simple mode. Unsupported export configurations remain
+explicit and never silently change the user's selection.
 
-Each video format is probed separately at startup, because the larger formats need
-a higher H.264 level than the 480 by 480 default. A format the browser cannot
-encode stays selectable and previewable, and reports why video creation is
-unavailable instead of being silently replaced by another format.
+Import runs in a cancellable worker using 64 KiB input chunks. It scans available
+dates, rereads the chosen range, and retains only selected points and neighboring
+filter context. The selected input is limited to 100,000 points, with at most
+100,000 additional context points. A single JSON record larger than 16 MiB is
+rejected before it can grow without bound. Oversized imports ask for a shorter
+range or use of Android instead of silently dropping locations.
 
-## Local development
+Raw processing carries its filtering state from the beginning of the stream so
+short date ranges preserve stabilization anchors. Unordered raw exports use
+additional passes with 10,000-point sort batches instead of loading all locations
+into memory. This can take longer, and remains cancellable.
 
-```bash
+The preview uses at most a 640-pixel longest edge and 15 fps, independent of export
+resolution. Maps are loaded as each frame needs them, using two simultaneous
+requests and a 32 MiB decoded-image cache. Tiles are drawn before eviction, including
+frames that need more tiles than fit in the cache. Failed map loads report an error
+rather than creating a video with missing tiles.
+
+The encoder loads only when entering Export. Only the selected configuration is
+probed, with serialized, cached probes. Full-size canvases exist only during export.
+MP4 output reserves metadata space using the known frame count and is limited to
+64 MiB, checked both by a conservative estimate and while writing actual output.
+Cancel waits for resource cleanup before another job can start.
+
+## Privacy and browser support
+
+- Timeline files, coordinates, dates, titles, frames, and generated media stay local.
+- No account, location permission, or broad file permission is needed.
+- Cloudflare Web Analytics measures aggregate site traffic. The application does not
+  add private Timeline contents or generated media to analytics events.
+- CARTO receives map tile requests only after the user accepts the map notice.
+- Static application assets may be cached after use. The service worker initially
+  precaches only landing essentials, never the encoder, import worker, demo video,
+  Timeline data, generated videos, or map tiles.
+- No Timeline or generated-video persistence is added. Reloading clears the session.
+- Preview requires a modern Canvas-capable browser. Export additionally requires
+  WebCodecs with H.264 encoding. Keep the tab open during export. Preview pauses
+  when the tab is hidden. Codec support is not a guarantee that a phone has enough
+  resources for every advanced configuration.
+
+## Development and deployment
+
+```sh
 cd web
 pnpm install --frozen-lockfile
 pnpm test
@@ -35,43 +71,31 @@ pnpm build
 pnpm dev
 ```
 
-The Vite base path targets the default GitHub Pages project URL at
-`/google-timeline-visualizer/`.
+Use `VITE_CARTO_BASEMAP_API_KEY` for the existing public CARTO project credential.
+Local environment overrides belong in ignored `.env*.local` files.
 
-The production deployment is available at
-<https://ahn-lab.org/google-timeline-visualizer/>. The Pages workflow builds and
-deploys this directory from `main`. Keep the project base path unchanged unless
-a dedicated custom subdomain is configured at the same time.
+The Pages workflow deploys from main, resolves the latest stable GitHub APK during
+the build, and also refreshes after a stable release or successful Android release
+workflow. No browser-side GitHub API request is needed. Local builds fall back to
+the stable release page unless `VITE_STABLE_APK_URL` is supplied.
 
-Set `VITE_PREVIEW=true` when building a public test deployment. Preview builds
-show a visible warning.
+The build verifies the landing JavaScript's 30 KiB gzip budget, the demo's 750 KiB
+budget, poster size, fast-start metadata, and the service worker's deferred assets.
+Keep the existing project base path.
 
-## Current web app scope
+## Fictional demo provenance
 
-The current implementation supports the complete private browser path.
+`public/demo-journey.mp4` and `public/demo-poster.webp` are generated solely from
+`public/sample-timeline.json`, never a personal Timeline. The source was exported
+through the web UI at square 480p, 15 fps, 15 seconds, steady camera, kilometers,
+and the title “Fictional journey”. The route and map attribution come from the
+same renderer as user previews.
 
-1. Load current direct-array or older `semanticSegments` Timeline JSON, with an
-   optional warned fallback for raw-only location exports.
-   A built-in fictional journey is available for privacy-safe device testing.
-2. Read absolute path timestamps or current minute offsets from segment start.
-   When timezone data is absent, preserve the exported route order and recorded
-   calendar dates so date-line travel is not reordered by the browser timezone.
-3. Choose a month range or exact dates, title, duration, and distance unit.
-   Distance units can follow the browser region automatically or be set to
-   Kilometers or Miles, and the selection applies to summaries and video text.
-4. Choose Fixed zoom, Steady following, Dynamic following, or Close-up camera
-   movement.
-5. Choose a video format: square 480p, 720p, or 1080p, portrait 1080x1920, or
-   landscape 1920x1080. The camera, map tiles, and overlay follow the selected
-   aspect ratio.
-6. Require explicit acknowledgement before contacting CARTO for map tiles.
-7. Preview the journey on a Canvas sized to the selected video format.
-8. Add the Android-style 1.5-second full-route ending, encode Canvas frames as
-   H.264, and mux them into an MP4.
-9. Keep the screen awake when supported and allow video creation to be cancelled.
-10. Preview, share, or download the completed MP4.
+The landing clip compresses the complete source journey to eight seconds.
 
-The browser layout, animated preview, encoded sample output, and camera following
-were validated at an iPhone-sized viewport and on a physical iPhone. Longer
-exports still benefit from representative-device memory, thermal, interruption,
-and foreground execution testing.
+```sh
+ffmpeg -i fictional-source.mp4 -vf "setpts=8/15*PTS,fps=15,scale=480:480" -t 8 -c:v libx264 -crf 29 -preset slow -pix_fmt yuv420p -movflags +faststart -an -metadata "title=Fictional journey" public/demo-journey.mp4
+ffmpeg -ss 2 -i public/demo-journey.mp4 -frames:v 1 -c:v libwebp -quality 75 public/demo-poster.webp
+```
+
+The clip is H.264/yuv420p, 480×480, 120 frames, eight seconds, without audio.

@@ -6,11 +6,12 @@
   "packageManager": "pnpm@11.19.0",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/check-web-build.mjs",
     "test": "vitest run",
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
+    "@streamparser/json": "0.0.26",
     "mediabunny": "1.55.1"
   },
   "devDependencies": {

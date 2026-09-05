@@ -1,3 +1,5 @@
+.env*.local
 node_modules/
 dist/
 *.tsbuildinfo
+!/public/demo-journey.mp4
