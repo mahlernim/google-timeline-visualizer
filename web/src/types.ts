@@ -1,3 +1,4 @@
+import type { TileCache } from './tile-cache';
 export interface GeoPoint {
   instant: Date;
   latitude: number;
@@ -59,4 +60,5 @@ export interface PreparedJourney {
   cameraTrack: CameraTrack;
   overviewViewport: Viewport;
   tiles: Map<string, HTMLImageElement>;
+  tileCache?: TileCache<ImageBitmap>;
 }

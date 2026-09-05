@@ -1,3 +1,4 @@
+import { TileCache } from './tile-cache';
 import { easeInOutCubic, easeOutCubic } from './animation';
 import {
   aspectOf,
@@ -87,33 +88,6 @@ function tileKey(tile: TileCoordinate): string {
   return `${tile.zoom}/${tile.x}/${tile.y}`;
 }
 
-function loadImage(url: string, signal?: AbortSignal): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.crossOrigin = 'anonymous';
-    const cleanup = (): void => signal?.removeEventListener('abort', abort);
-    const abort = (): void => {
-      image.src = '';
-      cleanup();
-      reject(new DOMException('Video creation was cancelled.', 'AbortError'));
-    };
-    image.onload = () => {
-      cleanup();
-      resolve(image);
-    };
-    image.onerror = () => {
-      cleanup();
-      reject(new Error('Could not load a map tile.'));
-    };
-    if (signal?.aborted) {
-      abort();
-      return;
-    }
-    signal?.addEventListener('abort', abort, { once: true });
-    image.src = url;
-  });
-}
-
 export function requiredTiles(viewport: Viewport): TileCoordinate[] {
   const tileCount = 2 ** viewport.zoom;
   const minTileX = Math.floor(viewport.minX * tileCount);
@@ -165,40 +139,13 @@ function drawMapBackground(
   }
 }
 
-async function loadRequiredTiles(
-  coordinates: TileCoordinate[],
-  signal?: AbortSignal,
-  onProgress?: (completed: number, total: number) => void,
-): Promise<Map<string, HTMLImageElement>> {
-  const tiles = new Map<string, HTMLImageElement>();
-  let nextIndex = 0;
-  let completed = 0;
-  const worker = async (): Promise<void> => {
-    while (nextIndex < coordinates.length) {
-      if (signal?.aborted) throw new DOMException('Video creation was cancelled.', 'AbortError');
-      const coordinate = coordinates[nextIndex];
-      nextIndex += 1;
-      const url = cartoTileUrl(coordinate);
-      try {
-        tiles.set(tileKey(coordinate), await loadImage(url, signal));
-      } catch (error) {
-        if (signal?.aborted || (error instanceof DOMException && error.name === 'AbortError')) throw error;
-      }
-      completed += 1;
-      onProgress?.(completed, coordinates.length);
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(6, coordinates.length) }, worker));
-  return tiles;
-}
-
 export async function prepareJourney(
   points: GeoPoint[],
   size: RenderSize = { width: 480, height: 480 },
   cameraMovement: CameraMovement = 'steady',
-  durationSeconds = 30,
+  _durationSeconds = 30,
   signal?: AbortSignal,
-  onProgress?: (completed: number, total: number) => void,
+  _onProgress?: (completed: number, total: number) => void,
 ): Promise<PreparedJourney> {
   if (points.length < 2) {
     throw new AppError('errorTooFewPoints', 'Select a period containing at least two location points.');
@@ -217,29 +164,24 @@ export async function prepareJourney(
     { ...journey, worldPoints: overviewSegments.flat() },
     size,
   );
-  const sampleCount = Math.max(
-    20,
-    Math.min(durationSeconds * 8, Math.max(durationSeconds * 2, Math.ceil(journey.totalDistanceKm / 250))),
-  );
-  const required = new Map<string, TileCoordinate>();
-  for (let sample = 0; sample <= sampleCount; sample += 1) {
-    for (const tile of requiredTiles(cameraViewportAt(cameraTrack, sample / sampleCount))) {
-      required.set(tileKey(tile), tile);
-    }
-  }
-  const journeyEnd = cameraViewportAt(cameraTrack, 1);
-  for (let sample = 0; sample <= 12; sample += 1) {
-    const ending = blendViewport(journeyEnd, endingOverview, easeOutCubic(sample / 12), size);
-    for (const tile of requiredTiles(ending)) required.set(tileKey(tile), tile);
-  }
-  const tiles = await loadRequiredTiles([...required.values()], signal, onProgress);
+  signal?.throwIfAborted();
+  const tileCache = new TileCache<ImageBitmap>(async (key, tileSignal) => {
+    const [zoom, x, y] = key.split('/').map(Number);
+    const response = await fetch(cartoTileUrl({ zoom, x, y }), { signal: tileSignal });
+    if (!response.ok) throw new AppError('errorPreviewFailed', 'Map images could not be loaded. Please try again.');
+    const image = await createImageBitmap(await response.blob());
+    if (tileSignal.aborted) { image.close(); tileSignal.throwIfAborted(); }
+    return image;
+  });
+  signal?.addEventListener('abort', () => tileCache.dispose(), { once: true });
   return {
     ...journey,
     overviewRouteSegments: overviewSegments,
     size,
     cameraTrack,
     overviewViewport: endingOverview,
-    tiles,
+    tiles: new Map(),
+    tileCache,
   };
 }
 
@@ -254,14 +196,17 @@ function strokeRoute(
   head: WorldPoint,
   viewport: Viewport,
   size: RenderSize,
+  start = 0,
+  end = points.length,
 ): void {
-  if (points.length === 0) return;
+  if (start >= end) return;
   context.beginPath();
-  points.forEach((point, index) => {
+  for (let index = start; index < end; index += 1) {
+    const point = points[index];
     const [x, y] = worldToCanvas(point, viewport, size);
-    if (index === 0) context.moveTo(x, y);
+    if (index === start) context.moveTo(x, y);
     else context.lineTo(x, y);
-  });
+  }
   const [headX, headY] = worldToCanvas(head, viewport, size);
   context.lineTo(headX, headY);
   context.stroke();
@@ -297,7 +242,7 @@ export function previewCanvasSize(
   const ratio = Number.isFinite(devicePixelRatio) && devicePixelRatio > 0 ? devicePixelRatio : 1;
   const deviceWidth = Number.isFinite(cssWidth) && cssWidth > 0 ? cssWidth * ratio : format.width;
   const minimumScale = Math.min(1, MIN_PREVIEW_SHORT_EDGE / Math.min(format.width, format.height));
-  const scale = Math.min(1, Math.max(minimumScale, deviceWidth / format.width));
+  const scale = Math.min(1, 640 / Math.max(format.width, format.height), Math.max(minimumScale, deviceWidth / format.width));
   return {
     width: Math.round(format.width * scale),
     height: Math.round(format.height * scale),
@@ -309,6 +254,7 @@ export function drawFrame(
   journey: PreparedJourney,
   frame: TimelineFrame,
   text: OverlayText,
+  background = true,
 ): void {
   const context = canvas.getContext('2d');
   if (!context) throw new AppError('errorCanvasUnavailable', 'Canvas rendering is unavailable.');
@@ -321,12 +267,10 @@ export function drawFrame(
     throw new AppError('errorAspectRatio', 'The prepared journey does not match the canvas aspect ratio.');
   }
   const scale = overlayScale(size);
-  context.clearRect(0, 0, size.width, size.height);
+  if (background) context.clearRect(0, 0, size.width, size.height);
   const journeyViewport = cameraViewportAt(journey.cameraTrack, frame.journeyProgress);
-  // The prepared size, never the canvas size: blendViewport derives the integer tile zoom from
-  // the width it is given, and prepareJourney downloaded the outro tiles at the prepared zoom.
-  // A smaller preview canvas would ask journey.tiles for keys that were never fetched, and the
-  // whole map would fall back to the empty background for the length of the outro.
+  // Use the same prepared size as the background pass so outro tiles and route overlays
+  // share one viewport even when a caller draws at a proportionally smaller canvas size.
   const viewport = frame.outroProgress <= 0
     ? journeyViewport
     : blendViewport(
@@ -335,7 +279,7 @@ export function drawFrame(
       easeOutCubic(frame.outroProgress),
       journey.size,
     );
-  drawMapBackground(canvas, viewport, journey.tiles);
+  if (background) drawMapBackground(canvas, viewport, journey.tiles);
 
   const current = pointAtProgress(journey, frame.journeyProgress);
   context.lineCap = 'round';
@@ -343,10 +287,9 @@ export function drawFrame(
   const activeAlpha = 1 - easeOutCubic(frame.outroProgress);
   context.save();
   context.globalAlpha = activeAlpha;
-  const traveled = journey.worldPoints.slice(0, current.completedIndex + 1);
   context.strokeStyle = 'rgba(233, 0, 100, 0.34)';
   context.lineWidth = TRAIL_WIDTH * scale;
-  strokeRoute(context, traveled, current.point, viewport, size);
+  strokeRoute(context, journey.worldPoints, current.point, viewport, size, 0, current.completedIndex + 1);
 
   const currentDistance = journey.totalDistanceKm * Math.max(0, Math.min(1, frame.journeyProgress));
   const recentStartDistance = Math.max(0, currentDistance - Math.max(80, journey.totalDistanceKm * 0.16));
@@ -358,10 +301,12 @@ export function drawFrame(
   context.lineWidth = RECENT_TRAIL_WIDTH * scale;
   strokeRoute(
     context,
-    journey.worldPoints.slice(recentStartIndex, current.completedIndex + 1),
+    journey.worldPoints,
     current.point,
     viewport,
     size,
+    recentStartIndex,
+    current.completedIndex + 1,
   );
   const [headX, headY] = worldToCanvas(current.point, viewport, size);
 
@@ -387,10 +332,12 @@ export function drawFrame(
     for (const segment of journey.overviewRouteSegments) {
       strokeRoute(
         context,
-        segment.slice(0, -1),
+        segment,
         segment.at(-1) ?? current.point,
         viewport,
         size,
+        0,
+        segment.length - 1,
       );
     }
     context.restore();
@@ -423,4 +370,49 @@ export function drawFrame(
     size.width - 12 * scale,
     size.height - 12 * scale,
   );
+}
+
+/** Loads and draws each tile before eviction. Encoding awaits the complete frame. */
+export async function drawJourneyFrame(
+  canvas: HTMLCanvasElement, journey: PreparedJourney, frame: TimelineFrame,
+  text: OverlayText, signal?: AbortSignal,
+): Promise<void> {
+  if (!journey.tileCache) { drawFrame(canvas, journey, frame, text); return; }
+  signal?.throwIfAborted();
+  const context = canvas.getContext('2d');
+  if (!context) throw new AppError('errorCanvasUnavailable', 'Canvas rendering is unavailable.');
+  const view = cameraViewportAt(journey.cameraTrack, frame.journeyProgress);
+  const viewport = frame.outroProgress <= 0 ? view
+    : blendViewport(view, journey.overviewViewport, easeOutCubic(frame.outroProgress), journey.size);
+  context.fillStyle = '#f2edf0';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  const count = 2 ** viewport.zoom;
+  const coordinates: Array<{ x: number; y: number }> = [];
+  for (let x = Math.floor(viewport.minX * count); x <= Math.floor(viewport.maxX * count); x += 1) {
+    for (let y = Math.max(0, Math.floor(viewport.minY * count)); y <= Math.min(count - 1, Math.floor(viewport.maxY * count)); y += 1) {
+      coordinates.push({ x, y });
+    }
+  }
+  let index = 0;
+  const draw = async (): Promise<void> => {
+    while (index < coordinates.length) {
+      signal?.throwIfAborted();
+      const { x, y } = coordinates[index++];
+      const key = tileKey({ zoom: viewport.zoom, x: ((x % count) + count) % count, y });
+      const image = await journey.tileCache!.get(key);
+      signal?.throwIfAborted();
+      const [left, top] = worldToCanvas({ x: x / count, y: y / count }, viewport, canvas);
+      const width = canvas.width / count / (viewport.maxX - viewport.minX);
+      const height = canvas.height / count / (viewport.maxY - viewport.minY);
+      context.drawImage(image, left, top, width, height);
+    }
+  };
+  await Promise.all([draw(), draw()]);
+  signal?.throwIfAborted();
+  drawFrame(canvas, journey, frame, text, false);
+}
+
+export function releaseJourney(journey: PreparedJourney | null): void {
+  journey?.tileCache?.dispose();
+  journey?.tiles.clear();
 }

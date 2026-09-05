@@ -228,29 +228,29 @@ const PREVIEW_SIZE_TABLE: PreviewSizeRow[] = [
   row(FORMATS[0], 332, 1, 332, 332),
   row(FORMATS[0], 332, 2, 480, 480),
   row(FORMATS[0], 332, 3, 480, 480),
-  row(FORMATS[1], 332, 2, 664, 664),
-  row(FORMATS[1], 332, 3, 720, 720),
-  row(FORMATS[2], 332, 2, 664, 664),
-  row(FORMATS[2], 332, 3, 996, 996),
+  row(FORMATS[1], 332, 2, 640, 640),
+  row(FORMATS[1], 332, 3, 640, 640),
+  row(FORMATS[2], 332, 2, 640, 640),
+  row(FORMATS[2], 332, 3, 640, 640),
   row(PORTRAIT, 313, 1, 313, 556),
-  row(PORTRAIT, 313, 2, 626, 1113),
-  row(PORTRAIT, 313, 3, 939, 1669),
-  row(LANDSCAPE, 332, 2, 664, 374),
-  row(LANDSCAPE, 332, 3, 996, 560),
+  row(PORTRAIT, 313, 2, 360, 640),
+  row(PORTRAIT, 313, 3, 360, 640),
+  row(LANDSCAPE, 332, 2, 640, 360),
+  row(LANDSCAPE, 332, 3, 640, 360),
   row(FORMATS[0], 576, 1, 480, 480),
   row(FORMATS[1], 576, 1, 576, 576),
-  row(FORMATS[2], 576, 2, 1080, 1080),
-  row(PORTRAIT, 334, 2, 668, 1188),
+  row(FORMATS[2], 576, 2, 640, 640),
+  row(PORTRAIT, 334, 2, 360, 640),
   row(LANDSCAPE, 576, 1, 576, 324),
-  row(LANDSCAPE, 576, 2, 1152, 648),
-  row(LANDSCAPE, 576, 3, 1728, 972),
-  row(LANDSCAPE, 0, 2, 1920, 1080),
-  row(PORTRAIT, Number.NaN, 2, 1080, 1920),
+  row(LANDSCAPE, 576, 2, 640, 360),
+  row(LANDSCAPE, 576, 3, 640, 360),
+  row(LANDSCAPE, 0, 2, 640, 360),
+  row(PORTRAIT, Number.NaN, 2, 360, 640),
   row(FORMATS[1], 332, 0, 332, 332),
   row(FORMATS[1], 332, undefined as unknown as number, 332, 332),
   row(FORMATS[0], -5, 2, 480, 480),
-  row(LANDSCAPE, Number.POSITIVE_INFINITY, 1, 1920, 1080),
-  row(FORMATS[2], 4000, 3, 1080, 1080),
+  row(LANDSCAPE, Number.POSITIVE_INFINITY, 1, 640, 360),
+  row(FORMATS[2], 4000, 3, 640, 640),
   row(LANDSCAPE, 10, 1, 427, 240),
   row(PORTRAIT, 10, 1, 240, 427),
 ];
@@ -304,10 +304,12 @@ describe('previewCanvasSize', () => {
     });
   });
 
-  it('falls back to the exact format size when the width cannot be measured', () => {
+  it('keeps hidden or unmeasurable previews within the pixel budget', () => {
     [0, -5, Number.NaN, Number.POSITIVE_INFINITY].forEach((cssWidth) => {
       FORMATS.forEach((format) => {
-        expect(previewCanvasSize(format, cssWidth, 2)).toEqual(format);
+        const size = previewCanvasSize(format, cssWidth, 2);
+        expect(Math.max(size.width, size.height)).toBeLessThanOrEqual(640);
+        expect(relativeAspectError(size, format)).toBeLessThanOrEqual(ASPECT_EPSILON);
       });
     });
   });

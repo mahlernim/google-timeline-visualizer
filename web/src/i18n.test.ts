@@ -411,7 +411,7 @@ describe('catalog completeness', () => {
 });
 
 describe('index.html i18n keys', () => {
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
   const catalog: Record<string, string | PluralEntry> = { ...CATALOGS.en };
 
   interface Annotation {

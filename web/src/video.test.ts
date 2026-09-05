@@ -6,7 +6,8 @@ import {
   createJourneyMp4,
   DEFAULT_VIDEO_FORMAT_KEY,
   isMp4,
-  probeVideoFormats,
+  createFormatProbe,
+  MAX_OUTPUT_BYTES,
   resolveVideoFormat,
   VIDEO_FRAME_RATES,
   VIDEO_FORMATS,
@@ -25,15 +26,14 @@ const encoder = vi.hoisted(() => ({
   finalize: vi.fn(async () => undefined),
   cancel: vi.fn(async () => undefined),
   buffer: null as ArrayBuffer | null,
+  writer: null as WritableStreamDefaultWriter<{ data: Uint8Array; position: number }> | null,
 }));
 
-vi.mock('./renderer', () => ({ drawFrame: vi.fn() }));
+vi.mock('./renderer', () => ({ drawJourneyFrame: vi.fn(async () => undefined) }));
 
 vi.mock('mediabunny', () => ({
-  BufferTarget: class {
-    get buffer(): ArrayBuffer | null {
-      return encoder.buffer;
-    }
+  StreamTarget: class {
+    constructor(stream: WritableStream<{ data: Uint8Array; position: number }>) { encoder.writer = stream.getWriter(); }
   },
   CanvasSource: class {
     add = encoder.add;
@@ -167,89 +167,42 @@ describe('video format table', () => {
   });
 });
 
-describe('probeVideoFormats', () => {
-  it('takes the first candidate and probes each format once when everything is supported', async () => {
-    const isConfigSupported = vi.fn(async () => ({ supported: true }));
-    stubEncoder(isConfigSupported);
-
-    const support = await probeVideoFormats();
-
-    const probeable = ALL_VIDEO_FORMATS.filter((format) => format.codecCandidates.length > 0);
-    expect(isConfigSupported).toHaveBeenCalledTimes(probeable.length);
-    ALL_VIDEO_FORMATS.forEach((format) => {
-      expect(support.get(videoFormatSupportKey(format))).toBe(format.codecCandidates[0] ?? null);
-    });
-  });
-
-  it('falls through to the next candidate when the first is rejected', async () => {
-    stubEncoder(async (config: { codec: string }) => ({
-      supported: config.codec !== VIDEO_FORMATS[2].codecCandidates[0],
-    }));
-
-    const support = await probeVideoFormats();
-
-    expect(support.get(videoFormatSupportKey(VIDEO_FORMATS[2]))).toBe(VIDEO_FORMATS[2].codecCandidates[1]);
-    expect(support.get(videoFormatSupportKey(VIDEO_FORMATS[0]))).toBe(VIDEO_FORMATS[0].codecCandidates[0]);
-  });
-
-  it('reports null for a format whose candidates all fail, leaving others intact', async () => {
-    const target = buildVideoFormat('portrait', 1080);
-    const failing = new Set<string>(target.codecCandidates);
-    stubEncoder(async (config: { codec: string; width: number; height: number }) => ({
-      supported: !(config.width === target.width && config.height === target.height && failing.has(config.codec)),
-    }));
-
-    const support = await probeVideoFormats();
-
-    expect(support.get(videoFormatSupportKey(target))).toBeNull();
-    expect(support.get(videoFormatSupportKey(VIDEO_FORMATS[3]))).toBe(VIDEO_FORMATS[3].codecCandidates[0]);
-  });
-
-  it('treats a throwing isConfigSupported as unsupported without rejecting', async () => {
-    stubEncoder(() => {
-      throw new TypeError('malformed codec string');
-    });
-
-    const support = await probeVideoFormats();
-
-    expect([...support.values()]).toEqual(Array(75).fill(null));
-  });
-
-  it('treats an undefined supported flag as unsupported', async () => {
-    stubEncoder(async () => ({ supported: undefined }));
-
-    const support = await probeVideoFormats();
-
-    expect([...support.values()]).toEqual(Array(75).fill(null));
-  });
-
-  it('reports every format as unavailable without touching a missing VideoEncoder', async () => {
-    vi.stubGlobal('VideoEncoder', undefined);
-
-    const support = await probeVideoFormats();
-
-    expect(support.size).toBe(75);
-    expect([...support.values()]).toEqual(Array(75).fill(null));
-  });
-
-  it('probes all size and frame-rate combinations in parallel', async () => {
-    const started: number[] = [];
+describe('selected-format probes', () => {
+  it('serializes configurations and caches success without probing unrelated sizes', async () => {
     let release = (): void => undefined;
-    const gate = new Promise<void>((resolve) => {
-      release = resolve;
-    });
-    stubEncoder(async (config: { width: number }) => {
-      started.push(config.width);
-      await gate;
-      return { supported: true };
-    });
-
-    const pending = probeVideoFormats();
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const called = vi.fn(async () => { await gate; return { supported: true }; });
+    stubEncoder(called);
+    const probe = createFormatProbe();
+    const first = probe(buildVideoFormat('square', 480, 15));
+    const duplicate = probe(buildVideoFormat('square', 480, 15));
+    const second = probe(buildVideoFormat('landscape', 720, 30));
+    expect(duplicate).toBe(first);
     await Promise.resolve();
-    expect(started).toHaveLength(ALL_VIDEO_FORMATS.filter((format) => format.codecCandidates.length > 0).length);
-
+    expect(called).toHaveBeenCalledTimes(1);
     release();
-    await pending;
+    await Promise.all([first, second]);
+    expect(called).toHaveBeenCalledTimes(2);
+    await probe(buildVideoFormat('square', 480, 15));
+    expect(called).toHaveBeenCalledTimes(2);
+  });
+
+  it('caches unsupported configurations and tries candidates only for that configuration', async () => {
+    const called = vi.fn(async (_config: { width: number; framerate: number }) => ({ supported: false }));
+    stubEncoder(called);
+    const probe = createFormatProbe();
+    const format = buildVideoFormat('square', 480, 15);
+    expect(await probe(format)).toBeNull();
+    expect(await probe(format)).toBeNull();
+    expect(called).toHaveBeenCalledTimes(format.codecCandidates.length);
+    expect(called.mock.calls.every(([config]) => config.width === 480 && config.framerate === 15)).toBe(true);
+  });
+
+  it('handles missing and rejecting encoder APIs without affecting preview', async () => {
+    vi.stubGlobal('VideoEncoder', undefined);
+    expect(await createFormatProbe()(VIDEO_FORMATS[0])).toBeNull();
+    stubEncoder(async () => { throw new TypeError('Unsupported codec'); });
+    expect(await createFormatProbe()(VIDEO_FORMATS[0])).toBeNull();
   });
 });
 
@@ -300,9 +253,31 @@ describe('createJourneyMp4', () => {
     stubEncoder(async () => ({ supported: true }));
     encoder.start.mockClear().mockResolvedValue(undefined);
     encoder.add.mockClear().mockResolvedValue(undefined);
-    encoder.finalize.mockClear().mockResolvedValue(undefined);
+    encoder.finalize.mockClear().mockImplementation(async () => {
+      if (encoder.buffer) await encoder.writer!.write({ data: new Uint8Array(encoder.buffer), position: 0 });
+    });
     encoder.cancel.mockClear().mockResolvedValue(undefined);
     encoder.buffer = mp4Buffer();
+  });
+
+  it('rejects an oversized estimate before starting the encoder', async () => {
+    await expect(createJourneyMp4(canvas, journey, { ...options, durationSeconds: 300 })).rejects.toThrow('outputTooLarge');
+    expect(encoder.start).not.toHaveBeenCalled();
+  });
+
+  it('stops and releases the encoder when actual output crosses the limit', async () => {
+    encoder.add.mockImplementationOnce(async () => {
+      await encoder.writer!.write({ data: new Uint8Array(1), position: MAX_OUTPUT_BYTES });
+    });
+    await expect(createJourneyMp4(canvas, journey, options)).rejects.toThrow('outputTooLarge');
+    expect(encoder.cancel).toHaveBeenCalledTimes(1);
+    expect(encoder.finalize).not.toHaveBeenCalled();
+  });
+
+  it('releases a partially started encoder on startup failure', async () => {
+    encoder.start.mockRejectedValueOnce(new Error('Allocation failed'));
+    await expect(createJourneyMp4(canvas, journey, options)).rejects.toThrow('Allocation failed');
+    expect(encoder.cancel).toHaveBeenCalledTimes(1);
   });
 
   it('releases the encoder when a frame fails to encode', async () => {
