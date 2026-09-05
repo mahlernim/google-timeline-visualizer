@@ -123,7 +123,7 @@ export const ko: Strings = {
   footerNoAccount: '계정도, 위치 권한도, 타임라인 업로드도 필요하지 않습니다.',
   footerMapAttribution: '지도 데이터 © OpenStreetMap 기여자 및 © CARTO.',
   footerThirdPartyNotices: '타사 고지 사항',
-  alphaTesterLink: '알파 테스터 참여하기',
+  openTestingLink: 'Android 앱 · Google Play 공개 테스트 참여',
 
   rawOnlyDialogTitle: '원시 위치 데이터만 발견됨',
   rawOnlyDialogBody1: '이 파일에는 처리된 방문 및 이동 기록 없이 원시 위치 정보만 포함되어 있습니다. 계속할 수 있지만 경로가 부정확하거나 일부 누락될 수 있으며, 이동 거리는 추정값으로 표시됩니다.',

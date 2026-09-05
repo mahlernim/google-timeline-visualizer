@@ -126,7 +126,7 @@ export const fr: Strings = {
   footerNoAccount: 'Aucun compte, aucune autorisation de localisation ni aucun envoi de votre Timeline n’est nécessaire.',
   footerMapAttribution: 'Données cartographiques © les contributeurs OpenStreetMap et © CARTO.',
   footerThirdPartyNotices: 'Mentions légales des tiers',
-  alphaTesterLink: 'Devenir testeur Alpha',
+  openTestingLink: 'Appli Android · Rejoindre le test ouvert sur Google Play',
 
   rawOnlyDialogTitle: 'Seules des données de localisation brutes ont été trouvées',
   rawOnlyDialogBody1: 'Ce fichier contient des données de localisation brutes, mais aucune visite ni aucun trajet traité. Vous pouvez continuer, mais l’itinéraire peut être imprécis ou incomplet, et la distance ne sera qu’une estimation.',

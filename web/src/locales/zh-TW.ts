@@ -118,7 +118,7 @@ export const zhTW: Strings = {
   footerNoAccount: '不需要帳號、定位權限，也不需要上傳時間軸。',
   footerMapAttribution: '地圖資料 © OpenStreetMap 貢獻者與 © CARTO。',
   footerThirdPartyNotices: '第三方授權聲明',
-  alphaTesterLink: '成為 Alpha 測試人員',
+  openTestingLink: 'Android 應用程式 · 參加 Google Play 公開測試',
 
   rawOnlyDialogTitle: '僅找到原始定位資料',
   rawOnlyDialogBody1: '此檔案包含原始定位資料，但沒有處理過的造訪紀錄或行程。您可以繼續，但路線可能不準確或不完整，距離也只是估計值。',

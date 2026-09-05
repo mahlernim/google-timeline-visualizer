@@ -121,7 +121,7 @@ export const ja: Strings = {
   footerNoAccount: 'アカウント、位置情報の権限、タイムラインのアップロードはいずれも不要です。',
   footerMapAttribution: '地図データ © OpenStreetMap contributors および © CARTO。',
   footerThirdPartyNotices: 'サードパーティに関する通知',
-  alphaTesterLink: 'Alpha テスターになる',
+  openTestingLink: 'Android アプリ · Google Play オープンテストに参加',
 
   rawOnlyDialogTitle: '未処理の位置情報のみが見つかりました',
   rawOnlyDialogBody1: 'このファイルには未処理の位置情報のみが含まれ、処理済みの訪問や移動はありません。続行できますが、経路が不正確または不完全になり、距離は推定値になります。',

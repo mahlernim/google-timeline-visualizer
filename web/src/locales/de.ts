@@ -123,7 +123,7 @@ export const de: Strings = {
   footerNoAccount: 'Kein Konto, keine Standortberechtigung und kein Timeline-Upload erforderlich.',
   footerMapAttribution: 'Kartendaten © OpenStreetMap-Mitwirkende und © CARTO.',
   footerThirdPartyNotices: 'Hinweise zu Drittanbietern',
-  alphaTesterLink: 'Alpha-Tester werden',
+  openTestingLink: 'Android-App · Am offenen Google Play-Test teilnehmen',
 
   rawOnlyDialogTitle: 'Nur unverarbeitete Standortdaten gefunden',
   rawOnlyDialogBody1: 'Diese Datei enthält unverarbeitete Standortdaten, aber keine verarbeiteten Besuche oder Wege. Sie können fortfahren, aber die Route kann ungenau oder unvollständig sein und die Entfernung ist nur eine Schätzung.',
