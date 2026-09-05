@@ -1,5 +1,13 @@
 # Timeline Visualizer 3.0.14
 
+[Join Google Play open testing](https://play.google.com/apps/testing/dev.mahlernim.timelinevisualizer)
+to install the Android app and receive updates through Google Play. Sign in with
+the Google account used on your phone, join the test, then follow the download
+link. Open testing needs no invitation or Google Group membership. Availability
+depends on Google's review and your country or device. If the test is not
+available yet, check the enrollment page again later. The APK remains available
+under **Assets** below.
+
 - Fixed a crash when entering zero as a custom frame rate on Android.
 - Export cancellation now takes effect while retrying unavailable encoder input buffers, including when finishing a video.
 - Fixed CLI map tile requests across the International Date Line and beyond map latitude bounds.

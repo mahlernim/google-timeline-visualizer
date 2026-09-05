@@ -28,9 +28,14 @@ MP4 の作成には H.264 エンコードに対応した Safari 16.4 以降が�
 
 ## Android にインストールする
 
-このアプリはまだ Google Play で公開されていません。このリポジトリの
-[最新リリース](https://github.com/mahlernim/google-timeline-visualizer/releases/latest)から
-次の手順でインストールします。
+[Google Play オープンテストに参加](https://play.google.com/apps/testing/dev.mahlernim.timelinevisualizer)
+するには、スマートフォンで使う Google アカウントでログインし、テストに参加してから
+Google Play のダウンロードリンクを開いてください。招待や Google グループへの参加は不要です。
+利用できるかどうかは Google の審査、国、端末によって異なります。
+まだ参加できない場合は、後で参加ページをもう一度確認してください。
+
+このリポジトリの [最新リリース](https://github.com/mahlernim/google-timeline-visualizer/releases/latest)から
+APK を直接インストールすることもできます。
 
 1. **Assets** にある最新の `TimelineVisualizer-*.apk` ファイルをダウンロードします。
    `.sha256` チェックサムファイルはダウンロードしないでください。

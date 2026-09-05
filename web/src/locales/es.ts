@@ -126,7 +126,7 @@ export const es: Strings = {
   footerNoAccount: 'No se necesita cuenta, permiso de ubicación ni subir el archivo Timeline.',
   footerMapAttribution: 'Datos del mapa © colaboradores de OpenStreetMap y © CARTO.',
   footerThirdPartyNotices: 'Avisos de terceros',
-  alphaTesterLink: 'Conviértete en tester Alfa',
+  openTestingLink: 'App para Android · Únete a la prueba abierta de Google Play',
 
   rawOnlyDialogTitle: 'Solo se encontraron datos de ubicación sin procesar',
   rawOnlyDialogBody1: 'Este archivo contiene datos de ubicación sin procesar, pero no visitas ni trayectos procesados. Puedes continuar, pero la ruta puede ser imprecisa o estar incompleta, y la distancia será solo una estimación.',

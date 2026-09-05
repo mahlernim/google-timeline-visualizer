@@ -126,7 +126,7 @@ export const ptBR: Strings = {
   footerNoAccount: 'Não exige conta, permissão de localização nem envio do Timeline.',
   footerMapAttribution: 'Dados do mapa © colaboradores do OpenStreetMap e © CARTO.',
   footerThirdPartyNotices: 'Avisos de terceiros',
-  alphaTesterLink: 'Torne-se um testador Alfa',
+  openTestingLink: 'App Android · Participe do teste aberto no Google Play',
 
   rawOnlyDialogTitle: 'Apenas dados de localização brutos encontrados',
   rawOnlyDialogBody1: 'Este arquivo contém dados de localização brutos, mas não contém visitas ou trajetos processados. Você pode continuar, mas a rota pode ficar imprecisa ou incompleta, e a distância será apenas uma estimativa.',

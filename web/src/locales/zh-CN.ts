@@ -123,7 +123,7 @@ export const zhCN: Strings = {
   footerNoAccount: '无需账号或位置权限，也不会上传 Timeline。',
   footerMapAttribution: '地图数据 © OpenStreetMap 贡献者与 © CARTO。',
   footerThirdPartyNotices: '第三方声明',
-  alphaTesterLink: '成为 Alpha 测试人员',
+  openTestingLink: 'Android 应用 · 加入 Google Play 公开测试',
 
   rawOnlyDialogTitle: '仅发现原始位置数据',
   rawOnlyDialogBody1: '此文件包含原始位置数据，但没有经过处理的到访记录或行程。您可以继续，但路线可能不准确或不完整，距离也只是估算值。',
