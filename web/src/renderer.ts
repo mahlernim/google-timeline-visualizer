@@ -1,5 +1,5 @@
 import { TileCache } from './tile-cache';
-import { easeInOutCubic, easeOutCubic } from './animation';
+import { easeInOutCubic, easeOutCubic, OUTRO_SECONDS } from './animation';
 import {
   aspectOf,
   blendViewport,
@@ -143,7 +143,7 @@ export async function prepareJourney(
   points: GeoPoint[],
   size: RenderSize = { width: 480, height: 480 },
   cameraMovement: CameraMovement = 'steady',
-  _durationSeconds = 30,
+  durationSeconds = 15,
   signal?: AbortSignal,
   _onProgress?: (completed: number, total: number) => void,
 ): Promise<PreparedJourney> {
@@ -176,6 +176,7 @@ export async function prepareJourney(
   signal?.addEventListener('abort', () => tileCache.dispose(), { once: true });
   return {
     ...journey,
+    durationSeconds,
     overviewRouteSegments: overviewSegments,
     size,
     cameraTrack,
@@ -209,6 +210,28 @@ function strokeRoute(
   }
   const [headX, headY] = worldToCanvas(head, viewport, size);
   context.lineTo(headX, headY);
+  context.stroke();
+}
+
+/** Match Android's 2.5-second fading trail, bounded to 80..2000 km. */
+export function trailWindowDistance(totalKm: number, durationSeconds: number): number {
+  const journeySeconds = Math.max(1, durationSeconds - OUTRO_SECONDS);
+  return Math.min(totalKm, Math.max(80, Math.min(2000, totalKm * 2.5 / journeySeconds)));
+}
+
+function strokeDistanceRange(
+  context: CanvasRenderingContext2D, journey: PreparedJourney, viewport: Viewport,
+  size: RenderSize, startKm: number, endKm: number,
+): void {
+  if (endKm <= startKm || journey.totalDistanceKm <= 0) return;
+  const start = worldPositionAtProgress(journey, startKm / journey.totalDistanceKm);
+  const end = worldPositionAtProgress(journey, endKm / journey.totalDistanceKm);
+  context.beginPath();
+  context.moveTo(...worldToCanvas(start.point, viewport, size));
+  for (let index = start.fromIndex + 1; index <= end.fromIndex; index += 1) {
+    context.lineTo(...worldToCanvas(journey.worldPoints[index], viewport, size));
+  }
+  context.lineTo(...worldToCanvas(end.point, viewport, size));
   context.stroke();
 }
 
@@ -287,27 +310,19 @@ export function drawFrame(
   const activeAlpha = 1 - easeOutCubic(frame.outroProgress);
   context.save();
   context.globalAlpha = activeAlpha;
-  context.strokeStyle = 'rgba(233, 0, 100, 0.34)';
-  context.lineWidth = TRAIL_WIDTH * scale;
-  strokeRoute(context, journey.worldPoints, current.point, viewport, size, 0, current.completedIndex + 1);
-
   const currentDistance = journey.totalDistanceKm * Math.max(0, Math.min(1, frame.journeyProgress));
-  const recentStartDistance = Math.max(0, currentDistance - Math.max(80, journey.totalDistanceKm * 0.16));
-  const recentStartIndex = Math.max(
-    0,
-    journey.cumulativeDistanceKm.findIndex((distance) => distance >= recentStartDistance),
-  );
+  const trailStart = Math.max(0, currentDistance - trailWindowDistance(journey.totalDistanceKm, journey.durationSeconds ?? 15));
+  const visibleTrail = currentDistance - trailStart;
+  const oldEnd = trailStart + visibleTrail * 0.45;
+  const middleEnd = trailStart + visibleTrail * 0.75;
+  context.strokeStyle = 'rgba(233, 0, 100, 0.22)';
+  context.lineWidth = TRAIL_WIDTH * scale;
+  strokeDistanceRange(context, journey, viewport, size, trailStart, oldEnd);
+  context.strokeStyle = 'rgba(233, 0, 100, 0.55)';
+  strokeDistanceRange(context, journey, viewport, size, oldEnd, middleEnd);
   context.strokeStyle = '#e90064';
   context.lineWidth = RECENT_TRAIL_WIDTH * scale;
-  strokeRoute(
-    context,
-    journey.worldPoints,
-    current.point,
-    viewport,
-    size,
-    recentStartIndex,
-    current.completedIndex + 1,
-  );
+  strokeDistanceRange(context, journey, viewport, size, middleEnd, currentDistance);
   const [headX, headY] = worldToCanvas(current.point, viewport, size);
 
   context.shadowColor = 'rgba(36, 25, 29, 0.35)';

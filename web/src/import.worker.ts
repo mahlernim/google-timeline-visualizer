@@ -14,8 +14,8 @@ self.onmessage = async (event: MessageEvent<ImportRequest>): Promise<void> => {
     }
   };
   try {
-    const { file, range } = event.data;
-    if (range) send({ kind: 'range', result: await extractTimeline(file, range, undefined, progress) });
+    const { file, range, index } = event.data;
+    if (range) send({ kind: 'range', result: await extractTimeline(file, range, undefined, progress, index) });
     else send({ kind: 'scan', scan: await scanTimeline(file, undefined, progress) });
   } catch (error) {
     send({ kind: 'error', code: error instanceof ImportError ? error.code

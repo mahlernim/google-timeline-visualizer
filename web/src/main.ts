@@ -12,6 +12,8 @@ import { ImportError } from './import-types';
 import type { TimelineScan, RangeRequest } from './import-types';
 import { AppError } from './errors';
 import { cumulativeDistances } from './geo';
+import { populateLanguageSelect } from './language-select';
+import { DEFAULT_RAW_ACCURACY, validateWebSettings } from './web-settings';
 import { frameAtElapsedSeconds } from './animation';
 import type { CameraMovement, GeoPoint, PreparedJourney } from './types';
 import type { OverlayText } from './renderer';
@@ -25,7 +27,6 @@ const form = el<HTMLFormElement>('settings-form');
 const language = el<HTMLSelectElement>('app-language');
 const unitSelect = el<HTMLSelectElement>('distance-unit');
 const sourceInput = el<HTMLInputElement>('timeline-file');
-const sampleButton = el<HTMLButtonElement>('sample-button');
 const startMonth = el<HTMLSelectElement>('start-month');
 const endMonth = el<HTMLSelectElement>('end-month');
 const startDate = el<HTMLInputElement>('start-date');
@@ -33,13 +34,12 @@ const endDate = el<HTMLInputElement>('end-date');
 const exact = el<HTMLInputElement>('exact-date-toggle');
 const advanced = el<HTMLInputElement>('advanced-toggle');
 const raw = el<HTMLInputElement>('raw-signals-toggle');
-const accuracy = el<HTMLInputElement>('raw-accuracy-limit');
 const filter = el<HTMLSelectElement>('location-filter');
 const camera = el<HTMLSelectElement>('camera-movement');
 const aspect = el<HTMLSelectElement>('aspect-ratio');
-const resolution = el<HTMLInputElement>('resolution');
-const frameRate = el<HTMLInputElement>('frame-rate');
-const duration = el<HTMLInputElement>('duration');
+const resolution = el<HTMLSelectElement>('resolution');
+const frameRate = el<HTMLSelectElement>('frame-rate');
+const duration = el<HTMLSelectElement>('duration');
 const simpleDuration = el<HTMLSelectElement>('duration-simple');
 const title = el<HTMLInputElement>('video-title');
 const consent = el<HTMLInputElement>('map-consent');
@@ -69,7 +69,6 @@ let step = 0;
 let scan: TimelineScan | null = null;
 let file: Blob | null = null;
 let fileName = '';
-let isSample = false;
 let points: GeoPoint[] = [];
 let rejected = 0;
 let distance = 0;
@@ -98,7 +97,7 @@ function range(): RangeRequest {
     start: exact.checked ? startDate.value : startMonth.value + '-01',
     end: exact.checked ? endDate.value : endMonth.value + '-' + String(lastDay).padStart(2, '0'),
     raw: raw.checked,
-    accuracy: accuracy.value.trim() === '' ? null : Number(accuracy.value),
+    accuracy: DEFAULT_RAW_ACCURACY,
     filter: advanced.checked && filter.value === 'off' ? 'off' : 'conservative',
   };
 }
@@ -152,7 +151,7 @@ function fail(error: unknown): void {
     'malformed-json': 'errorMalformedJson', 'legacy-format': 'errorLegacyFormat',
     'unsupported-format': 'errorUnsupportedFormat', 'no-usable-locations': 'errorNoUsableLocations',
   };
-  if (['rangeTooLarge', 'invalidDates', 'importFailed', 'outputTooLarge'].includes(code)) {
+  if (['rangeTooLarge', 'invalidDates', 'invalidSettings', 'importFailed', 'outputTooLarge'].includes(code)) {
     errorText = () => f(code as FlowKey);
   } else if (parseKeys[code]) errorText = () => i18n.t(parseKeys[code]);
   else if (error instanceof AppError) errorText = () => i18n.t(error.code);
@@ -185,7 +184,6 @@ function refresh(): void {
   el('month-range-fields').classList.toggle('hidden', exact.checked);
   el('exact-date-fields').classList.toggle('hidden', !exact.checked);
   el('raw-signals-row').classList.toggle('hidden', !scan?.hasRaw);
-  el('raw-accuracy-field').classList.toggle('hidden', !raw.checked);
   el('raw-signals-description').classList.toggle('hidden', !raw.checked);
   el('location-filter-field').classList.toggle('hidden', raw.checked);
   renderStatus();
@@ -213,10 +211,11 @@ function localize(): void {
   syncDocumentLang(i18n);
   applyStrings(document, i18n);
   applyFlowStrings(document, i18n.locale);
+  populateLanguageSelect(language, languagePreference, languages(), i18n.t('languageSystemDefault'));
   populateDates();
   const resolved = distanceUnit();
   unitSelect.options[0].textContent = i18n.t('distanceUnitAutomaticResolved', { automatic: i18n.t('distanceUnitAutomatic'), resolved: i18n.t(resolved === 'miles' ? 'distanceUnitMiles' : 'distanceUnitKilometers') });
-  if (scan) el('file-status').textContent = [isSample ? i18n.t('sampleSourceName') : fileName, scan.firstDate, scan.lastDate].join(' · ');
+  if (scan) el('file-status').textContent = [fileName, scan.firstDate, scan.lastDate].join(' · ');
   if (points.length) el('selection-summary').textContent = i18n.join(
     i18n.t(raw.checked ? 'summaryDistanceEstimated' : 'summaryDistanceAbout', {
       count: points.length, distance: i18n.formatDistance(distance, distanceUnit()),
@@ -265,14 +264,13 @@ function showStep(target: number): void {
   errorText = null;
   refresh();
 }
-async function load(fileToRead: Blob, name: string, sample = false): Promise<void> {
+async function load(fileToRead: Blob, name: string): Promise<void> {
   stop();
   releaseResult();
   scan = null;
   points = [];
   file = fileToRead;
   fileName = name;
-  isSample = sample;
   step = 0;
   await job('importScanning', async (signal, current) => {
     const { runImport } = await import('./import-client');
@@ -284,7 +282,7 @@ async function load(fileToRead: Blob, name: string, sample = false): Promise<voi
     if (raw.checked) advanced.checked = true;
     exact.checked = false;
     populateDates(true);
-    el('file-status').textContent = [sample ? i18n.t('sampleSourceName') : name, scan.firstDate, scan.lastDate].join(' · ');
+    el('file-status').textContent = [name, scan.firstDate, scan.lastDate].join(' · ');
     if (raw.checked) {
       rawDialog.showModal();
     } else { step = 1; }
@@ -294,8 +292,9 @@ async function load(fileToRead: Blob, name: string, sample = false): Promise<voi
 function validSettings(): boolean {
   const fields: Array<HTMLInputElement | HTMLSelectElement> = [title, aspect];
   if (exact.checked) fields.push(startDate, endDate);
-  if (advanced.checked) fields.push(duration, resolution, frameRate, accuracy);
+  if (advanced.checked) fields.push(duration, resolution, frameRate);
   for (const field of fields) if (!field.reportValidity()) return false;
+  if (!validateWebSettings(advanced.checked ? Number(resolution.value) : 480, advanced.checked ? Number(frameRate.value) : 15, currentDuration())) { fail(new ImportError('invalidSettings')); return false; }
   const selected = range();
   if (!selected.start || !selected.end || selected.start > selected.end) { fail(new ImportError('invalidDates')); return false; }
   return true;
@@ -312,7 +311,7 @@ next.addEventListener('click', async () => {
     await job('extractReading', async (signal, current) => {
       const { runImport } = await import('./import-client');
       signal.throwIfAborted();
-      const message = await runImport({ file: file!, range: range() }, signal, (fraction) => { progress.value = fraction; });
+      const message = await runImport({ file: file!, range: range(), index: scan?.index }, signal, (fraction) => { progress.value = fraction; });
       if (!current() || message.kind !== 'range') return;
       points = message.result.points;
       rejected = message.result.rejected;
@@ -356,13 +355,13 @@ previewButton.addEventListener('click', async () => {
     canvas.height = size.height;
     canvas.style.setProperty('--preview-aspect', String(format.width / format.height));
     canvas.hidden = false;
-    prepared = await renderer.prepareJourney(points, size, currentCamera(), 8, signal);
+    prepared = await renderer.prepareJourney(points, size, currentCamera(), currentDuration(), signal);
     const text = overlay();
     const frames = 8 * 15;
     for (let frame = 0; frame <= frames; frame += 1) {
       signal.throwIfAborted();
       const started = performance.now();
-      await renderer.drawJourneyFrame(canvas, prepared, frameAtElapsedSeconds(frame / 15, 6.5), text, signal);
+      await renderer.drawJourneyFrame(canvas, prepared, frameAtElapsedSeconds(frame / 15, 8), text, signal);
       if (!current()) return;
       progress.value = frame / frames;
       // Waiting only for the remaining frame time keeps map loading from creating a burst.
@@ -416,15 +415,6 @@ createButton.addEventListener('click', async () => {
   });
 });
 sourceInput.addEventListener('change', () => { const selected = sourceInput.files?.[0]; if (selected) void load(selected, selected.name); });
-sampleButton.addEventListener('click', async () => {
-  sampleButton.disabled = true;
-  try {
-    const response = await fetch(import.meta.env.BASE_URL + 'sample-timeline.json');
-    if (!response.ok) throw new ImportError('importFailed');
-    await load(await response.blob(), '', true);
-  } catch (error) { fail(error); }
-  finally { sampleButton.disabled = false; }
-});
 el('continue-raw-data').addEventListener('click', () => { rawDialog.close(); step = 1; refresh(); });
 el('open-google-maps').addEventListener('click', () => { window.open('https://maps.google.com/', '_blank', 'noopener,noreferrer'); });
 rawDialog.addEventListener('cancel', () => { stop(); scan = null; file = null; });
@@ -467,6 +457,7 @@ share.addEventListener('click', async () => {
   catch (error) { if (!(error instanceof DOMException && error.name === 'AbortError')) { errorText = () => i18n.t('errorShareUnavailable'); renderStatus(); } }
 });
 document.addEventListener('visibilitychange', () => { if (document.hidden && step === 2 && busy) stop(); });
+window.addEventListener('languagechange', localize);
 window.addEventListener('pagehide', () => { stop(); releaseResult(); file = null; points = []; scan = null; });
 window.addEventListener('pageshow', (event) => { if (event.persisted) { step = 0; form.reset(); advanced.checked = false; localize(); } });
 // Browsers may restore form values, including 4K settings. A fresh session always starts light.

@@ -15,3 +15,5 @@
 canvas,video{max-width:100%}
 #journey-canvas,#result-video{display:block;width:min(100%,calc(60vh * var(--preview-aspect,1)));height:auto;aspect-ratio:var(--preview-aspect,1);margin:16px auto;border-radius:14px}
 @media(max-width:440px){.steps button{flex-direction:column;gap:2px;font-size:11px}.preferences{gap:10px}.preferences label{min-width:120px}.shell{padding:18px}}
+
+.footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 18px}.original-credit{font-size:12px}

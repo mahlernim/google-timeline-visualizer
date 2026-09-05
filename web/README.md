@@ -3,27 +3,35 @@
 The public landing page is at <https://ahn-lab.org/google-timeline-visualizer/>.
 The browser application is at <https://ahn-lab.org/google-timeline-visualizer/app/>.
 
-The landing page uses a small prerecorded fictional journey. Android visitors see
+The landing page uses a small prerecorded real journey shared by the publisher. Android visitors see
 compact Play testing and APK options first. PC, iPhone, iPad, and unknown devices
 see the web app first. Device detection changes the order, never redirects anyone.
 
 ## Browser workflow
 
-1. Import a current direct-array or semantic Timeline JSON, or try the fictional sample.
+1. Import a current direct-array or semantic Timeline JSON.
 2. Choose months or exact dates. The latest available month is selected initially.
 3. Accept the map notice and preview the journey.
 4. Check the selected browser codec, then create, share, or download an MP4.
 
 Simple mode uses square 480p, 15 fps, 15 seconds, and the steady camera. It also
-offers portrait/landscape and 10- or 30-second duration. Advanced settings expose
-camera movement, location filtering, raw signals, accuracy, custom duration
-10–300 seconds, resolution 480–2160, and whole frame rates 15–120 fps.
+offers portrait/landscape and durations of 15, 20, 30, 45, or 60 seconds.
+Advanced settings expose camera movement, location filtering, and raw signals.
+Resolution choices are 480p, 720p, 1024p, and 1920p (the short edge), with frame
+rates of 15, 30, or 60 fps. Raw accuracy stays at the existing 100-meter default
+without a separate control. All numeric video settings use validated selections.
 Every new session starts in simple mode. Unsupported export configurations remain
 explicit and never silently change the user's selection.
 
 Import runs in a cancellable worker using 64 KiB input chunks. It scans available
-dates, rereads the chosen range, and retains only selected points and neighboring
-filter context. The selected input is limited to 100,000 points, with at most
+dates and builds an in-memory index of semantic record byte ranges. The first pass
+still validates and decodes the complete file. The second pass seeks only blocks
+that overlap the selected dates or necessary semantic coverage, and retains only
+selected points and neighboring filter context. The index preserves full-file
+ordering and timezone signals, uses no coordinate arrays, and is bounded to 2,048
+blocks by coalescing adjacent ranges. Pathological disconnected arrays fall back
+to a complete streamed pass. Choosing another file or leaving the session releases
+the index. It is not a persistent preprocessed copy. The selected input is limited to 100,000 points, with at most
 100,000 additional context points. A single JSON record larger than 16 MiB is
 rejected before it can grow without bound. Oversized imports ask for a shorter
 range or use of Android instead of silently dropping locations.
@@ -34,7 +42,9 @@ additional passes with 10,000-point sort batches instead of loading all location
 into memory. This can take longer, and remains cancellable.
 
 The preview uses at most a 640-pixel longest edge and 15 fps, independent of export
-resolution. Maps are loaded as each frame needs them, using two simultaneous
+resolution. Preview and export share a fading trail based on 2.5 seconds of travel,
+bounded to 80 through 2,000 km and never longer than the journey. Older routes
+clear during travel; the complete route appears in the ending overview. Maps are loaded as each frame needs them, using two simultaneous
 requests and a 32 MiB decoded-image cache. Tiles are drawn before eviction, including
 frames that need more tiles than fit in the cache. Failed map loads report an error
 rather than creating a video with missing tiles.
@@ -85,19 +95,20 @@ The build verifies the landing JavaScript's 30 KiB gzip budget, the demo's 750 K
 budget, poster size, fast-start metadata, and the service worker's deferred assets.
 Keep the existing project base path.
 
-## Fictional demo provenance
+## Demo provenance
 
-`public/demo-journey.mp4` and `public/demo-poster.webp` are generated solely from
-`public/sample-timeline.json`, never a personal Timeline. The source was exported
-through the web UI at square 480p, 15 fps, 15 seconds, steady camera, kilometers,
-and the title “Fictional journey”. The route and map attribution come from the
-same renderer as user previews.
-
-The landing clip compresses the complete source journey to eight seconds.
+`public/demo-journey.mp4` contains the first ten seconds of the publisher's
+`timeline video.mp4`, supplied and explicitly authorized for public use by mahlerlab.
+`public/demo-poster.webp` is a frame from that excerpt. The source file is not
+included. The clip preserves the source pacing and existing map attribution.
 
 ```sh
-ffmpeg -i fictional-source.mp4 -vf "setpts=8/15*PTS,fps=15,scale=480:480" -t 8 -c:v libx264 -crf 29 -preset slow -pix_fmt yuv420p -movflags +faststart -an -metadata "title=Fictional journey" public/demo-journey.mp4
+ffmpeg -i "timeline video.mp4" -t 10 -vf "fps=15,scale=480:480" -c:v libx264 -crf 27 -preset slow -pix_fmt yuv420p -movflags +faststart -an -map_metadata -1 -metadata "title=Timeline Visualizer by mahlerlab" public/demo-journey.mp4
 ffmpeg -ss 2 -i public/demo-journey.mp4 -frames:v 1 -c:v libwebp -quality 75 public/demo-poster.webp
 ```
 
-The clip is H.264/yuv420p, 480×480, 120 frames, eight seconds, without audio.
+The clip is H.264/yuv420p, 480×480, 150 frames, ten seconds, without audio.
+It loops with inline play/pause controls. Reduced motion, data saving, and autoplay
+restrictions require manual playback. Neither the video nor application modules
+are precached on a cold landing visit. The fictional JSON remains a parser fixture
+and is not offered as an import action.

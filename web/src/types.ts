@@ -61,4 +61,6 @@ export interface PreparedJourney {
   overviewViewport: Viewport;
   tiles: Map<string, HTMLImageElement>;
   tileCache?: TileCache<ImageBitmap>;
+  /** Selected total duration. Preview and export use the same trail window. */
+  durationSeconds?: number;
 }

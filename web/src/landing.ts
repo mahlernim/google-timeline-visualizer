@@ -1,5 +1,6 @@
 import './landing.css';
-import { activeLocale, readLanguagePreference, writeLanguagePreference, isLanguagePreference, LANGUAGE_NAMES, LOCALES } from './language';
+import { activeLocale, readLanguagePreference, writeLanguagePreference, isLanguagePreference } from './language';
+import { populateLanguageSelect } from './language-select';
 import { applyFlowStrings, flowText } from './flow-i18n';
 import { preferAndroid, mayAutoplay } from './device';
 
@@ -21,9 +22,7 @@ function text(): void {
   locale = activeLocale(preference, navigator.languages ?? [navigator.language]);
   document.documentElement.lang = locale;
   applyFlowStrings(document, locale);
-  language.replaceChildren(new Option(flowText(locale, 'system'), 'system'),
-    ...LOCALES.map((tag) => new Option(LANGUAGE_NAMES[tag], tag)));
-  language.value = preference;
+  populateLanguageSelect(language, preference, navigator.languages ?? [navigator.language], flowText(locale, 'system'));
   toggle.textContent = flowText(locale, video.paused ? 'playDemo' : 'pauseDemo');
 }
 text();
@@ -64,6 +63,7 @@ language.addEventListener('change', () => {
   writeLanguagePreference(preference);
   text();
 });
+window.addEventListener('languagechange', text);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     void navigator.serviceWorker.register(import.meta.env.BASE_URL + 'service-worker.js?v=' + import.meta.env.VITE_SW_VERSION,

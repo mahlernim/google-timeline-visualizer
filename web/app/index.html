@@ -23,7 +23,7 @@
       <p id="mode-summary" class="status" data-flow="simpleHint">Light preview · 480p · 15 fps</p>
       <div class="preferences">
         <label><span data-i18n="languageLabel">Language</span><select id="app-language">
-            <option value="system" data-i18n="languageSystemDefault">System default</option>
+            <option value="system">English</option>
             <option value="en">English</option>
             <option value="ko">한국어</option>
             <option value="ja">日本語</option>
@@ -65,7 +65,6 @@
             <span data-i18n="chooseFileButton">Choose Timeline.json</span>
             <input id="timeline-file" type="file" accept="application/json,.json" />
           </label>
-          <button id="sample-button" class="secondary" type="button" data-i18n="sampleButton">Try a fictional sample journey</button>
         </div>
         <p id="file-status" class="status" role="status" data-i18n="fileStatusEmpty">No Timeline loaded</p>
         <p data-flow="importReady">Choose the dates you want to preview.</p>
@@ -112,9 +111,11 @@
         </label>
         <label id="simple-duration-field"><span data-i18n="durationLabel">Duration</span>
           <select id="duration-simple">
-            <option value="10" data-i18n="durationSeconds" data-i18n-count="10">10 seconds</option>
             <option value="15" data-i18n="durationSeconds" data-i18n-count="15" selected>15 seconds</option>
+            <option value="20" data-i18n="durationSeconds" data-i18n-count="20">20 seconds</option>
             <option value="30" data-i18n="durationSeconds" data-i18n-count="30">30 seconds</option>
+            <option value="45" data-i18n="durationSeconds" data-i18n-count="45">45 seconds</option>
+            <option value="60" data-i18n="durationSeconds" data-i18n-count="60">60 seconds</option>
           </select>
         </label>
         <label class="checkbox-row"><input id="advanced-toggle" type="checkbox"><span data-flow="advanced">Advanced settings</span></label>
@@ -125,11 +126,6 @@
         </label>
         <p id="raw-signals-description" class="status" data-i18n="rawSignalsDescription">Uses recent unprocessed location estimates. Noise is reduced, but the route and distance may still be inaccurate.</p>
         <p id="raw-date-range" class="status" aria-live="polite"></p>
-        <label id="raw-accuracy-field" >
-          <span data-i18n="accuracyLimitLabel">Accuracy limit (meters)</span>
-          <input id="raw-accuracy-limit" type="number" min="0" step="1" inputmode="decimal" value="100" />
-          <span class="field-help" data-i18n="accuracyLimitHelp">Less accurate locations are excluded. Leave blank to include every usable location.</span>
-        </label>
         <label id="location-filter-field">
           <span data-i18n="locationFilterLabel">GPS outlier filtering</span>
           <select id="location-filter">
@@ -140,7 +136,13 @@
         </label>
         <label>
           <span data-i18n="durationLabel">Duration</span>
-          <input id="duration" type="number" min="10" max="300" step="1" inputmode="numeric" value="15" required />
+          <select id="duration">
+            <option value="15" data-i18n="durationSeconds" data-i18n-count="15" selected>15 seconds</option>
+            <option value="20" data-i18n="durationSeconds" data-i18n-count="20">20 seconds</option>
+            <option value="30" data-i18n="durationSeconds" data-i18n-count="30">30 seconds</option>
+            <option value="45" data-i18n="durationSeconds" data-i18n-count="45">45 seconds</option>
+            <option value="60" data-i18n="durationSeconds" data-i18n-count="60">60 seconds</option>
+          </select>
         </label>
         <label>
           <span data-i18n="cameraMovementLabel">Camera movement</span>
@@ -153,12 +155,12 @@
         </label>
         <label>
           <span data-i18n="resolutionLabel">Resolution</span>
-          <input id="resolution" type="number" min="480" max="2160" step="2" inputmode="numeric" value="480" aria-describedby="format-warning" required />
-          <span class="field-help" data-i18n="videoFormatHelp">Enter the short edge in pixels from 480 through 2160. Larger formats take longer and produce larger files.</span>
+          <select id="resolution" aria-describedby="format-warning"><option value="480">480p</option><option value="720">720p</option><option value="1024">1024p</option><option value="1920">1920p</option></select>
+          <span class="field-help" data-flow="resolutionHelp">Resolution is the short edge. Larger formats take longer and produce larger files.</span>
         </label>
         <label>
           <span data-i18n="frameRateLabel">Frame rate</span>
-          <input id="frame-rate" type="number" min="15" max="120" step="1" inputmode="numeric" value="15" aria-describedby="format-warning" required />
+          <select id="frame-rate" aria-describedby="format-warning"><option value="15">15 fps</option><option value="30">30 fps</option><option value="60">60 fps</option></select>
           <span class="field-help" data-i18n="frameRateHelp">Higher frame rates look smoother but take longer and create larger files.</span>
         </label>
         </div>
@@ -204,6 +206,8 @@
       <footer>
         <p data-i18n="footerNoAccount">No account, location permission, or Timeline upload is required.</p>
         <p data-i18n="footerMapAttribution">Map data © OpenStreetMap contributors and © CARTO.</p>
+        <p class="original-credit" data-flow="originalCredit">The original Timeline Visualizer by mahlerlab</p>
+        <nav class="footer-links"><a href="https://github.com/mahlernim/google-timeline-visualizer/discussions" target="_blank" rel="noopener noreferrer" data-flow="feedback">Feedback &amp; suggestions</a><a href="https://github.com/mahlernim/google-timeline-visualizer">GitHub</a></nav>
         <p><a href="../third-party-notices.txt" data-i18n="footerThirdPartyNotices">Third-party notices</a></p>
       </footer>
     </main>
