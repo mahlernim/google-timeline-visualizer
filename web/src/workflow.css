@@ -1,8 +1,6 @@
 [hidden]{display:none!important}
 .brand{font-weight:700;text-decoration:none;color:inherit}
 .app-header{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.preferences{display:flex;gap:16px;flex-wrap:wrap;margin:16px 0}
-.preferences label{flex:1;min-width:140px}
 .steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;list-style:none;padding:0;margin:22px 0}
 .steps button{display:flex;align-items:center;justify-content:center;gap:7px;background:transparent;color:#78626b;border:1px solid #e5d7de;padding:10px 5px;font-size:12px;width:100%;min-height:42px}
 .steps button[aria-current=step]{background:#fff;color:#b5004d;border-color:#c3648d;font-weight:750}
@@ -14,6 +12,19 @@
 .workflow-actions{margin-top:16px}
 canvas,video{max-width:100%}
 #journey-canvas,#result-video{display:block;width:min(100%,calc(60vh * var(--preview-aspect,1)));height:auto;aspect-ratio:var(--preview-aspect,1);margin:16px auto;border-radius:14px}
-@media(max-width:440px){.steps button{flex-direction:column;gap:2px;font-size:11px}.preferences{gap:10px}.preferences label{min-width:120px}.shell{padding:18px}}
-
+@media(max-width:440px){.steps button{flex-direction:column;gap:2px;font-size:11px}
 .footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 18px}.original-credit{font-size:12px}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.language-control{margin:0;flex-shrink:0}.language-control select{width:auto;max-width:136px;min-height:44px;padding:8px;font-size:13px;background:transparent}
+.app-header .brand{font-size:15px}
+.help-platforms{display:flex;gap:8px;margin:14px 0}.help-platforms button{min-height:44px;padding:8px 13px;background:transparent;color:#74183f;border:1px solid #d9bac7;font-size:13px}.help-platforms button[aria-pressed=true]{background:#fff;border-color:#b5004d}
+.help-panel a{color:#8d003d;font-size:13px}.help-panel>p{margin-top:12px}
+#import-work{padding:14px;border:1px solid #e8c6d5;border-radius:14px;background:#fff1f7}
+#import-filename,#file-status,#selected-file{overflow-wrap:anywhere}
+#import-filename{margin:0 0 10px;font-weight:650}#import-work p{font-size:14px;margin-bottom:6px}#import-work progress{height:12px;margin:4px 0 14px}
+#size-estimate{padding-top:14px;border-top:1px solid #eadde3;margin-top:18px}
+.size-warning{margin:10px 0 0;padding:12px;border-radius:12px;background:#fff0e2;color:#793900;font-size:14px}
+:focus-visible,.file-button:focus-within{outline:3px solid #bd0050;outline-offset:4px}
+[data-panel] h2{scroll-margin-top:20px}
+@media(max-width:440px){.language-control select{max-width:116px}.app-header{gap:8px}.app-header .brand{font-size:14px}}

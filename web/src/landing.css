@@ -25,7 +25,7 @@ figcaption{font-size:12px;color:#806b74;margin:12px 3px 0}
 [data-platform=android] .android-options h2{display:none}
 [data-platform=android] .recommended{display:block;margin:0 0 10px;font-size:12px}
 [data-platform=android] .android-links a{border:1px solid #dbc7d1;border-radius:9px;text-decoration:none;padding:9px 12px;background:#fff}
-[data-platform=android] .open-web{background:transparent;color:#493940;border:1px solid #dbc7d1;padding:9px 14px;font-size:14px}
+[data-platform=android] .open-web{background:#ffe1ed;color:#8c003b;border:1px solid #bd4c7c;padding:11px 16px;font-size:14px}
 footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px 24px;border-top:1px solid #ecdfe5;margin-top:55px;padding-top:20px;color:#806b74;font-size:12px}
 footer p{margin:0;max-width:570px}footer nav{display:flex;flex-wrap:wrap;gap:12px 18px}.original-credit{flex-basis:100%}
 :focus-visible{outline:3px solid #bd0050;outline-offset:4px}

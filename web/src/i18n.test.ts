@@ -523,7 +523,7 @@ describe('index.html i18n keys', () => {
       const [, , attrs, key, text] = match;
       const count = /\sdata-i18n-count="([^"]*)"/.exec(attrs);
       const rendered = count === null ? translate(key) : translate(key, { count: Number(count[1]) });
-      expect(rendered, key).toBe(text);
+      expect(rendered, key).toBe(text.replaceAll("&amp;", "&"));
       checked += 1;
     }
     expect(checked).toBeGreaterThan(50);

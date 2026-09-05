@@ -17,12 +17,7 @@
     <main class="shell">
       <header class="app-header">
         <a class="brand" href="../">Timeline Visualizer</a>
-        <a href="../" data-flow="home">Home</a>
-      </header>
-      <h1 data-i18n="headerTitle">Create video</h1>
-      <p id="mode-summary" class="status" data-flow="simpleHint">Light preview · 480p · 15 fps</p>
-      <div class="preferences">
-        <label><span data-i18n="languageLabel">Language</span><select id="app-language">
+        <label class="language-control"><span class="sr-only" data-i18n="languageLabel">Language</span><select id="app-language">
             <option value="system">English</option>
             <option value="en">English</option>
             <option value="ko">한국어</option>
@@ -34,12 +29,9 @@
             <option value="de">Deutsch</option>
             <option value="pt-BR">Português (Brasil)</option>
           </select></label>
-        <label><span data-i18n="distanceUnitLabel">Distance unit</span><select id="distance-unit">
-            <option value="automatic" selected>Automatic · Kilometers</option>
-            <option value="kilometers" data-i18n="distanceUnitKilometers">Kilometers</option>
-            <option value="miles" data-i18n="distanceUnitMiles">Miles</option>
-          </select></label>
-      </div>
+      </header>
+      <h1 data-i18n="headerTitle">Create video</h1>
+      <p id="mode-summary" class="status" data-flow="simpleHint">Light preview · 480p · 15 fps</p>
       <nav aria-label="Progress"><ol class="steps">
         <li><button type="button" data-step="0" aria-current="step"><span>1</span><span data-flow="importStep">Import</span></button></li>
         <li><button type="button" data-step="1" disabled><span>2</span><span data-flow="datesStep">Choose dates</span></button></li>
@@ -48,29 +40,52 @@
       </ol></nav>
       <form id="settings-form" autocomplete="off">
       <section id="step-import" class="card" data-panel="0">
-        <h2 data-i18n="fileCardTitle">Timeline file</h2>
-        <p data-i18n="fileCardIntro">Choose your exported Timeline.json. The file stays on this device, and only map images are requested from the map provider.</p>
+        <h2 tabindex="-1" data-i18n="fileCardTitle">Timeline file</h2>
+        <p data-i18n="fileCardIntro">Choose your exported Timeline file. The file stays on this device, and only map images are requested from the map provider.</p>
         <details class="help-panel">
-          <summary data-i18n="exportHelpSummary">How to export Timeline on iPhone</summary>
+          <summary data-flow="exportHelpTitle">How to get your Timeline file</summary>
+          <div class="help-platforms" role="group" aria-labelledby="export-help-label">
+            <span id="export-help-label" class="sr-only" data-flow="exportHelpTitle">How to get your Timeline file</span>
+            <button id="help-android" type="button" aria-pressed="true" aria-controls="guide-android">Android</button>
+            <button id="help-ios" type="button" aria-pressed="false" aria-controls="guide-ios">iPhone / iPad</button>
+          </div>
+          <div id="guide-android">
+            <ol>
+              <li data-flow="androidExport1">Open your phone’s Settings, then Location.</li>
+              <li data-flow="androidExport2">Select Location services, then Timeline.</li>
+              <li data-flow="androidExport3">Tap Export Timeline data, then Continue.</li>
+              <li data-flow="androidExport4">Choose where to save the JSON file, tap Save, then return here.</li>
+            </ol>
+            <a href="https://support.google.com/maps/answer/6258979?co=GENIE.Platform%3DAndroid" target="_blank" rel="noopener noreferrer" data-flow="googleGuide">Google’s export guide</a>
+          </div>
+          <div id="guide-ios" hidden>
           <ol>
             <li data-i18n="exportHelpStep1">Open Google Maps and tap your profile picture.</li>
-            <li data-i18n="exportHelpStep2">Open Settings, then Personal content.</li>
+            <li data-i18n="exportHelpStep2">Open Settings, then Location &amp; Privacy (formerly Personal content).</li>
             <li data-i18n="exportHelpStep3">Select Export Timeline data.</li>
-            <li data-i18n="exportHelpStep4">Save Timeline.json in the Files app, then return here.</li>
+            <li data-i18n="exportHelpStep4">Choose Save to Files, select a folder and save. Return here with location-history.json or Timeline.json.</li>
           </ol>
-          <p data-i18n="addToHomeScreenHint">To keep this app on your iPhone, use Safari’s Share menu and choose Add to Home Screen.</p>
+            <a href="https://support.google.com/maps/answer/6258979?co=GENIE.Platform%3DiOS" target="_blank" rel="noopener noreferrer" data-flow="googleGuide">Google’s export guide</a>
+          </div>
+          <p data-flow="exportFileHint">Choose the exported JSON file below. On a computer, first transfer it from your phone.</p>
         </details>
         <div class="source-actions">
-          <label class="file-button">
-            <span data-i18n="chooseFileButton">Choose Timeline.json</span>
+          <label id="file-picker" class="file-button">
+            <span id="choose-file-label" data-i18n="chooseFileButton">Choose Timeline file</span>
             <input id="timeline-file" type="file" accept="application/json,.json" />
           </label>
+          <div id="import-work" hidden>
+            <p id="import-filename" class="status"></p>
+            <div id="import-status-slot"></div>
+            <div id="import-cancel-slot"></div>
+          </div>
         </div>
+        <div id="import-error-slot"></div>
         <p id="file-status" class="status" role="status" data-i18n="fileStatusEmpty">No Timeline loaded</p>
-        <p data-flow="importReady">Choose the dates you want to preview.</p>
       </section>
       <section id="step-dates" class="card" data-panel="1" hidden>
-        <h2 data-flow="datesStep">Choose dates</h2>
+        <h2 tabindex="-1" data-flow="datesStep">Choose dates</h2>
+        <p id="selected-file" class="status"></p>
         <div id="period-controls">
           <label class="checkbox-row">
             <input id="exact-date-toggle" type="checkbox" />
@@ -118,6 +133,11 @@
             <option value="60" data-i18n="durationSeconds" data-i18n-count="60">60 seconds</option>
           </select>
         </label>
+        <label><span data-i18n="distanceUnitLabel">Distance unit</span><select id="distance-unit">
+            <option value="automatic" selected>Automatic · Kilometers</option>
+            <option value="kilometers" data-i18n="distanceUnitKilometers">Kilometers</option>
+            <option value="miles" data-i18n="distanceUnitMiles">Miles</option>
+          </select></label>
         <label class="checkbox-row"><input id="advanced-toggle" type="checkbox"><span data-flow="advanced">Advanced settings</span></label>
         <div id="advanced-fields" hidden>
         <label id="raw-signals-row" class="checkbox-row">
@@ -164,9 +184,12 @@
           <span class="field-help" data-i18n="frameRateHelp">Higher frame rates look smoother but take longer and create larger files.</span>
         </label>
         </div>
+        <p id="size-estimate" class="status" aria-live="polite"></p>
+        <p id="format-warning" class="size-warning" hidden data-flow="sizeLimitHint">Above the 64 MiB export limit. Reduce duration, resolution, or frame rate. You can still preview.</p>
       </section>
       <section id="preview-card" class="card" data-panel="2" hidden>
-        <h2 data-flow="previewStep">Preview</h2>
+        <h2 tabindex="-1" data-flow="quickPreview">Quick preview · 8 seconds</h2>
+        <p id="preview-export-duration" class="status"></p>
         <p id="selection-summary" class="status"></p>
         <p data-flow="previewHint">The preview uses fewer pixels to keep your browser responsive.</p>
         <div class="privacy-notice">
@@ -182,7 +205,7 @@
         <button id="preview-button" type="button" data-i18n="previewButton">Preview</button>
       </section>
       <section id="step-export" class="card" data-panel="3" hidden>
-        <h2 data-flow="exportStep">Export</h2>
+        <h2 tabindex="-1" data-flow="exportStep">Export</h2>
         <p id="export-settings" class="status"></p>
         <p data-flow="exportHint">Keep this tab open while creating your video.</p>
         <p id="compatibility-status" class="status"></p>
@@ -193,13 +216,13 @@
           <a id="download-link" class="button secondary" download="timeline-journey.mp4" data-i18n="downloadButton">Download MP4</a>
         </div>
       </section>
-      <div class="workflow-status" role="status" aria-live="polite">
-        <p id="progress-label"></p><progress id="export-progress" value="0" max="1" hidden></progress>
-      </div>
-      <p id="error-message" class="error" role="alert" hidden></p>
-      <div class="actions workflow-actions">
+      <div id="workflow-status-slot"><div id="workflow-status" class="workflow-status" role="status" aria-live="polite">
+        <p id="progress-label"></p><progress id="export-progress" aria-labelledby="progress-label" value="0" max="1" hidden></progress>
+      </div></div>
+      <div id="workflow-error-slot"><p id="error-message" class="error" role="alert" hidden></p></div>
+      <div id="workflow-actions" class="actions workflow-actions">
         <button id="back-button" class="secondary" type="button" data-flow="back" hidden>Back</button>
-        <button id="next-button" type="button" data-flow="next" hidden>Continue</button>
+        <button id="next-button" type="button" hidden>Go to preview</button>
         <button id="cancel-button" class="secondary" type="button" data-flow="cancel" hidden>Cancel</button>
       </div>
       </form>
