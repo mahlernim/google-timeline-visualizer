@@ -61,6 +61,30 @@ describe('streamed Timeline import', () => {
     expect(seen.length).toBeGreaterThan(10);
     expect(seen.at(-1)).toBe(1);
   });
+  it('preserves raw stabilization anchors that start before the date context', async () => {
+    const data = { rawSignals: Array.from({ length: 3 * 24 * 60 }, (_, minute) => ({ position: {
+      timestamp: new Date(Date.UTC(2026, 0, 1) + minute * 60_000).toISOString(),
+      LatLng: 'geo:37,127', accuracyMeters: 100,
+    } })) };
+    const range = { ...all, raw: true, start: '2026-01-03', end: '2026-01-03' };
+    expect((await extractTimeline(blob(data), range)).points)
+      .toEqual(selectDateRange(processRawSignals(parseRawSignalsJson(data), 100).points, range.start, range.end));
+  });
+  it('preserves shuffled raw data, duplicate accuracy, and spikes across bounded sort batches', async () => {
+    const ordered = Array.from({ length: 20_003 }, (_, minute) => ({ position: {
+      timestamp: new Date(Date.UTC(2026, 0, 1) + minute * 60_000).toISOString(),
+      LatLng: minute % 89 === 0 ? 'geo:51,0' : 'geo:37,127', accuracyMeters: minute % 29 === 0 ? 200 : 100,
+    } }));
+    // Put a better duplicate at the opposite end of a nonchronological source.
+    const data = { rawSignals: [...ordered.slice(10_000).reverse(), ...ordered.slice(0, 10_000),
+      { position: { ...ordered[10_000].position, accuracyMeters: 5 } }] };
+    const range = { ...all, raw: true, start: '2026-01-10', end: '2026-01-13' };
+    const parsed = parseRawSignalsJson(data);
+    const expected = selectDateRange(processRawSignals(parsed, 100).points, range.start, range.end);
+    const actual = await extractTimeline(blob(data), range);
+    expect(actual.points).toEqual(expected);
+    expect(actual.rejected).toBe(selectDateRange(parsed, range.start, range.end).length - expected.length);
+  });
   it('refuses oversized selections without returning truncated output', async () => {
     const data = Array.from({ length: 50_001 }, () => activity('2026-01-01'));
     await expect(extractTimeline(blob(data), all)).rejects.toMatchObject({ code: 'rangeTooLarge' });

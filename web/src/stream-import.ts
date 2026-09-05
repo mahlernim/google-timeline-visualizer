@@ -2,9 +2,11 @@ import { JSONParser, TokenType } from '@streamparser/json';
 import { filterLocationOutliers } from './outlier';
 import {
   parseTimelineSegment, reconcileTimelineSegments, parseRawSignalsJson,
-  processRawSignals, pointDateKey, TimelineParseError,
+  pointDateKey, TimelineParseError,
 } from './timeline';
-import type { ParsedTimelineSegment, TimeInterval, RawSignalPoint } from './timeline';
+import type { ParsedTimelineSegment, TimeInterval } from './timeline';
+import { RawSignalStream, RawBatch, compareRaw } from './raw-stream';
+import type { IndexedRawPoint } from './raw-stream';
 import type { GeoPoint } from './types';
 import { ImportError, MAX_SELECTED_POINTS } from './import-types';
 import type { TimelineScan, RangeRequest, ImportResult } from './import-types';
@@ -144,6 +146,7 @@ export async function extractTimeline(
   if (!/^\d{4}-\d{2}-\d{2}$/.test(range.start) || !/^\d{4}-\d{2}-\d{2}$/.test(range.end) || range.start > range.end) {
     throw new ImportError('invalidDates');
   }
+  if (range.raw) return extractRaw(file, range, signal, progress);
   const startContext = adjacentDate(range.start, -1);
   const endContext = adjacentDate(range.end, 1);
   const inRange = (point: GeoPoint): boolean => {
@@ -156,7 +159,6 @@ export async function extractTimeline(
   };
   const segments: ParsedTimelineSegment[] = [];
   const intervals: TimeInterval[] = [];
-  const raw: RawSignalPoint[] = [];
   const direction = new Direction();
   let preserveRecordedOrder = false;
   const contextStartMillis = Date.parse(startContext + 'T00:00:00Z') - 86400_000;
@@ -169,13 +171,6 @@ export async function extractTimeline(
     if (selected > MAX_SELECTED_POINTS || retained > MAX_SELECTED_POINTS * 2) throw new ImportError('rangeTooLarge');
   };
   await records(file, (kind, record) => {
-    if (range.raw) {
-      if (kind !== 'raw') return;
-      const points = parseRawSignalsJson({ rawSignals: [record] }).filter(inContext);
-      retain(points);
-      raw.push(...points);
-      return;
-    }
     if (kind !== 'semantic') return;
     const segment = parseTimelineSegment(record);
     if (!segment) return;
@@ -191,17 +186,6 @@ export async function extractTimeline(
     if (segment.points.length) { retain(segment.points); segments.push(segment); }
   }, signal, progress);
   signal?.throwIfAborted();
-  if (range.raw) {
-    const unique = new Map<string, RawSignalPoint>();
-    for (const point of raw) {
-      const key = `${point.instant.getTime()}:${point.latitude}:${point.longitude}`;
-      const previous = unique.get(key);
-      if (!previous || previous.accuracyMeters > point.accuracyMeters) unique.set(key, point);
-    }
-    const input = [...unique.values()].sort((a, b) => a.instant.getTime() - b.instant.getTime());
-    const processed = processRawSignals(input, range.accuracy).points.filter(inRange);
-    return { points: processed, rejected: Math.max(0, input.filter(inRange).length - processed.length) };
-  }
   if (!segments.length) return { points: [], rejected: 0 };
   let normalized: GeoPoint[];
   try { normalized = reconcileTimelineSegments(segments, intervals, direction.reversed(), preserveRecordedOrder); }
@@ -211,4 +195,53 @@ export async function extractTimeline(
   }
   const filtered = filterLocationOutliers(normalized, range.filter).points.filter(inRange);
   return { points: filtered, rejected: normalized.filter(inRange).length - filtered.length };
+}
+
+async function extractRaw(file: Blob, range: RangeRequest, signal?: AbortSignal, progress?: (fraction: number) => void): Promise<ImportResult> {
+  let points: GeoPoint[] = [];
+  let selected = 0;
+  let previousTime = -Infinity;
+  let uniqueSelected = 0;
+  let ordered = true;
+  const inRange = (point: GeoPoint) => { const date = pointDateKey(point); return date >= range.start && date <= range.end; };
+  const emit = (point: GeoPoint): void => { if (inRange(point)) points.push(point); };
+  const unique = (point: GeoPoint): void => { if (inRange(point)) uniqueSelected += 1; };
+  let processor = new RawSignalStream(range.accuracy, emit, unique);
+  // Carry spike and stabilization state from the complete ordered stream, not just one
+  // neighboring day. Stationary clusters can otherwise shift their anchors indefinitely.
+  await records(file, (kind, value) => {
+    if (kind !== 'raw') return;
+    for (const point of parseRawSignalsJson({ rawSignals: [value] })) {
+      if (inRange(point) && ++selected > MAX_SELECTED_POINTS) throw new ImportError('rangeTooLarge');
+      if (point.instant.getTime() < previousTime) ordered = false;
+      previousTime = point.instant.getTime();
+      if (ordered) processor.push(point);
+    }
+  }, signal, progress);
+  if (!ordered) {
+    points = [];
+    uniqueSelected = 0;
+    processor = new RawSignalStream(range.accuracy, emit, unique);
+    let cursor: IndexedRawPoint | null = null;
+    // Unordered exports need extra passes rather than an unbounded in-memory sort.
+    // Stable record indices preserve duplicate/tied-timestamp behavior across batches.
+    while (true) {
+      const batch = new RawBatch();
+      let index = 0;
+      let eligible = 0;
+      await records(file, (kind, value) => {
+        if (kind !== 'raw') return;
+        for (const point of parseRawSignalsJson({ rawSignals: [value] })) {
+          const item = { point, index: index++ };
+          if (!cursor || compareRaw(item, cursor) > 0) { batch.push(item); eligible += 1; }
+        }
+      }, signal, progress);
+      const sorted = batch.sorted();
+      for (const item of sorted) processor.push(item.point);
+      if (sorted.length === eligible) break;
+      cursor = sorted.at(-1)!;
+    }
+  }
+  processor.finish();
+  return { points, rejected: Math.max(0, uniqueSelected - points.length) };
 }

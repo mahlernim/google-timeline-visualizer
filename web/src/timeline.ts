@@ -358,11 +358,7 @@ export function processRawSignals(
       stabilized.push(candidate);
       continue;
     }
-    const elapsed = candidate.instant.getTime() - previous.instant.getTime();
-    const uncertaintyKm = Math.max(0.025, (previous.accuracyMeters + candidate.accuracyMeters) / 1000);
-    const overlapsWithinUncertainty = elapsed >= 0 && elapsed <= 10 * 60 * 1000
-      && haversineKm(previous, candidate) <= uncertaintyKm;
-    if (overlapsWithinUncertainty) {
+    if (rawSignalsOverlap(previous, candidate)) {
       if (candidate.accuracyMeters < previous.accuracyMeters) stabilized[stabilized.length - 1] = candidate;
     } else {
       stabilized.push(candidate);
@@ -379,7 +375,13 @@ export function processRawSignals(
   };
 }
 
-function isShortImpossibleRawSpike(
+export function rawSignalsOverlap(previous: RawSignalPoint, candidate: RawSignalPoint): boolean {
+  const elapsed = candidate.instant.getTime() - previous.instant.getTime();
+  const uncertaintyKm = Math.max(0.025, (previous.accuracyMeters + candidate.accuracyMeters) / 1000);
+  return elapsed >= 0 && elapsed <= 10 * 60 * 1000 && haversineKm(previous, candidate) <= uncertaintyKm;
+}
+
+export function isShortImpossibleRawSpike(
   before: RawSignalPoint,
   candidate: RawSignalPoint,
   after: RawSignalPoint,

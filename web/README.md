@@ -28,6 +28,11 @@ filter context. The selected input is limited to 100,000 points, with at most
 rejected before it can grow without bound. Oversized imports ask for a shorter
 range or use of Android instead of silently dropping locations.
 
+Raw processing carries its filtering state from the beginning of the stream so
+short date ranges preserve stabilization anchors. Unordered raw exports use
+additional passes with 10,000-point sort batches instead of loading all locations
+into memory. This can take longer, and remains cancellable.
+
 The preview uses at most a 640-pixel longest edge and 15 fps, independent of export
 resolution. Maps are loaded as each frame needs them, using two simultaneous
 requests and a 32 MiB decoded-image cache. Tiles are drawn before eviction, including
