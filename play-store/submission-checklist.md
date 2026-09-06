@@ -19,7 +19,7 @@
 
 ## Release
 
-- Version name `3.0.14` and version code `56`
+- Version name `3.0.15` and version code `57`
 - Upload the signed `playRelease` Android App Bundle
 - On first enrollment, preserve the existing app-signing key so GitHub and Play installs remain update-compatible
 - Register a separate upload key for later Play releases
