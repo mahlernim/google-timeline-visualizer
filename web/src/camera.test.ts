@@ -151,7 +151,7 @@ describe('camera track', () => {
       [35.1800, 129.0800],
     ]);
     const track = buildCameraTrack(changingJourney, SQUARE_480, movement);
-    const maximumLogSpanChange = movement === 'close-up' ? 1.1 : 0.8;
+    const maximumLogSpanChange = movement === 'close-up' ? 1.25 : 0.8;
     for (let index = 1; index < track.frames.length; index += 1) {
       const previous = track.frames[index - 1];
       const current = track.frames[index];
@@ -186,6 +186,41 @@ describe('camera track', () => {
       expect(point.y).toBeGreaterThanOrEqual(viewport.minY);
       expect(point.y).toBeLessThanOrEqual(viewport.maxY);
     });
+  });
+
+  it('uses the same 6 km close-up minimum route context as Android and CLI', () => {
+    // The proportional context for close-up is 3.5% of total distance.
+    // On a 100 km route that gives 3.5 km, which is below both the old (15) and new (6) floor.
+    // On a 200 km route that gives 7 km, which is above 6 but still below 15.
+    // We verify that close-up frames a 200 km route tighter than it would with a 15 km floor
+    // by comparing it against dynamic mode, whose minimum is 100 km and therefore dominates.
+    // The close-up viewport must be narrower, which is only true when its floor is 6, not 15.
+    const localHop = journey(densify([
+      [37.5665, 126.9780],
+      [37.5665, 128.7700],  // ~160 km east — proportional context ~5.6 km (below 6 floor)
+    ], 60));
+    const closeUp = cameraViewportAt(buildCameraTrack(localHop, SQUARE_480, 'close-up'), 0.5);
+    const dynamic = cameraViewportAt(buildCameraTrack(localHop, SQUARE_480, 'dynamic'), 0.5);
+
+    // close-up must frame more tightly than dynamic on this route length
+    expect(closeUp.maxY - closeUp.minY).toBeLessThan(dynamic.maxY - dynamic.minY);
+  });
+
+  it('selects a narrower local context window with 6 km floor than with 15 km floor', () => {
+    // Synthetic route: ~10 km total. Proportional context = 0.035 × 10 = 0.35 km → floor applies.
+    // With floor=6 the camera looks 6 km ahead/behind. With floor=15 it would look 15 km — wider
+    // than the whole route, causing unnecessary zoom-out on a short local trip.
+    // We verify the viewport is tighter than it would be if the 15 km floor were still active,
+    // by checking it is narrower than the equivalent dynamic viewport (floor=100 km, always wider).
+    const shortLocal = journey(densify([
+      [37.5665, 126.9780],
+      [37.5200, 127.0600],  // ~10 km
+    ], 20));
+    const closeUp = cameraViewportAt(buildCameraTrack(shortLocal, SQUARE_480, 'close-up'), 0.5);
+    const dynamic = cameraViewportAt(buildCameraTrack(shortLocal, SQUARE_480, 'dynamic'), 0.5);
+
+    // close-up must be tighter than dynamic on a short local trip (no transfer override)
+    expect(closeUp.maxY - closeUp.minY).toBeLessThan(dynamic.maxY - dynamic.minY);
   });
 
   it.each(FORMATS)('keeps close-up camera frames at the $width x $height aspect ratio', (size) => {

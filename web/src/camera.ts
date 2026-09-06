@@ -69,7 +69,7 @@ const MOVEMENT_PROFILES: Record<CameraMovement, CameraMovementProfile> = {
   },
   'close-up': {
     contextFraction: 0.035,
-    minimumContextKm: 15,
+    minimumContextKm: 6,
     maximumContextKm: 120,
     padding: 1.7,
     minimumViewportSpan: 0.00030,
