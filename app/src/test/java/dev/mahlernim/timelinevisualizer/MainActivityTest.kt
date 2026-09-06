@@ -1846,6 +1846,67 @@ class MainActivityTest {
     }
 
     @Test
+    @Config(sdk = [35], qualifiers = "w320dp-h640dp-port-xxhdpi")
+    fun exportTrayUsesNavigationInsetOnlyWhileBottomNavigationIsHidden() {
+        val activity = launchActivity()
+        val root = activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
+        val tray = activity.findViewById<View>(R.id.exportStatusTray)
+        val baseBottomMargin = (tray.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
+        val density = activity.resources.displayMetrics.density
+        val bottomInset = (24 * density).toInt()
+        val insets = WindowInsetsCompat.Builder()
+            .setInsets(WindowInsetsCompat.Type.systemBars(), Insets.of(0, 0, 0, bottomInset))
+            .build()
+
+        VideoExportCoordinator.publish(
+            context,
+            VideoExportSnapshot(status = VideoExportStatus.RUNNING, startedAtMillis = System.currentTimeMillis()),
+        )
+        shadowOf(Looper.getMainLooper()).idle()
+        ViewCompat.dispatchApplyWindowInsets(root, insets)
+
+        assertEquals(View.VISIBLE, tray.visibility)
+        assertEquals(baseBottomMargin, (tray.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin)
+
+        MainActivity::class.java
+            .getDeclaredMethod("showVideoPlayer", Uri::class.java, Boolean::class.javaPrimitiveType)
+            .apply { isAccessible = true }
+            .invoke(activity, Uri.parse("content://example/generated-video"), true)
+
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.bottomNavigation).visibility)
+        assertEquals(baseBottomMargin + bottomInset, (tray.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin)
+
+        VideoExportCoordinator.publish(
+            context,
+            VideoExportSnapshot(
+                status = VideoExportStatus.COMPLETE,
+                outputUri = "content://example/generated-video",
+                title = "Trip",
+            ),
+        )
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(baseBottomMargin + bottomInset, (tray.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin)
+
+        VideoExportCoordinator.publish(
+            context,
+            VideoExportSnapshot(status = VideoExportStatus.FAILED, errorMessage = "Export failed"),
+        )
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(baseBottomMargin + bottomInset, (tray.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin)
+
+        activity.findViewById<View>(R.id.playerBackButton).performClick()
+
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.bottomNavigation).visibility)
+        assertEquals(View.VISIBLE, tray.visibility)
+        assertEquals(baseBottomMargin, (tray.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin)
+
+        VideoExportCoordinator.publish(context, VideoExportSnapshot(status = VideoExportStatus.IDLE))
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(View.GONE, tray.visibility)
+        assertEquals(baseBottomMargin, (tray.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin)
+    }
+
+    @Test
     @Config(sdk = [35], qualifiers = "notnight")
     fun systemLightModeUsesLightThemeAndSystemBars() {
         val activity = launchActivity()

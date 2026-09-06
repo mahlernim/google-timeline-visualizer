@@ -1,6 +1,7 @@
 package dev.mahlernim.timelinevisualizer
 
 import android.graphics.Rect
+import android.net.Uri
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -11,17 +12,95 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
+import androidx.core.view.ViewCompat
 import androidx.test.core.app.ApplicationProvider
+import dev.mahlernim.timelinevisualizer.export.VideoExportCoordinator
+import dev.mahlernim.timelinevisualizer.export.VideoExportSnapshot
+import dev.mahlernim.timelinevisualizer.export.VideoExportStatus
 import dev.mahlernim.timelinevisualizer.journal.JournalOnboardingStore
+import dev.mahlernim.timelinevisualizer.videos.VideoRecord
+import dev.mahlernim.timelinevisualizer.videos.VideoStore
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class DeviceSmokeTest {
+    @Test
+    fun exportTrayClearsSystemNavigationDuringPlayback() {
+        completeJournalOnboarding()
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val videoFile = File(context.cacheDir, "tray-existing.mp4")
+        InstrumentationRegistry.getInstrumentation().context.assets.open("tray-playback.mp4").use { input ->
+            videoFile.outputStream().use(input::copyTo)
+        }
+        val uri = Uri.fromFile(videoFile)
+        VideoStore(context).upsert(
+            VideoRecord(uri.toString(), "Existing video", videoFile.name, System.currentTimeMillis(), 1),
+        )
+        try {
+            ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+                VideoExportCoordinator.publish(
+                    context,
+                    VideoExportSnapshot(
+                        status = VideoExportStatus.RUNNING,
+                        startedAtMillis = System.currentTimeMillis(),
+                    ),
+                    persist = false,
+                )
+                waitForVisible(scenario, R.id.exportStatusTray)
+                waitForEnabled(scenario, R.id.videoWatchButton)
+                scenario.onActivity { activity ->
+                    val tray = activity.findViewById<View>(R.id.exportStatusTray)
+                    val navigation = activity.findViewById<View>(R.id.bottomNavigation)
+                    val trayBounds = Rect()
+                    val navigationBounds = Rect()
+                    assertTrue(tray.getGlobalVisibleRect(trayBounds))
+                    assertTrue(navigation.getGlobalVisibleRect(navigationBounds))
+                    assertTrue(trayBounds.bottom <= navigationBounds.top - dp(activity, 8))
+                    assertTrue(activity.findViewById<View>(R.id.videoWatchButton).isEnabled)
+                    activity.findViewById<View>(R.id.videoWatchButton).performClick()
+                }
+                InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+                scenario.onActivity { activity ->
+                    val tray = activity.findViewById<View>(R.id.exportStatusTray)
+                    val navigation = activity.findViewById<View>(R.id.bottomNavigation)
+                    val decor = activity.window.decorView
+                    val trayBounds = Rect()
+                    val decorBounds = Rect()
+                    val bottomInset = ViewCompat.getRootWindowInsets(decor)
+                        ?.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())?.bottom
+                        ?: throw AssertionError("Missing system-bar insets")
+                    assertTrue(tray.getGlobalVisibleRect(trayBounds))
+                    assertTrue(decor.getGlobalVisibleRect(decorBounds))
+                    assertEquals(View.GONE, navigation.visibility)
+                    assertTrue(trayBounds.bottom <= decorBounds.bottom - bottomInset - dp(activity, 8))
+                    activity.findViewById<View>(R.id.playerBackButton).performClick()
+                }
+                InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+                scenario.onActivity { activity ->
+                    val tray = activity.findViewById<View>(R.id.exportStatusTray)
+                    val navigation = activity.findViewById<View>(R.id.bottomNavigation)
+                    val trayBounds = Rect()
+                    val navigationBounds = Rect()
+                    assertTrue(tray.getGlobalVisibleRect(trayBounds))
+                    assertTrue(navigation.getGlobalVisibleRect(navigationBounds))
+                    assertEquals(View.VISIBLE, navigation.visibility)
+                    assertTrue(trayBounds.bottom <= navigationBounds.top - dp(activity, 8))
+                }
+            }
+        } finally {
+            VideoExportCoordinator.publish(context, VideoExportSnapshot(status = VideoExportStatus.IDLE), persist = false)
+            VideoStore(context).remove(uri.toString())
+            videoFile.delete()
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+        }
+    }
+
     @Test
     fun emptyLibraryLaunchAndBackNavigationWorkOnDevice() {
         completeJournalOnboarding()
@@ -149,6 +228,8 @@ class DeviceSmokeTest {
         JournalOnboardingStore(ApplicationProvider.getApplicationContext()).complete()
     }
 
+    private fun dp(activity: MainActivity, value: Int) = (value * activity.resources.displayMetrics.density).toInt()
+
     private fun waitForVisible(scenario: ActivityScenario<MainActivity>, viewId: Int) {
         val deadline = System.currentTimeMillis() + 10_000L
         var visible = false
@@ -159,5 +240,15 @@ class DeviceSmokeTest {
             if (!visible) Thread.sleep(50)
         }
         assertTrue(visible)
+    }
+
+    private fun waitForEnabled(scenario: ActivityScenario<MainActivity>, viewId: Int) {
+        val deadline = System.currentTimeMillis() + 10_000L
+        var enabled = false
+        while (System.currentTimeMillis() < deadline && !enabled) {
+            scenario.onActivity { enabled = it.findViewById<View>(viewId).isEnabled }
+            if (!enabled) Thread.sleep(50)
+        }
+        assertTrue(enabled)
     }
 }

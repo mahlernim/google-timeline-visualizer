@@ -291,6 +291,7 @@ class MainActivity : AppCompatActivity() {
     private var videosExpanded = false
     private var currentScreen = Screen.VIDEOS
     private var systemBarInsets = Insets.NONE
+    private var exportTrayBaseBottomMargin = 0
     private var rememberedTimelineLoaded = false
     private var interruptedTimelineRecovered = false
     private var lastRenderedExportStatus = VideoExportStatus.IDLE
@@ -409,6 +410,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        exportTrayBaseBottomMargin = (binding.exportStatusTray.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
         home = ScreenVideosBinding.bind(findViewById(R.id.videosScreen))
         editor = ScreenNewVideoBinding.bind(findViewById(R.id.newVideoScreen))
         onboarding = ScreenJournalOnboardingBinding.bind(findViewById(R.id.journalOnboardingScreen))
@@ -1031,6 +1033,7 @@ class MainActivity : AppCompatActivity() {
         onboarding.root.visibility = View.GONE
         setBottomNavigationVisible(false)
         binding.exportStatusTray.visibility = View.GONE
+        applySystemBarInsets()
     }
 
     private fun configureJournalOnboarding() {
@@ -1099,6 +1102,7 @@ class MainActivity : AppCompatActivity() {
         )
         setBottomNavigationVisible(false)
         binding.exportStatusTray.visibility = View.GONE
+        applySystemBarInsets()
         onboarding.onboardingPager.setCurrentItem(onboardingPage, false)
         renderJournalOnboardingPage(announce = false)
     }
@@ -1606,6 +1610,15 @@ class MainActivity : AppCompatActivity() {
             binding.bottomNavigation.paddingRight,
             if (navigationVisible) systemBarInsets.bottom else 0,
         )
+        val trayLayoutParams = binding.exportStatusTray.layoutParams as ViewGroup.MarginLayoutParams
+        trayLayoutParams.bottomMargin = exportTrayBaseBottomMargin + if (
+            binding.exportStatusTray.visibility == View.VISIBLE && !navigationVisible
+        ) {
+            systemBarInsets.bottom
+        } else {
+            0
+        }
+        binding.exportStatusTray.layoutParams = trayLayoutParams
         val contentBottomInset = if (navigationVisible) 0 else systemBarInsets.bottom
         listOf(home.root, editor.root, settingsScreen.root, playerScreen.root, onboarding.root).forEach { screen ->
             screen.setPadding(
@@ -4450,6 +4463,7 @@ class MainActivity : AppCompatActivity() {
     private fun showRunningExportTray() {
         if (currentScreen == Screen.ONBOARDING) {
             binding.exportStatusTray.visibility = View.GONE
+            applySystemBarInsets()
             return
         }
         binding.exportStatusTray.visibility = View.VISIBLE
@@ -4459,11 +4473,13 @@ class MainActivity : AppCompatActivity() {
         binding.exportTrayShareButton.visibility = View.GONE
         binding.exportTrayDismissButton.visibility = View.GONE
         binding.exportTrayRetryButton.visibility = View.GONE
+        applySystemBarInsets()
     }
 
     private fun showCompletedExportTray() {
         if (currentScreen == Screen.ONBOARDING) {
             binding.exportStatusTray.visibility = View.GONE
+            applySystemBarInsets()
             return
         }
         binding.exportStatusTray.visibility = View.VISIBLE
@@ -4474,6 +4490,7 @@ class MainActivity : AppCompatActivity() {
         binding.exportTrayShareButton.visibility = if (lastVideoUri != null) View.VISIBLE else View.GONE
         binding.exportTrayDismissButton.visibility = View.VISIBLE
         binding.exportTrayStatusText.setText(R.string.video_ready)
+        applySystemBarInsets()
         if (lastRenderedExportStatus != VideoExportStatus.COMPLETE) {
             announceExportStatus(getString(R.string.video_ready))
         }
@@ -4483,6 +4500,7 @@ class MainActivity : AppCompatActivity() {
     private fun showFailedExportTray(snapshot: VideoExportSnapshot) {
         if (currentScreen == Screen.ONBOARDING) {
             binding.exportStatusTray.visibility = View.GONE
+            applySystemBarInsets()
             return
         }
         binding.exportStatusTray.visibility = View.VISIBLE
@@ -4495,6 +4513,7 @@ class MainActivity : AppCompatActivity() {
         binding.exportTrayRetryButton.visibility = if (failureKind.retryable) View.VISIBLE else View.GONE
         binding.exportTrayRetryButton.isEnabled = true
         binding.exportTrayStatusText.text = snapshot.errorMessage ?: getString(R.string.video_export_failed)
+        applySystemBarInsets()
         if (lastRenderedExportStatus != VideoExportStatus.FAILED) {
             announceExportStatus(binding.exportTrayStatusText.text)
         }
@@ -4503,6 +4522,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun hideExportTray() {
         binding.exportStatusTray.visibility = View.GONE
+        applySystemBarInsets()
         lastAnnouncedExportPhase = null
         exportEtaEstimator.reset()
     }
