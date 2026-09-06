@@ -29,11 +29,12 @@ MP4를 만들려면 H.264 인코딩을 지원하는 Safari 16.4 이상이 필요
 
 ## Android에 설치하기
 
-[Google Play 공개 테스트 참여](https://play.google.com/apps/testing/dev.mahlernim.timelinevisualizer)
-페이지에서 휴대전화에 사용하는 Google 계정으로 로그인하고 테스트에 참여한 뒤,
-Google Play 다운로드 링크를 누르세요. 공개 테스트에는 초대나 Google 그룹 가입이
-필요하지 않습니다. Google 심사와 국가, 기기에 따라 이용 가능 여부가 달라집니다.
-아직 참여할 수 없다면 나중에 참여 페이지를 다시 확인하세요.
+[Google Play 앱 페이지](https://play.google.com/store/apps/details?id=dev.mahlernim.timelinevisualizer)에서
+Timeline Visualizer를 설치하세요.
+
+[Google Play 공개 테스트에 참여](https://play.google.com/apps/testing/dev.mahlernim.timelinevisualizer)하면
+테스트 업데이트도 받을 수 있습니다. 신청서, 초대 또는 Google 그룹 가입은 필요하지
+않습니다. 국가와 기기에 따라 이용 가능 여부가 달라질 수 있습니다.
 
 이 저장소의 [최신 릴리스](https://github.com/mahlernim/google-timeline-visualizer/releases/latest)에서
 APK를 직접 설치할 수도 있습니다.

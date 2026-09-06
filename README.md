@@ -32,12 +32,11 @@ use Safari's Share menu and choose **Add to Home Screen**.
 
 ## Install on Android
 
-[Join Google Play open testing](https://play.google.com/apps/testing/dev.mahlernim.timelinevisualizer)
-to get the Android app and updates through Google Play. Sign in with the Google
-account you use on your phone, join the test, then follow the Google Play download
-link. No invitation or Google Group membership is needed for open testing.
-Availability depends on Google's review and your country or device. If the test
-is not available yet, check the enrollment page again later.
+Install Timeline Visualizer from the [Google Play listing](https://play.google.com/store/apps/details?id=dev.mahlernim.timelinevisualizer).
+
+You can also [join Google Play open testing](https://play.google.com/apps/testing/dev.mahlernim.timelinevisualizer)
+to receive test updates. No application form, invitation, or Google Group
+membership is needed. Availability depends on your country and device.
 
 You can also install the APK from this repository's
 [latest release](https://github.com/mahlernim/google-timeline-visualizer/releases/latest).
