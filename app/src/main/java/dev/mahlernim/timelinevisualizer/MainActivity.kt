@@ -3778,7 +3778,7 @@ class MainActivity : AppCompatActivity() {
         makeDropdownOpenReliably(dropdown)
         updateDistanceUnitLabel()
         dropdown.setOnItemClickListener { _, _, position, _ ->
-            applyDistanceUnitPreference(DistanceUnitPreference.entries[position])
+            applyDistanceUnitPreference(DistanceUnitPreference.fromSelection(position))
         }
     }
 
@@ -3795,21 +3795,16 @@ class MainActivity : AppCompatActivity() {
         val dropdown = settingsScreen.distanceUnitDropdown
         val labels = distanceUnitLabels()
         dropdown.setAdapter(SelectionArrayAdapter(this, labels))
-        dropdown.setText(labels[distanceUnitPreference.ordinal], false)
+        dropdown.setText(
+            labels[DistanceUnitPreference.selectionIndex(distanceUnitPreference, systemLocale())],
+            false,
+        )
     }
 
-    private fun distanceUnitLabels(): List<String> {
-        val automatic = getString(
-            R.string.distance_unit_automatic_resolved,
-            getString(R.string.distance_unit_automatic),
-            distanceUnitName(DistanceUnit.automatic(systemLocale())),
-        )
-        return listOf(
-            automatic,
+    private fun distanceUnitLabels(): List<String> = listOf(
             getString(R.string.distance_unit_kilometers),
             getString(R.string.distance_unit_miles),
         )
-    }
 
     private fun distanceUnitName(unit: DistanceUnit): String = getString(
         when (unit) {
@@ -3834,7 +3829,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun languageLabels(): List<String> = listOf(
-            getString(R.string.language_system_default),
             getString(R.string.language_name_en),
             getString(R.string.language_name_ko),
             getString(R.string.language_name_ja),
@@ -3844,6 +3838,8 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.language_name_fr),
             getString(R.string.language_name_de),
             getString(R.string.language_name_pt_br),
+            getString(R.string.language_name_id),
+            getString(R.string.language_name_vi),
         )
 
     private fun applyLanguageSelection(position: Int) {
@@ -3855,7 +3851,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showOnboardingLanguagePicker() {
         val labels = languageLabels().toTypedArray()
-        val selected = AppLanguage.selectionIndex(currentApplicationLanguageTags())
+        val selected = selectedLanguageIndex()
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.language)
             .setSingleChoiceItems(labels, selected) { dialog, position ->
@@ -3867,15 +3863,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateOnboardingLanguageLabel() {
-        val selected = AppLanguage.selectionIndex(currentApplicationLanguageTags())
+        val selected = selectedLanguageIndex()
         onboarding.onboardingLanguageButton.text = languageLabels()[selected]
     }
 
     private fun updateLanguageSelectionLabel() {
         val dropdown = settingsScreen.languageDropdown
-        val selected = AppLanguage.selectionIndex(currentApplicationLanguageTags())
+        val selected = selectedLanguageIndex()
         dropdown.setText(dropdown.adapter.getItem(selected).toString(), false)
     }
+
+    private fun selectedLanguageIndex(): Int = AppLanguage.selectionIndex(
+        currentApplicationLanguageTags(),
+        systemLocale().toLanguageTag(),
+    )
 
     private fun configureCameraPreparation() {
         editor.timelineView.onCameraPreparationChanged = { ready ->

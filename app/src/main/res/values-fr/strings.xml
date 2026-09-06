@@ -274,7 +274,7 @@
     </plurals>
     <string name="about_and_privacy">À propos et confidentialité</string>
     <string name="language">Langue</string>
-    <string name="language_summary">Choisissez la langue de Timeline Visualizer. Le réglage par défaut du système suit la langue de l’appareil ou de l’application Android.</string>
+    <string name="language_summary">Choisissez la langue de Timeline Visualizer.</string>
     <string name="language_system_default">Valeur par défaut du système</string>
     <string name="app_version">Version %1$s (%2$d)</string>
     <string name="video_playback_failed">Cette vidéo n\'a pas pu être lue dans Timeline Visualizer.</string>

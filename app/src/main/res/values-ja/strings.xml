@@ -272,7 +272,7 @@
     </plurals>
     <string name="about_and_privacy">情報とプライバシー</string>
     <string name="language">言語</string>
-    <string name="language_summary">Timeline Visualizerで使用する言語を選択します。システムのデフォルトでは、端末またはAndroidのアプリ言語設定に従います。</string>
+    <string name="language_summary">Timeline Visualizerで使用する言語を選択します。</string>
     <string name="language_system_default">システムのデフォルト</string>
     <string name="app_version">バージョン %1$s（%2$d）</string>
     <string name="video_playback_failed">Timeline Visualizer内でこの動画を再生できませんでした。</string>

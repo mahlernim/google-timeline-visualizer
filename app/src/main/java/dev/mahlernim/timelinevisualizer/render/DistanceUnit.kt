@@ -46,4 +46,13 @@ enum class DistanceUnitPreference {
         KILOMETERS -> DistanceUnit.KILOMETERS
         MILES -> DistanceUnit.MILES
     }
+
+    companion object {
+        val selectable = listOf(KILOMETERS, MILES)
+
+        fun fromSelection(position: Int): DistanceUnitPreference = selectable[position]
+
+        fun selectionIndex(preference: DistanceUnitPreference, systemLocale: Locale): Int =
+            preference.resolve(systemLocale).ordinal
+    }
 }

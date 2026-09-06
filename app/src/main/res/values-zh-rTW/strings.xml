@@ -265,7 +265,7 @@
     </plurals>
     <string name="about_and_privacy">關於和隱私權</string>
     <string name="language">語言</string>
-    <string name="language_summary">選擇 Timeline Visualizer 使用的語言。系統預設會跟隨裝置或 Android 應用程式語言設定。</string>
+    <string name="language_summary">選擇 Timeline Visualizer 使用的語言。</string>
     <string name="language_system_default">系統預設值</string>
     <string name="app_version">版本 %1$s（%2$d）</string>
     <string name="video_playback_failed">無法在 Timeline Visualizer 中播放這部影片。</string>

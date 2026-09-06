@@ -17,6 +17,8 @@ import android.widget.AutoCompleteTextView
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -58,6 +60,7 @@ import dev.mahlernim.timelinevisualizer.render.DistanceUnit
 import dev.mahlernim.timelinevisualizer.render.DistanceUnitPreference
 import dev.mahlernim.timelinevisualizer.ui.CameraSettingsPreferences
 import dev.mahlernim.timelinevisualizer.ui.DistanceUnitPreferences
+import dev.mahlernim.timelinevisualizer.ui.AppLanguage
 import dev.mahlernim.timelinevisualizer.ui.TimelineView
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -102,6 +105,7 @@ class MainActivityTest {
         context.getSharedPreferences("camera-settings", Context.MODE_PRIVATE).edit().clear().commit()
         context.getSharedPreferences("timeline-filter-settings", Context.MODE_PRIVATE).edit().clear().commit()
         context.getSharedPreferences("distance-unit-settings", Context.MODE_PRIVATE).edit().clear().commit()
+        AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList())
         timelineSourceStore.clearForTest()
         context.getSharedPreferences("video-presets", Context.MODE_PRIVATE).edit().clear().commit()
         context.getSharedPreferences("trips_lab", Context.MODE_PRIVATE).edit().clear().commit()
@@ -762,24 +766,25 @@ class MainActivityTest {
                 R.string.distance_unit_kilometers
             },
         )
-        assertEquals(
-            activity.getString(
-                R.string.distance_unit_automatic_resolved,
-                activity.getString(R.string.distance_unit_automatic),
-                automaticDistanceName,
-            ),
-            activity.findViewById<AutoCompleteTextView>(R.id.distanceUnitDropdown).text.toString(),
-        )
+        assertEquals(automaticDistanceName, activity.findViewById<AutoCompleteTextView>(R.id.distanceUnitDropdown).text.toString())
+        assertEquals(2, activity.findViewById<AutoCompleteTextView>(R.id.distanceUnitDropdown).adapter.count)
         assertTrue(
             !activity.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(
                 R.id.simplifyRouteDetailSwitch,
             ).isChecked,
         )
-        assertEquals(
-            activity.getString(R.string.language_system_default),
-            activity.findViewById<AutoCompleteTextView>(R.id.languageDropdown).text.toString(),
+        val languageNames = listOf(
+            R.string.language_name_en, R.string.language_name_ko, R.string.language_name_ja,
+            R.string.language_name_zh_cn, R.string.language_name_zh_tw, R.string.language_name_es,
+            R.string.language_name_fr, R.string.language_name_de, R.string.language_name_pt_br,
+            R.string.language_name_id, R.string.language_name_vi,
         )
-        assertEquals(10, activity.findViewById<AutoCompleteTextView>(R.id.languageDropdown).adapter.count)
+        val resolvedLanguage = AppLanguage.selectionIndex(
+            "",
+            android.content.res.Resources.getSystem().configuration.locales[0].toLanguageTag(),
+        )
+        assertEquals(activity.getString(languageNames[resolvedLanguage]), activity.findViewById<AutoCompleteTextView>(R.id.languageDropdown).text.toString())
+        assertEquals(11, activity.findViewById<AutoCompleteTextView>(R.id.languageDropdown).adapter.count)
         assertEquals(
             activity.getString(R.string.app_version, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),
             activity.findViewById<TextView>(R.id.versionText).text.toString(),
@@ -871,7 +876,7 @@ class MainActivityTest {
         activity.findViewById<View>(R.id.navigationSettings).performClick()
         val dropdown = activity.findViewById<AutoCompleteTextView>(R.id.distanceUnitDropdown)
 
-        dropdown.onItemClickListener?.onItemClick(null, null, DistanceUnitPreference.MILES.ordinal, 0L)
+        dropdown.onItemClickListener?.onItemClick(null, null, 1, 0L)
 
         assertEquals(activity.getString(R.string.distance_unit_miles), dropdown.text.toString())
         assertEquals(DistanceUnitPreference.MILES, DistanceUnitPreferences(activity).load())
@@ -894,6 +899,17 @@ class MainActivityTest {
 
         assertEquals(DistanceUnitPreference.MILES, DistanceUnitPreferences(activity).load())
         assertEquals(activity.getString(R.string.distance_unit_miles), dropdown.text.toString())
+    }
+
+    @Test
+    fun selectingLanguageUsesTheVisibleIndexAndPersistsTheAppLocale() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.navigationSettings).performClick()
+        val dropdown = activity.findViewById<AutoCompleteTextView>(R.id.languageDropdown)
+
+        dropdown.onItemClickListener?.onItemClick(null, null, 9, 0L)
+
+        assertEquals("id", AppCompatDelegate.getApplicationLocales().toLanguageTags())
     }
 
     @Test
@@ -1021,6 +1037,14 @@ class MainActivityTest {
     @Test
     @Config(sdk = [35], qualifiers = "pt-rBR-w360dp-h640dp-xxhdpi")
     fun compactBrazilianPortugueseButtonsRemainSingleLine() = assertCompactButtons()
+
+    @Test
+    @Config(sdk = [35], qualifiers = "id-rID-w360dp-h640dp-xxhdpi")
+    fun compactIndonesianButtonsRemainSingleLine() = assertCompactButtons()
+
+    @Test
+    @Config(sdk = [35], qualifiers = "vi-rVN-w360dp-h640dp-xxhdpi")
+    fun compactVietnameseButtonsRemainSingleLine() = assertCompactButtons()
 
     @Test
     fun normalLaunchOpensTripsWhenLibraryIsEmpty() {

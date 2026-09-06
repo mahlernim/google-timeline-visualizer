@@ -22,7 +22,8 @@ function text(): void {
   locale = activeLocale(preference, navigator.languages ?? [navigator.language]);
   document.documentElement.lang = locale;
   applyFlowStrings(document, locale);
-  populateLanguageSelect(language, preference, navigator.languages ?? [navigator.language], flowText(locale, 'system'));
+  language.setAttribute('aria-label', flowText(locale, 'language'));
+  populateLanguageSelect(language, preference, navigator.languages ?? [navigator.language]);
   toggle.textContent = flowText(locale, video.paused ? 'playDemo' : 'pauseDemo');
 }
 text();

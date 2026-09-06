@@ -1,0 +1,41 @@
+Nhiều năm du lịch, được giữ trên điện thoại và sống động trở lại.
+
+Timeline Visualizer biến tệp xuất Dòng thời gian Google Maps thành Nhật ký Du lịch riêng tư trên điện thoại, rồi tạo video bản đồ hoạt ảnh. Nhập Timeline.json một lần, quay lại với các tệp xuất mới hơn và Nhật ký sẽ giữ chi tiết tuyến đường tốt nhất cho từng giai đoạn.
+
+Xây dựng Nhật ký Du lịch
+• Nhập Timeline.json để tạo Nhật ký chỉ ở trên thiết bị này
+• Quay lại với các tệp xuất mới hơn để giữ lại chi tiết mà bản xuất sau có thể mất
+• Video dùng các tuyến đường chi tiết nhất và bổ sung chỗ thiếu bằng lịch sử Dòng thời gian
+• Có lời nhắc nhẹ tùy chọn khi nên nhập tệp xuất mới
+
+Tạo câu chuyện của bạn
+• Tự động tìm chuyến đi hoặc tự nhập ngày
+• Tạo tổng kết theo tháng, năm hoặc khoảng tùy chỉnh
+• Khi có, dùng các mẫu vị trí thô gần đây để vẽ tuyến đường chi tiết hơn
+• Cá nhân hóa tiêu đề dùng lại, chẳng hạn “Dòng thời gian của Mina năm 2026”
+• Xem trước hoạt ảnh trước khi tạo video chất lượng đầy đủ
+• Chọn góc nhìn bản đồ: tỷ lệ cố định, rộng, cân bằng hoặc cận cảnh
+• Cân bằng hành trình dài bằng nhịp chuyến đi dài và khung hình chuyến đi địa phương
+• Xuất 480p đến 2160p ở dạng vuông, dọc hoặc ngang, với độ phân giải và tốc độ khung hình tùy chỉnh
+• Chọn từ 10 đến 300 giây và lưu các thiết lập sẵn của bạn kèm một mặc định
+• Thận trọng bỏ qua điểm GPS bất thường riêng lẻ hoặc tắt lọc
+• Kết thúc bằng thu nhỏ mượt mà và ảnh tổng quan toàn bộ tuyến đường
+• Tiếp tục tạo trong nền với thông báo
+• Tự động lưu video vào Movies/Timeline Visualizer trên Android 10 trở lên
+• Lưu hoặc chia sẻ ảnh tổng quan tuyến đường 1080 × 1080 cuối cùng
+
+Cần khôi phục các chuyến đi cũ trước?
+Mở hướng dẫn khôi phục đã được bản địa hóa trong ứng dụng. Hướng dẫn giải thích cách nhập bản sao lưu Dòng thời gian được mã hóa hiện có vào Google Maps, rồi xuất tệp JSON mới cho Timeline Visualizer. Ứng dụng không bao giờ truy cập Tài khoản Google hoặc bản sao lưu được mã hóa của bạn.
+
+Thư viện của bạn
+Các chuyến đi, bản tổng kết và mọi video đã tạo xuất hiện trong Thư viện với hình thu nhỏ, tiêu đề, ngày, thời lượng và giai đoạn. Thêm các tệp MP4 cũ, phát trong ứng dụng, chia sẻ hoặc xóa khỏi thư viện sau khi xác nhận.
+
+Điều hướng đơn giản
+Di chuyển giữa Thư viện, Tạo và Cài đặt bằng thanh điều hướng dưới cùng. Góc nhìn bản đồ, nhịp độ và chất lượng video trở thành mặc định cho video tiếp theo.
+
+Thiết kế vì quyền riêng tư
+Tệp Dòng thời gian và Nhật ký Du lịch của bạn không bao giờ được tải lên, và Nhật ký bị loại trừ khỏi sao lưu Android cũng như chuyển thiết bị. Tuyến đường, tiêu đề và video tạo ra được xử lý trên thiết bị. Không dùng đăng nhập Google, phân tích, quảng cáo hay quyền vị trí.
+
+Để vẽ bản đồ, ứng dụng yêu cầu các ô bản đồ từ CARTO. Các yêu cầu này gồm tọa độ ô của khu vực bản đồ và thông tin mạng thông thường, có thể tiết lộ những nơi trong Dòng thời gian của bạn cho CARTO. Ứng dụng giải thích điều này trước khi tải Dòng thời gian lần đầu và cho phép bạn hủy.
+
+Timeline Visualizer là ứng dụng mã nguồn mở độc lập. Ứng dụng không liên kết với hoặc được Google xác nhận. Google Maps là nhãn hiệu của Google LLC.

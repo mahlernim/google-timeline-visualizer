@@ -35,4 +35,13 @@ class DistanceUnitTest {
         assertEquals(62.1371192237334, DistanceUnit.MILES.fromKilometers(100.0), 1e-12)
         assertEquals(100.0, DistanceUnit.KILOMETERS.fromKilometers(100.0), 0.0)
     }
+
+    @Test
+    fun visibleUnitSelectionsResolveStoredAutomaticWithoutOfferingIt() {
+        assertEquals(listOf(DistanceUnitPreference.KILOMETERS, DistanceUnitPreference.MILES), DistanceUnitPreference.selectable)
+        assertEquals(0, DistanceUnitPreference.selectionIndex(DistanceUnitPreference.AUTOMATIC, Locale.KOREA))
+        assertEquals(1, DistanceUnitPreference.selectionIndex(DistanceUnitPreference.AUTOMATIC, Locale.US))
+        assertEquals(DistanceUnitPreference.KILOMETERS, DistanceUnitPreference.fromSelection(0))
+        assertEquals(DistanceUnitPreference.MILES, DistanceUnitPreference.fromSelection(1))
+    }
 }

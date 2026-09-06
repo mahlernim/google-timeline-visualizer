@@ -5,17 +5,22 @@ import org.junit.Test
 
 class AppLanguageTest {
     @Test
-    fun mapsSupportedLanguageTagsAndSystemDefault() {
-        assertEquals(0, AppLanguage.selectionIndex(""))
-        assertEquals(1, AppLanguage.selectionIndex("en-US"))
-        assertEquals(2, AppLanguage.selectionIndex("ko"))
-        assertEquals(4, AppLanguage.selectionIndex("zh-Hans-CN"))
-        assertEquals(5, AppLanguage.selectionIndex("zh-Hant-TW"))
-        assertEquals(9, AppLanguage.selectionIndex("pt-BR"))
+    fun mapsSupportedLanguageTagsToVisibleSelectionIndexes() {
+        assertEquals(0, AppLanguage.selectionIndex("en-US"))
+        assertEquals(1, AppLanguage.selectionIndex("ko"))
+        assertEquals(3, AppLanguage.selectionIndex("zh-Hans-CN"))
+        assertEquals(4, AppLanguage.selectionIndex("zh-Hant-TW"))
+        assertEquals(8, AppLanguage.selectionIndex("pt-BR"))
+        assertEquals(9, AppLanguage.selectionIndex("in-ID"))
+        assertEquals(9, AppLanguage.selectionIndex("id-ID"))
+        assertEquals(10, AppLanguage.selectionIndex("vi-VN"))
     }
 
     @Test
-    fun unsupportedLanguageFallsBackToSystemDefault() {
+    fun emptyOrUnsupportedLanguageUsesTheResolvedDeviceLanguageOrEnglish() {
+        assertEquals(1, AppLanguage.selectionIndex("", "ko-KR"))
+        assertEquals(9, AppLanguage.selectionIndex("", "in-ID"))
+        assertEquals(0, AppLanguage.selectionIndex("", "it-IT"))
         assertEquals(0, AppLanguage.selectionIndex("it-IT"))
         assertEquals(0, AppLanguage.selectionIndex("pt-PT"))
         assertEquals(0, AppLanguage.selectionIndex("invalid"))
@@ -23,9 +28,8 @@ class AppLanguageTest {
 
     @Test
     fun everySelectionProducesTheExpectedLocaleList() {
-        assertEquals("", AppLanguage.localesForSelection(0).toLanguageTags())
         AppLanguage.supportedTags.forEachIndexed { index, tag ->
-            assertEquals(tag, AppLanguage.localesForSelection(index + 1).toLanguageTags())
+            assertEquals(tag, AppLanguage.localesForSelection(index).toLanguageTags())
         }
     }
 }
