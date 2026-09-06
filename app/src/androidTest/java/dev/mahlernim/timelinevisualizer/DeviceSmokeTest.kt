@@ -44,54 +44,54 @@ class DeviceSmokeTest {
         )
         try {
             ActivityScenario.launch(MainActivity::class.java).use { scenario ->
-            VideoExportCoordinator.publish(
-                context,
-                VideoExportSnapshot(
-                    status = VideoExportStatus.RUNNING,
-                    startedAtMillis = System.currentTimeMillis(),
-                ),
-                persist = false,
-            )
-            waitForVisible(scenario, R.id.exportStatusTray)
-            waitForEnabled(scenario, R.id.videoWatchButton)
-            scenario.onActivity { activity ->
-                val tray = activity.findViewById<View>(R.id.exportStatusTray)
-                val navigation = activity.findViewById<View>(R.id.bottomNavigation)
-                val trayBounds = Rect()
-                val navigationBounds = Rect()
-                assertTrue(tray.getGlobalVisibleRect(trayBounds))
-                assertTrue(navigation.getGlobalVisibleRect(navigationBounds))
-                assertTrue(trayBounds.bottom <= navigationBounds.top - dp(activity, 8))
-                assertTrue(activity.findViewById<View>(R.id.videoWatchButton).isEnabled)
-                activity.findViewById<View>(R.id.videoWatchButton).performClick()
-            }
-            InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-            scenario.onActivity { activity ->
-                val tray = activity.findViewById<View>(R.id.exportStatusTray)
-                val navigation = activity.findViewById<View>(R.id.bottomNavigation)
-                val decor = activity.window.decorView
-                val trayBounds = Rect()
-                val decorBounds = Rect()
-                val bottomInset = ViewCompat.getRootWindowInsets(decor)
-                    ?.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())?.bottom
-                    ?: throw AssertionError("Missing system-bar insets")
-                assertTrue(tray.getGlobalVisibleRect(trayBounds))
-                assertTrue(decor.getGlobalVisibleRect(decorBounds))
-                assertEquals(View.GONE, navigation.visibility)
-                assertTrue(trayBounds.bottom <= decorBounds.bottom - bottomInset - dp(activity, 8))
-                activity.findViewById<View>(R.id.playerBackButton).performClick()
-            }
-            InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-            scenario.onActivity { activity ->
-                val tray = activity.findViewById<View>(R.id.exportStatusTray)
-                val navigation = activity.findViewById<View>(R.id.bottomNavigation)
-                val trayBounds = Rect()
-                val navigationBounds = Rect()
-                assertTrue(tray.getGlobalVisibleRect(trayBounds))
-                assertTrue(navigation.getGlobalVisibleRect(navigationBounds))
-                assertEquals(View.VISIBLE, navigation.visibility)
-                assertTrue(trayBounds.bottom <= navigationBounds.top - dp(activity, 8))
-            }
+                VideoExportCoordinator.publish(
+                    context,
+                    VideoExportSnapshot(
+                        status = VideoExportStatus.RUNNING,
+                        startedAtMillis = System.currentTimeMillis(),
+                    ),
+                    persist = false,
+                )
+                waitForVisible(scenario, R.id.exportStatusTray)
+                waitForEnabled(scenario, R.id.videoWatchButton)
+                scenario.onActivity { activity ->
+                    val tray = activity.findViewById<View>(R.id.exportStatusTray)
+                    val navigation = activity.findViewById<View>(R.id.bottomNavigation)
+                    val trayBounds = Rect()
+                    val navigationBounds = Rect()
+                    assertTrue(tray.getGlobalVisibleRect(trayBounds))
+                    assertTrue(navigation.getGlobalVisibleRect(navigationBounds))
+                    assertTrue(trayBounds.bottom <= navigationBounds.top - dp(activity, 8))
+                    assertTrue(activity.findViewById<View>(R.id.videoWatchButton).isEnabled)
+                    activity.findViewById<View>(R.id.videoWatchButton).performClick()
+                }
+                InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+                scenario.onActivity { activity ->
+                    val tray = activity.findViewById<View>(R.id.exportStatusTray)
+                    val navigation = activity.findViewById<View>(R.id.bottomNavigation)
+                    val decor = activity.window.decorView
+                    val trayBounds = Rect()
+                    val decorBounds = Rect()
+                    val bottomInset = ViewCompat.getRootWindowInsets(decor)
+                        ?.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())?.bottom
+                        ?: throw AssertionError("Missing system-bar insets")
+                    assertTrue(tray.getGlobalVisibleRect(trayBounds))
+                    assertTrue(decor.getGlobalVisibleRect(decorBounds))
+                    assertEquals(View.GONE, navigation.visibility)
+                    assertTrue(trayBounds.bottom <= decorBounds.bottom - bottomInset - dp(activity, 8))
+                    activity.findViewById<View>(R.id.playerBackButton).performClick()
+                }
+                InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+                scenario.onActivity { activity ->
+                    val tray = activity.findViewById<View>(R.id.exportStatusTray)
+                    val navigation = activity.findViewById<View>(R.id.bottomNavigation)
+                    val trayBounds = Rect()
+                    val navigationBounds = Rect()
+                    assertTrue(tray.getGlobalVisibleRect(trayBounds))
+                    assertTrue(navigation.getGlobalVisibleRect(navigationBounds))
+                    assertEquals(View.VISIBLE, navigation.visibility)
+                    assertTrue(trayBounds.bottom <= navigationBounds.top - dp(activity, 8))
+                }
             }
         } finally {
             VideoExportCoordinator.publish(context, VideoExportSnapshot(status = VideoExportStatus.IDLE), persist = false)
