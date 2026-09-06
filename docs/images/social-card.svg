@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#FFF8FA"/><stop offset="1" stop-color="#FBE7F0"/></linearGradient></defs>
+<rect width="1200" height="630" fill="url(#bg)"/>
+<circle cx="1050" cy="-20" r="360" fill="#ffffff" opacity=".45"/>
+<g fill="none" stroke="#E3CCD6" stroke-width="2"><path d="M730 100L1140 210M700 210L1120 335M720 340L1150 470M775 60L710 545M930 80L850 570M1100 140L1025 565"/></g>
+<path d="M758 445C838 463 914 418 867 348S899 216 1028 194" fill="none" stroke="#fff" stroke-width="20" stroke-linecap="round"/>
+<path d="M758 445C838 463 914 418 867 348S899 216 1028 194" fill="none" stroke="#E90064" stroke-width="9" stroke-linecap="round"/>
+<circle cx="758" cy="445" r="13" fill="#fff" stroke="#E90064" stroke-width="6"/>
+<g transform="translate(974 98) scale(.9)"><path d="M60 0C27 0 0 27 0 60c0 45 60 116 60 116s60-71 60-116C120 27 93 0 60 0Z" fill="#E90064"/><circle cx="60" cy="59" r="22" fill="#FFF8FA"/></g>
+<g font-family="Segoe UI, Arial, sans-serif" fill="#24191D">
+<text x="66" y="88" font-size="25" font-weight="700">Timeline Visualizer</text>
+<text x="62" y="235" font-size="76" font-weight="750" letter-spacing="-3">Your places,</text>
+<text x="62" y="323" font-size="76" font-weight="750" letter-spacing="-3">in motion.</text>
+<text x="66" y="392" font-size="27" fill="#68505B">Turn your Google Maps Timeline</text>
+<text x="66" y="432" font-size="27" fill="#68505B">into videos to watch and share.</text>
+<rect x="66" y="492" width="341" height="47" rx="23.5" fill="#FFFFFF"/>
+<text x="88" y="523" font-size="19" font-weight="600">Your Timeline stays on your device.</text>
+<text x="66" y="591" font-size="18" fill="#806B74">ahn-lab.org/google-timeline-visualizer</text>
+</g></svg>

@@ -20,6 +20,7 @@ class AppLanguageTest {
     fun emptyOrUnsupportedLanguageUsesTheResolvedDeviceLanguageOrEnglish() {
         assertEquals(1, AppLanguage.selectionIndex("", "ko-KR"))
         assertEquals(9, AppLanguage.selectionIndex("", "in-ID"))
+        assertEquals(10, AppLanguage.selectionIndex("", "it-IT,vi-VN"))
         assertEquals(0, AppLanguage.selectionIndex("", "it-IT"))
         assertEquals(0, AppLanguage.selectionIndex("it-IT"))
         assertEquals(0, AppLanguage.selectionIndex("pt-PT"))

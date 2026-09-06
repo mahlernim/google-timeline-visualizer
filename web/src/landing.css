@@ -15,6 +15,11 @@ figcaption{font-size:12px;color:#806b74;margin:12px 3px 0}
 .choices{display:flex;flex-direction:column;margin-top:28px;gap:20px}
 .web-option p,.android-options p{font-size:13px;color:#806b74;margin:8px 0 0}
 .open-web{display:inline-flex;align-items:center;justify-content:center;gap:24px;text-decoration:none;font-weight:650;background:#e90064;color:white;border-radius:11px;padding:12px 19px;font-size:15px}
+.share-app-control{margin-top:12px}
+#share-app{border:1px solid #bd4c7c;border-radius:9px;background:#fff;color:#8c003b;padding:8px 12px;cursor:pointer}
+#share-app:disabled{cursor:wait;opacity:.65}
+#share-status{font-size:12px;color:#806b74;margin:6px 0 0}
+#share-url{width:100%;margin-top:6px;padding:7px;border:1px solid #dbc7d1;border-radius:6px}
 .android-options{border-top:1px solid #ecdfe5;padding-top:18px}
 .android-options h2{font-size:13px;font-weight:650;color:#806b74;margin:0 0 9px}
 .android-links{display:flex;flex-wrap:wrap;gap:8px 17px;font-size:14px;font-weight:550}

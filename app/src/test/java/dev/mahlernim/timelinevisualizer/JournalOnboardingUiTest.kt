@@ -73,7 +73,7 @@ class JournalOnboardingUiTest {
         )
         val resolvedLanguage = AppLanguage.selectionIndex(
             "",
-            android.content.res.Resources.getSystem().configuration.locales[0].toLanguageTag(),
+            android.content.res.Resources.getSystem().configuration.locales.toLanguageTags(),
         )
         assertEquals(activity.getString(languageNames[resolvedLanguage]), activity.findViewById<TextView>(R.id.onboardingLanguageButton).text)
         assertTrue(activity.findViewById<TextView>(R.id.onboardingPageTitle).isAccessibilityHeading)

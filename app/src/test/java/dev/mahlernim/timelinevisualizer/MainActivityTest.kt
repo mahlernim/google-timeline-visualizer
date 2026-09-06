@@ -781,7 +781,7 @@ class MainActivityTest {
         )
         val resolvedLanguage = AppLanguage.selectionIndex(
             "",
-            android.content.res.Resources.getSystem().configuration.locales[0].toLanguageTag(),
+            android.content.res.Resources.getSystem().configuration.locales.toLanguageTags(),
         )
         assertEquals(activity.getString(languageNames[resolvedLanguage]), activity.findViewById<AutoCompleteTextView>(R.id.languageDropdown).text.toString())
         assertEquals(11, activity.findViewById<AutoCompleteTextView>(R.id.languageDropdown).adapter.count)

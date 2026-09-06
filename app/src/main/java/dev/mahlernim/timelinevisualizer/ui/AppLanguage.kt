@@ -7,9 +7,18 @@ object AppLanguage {
     val supportedTags = listOf("en", "ko", "ja", "zh-CN", "zh-TW", "es", "fr", "de", "pt-BR", "id", "vi")
 
     fun selectionIndex(languageTags: String, fallbackTag: String = "en"): Int {
-        val selected = languageTags.substringBefore(',').trim().ifEmpty { fallbackTag }
+        val candidates = languageTags.ifBlank { fallbackTag }
+            .split(',')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+        return candidates.firstNotNullOfOrNull(::normalizedTag)
+            ?.let(supportedTags::indexOf)
+            ?: 0
+    }
+
+    private fun normalizedTag(selected: String): String? {
         val locale = Locale.forLanguageTag(selected)
-        val normalized = when {
+        return when {
             supportedTags.contains(selected) -> selected
             locale.language in listOf("en", "ko", "ja", "es", "fr", "de", "vi") -> locale.language
             locale.language in listOf("id", "in") -> "id"
@@ -22,9 +31,8 @@ object AppLanguage {
                 locale.script.equals("Hant", ignoreCase = true) ||
                     locale.country.uppercase(Locale.ROOT) in listOf("TW", "HK", "MO")
                 ) -> "zh-TW"
-            else -> "en"
+            else -> null
         }
-        return supportedTags.indexOf(normalized)
     }
 
     fun localesForSelection(position: Int): LocaleListCompat {

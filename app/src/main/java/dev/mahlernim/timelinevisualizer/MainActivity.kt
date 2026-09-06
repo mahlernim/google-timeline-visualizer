@@ -3875,7 +3875,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun selectedLanguageIndex(): Int = AppLanguage.selectionIndex(
         currentApplicationLanguageTags(),
-        systemLocale().toLanguageTag(),
+        Resources.getSystem().configuration.locales.toLanguageTags(),
     )
 
     private fun configureCameraPreparation() {
