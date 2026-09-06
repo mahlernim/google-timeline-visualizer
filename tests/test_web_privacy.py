@@ -22,12 +22,14 @@ def test_web_privacy_copy_does_not_claim_analytics_are_absent() -> None:
     assert "Cloudflare Web Analytics" in readme
 
 
-def test_web_app_links_directly_to_public_play_enrollment() -> None:
+def test_web_app_links_directly_to_public_play_listing() -> None:
     html = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
 
-    assert "https://play.google.com/apps/testing/dev.mahlernim.timelinevisualizer" in html
+    listing = "https://play.google.com/store/apps/details?id=dev.mahlernim.timelinevisualizer"
+    enrollment = "https://play.google.com/apps/testing/dev.mahlernim.timelinevisualizer"
+    assert f'href="{listing}" data-flow="playTesting"' in html
+    assert f'href="{enrollment}" data-flow="enrolled"' in html
     assert "https://github.com/mahlernim/google-timeline-visualizer/discussions/165" not in html
-    assert 'https://play.google.com/store/apps/details?id=dev.mahlernim.timelinevisualizer' in html
     assert 'https://forms.gle/mmM1ErM8nwtxNHez9' not in html
     assert 'href="/google-timeline-visualizer/app/"' in html
     app = (ROOT / 'web' / 'app' / 'index.html').read_text(encoding='utf-8')
