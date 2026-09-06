@@ -17,8 +17,8 @@ def test_web_privacy_copy_does_not_claim_analytics_are_absent() -> None:
     html = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
     readme = (ROOT / "web" / "README.md").read_text(encoding="utf-8")
 
-    assert "No account, location permission, or Timeline upload is required." in html
-    assert "No account, location permission, analytics, or upload is required." not in html
+    assert "No app account, location permission, or Timeline upload is required." in html
+    assert "No app account, location permission, analytics, or upload is required." not in html
     assert "Cloudflare Web Analytics" in readme
 
 
@@ -27,7 +27,8 @@ def test_web_app_links_directly_to_public_play_enrollment() -> None:
 
     assert "https://play.google.com/apps/testing/dev.mahlernim.timelinevisualizer" in html
     assert "https://github.com/mahlernim/google-timeline-visualizer/discussions/165" not in html
-    assert 'https://forms.gle/mmM1ErM8nwtxNHez9' in html
+    assert 'https://play.google.com/store/apps/details?id=dev.mahlernim.timelinevisualizer' in html
+    assert 'https://forms.gle/mmM1ErM8nwtxNHez9' not in html
     assert 'href="/google-timeline-visualizer/app/"' in html
     app = (ROOT / 'web' / 'app' / 'index.html').read_text(encoding='utf-8')
     assert 'docs/privacy-web.md' in app
