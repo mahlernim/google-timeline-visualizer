@@ -2,9 +2,43 @@ import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 ANDROID_NS = "{http://schemas.android.com/apk/res/android}"
+
+
+@pytest.mark.parametrize("directory", ["values-in", "values-vi"])
+def test_new_languages_cover_resources_and_preserve_format_arguments(directory):
+    resources = ROOT / "app/src/main/res"
+    source = {
+        element.attrib["name"]: element
+        for element in ET.parse(resources / "values/strings.xml").getroot()
+        if element.attrib.get("translatable") != "false"
+    }
+    localized_elements = list(ET.parse(resources / directory / "strings.xml").getroot())
+    localized = {element.attrib["name"]: element for element in localized_elements}
+    assert len(localized) == len(localized_elements), "Duplicate resource names"
+    assert source.keys() <= localized.keys(), source.keys() - localized.keys()
+
+    def arguments(text):
+        return sorted(re.findall(r"%(?:\d+\$)?[-#+ 0,(]*\d*(?:\.\d+)?[a-zA-Z]", text))
+
+    for name, original in source.items():
+        translated = localized[name]
+        assert translated.tag == original.tag, name
+        if original.tag == "plurals":
+            # Both languages use CLDR's single 'other' cardinal category.
+            assert [item.attrib["quantity"] for item in translated] == ["other"], name
+            baseline = original.find("item[@quantity='other']")
+            text = "".join(translated[0].itertext())
+            assert text.strip(), name
+            assert arguments(text) == arguments("".join(baseline.itertext())), name
+        else:
+            text = "".join(translated.itertext())
+            assert text.strip(), name
+            assert arguments(text) == arguments("".join(original.itertext())), name
 
 
 def test_language_selector_matches_android_locale_configuration():

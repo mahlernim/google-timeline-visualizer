@@ -3,6 +3,8 @@ import { activeLocale, readLanguagePreference, writeLanguagePreference, isLangua
 import { populateLanguageSelect } from './language-select';
 import { applyFlowStrings, flowText } from './flow-i18n';
 import { preferAndroid, mayAutoplay } from './device';
+import { shareApp, SHARE_URL } from './share-app';
+import { SHARE_STRINGS } from './share-i18n';
 
 const language = document.getElementById('landing-language') as HTMLSelectElement;
 const video = document.getElementById('demo-video') as HTMLVideoElement;
@@ -10,6 +12,9 @@ const toggle = document.getElementById('demo-toggle') as HTMLButtonElement;
 const android = document.getElementById('android-options')!;
 const web = document.getElementById('web-option')!;
 const choices = document.getElementById('choices')!;
+const shareButton = document.getElementById('share-app') as HTMLButtonElement;
+const shareStatus = document.getElementById('share-status')!;
+const shareUrl = document.getElementById('share-url') as HTMLInputElement;
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 const connection = (navigator as Navigator & { connection?: EventTarget & { saveData?: boolean } }).connection;
 let preference = readLanguagePreference();
@@ -22,9 +27,36 @@ function text(): void {
   locale = activeLocale(preference, navigator.languages ?? [navigator.language]);
   document.documentElement.lang = locale;
   applyFlowStrings(document, locale);
-  populateLanguageSelect(language, preference, navigator.languages ?? [navigator.language], flowText(locale, 'system'));
+  language.setAttribute('aria-label', flowText(locale, 'language'));
+  populateLanguageSelect(language, preference, navigator.languages ?? [navigator.language]);
   toggle.textContent = flowText(locale, video.paused ? 'playDemo' : 'pauseDemo');
+  shareButton.textContent = SHARE_STRINGS[locale].button;
+  shareUrl.setAttribute('aria-label', SHARE_STRINGS[locale].manualInputLabel);
 }
+function clearShareFeedback(): void {
+  shareStatus.textContent = '';
+  shareUrl.value = '';
+  shareUrl.hidden = true;
+}
+shareButton.addEventListener('click', async () => {
+  const labels = SHARE_STRINGS[locale];
+  clearShareFeedback();
+  shareButton.disabled = true;
+
+  try {
+    const result = await shareApp(labels.text);
+    if (result === 'copied') shareStatus.textContent = labels.copied;
+    if (result === 'manual') {
+      shareStatus.textContent = labels.manual;
+      shareUrl.value = SHARE_URL;
+      shareUrl.hidden = false;
+      shareUrl.focus();
+      shareUrl.select();
+    }
+  } finally {
+    shareButton.disabled = false;
+  }
+});
 text();
 const androidFirst = preferAndroid(navigator.userAgent, navigator.maxTouchPoints);
 document.documentElement.dataset.platform = androidFirst ? 'android' : 'web';
@@ -61,9 +93,10 @@ language.addEventListener('change', () => {
   if (!isLanguagePreference(language.value)) return;
   preference = language.value;
   writeLanguagePreference(preference);
+  clearShareFeedback();
   text();
 });
-window.addEventListener('languagechange', text);
+window.addEventListener('languagechange', () => { clearShareFeedback(); text(); });
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     void navigator.serviceWorker.register(import.meta.env.BASE_URL + 'service-worker.js?v=' + import.meta.env.VITE_SW_VERSION,

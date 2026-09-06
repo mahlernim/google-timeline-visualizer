@@ -79,6 +79,7 @@ let renderer: typeof import('./renderer') | null = null;
 let encoder: typeof import('./video') | null = null;
 let prepared: PreparedJourney | null = null;
 let supportedFormat: ResolvedVideoFormat | null = null;
+let compatibilityText: () => string = () => '';
 let resultUrl: string | null = null;
 let resultFile: File | null = null;
 let statusText: () => string = () => '';
@@ -266,10 +267,16 @@ function localize(): void {
   syncDocumentLang(i18n);
   applyStrings(document, i18n);
   applyFlowStrings(document, i18n.locale);
-  populateLanguageSelect(language, languagePreference, languages(), i18n.t('languageSystemDefault'));
+  populateLanguageSelect(language, languagePreference, languages());
   populateDates();
   const resolved = distanceUnit();
-  unitSelect.options[0].textContent = i18n.t('distanceUnitAutomaticResolved', { automatic: i18n.t('distanceUnitAutomatic'), resolved: i18n.t(resolved === 'miles' ? 'distanceUnitMiles' : 'distanceUnitKilometers') });
+  unitSelect.value = resolved;
+  if (step === 3) {
+    const format = currentFormat();
+    el('export-settings').textContent = format.width + ' × ' + format.height + ' · ' + format.frameRate + ' fps · '
+      + i18n.t('durationSeconds', { count: currentDuration() });
+    el('compatibility-status').textContent = compatibilityText();
+  }
   if (scan) el('file-status').textContent = [fileName, scan.firstDate, scan.lastDate].join(' · ');
   if (points.length) el('selection-summary').textContent = i18n.join(
     i18n.t(raw.checked ? 'summaryDistanceEstimated' : 'summaryDistanceAbout', {
@@ -384,6 +391,7 @@ next.addEventListener('click', async () => {
     await job('working', async (signal, current) => {
       const format = currentFormat();
       el('compatibility-status').textContent = '';
+      compatibilityText = () => '';
       el('export-settings').textContent = format.width + ' × ' + format.height + ' · ' + format.frameRate + ' fps · '
         + i18n.t('durationSeconds', { count: currentDuration() });
       if (estimatedOutputBytes(format, currentDuration()) > MAX_OUTPUT_BYTES) throw new Error('outputTooLarge');
@@ -392,8 +400,9 @@ next.addEventListener('click', async () => {
       const codec = await probe(format);
       if (!current()) return;
       supportedFormat = codec ? { ...format, codec } : null;
-      el('compatibility-status').textContent = codec ? i18n.t('compatibilityFull')
+      compatibilityText = () => codec ? i18n.t('compatibilityFull')
         : i18n.t('errorFormatUnsupported', { width: format.width, height: format.height, fps: format.frameRate });
+      el('compatibility-status').textContent = compatibilityText();
       statusText = () => '';
     });
   }

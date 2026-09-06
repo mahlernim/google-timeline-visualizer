@@ -319,7 +319,7 @@
     </plurals>
     <string name="about_and_privacy">About and privacy</string>
     <string name="language">Language</string>
-    <string name="language_summary">Choose a language for Timeline Visualizer. System default follows your device or Android app-language setting.</string>
+    <string name="language_summary">Choose a language for Timeline Visualizer.</string>
     <string name="language_system_default">System default</string>
     <string name="language_name_en" translatable="false">English</string>
     <string name="language_name_ko" translatable="false">한국어</string>
@@ -330,6 +330,8 @@
     <string name="language_name_fr" translatable="false">Français</string>
     <string name="language_name_de" translatable="false">Deutsch</string>
     <string name="language_name_pt_br" translatable="false">Português (Brasil)</string>
+    <string name="language_name_id" translatable="false">Bahasa Indonesia</string>
+    <string name="language_name_vi" translatable="false">Tiếng Việt</string>
     <string name="app_version">Version %1$s (%2$d)</string>
     <string name="video_playback_failed">This video could not be played inside Timeline Visualizer.</string>
     <string name="open_in_another_app">Open in another app</string>

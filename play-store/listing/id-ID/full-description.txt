@@ -1,0 +1,41 @@
+Tahun-tahun perjalanan Anda tetap di ponsel dan dihidupkan kembali.
+
+Timeline Visualizer mengubah ekspor Linimasa Google Maps menjadi Jurnal Perjalanan pribadi di ponsel Anda, lalu membuat video peta animasi darinya. Impor Timeline.json sekali, kembali dengan ekspor yang lebih baru, dan Jurnal menyimpan detail rute terbaik untuk setiap periode.
+
+Bangun Jurnal Perjalanan Anda
+• Impor Timeline.json untuk membuat Jurnal yang tetap di perangkat ini
+• Kembali dengan ekspor yang lebih baru untuk mempertahankan detail yang mungkin hilang pada ekspor berikutnya
+• Video menggunakan rute paling terperinci Anda dan mengisi kekosongan dengan riwayat Linimasa
+• Pengingat opsional yang tidak mengganggu saat ekspor baru layak diimpor
+
+Ceritakan kisah Anda
+• Temukan perjalanan secara otomatis atau masukkan tanggal sendiri
+• Buat rekap bulanan, tahunan, atau rentang khusus
+• Gambar rute lebih rinci dari sampel lokasi mentah terbaru, bila tersedia
+• Personalisasi judul yang dapat dipakai ulang, seperti “Linimasa Mina 2026”
+• Pratinjau animasi sebelum membuat video berkualitas penuh
+• Pilih tampilan peta: Skala tetap, Lebar, Seimbang, atau Close-up
+• Seimbangkan perjalanan jauh dengan tempo perjalanan jauh dan pembingkaian perjalanan lokal
+• Ekspor 480p hingga 2160p dalam format persegi, potret, atau lanskap, dengan resolusi dan laju frame khusus
+• Pilih 10 hingga 300 detik dan simpan preset sendiri dengan default
+• Abaikan pencilan GPS terpisah secara konservatif, atau nonaktifkan penyaringan
+• Akhiri dengan zoom-out mulus dan ikhtisar rute lengkap
+• Lanjutkan pembuatan di latar belakang, dengan notifikasi
+• Simpan video otomatis ke Movies/Timeline Visualizer pada Android 10 dan yang lebih baru
+• Simpan atau bagikan ikhtisar rute akhir 1080 × 1080
+
+Perlu memulihkan perjalanan lama terlebih dahulu?
+Buka panduan pemulihan berbahasa Indonesia dari aplikasi. Panduan ini menjelaskan cara mengimpor cadangan Linimasa terenkripsi yang ada di Google Maps, lalu mengekspor file JSON baru untuk Timeline Visualizer. Aplikasi tidak pernah mengakses Akun Google atau cadangan terenkripsi Anda.
+
+Koleksi Anda
+Perjalanan yang tersimpan, rekap, dan setiap video yang Anda buat muncul di Koleksi dengan gambar mini, judul, tanggal, durasi, dan periode. Tambahkan file MP4 lama, putar di aplikasi, bagikan, atau hapus dari koleksi dengan konfirmasi.
+
+Navigasi sederhana
+Berpindah antara Koleksi, Buat, dan Setelan dari panel navigasi bawah. Tampilan peta, tempo, dan kualitas video menjadi default untuk video berikutnya.
+
+Dirancang untuk privasi
+File Linimasa dan Jurnal Perjalanan Anda tidak pernah diunggah. Jurnal dikecualikan dari pencadangan Android dan transfer perangkat. Rute, judul, dan video yang dibuat diproses di perangkat Anda. Tidak ada login Google, analitik, iklan, atau izin lokasi yang digunakan.
+
+Untuk menggambar peta, aplikasi meminta ubin peta dari CARTO. Permintaan tersebut mencakup koordinat ubin area peta dan informasi jaringan biasa, yang dapat mengungkapkan tempat dalam Linimasa Anda kepada CARTO. Aplikasi menjelaskan hal ini sebelum Linimasa pertama dimuat dan memungkinkan Anda membatalkan.
+
+Timeline Visualizer adalah aplikasi open source independen. Aplikasi ini tidak berafiliasi dengan atau didukung oleh Google. Google Maps adalah merek dagang Google LLC.

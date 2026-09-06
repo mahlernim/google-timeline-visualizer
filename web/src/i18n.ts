@@ -5,6 +5,8 @@ import { fr } from './locales/fr';
 import { ja } from './locales/ja';
 import { ko } from './locales/ko';
 import { ptBR } from './locales/pt-BR';
+import { id } from './locales/id';
+import { vi } from './locales/vi';
 import { zhCN } from './locales/zh-CN';
 import { zhTW } from './locales/zh-TW';
 import { convertDistanceFromKilometers } from './distance-unit';
@@ -238,7 +240,7 @@ export type PluralKey = { [K in StringKey]: Strings[K] extends PluralEntry ? K :
 export type TextKey = Exclude<StringKey, PluralKey>;
 
 /**
- * All nine catalogs are statically imported so they land in the entry chunk.
+ * All catalogs are statically imported so they land in the entry chunk.
  *
  * They must never become dynamic `import()`. The generated service worker precaches the
  * complete static build, but keeping catalogs in the entry bundle also avoids a second
@@ -256,6 +258,8 @@ export const CATALOGS: Readonly<Record<LocaleTag, Strings>> = {
   fr,
   de,
   'pt-BR': ptBR,
+  id,
+  vi,
 };
 
 export type Params = Readonly<Record<string, string | number>>;

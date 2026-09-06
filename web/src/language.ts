@@ -7,7 +7,9 @@ export type LocaleTag =
   | 'es'
   | 'fr'
   | 'de'
-  | 'pt-BR';
+  | 'pt-BR'
+  | 'id'
+  | 'vi';
 
 /**
  * The order of AppLanguage.supportedTags on Android, which is the order of
@@ -24,13 +26,15 @@ export const LOCALES: readonly LocaleTag[] = [
   'fr',
   'de',
   'pt-BR',
+  'id',
+  'vi',
 ];
 
 /**
  * Every language is labelled in its own language, verbatim from the language_name_* resources
  * in app/src/main/res/values/strings.xml. Those are translatable="false" on Android and are
  * deliberately kept out of the catalogs here for the same reason: a ko catalog would translate
- * 'Espanol' into Korean, and nine catalogs would each repeat the same nine values.
+ * 'Espanol' into Korean, and each catalog would repeat the same language names.
  */
 export const LANGUAGE_NAMES: Readonly<Record<LocaleTag, string>> = {
   en: 'English',
@@ -42,6 +46,8 @@ export const LANGUAGE_NAMES: Readonly<Record<LocaleTag, string>> = {
   fr: 'Français',
   de: 'Deutsch',
   'pt-BR': 'Português (Brasil)',
+  id: 'Bahasa Indonesia',
+  vi: 'Tiếng Việt',
 };
 
 interface ParsedTag {
@@ -96,6 +102,9 @@ const LANGUAGE_LOCALES: Readonly<Record<string, LocaleTag | undefined>> = {
   de: 'de',
   pt: 'pt-BR',
   zh: 'zh-CN',
+  id: 'id',
+  in: 'id',
+  vi: 'vi',
 };
 
 function isLocaleTag(value: string): value is LocaleTag {
@@ -103,7 +112,7 @@ function isLocaleTag(value: string): value is LocaleTag {
 }
 
 function matchTag(parsed: ParsedTag): LocaleTag | null {
-  // a. exact: the normalized language-region, or the bare language, is one of the nine.
+  // a. exact: the normalized language-region, or the bare language, is a supported locale.
   const exact = parsed.region === null ? parsed.language : `${parsed.language}-${parsed.region}`;
   if (isLocaleTag(exact)) return exact;
   // b. language plus script, which outranks the region.
@@ -111,7 +120,7 @@ function matchTag(parsed: ParsedTag): LocaleTag | null {
     const byScript = SCRIPT_LOCALES[`${parsed.language}-${parsed.script}`];
     if (byScript) return byScript;
   }
-  // c. language plus a region that maps onto one of the nine.
+  // c. language plus a region that maps onto a supported locale.
   if (parsed.region !== null) {
     const byRegion = REGION_LOCALES[`${parsed.language}-${parsed.region}`];
     if (byRegion) return byRegion;

@@ -7,10 +7,13 @@ import android.os.Looper
 import android.view.View
 import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import dev.mahlernim.timelinevisualizer.journal.JournalDatabase
 import dev.mahlernim.timelinevisualizer.journal.JournalEntity
 import dev.mahlernim.timelinevisualizer.journal.JournalOnboardingStore
 import dev.mahlernim.timelinevisualizer.journal.JournalRepository
+import dev.mahlernim.timelinevisualizer.ui.AppLanguage
 import java.io.File
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -39,6 +42,7 @@ class JournalOnboardingUiTest {
         context.getSharedPreferences(JournalOnboardingStore.PREFERENCES_NAME, Context.MODE_PRIVATE)
             .edit().clear().commit()
         context.getSharedPreferences("display", Context.MODE_PRIVATE).edit().clear().commit()
+        AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList())
     }
 
     @After
@@ -61,10 +65,17 @@ class JournalOnboardingUiTest {
         assertEquals(View.INVISIBLE, activity.findViewById<View>(R.id.onboardingBackButton).visibility)
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.onboardingNextButton).visibility)
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.onboardingLanguageButton).visibility)
-        assertEquals(
-            activity.getString(R.string.language_system_default),
-            activity.findViewById<TextView>(R.id.onboardingLanguageButton).text,
+        val languageNames = listOf(
+            R.string.language_name_en, R.string.language_name_ko, R.string.language_name_ja,
+            R.string.language_name_zh_cn, R.string.language_name_zh_tw, R.string.language_name_es,
+            R.string.language_name_fr, R.string.language_name_de, R.string.language_name_pt_br,
+            R.string.language_name_id, R.string.language_name_vi,
         )
+        val resolvedLanguage = AppLanguage.selectionIndex(
+            "",
+            android.content.res.Resources.getSystem().configuration.locales.toLanguageTags(),
+        )
+        assertEquals(activity.getString(languageNames[resolvedLanguage]), activity.findViewById<TextView>(R.id.onboardingLanguageButton).text)
         assertTrue(activity.findViewById<TextView>(R.id.onboardingPageTitle).isAccessibilityHeading)
     }
 

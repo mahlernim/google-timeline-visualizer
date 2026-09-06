@@ -9,6 +9,19 @@
     <meta name="description" data-i18n-attr="content:appDescription" content="Create a travel animation privately from a Google Maps Timeline export." />
     <meta name="google-adsense-account" content="ca-pub-4628399954212784" />
     <link rel="canonical" href="https://ahn-lab.org/google-timeline-visualizer/app/" />
+    <meta property="og:title" content="The original Timeline Visualizer" />
+    <meta property="og:description" content="Create a private journey video from your Google Maps Timeline." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ahn-lab.org/google-timeline-visualizer/app/" />
+    <meta property="og:image" content="https://ahn-lab.org/google-timeline-visualizer/social-card.png" />
+    <meta property="og:image:width" content="1730" />
+    <meta property="og:image:height" content="909" />
+    <meta property="og:image:alt" content="The original Timeline Visualizer. Your places, in motion. A map preview based on the public app demo with pink journey trails." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="The original Timeline Visualizer" />
+    <meta name="twitter:description" content="Create a private journey video from your Google Maps Timeline." />
+    <meta name="twitter:image" content="https://ahn-lab.org/google-timeline-visualizer/social-card.png" />
+    <meta name="twitter:image:alt" content="The original Timeline Visualizer. Your places, in motion. A map preview based on the public app demo with pink journey trails." />
     <link rel="manifest" href="../manifest.webmanifest" />
     <link rel="icon" href="../icon.svg" type="image/svg+xml" />
     <title data-i18n="appName">Timeline Visualizer</title>
@@ -18,7 +31,6 @@
       <header class="app-header">
         <a class="brand" href="../">Timeline Visualizer</a>
         <label class="language-control"><span class="sr-only" data-i18n="languageLabel">Language</span><select id="app-language">
-            <option value="system">English</option>
             <option value="en">English</option>
             <option value="ko">한국어</option>
             <option value="ja">日本語</option>
@@ -28,6 +40,8 @@
             <option value="fr">Français</option>
             <option value="de">Deutsch</option>
             <option value="pt-BR">Português (Brasil)</option>
+            <option value="id">Bahasa Indonesia</option>
+            <option value="vi">Tiếng Việt</option>
           </select></label>
       </header>
       <h1 data-i18n="headerTitle">Create video</h1>
@@ -134,7 +148,6 @@
           </select>
         </label>
         <label><span data-i18n="distanceUnitLabel">Distance unit</span><select id="distance-unit">
-            <option value="automatic" selected>Automatic · Kilometers</option>
             <option value="kilometers" data-i18n="distanceUnitKilometers">Kilometers</option>
             <option value="miles" data-i18n="distanceUnitMiles">Miles</option>
           </select></label>

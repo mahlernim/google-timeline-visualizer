@@ -1,4 +1,6 @@
 import type { LocaleTag } from './language';
+import { flowId } from './locales/flow-id';
+import { flowVi } from './locales/flow-vi';
 export const FLOW_STRINGS = {
   "en": {
     "heroTitle": "Your places, in motion.",
@@ -521,7 +523,9 @@ export const FLOW_STRINGS = {
     "toPreview": "Ir para a prévia",
     "exportSettings": "Configurações de exportação",
     "changeFile": "Escolher outro arquivo"
-  }
+  },
+  id: flowId,
+  vi: flowVi,
 } as const;
 export type FlowKey = keyof typeof FLOW_STRINGS.en;
 export function flowText(locale: LocaleTag, key: FlowKey): string { return FLOW_STRINGS[locale][key]; }

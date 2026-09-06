@@ -45,6 +45,9 @@ describe('resolveLocale', () => {
     [['en-US'], 'en'],
     [['en-GB'], 'en'],
     [['ko-KR'], 'ko'],
+    [['id-ID'], 'id'],
+    [['in-ID'], 'id'],
+    [['vi-VN'], 'vi'],
     [['ja'], 'ja'],
     [['zh-CN'], 'zh-CN'],
     [['zh-TW'], 'zh-TW'],
@@ -312,7 +315,8 @@ describe('catalog completeness', () => {
 
   it('does not drift from the Android locale list', () => {
     // app/src/main/res/xml/locales_config.xml, in its own order.
-    expect([...LOCALES]).toEqual(['en', 'ko', 'ja', 'zh-CN', 'zh-TW', 'es', 'fr', 'de', 'pt-BR']);
+    const config = readFileSync(new URL('../../app/src/main/res/xml/locales_config.xml', import.meta.url), 'utf8');
+    expect([...LOCALES]).toEqual([...config.matchAll(/android:name="([^"]+)"/g)].map(match => match[1]));
   });
 
   it('names every language in its own language', () => {
@@ -491,18 +495,17 @@ describe('index.html i18n keys', () => {
     const block = /<select id="app-language">([\s\S]*?)<\/select>/.exec(html);
     expect(block).not.toBeNull();
     const options = [...(block?.[1] ?? '').matchAll(/<option value="([^"]*)"[^>]*>([^<]*)<\/option>/g)];
-    expect(options.map((option) => option[1])).toEqual(['system', ...LOCALES]);
-    for (const option of options.slice(1)) {
+    expect(options.map((option) => option[1])).toEqual([...LOCALES]);
+    for (const option of options) {
       expect(option[2], option[1]).toBe(LANGUAGE_NAMES[option[1] as LocaleTag]);
     }
   });
 
-  it('offers the three Android distance-unit preferences with Automatic selected', () => {
+  it('offers distance units directly without a separate automatic option', () => {
     const block = /<select id="distance-unit">([\s\S]*?)<\/select>/.exec(html);
     expect(block).not.toBeNull();
     const options = [...(block?.[1] ?? '').matchAll(/<option value="([^"]*)"([^>]*)>/g)];
-    expect(options.map((option) => option[1])).toEqual(['automatic', 'kilometers', 'miles']);
-    expect(options[0][2]).toContain('selected');
+    expect(options.map((option) => option[1])).toEqual(['kilometers', 'miles']);
   });
 
   it('offers selection controls for duration, resolution, and frame rate', () => {

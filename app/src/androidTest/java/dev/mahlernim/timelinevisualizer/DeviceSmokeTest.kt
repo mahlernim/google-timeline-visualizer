@@ -154,7 +154,8 @@ class DeviceSmokeTest {
                 add(R.id.longTripDropdown to 4)
                 add(R.id.videoQualityDropdown to 6)
                 add(R.id.frameRateDropdown to 4)
-                add(R.id.languageDropdown to 10)
+                add(R.id.languageDropdown to 11)
+                add(R.id.distanceUnitDropdown to 2)
                 add(R.id.tripDetectionDropdown to 3)
                 add(R.id.localFramingDropdown to 3)
             }
@@ -170,7 +171,7 @@ class DeviceSmokeTest {
     }
 
     @Test
-    fun appLanguageSelectionSurvivesRecreationAndReturnsToSystemDefault() {
+    fun explicitLanguageSelectionSurvivesRecreationAndCanBeChanged() {
         completeJournalOnboarding()
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         instrumentation.runOnMainSync {
@@ -180,7 +181,7 @@ class DeviceSmokeTest {
             scenario.onActivity { activity ->
                 activity.findViewById<View>(R.id.navigationSettings).performClick()
                 activity.findViewById<AutoCompleteTextView>(R.id.languageDropdown)
-                    .onItemClickListener?.onItemClick(null, null, 2, 0L)
+                    .onItemClickListener?.onItemClick(null, null, 1, 0L)
             }
             instrumentation.waitForIdleSync()
             scenario.onActivity { activity ->
@@ -196,13 +197,22 @@ class DeviceSmokeTest {
                 )
             }
 
-            instrumentation.runOnMainSync {
-                AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList())
+            scenario.onActivity { activity ->
+                activity.findViewById<AutoCompleteTextView>(R.id.languageDropdown)
+                    .onItemClickListener?.onItemClick(null, null, 0, 0L)
             }
             instrumentation.waitForIdleSync()
             scenario.onActivity { activity ->
-                assertTrue(AppCompatDelegate.getApplicationLocales().isEmpty)
+                assertEquals("en", activity.resources.configuration.locales[0].language)
                 assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.settingsScreen).visibility)
+                assertEquals(
+                    activity.getString(R.string.language_name_en),
+                    activity.findViewById<AutoCompleteTextView>(R.id.languageDropdown).text.toString(),
+                )
+            }
+
+            instrumentation.runOnMainSync {
+                AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList())
             }
         }
     }

@@ -17,7 +17,7 @@ describe('landing priorities', () => {
     expect(mayAutoplay(true, false)).toBe(false);
     expect(mayAutoplay(false, true)).toBe(false);
   });
-  it('provides every new label in all nine languages', () => {
+  it('provides every new label in all supported languages', () => {
     const keys = Object.keys(FLOW_STRINGS.en).sort();
     for (const locale of LOCALES) {
       expect(Object.keys(FLOW_STRINGS[locale]).sort()).toEqual(keys);
