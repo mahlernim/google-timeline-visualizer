@@ -32,7 +32,6 @@ function text(): void {
   toggle.textContent = flowText(locale, video.paused ? 'playDemo' : 'pauseDemo');
   shareButton.textContent = SHARE_STRINGS[locale].button;
   shareUrl.setAttribute('aria-label', SHARE_STRINGS[locale].manualInputLabel);
-  clearShareFeedback();
 }
 function clearShareFeedback(): void {
   shareStatus.textContent = '';
@@ -94,9 +93,10 @@ language.addEventListener('change', () => {
   if (!isLanguagePreference(language.value)) return;
   preference = language.value;
   writeLanguagePreference(preference);
+  clearShareFeedback();
   text();
 });
-window.addEventListener('languagechange', text);
+window.addEventListener('languagechange', () => { clearShareFeedback(); text(); });
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     void navigator.serviceWorker.register(import.meta.env.BASE_URL + 'service-worker.js?v=' + import.meta.env.VITE_SW_VERSION,

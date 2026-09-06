@@ -597,7 +597,7 @@
     <string name="onboarding_start_note">Jika Linimasa belum diaktifkan, siapkan terlebih dahulu. Google Maps hanya dapat mencatat perjalanan baru setelah itu.</string>
     <string name="onboarding_choose_export">Pilih ekspor Linimasa</string>
     <string name="onboarding_setup_maps">Siapkan Linimasa Google Maps</string>
-    <string name="onboarding_page_position">%1$d of %2$d</string>
+    <string name="onboarding_page_position">%1$d dari %2$d</string>
     <string name="onboarding_page_announcement">Halaman %1$d dari %2$d. %3$s</string>
     <string name="onboarding_skip">Nanti saja</string>
     <string name="onboarding_v11_journal_title">Ubah perjalanan Anda menjadi Jurnal Perjalanan</string>
