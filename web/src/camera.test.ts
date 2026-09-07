@@ -3,6 +3,7 @@ import {
   blendViewport,
   buildCameraTrack,
   cameraViewportAt,
+  CLOSE_UP_MINIMUM_CONTEXT_KM,
   overviewSafeArea,
   overviewViewport,
   worldPositionAtProgress,
@@ -159,6 +160,50 @@ describe('camera track', () => {
       expect(Math.abs(Math.log(current.spanY / previous.spanY))).toBeLessThan(maximumLogSpanChange);
       expect(Math.abs(current.zoom - previous.zoom)).toBeLessThanOrEqual(3);
     }
+  });
+
+  it.each(FORMATS)('bounds close-up departure zoom and recovers transfer framing at $width x $height', (size) => {
+    const transfer = journey([
+      [37.5665, 126.9780],
+      [37.5650, 126.9850],
+      [35.1796, 129.0756],
+      [35.1800, 129.0800],
+    ]);
+    const track = buildCameraTrack(transfer, size, 'close-up');
+    for (let index = 1; index < track.frames.length; index += 1) {
+      expect(track.frames[index].spanY / track.frames[index - 1].spanY).toBeLessThanOrEqual(2 + 1e-12);
+      const viewport = cameraViewportAt(track, index / (track.frames.length - 1));
+      const marker = worldPositionAtProgress(transfer, index / (track.frames.length - 1)).point;
+      expect((marker.x - viewport.minX) / (viewport.maxX - viewport.minX)).toBeGreaterThanOrEqual(0.299);
+      expect((marker.x - viewport.minX) / (viewport.maxX - viewport.minX)).toBeLessThanOrEqual(0.701);
+      expect((marker.y - viewport.minY) / (viewport.maxY - viewport.minY)).toBeGreaterThanOrEqual(0.299);
+      expect((marker.y - viewport.minY) / (viewport.maxY - viewport.minY)).toBeLessThanOrEqual(0.701);
+    }
+    // Both transfer endpoints must fit by sample 12 of 480, despite the cap.
+    const viewport = cameraViewportAt(track, 12 / 480);
+    transfer.worldPoints.slice(1, 3).forEach((point) => {
+      expect(point.x).toBeGreaterThanOrEqual(viewport.minX);
+      expect(point.x).toBeLessThanOrEqual(viewport.maxX);
+      expect(point.y).toBeGreaterThanOrEqual(viewport.minY);
+      expect(point.y).toBeLessThanOrEqual(viewport.maxY);
+    });
+  });
+
+  it('matches the Android and CLI 6 km close-up minimum route context', () => {
+    expect(CLOSE_UP_MINIMUM_CONTEXT_KM).toBe(6);
+  });
+
+  it('limits initial close-up context to 6 km on a local route', () => {
+    // Forty 1 km segments avoid transfer detection. At this scale the 6 km
+    // context exceeds the viewport floor, and points 7-15 km away widen it.
+    const local = {
+      worldPoints: Array.from({ length: 41 }, (_, km) => ({ x: 0.5 + km / 20_000, y: 0.3 })),
+      cumulativeDistanceKm: Array.from({ length: 41 }, (_, km) => km),
+      totalDistanceKm: 40,
+    };
+    const viewport = cameraViewportAt(buildCameraTrack(local, SQUARE_480, 'close-up'), 0);
+
+    expect(viewport.maxX - viewport.minX).toBeCloseTo(6 / 20_000 * 1.7, 12);
   });
 
   it('frames local travel more tightly in close-up mode than dynamic mode', () => {

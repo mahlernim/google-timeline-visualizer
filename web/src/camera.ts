@@ -33,6 +33,8 @@ interface JourneyLeg {
   isTransfer: boolean;
 }
 
+export const CLOSE_UP_MINIMUM_CONTEXT_KM = 6;
+
 const MOVEMENT_PROFILES: Record<CameraMovement, CameraMovementProfile> = {
   fixed: {
     contextFraction: 0.10,
@@ -69,7 +71,7 @@ const MOVEMENT_PROFILES: Record<CameraMovement, CameraMovementProfile> = {
   },
   'close-up': {
     contextFraction: 0.035,
-    minimumContextKm: 15,
+    minimumContextKm: CLOSE_UP_MINIMUM_CONTEXT_KM,
     maximumContextKm: 120,
     padding: 1.7,
     minimumViewportSpan: 0.00030,
@@ -81,6 +83,9 @@ const MOVEMENT_PROFILES: Record<CameraMovement, CameraMovementProfile> = {
 };
 
 const CAMERA_TRACK_SAMPLES = 480;
+// Limit abrupt Close-up expansion to one zoom level per track sample. This
+// delays full transfer framing slightly without slowing ordinary zoom changes.
+const CLOSE_UP_MAX_LOG_ZOOM_OUT = Math.LN2;
 const CAMERA_DEAD_ZONE_HALF = 0.20;
 const FIXED_ZOOM_PERCENTILE = 0.80;
 const TILE_ZOOM_HYSTERESIS = 0.15;
@@ -427,9 +432,13 @@ export function buildCameraTrack(
       continue;
     }
     const zoomAlpha = rawSpanY > previous.spanY ? movement.zoomOutAlpha : movement.zoomInAlpha;
+    const logSpanChange = (Math.log(rawSpanY) - Math.log(previous.spanY)) * zoomAlpha;
+    const limitedLogSpanChange = cameraMovement === 'close-up'
+      ? Math.min(logSpanChange, CLOSE_UP_MAX_LOG_ZOOM_OUT)
+      : logSpanChange;
     const spanY = movement.fixedZoom
       ? rawSpanY
-      : clamp(Math.exp(Math.log(previous.spanY) + (Math.log(rawSpanY) - Math.log(previous.spanY)) * zoomAlpha),
+      : clamp(Math.exp(Math.log(previous.spanY) + limitedLogSpanChange),
         movement.minimumViewportSpan, MAX_VIEWPORT_SPAN);
     const spanX = spanY * aspect;
     const markerX = unwrapNear(sample.marker.x, previous.centerX);
