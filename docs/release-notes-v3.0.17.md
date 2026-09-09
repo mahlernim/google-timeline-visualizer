@@ -71,4 +71,3 @@
 ## Web release on GitHub only
 
 The Close-up camera improvement is a separate web release note. It is not part of the Android v3.0.17 release.
-
