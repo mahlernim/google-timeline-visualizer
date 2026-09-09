@@ -74,6 +74,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           apk="TimelineVisualizer-${RELEASE_TAG}.apk"
+          notes_source="docs/release-notes-${RELEASE_TAG}.md"
+          notes_file="$RUNNER_TEMP/release-notes-${RELEASE_TAG}.md"
+          access_links="docs/release-access-links.md"
+          test -s "$notes_source"
+          test -s "$access_links"
+          if grep -Fq '<!-- release-access-links -->' "$notes_source"; then
+            cp "$notes_source" "$notes_file"
+          else
+            {
+              cat "$access_links"
+              printf '\n'
+              cat "$notes_source"
+            } > "$notes_file"
+          fi
           cp app/build/outputs/apk/github/release/app-github-release.apk "$apk"
           sha256sum "$apk" > "$apk.sha256"
           version_code="$(sed -nE 's/^[[:space:]]*versionCode = ([0-9]+).*$/\1/p' app/build.gradle.kts | head -n 1)"
@@ -85,6 +99,7 @@ jobs:
             '{versionCode: $versionCode, versionName: $versionName, releaseUrl: $releaseUrl}' \
             > update.json
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --notes-file "$notes_file"
             gh release upload "$RELEASE_TAG" "$apk" "$apk.sha256" update.json --clobber
           else
             gh release create "$RELEASE_TAG" \
@@ -92,6 +107,6 @@ jobs:
               "$apk.sha256" \
               update.json \
               --title "Timeline Visualizer ${RELEASE_TAG#v}" \
-              --notes-file "docs/release-notes-${RELEASE_TAG}.md" \
+              --notes-file "$notes_file" \
               --verify-tag
           fi
