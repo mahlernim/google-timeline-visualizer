@@ -1,6 +1,6 @@
-Nhiều năm du lịch, được giữ trên điện thoại và sống động trở lại.
+Timeline Visualizer Original là ứng dụng Android của MahlerLab, đơn vị tạo dự án mã nguồn mở Timeline Visualizer. Biến Dòng thời gian Google Maps của bạn thành video du lịch hoạt ảnh và giữ Nhật ký Du lịch riêng tư trên điện thoại.
 
-Timeline Visualizer biến tệp xuất Dòng thời gian Google Maps thành Nhật ký Du lịch riêng tư trên điện thoại, rồi tạo video bản đồ hoạt ảnh. Nhập Timeline.json một lần, quay lại với các tệp xuất mới hơn và Nhật ký sẽ giữ chi tiết tuyến đường tốt nhất cho từng giai đoạn.
+Nhập tệp xuất Timeline, chọn chuyến đi hoặc khoảng ngày, xem trước tuyến đường và tạo MP4 để xem hoặc chia sẻ.
 
 Xây dựng Nhật ký Du lịch
 • Nhập Timeline.json để tạo Nhật ký chỉ ở trên thiết bị này

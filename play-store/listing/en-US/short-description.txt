@@ -1,1 +1,1 @@
-A private Travel Journal from your Google Maps Timeline, with animated videos.
+Turn Google Maps Timeline into travel videos with the original open-source app.

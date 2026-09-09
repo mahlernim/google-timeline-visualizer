@@ -1,6 +1,6 @@
-把多年的旅行留在手机里，让它动起来。
+Timeline Visualizer 原版是 MahlerLab 推出的 Android 应用，MahlerLab 创建了开源 Timeline Visualizer 项目。将您的 Google Maps Timeline 制成动画旅行视频，并在手机中保存私密旅行记录。
 
-Timeline Visualizer 会把 Google Maps Timeline 导出文件变成手机中私密的旅行记录，再据此制作动画地图视频。导入一次 Timeline.json，之后再导入较新的文件，旅行记录就会为每个时段保留最详细的路线。
+导入 Timeline 导出文件，选择旅行或日期范围，预览路线，然后创建可观看或分享的 MP4。
 
 建立你的旅行记录
 • 导入 Timeline.json，建立只保存在本机的旅行记录

@@ -1,1 +1,1 @@
-用 Google Maps Timeline 建立私密旅行記錄，並製作動畫影片。
+MahlerLab 原創應用，將 Google Maps Timeline 製成旅行影片。

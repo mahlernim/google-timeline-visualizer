@@ -1,6 +1,6 @@
-Años de viajes, guardados en su teléfono y llenos de vida.
+Timeline Visualizer Original es la aplicación Android de MahlerLab, creador del proyecto de código abierto Timeline Visualizer. Convierta su Google Maps Timeline en vídeos de viaje animados y mantenga un diario de viaje privado en su teléfono.
 
-Timeline Visualizer convierte una exportación de Google Maps Timeline en un diario de viaje privado en su teléfono y crea vídeos de mapas animados a partir de él. Importe Timeline.json una vez, vuelva con exportaciones más recientes y el diario conservará el mejor detalle de ruta disponible para cada período.
+Importe su exportación de Timeline, elija un viaje o un intervalo de fechas, vea su ruta en la vista previa y cree un MP4 para ver o compartir.
 
 Cree su diario de viaje
 • Importe Timeline.json para crear un diario que permanece en este dispositivo
