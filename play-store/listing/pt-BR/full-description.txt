@@ -1,6 +1,6 @@
-Anos de viagens, guardados no seu telefone e ganhando vida.
+Timeline Visualizer Original é o aplicativo Android da MahlerLab, criadora do projeto de código aberto Timeline Visualizer. Transforme seu Google Maps Timeline em vídeos de viagem animados e mantenha um diário de viagem particular no seu telefone.
 
-O Timeline Visualizer transforma uma exportação do Google Maps Timeline em um diário de viagem particular no seu telefone e cria vídeos de mapa animados a partir dele. Importe o Timeline.json uma vez, volte com exportações mais recentes, e o diário mantém o melhor detalhe de rota disponível para cada período.
+Importe sua exportação da Timeline, escolha uma viagem ou intervalo de datas, visualize sua rota e crie um MP4 para assistir ou compartilhar.
 
 Crie seu diário de viagem
 • Importe o Timeline.json para criar um diário que fica neste aparelho
@@ -36,7 +36,6 @@ Mova-se entre Biblioteca, Criar e Configurações na barra de navegação inferi
 Projetado para privacidade
 Seu arquivo Timeline e seu diário de viagem nunca são enviados, e o diário fica fora do backup e da transferência do Android. As rotas, os títulos e os vídeos gerados são processados no seu aparelho. Nenhum login, análise, publicidade ou permissão de localização do Google é usado.
 
-
-Para desenhar o mapa, o aplicativo solicita blocos de mapa do CARTO. Essas solicitações incluem coordenadas de blocos de áreas do mapa e informações normais de rede, que podem revelar locais em seu Timeline a CARTO. O aplicativo explica isso antes do primeiro Timeline ser carregado e permite cancelar.
+Para desenhar o mapa, o aplicativo solicita blocos de mapa do CARTO. Essas solicitações incluem coordenadas de blocos da área do mapa e informações normais de rede, que podem revelar à CARTO locais em seu Timeline. O aplicativo explica isso antes de carregar o primeiro Timeline e permite cancelar.
 
 Timeline Visualizer é um aplicativo independente de código aberto. Não é afiliado ou endossado por Google. Google Maps é uma marca registrada da Google LLC.

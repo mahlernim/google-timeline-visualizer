@@ -1,6 +1,6 @@
-Des années de voyages, conservées sur votre téléphone et animées.
+Timeline Visualizer Original est l'application Android de MahlerLab, créateur du projet open source Timeline Visualizer. Transformez votre Google Maps Timeline en vidéos de voyage animées et gardez un carnet de voyage privé sur votre téléphone.
 
-Timeline Visualizer transforme une exportation Google Maps Timeline en carnet de voyage privé sur votre téléphone, puis en fait des vidéos cartographiques animées. Importez Timeline.json une fois, revenez avec des exportations plus récentes, et le carnet conserve le meilleur niveau de détail disponible pour chaque période.
+Importez votre exportation Timeline, choisissez un voyage ou une période, prévisualisez votre itinéraire et créez un MP4 à regarder ou partager.
 
 Créez votre carnet de voyage
 • Importez Timeline.json pour créer un carnet qui reste sur cet appareil
@@ -36,7 +36,6 @@ Déplacez-vous entre Bibliothèque, Créer et Paramètres dans la barre de navig
 Conçu pour la confidentialité
 Votre fichier Timeline et votre carnet de voyage ne sont jamais téléversés, et le carnet est exclu de la sauvegarde et du transfert Android. Les itinéraires, les titres et les vidéos générées sont traités sur votre appareil. Aucune autorisation de connexion, d'analyse, de publicité ou de localisation Google n'est utilisée.
 
-
-Pour dessiner la carte, l'application demande des tuiles de carte à CARTO. Ces demandes incluent les coordonnées des tuiles de la zone cartographique et les informations normales du réseau, qui peuvent révéler des endroits de votre Timeline à CARTO. L'application explique cela avant le chargement du premier Timeline et vous permet d'annuler.
+Pour dessiner la carte, l'application demande des tuiles de carte à CARTO. Ces demandes incluent les coordonnées des tuiles de la zone cartographique et les informations normales du réseau, qui peuvent révéler à CARTO des lieux de votre Timeline. L'application explique cela avant le chargement de la première Timeline et vous permet d'annuler.
 
 Timeline Visualizer est une application open source indépendante. Il n'est ni affilié ni approuvé par Google. Google Maps est une marque commerciale de Google LLC.

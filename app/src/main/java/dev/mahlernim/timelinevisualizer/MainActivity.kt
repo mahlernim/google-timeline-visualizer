@@ -430,7 +430,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
-            systemBarInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            systemBarInsets = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout(),
+            )
             applySystemBarInsets()
             WindowInsetsCompat.CONSUMED
         }
@@ -1598,9 +1600,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun applySystemBarInsets() {
         binding.root.setPadding(
-            binding.root.paddingLeft,
+            systemBarInsets.left,
             systemBarInsets.top,
-            binding.root.paddingRight,
+            systemBarInsets.right,
             0,
         )
         val navigationVisible = binding.bottomNavigation.visibility == View.VISIBLE

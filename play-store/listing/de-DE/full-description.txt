@@ -1,6 +1,6 @@
-Jahre voller Reisen – auf Ihrem Telefon bewahrt und zum Leben erweckt.
+Timeline Visualizer Original ist die Android-App von MahlerLab, dem Entwickler des Open-Source-Projekts Timeline Visualizer. Verwandeln Sie Ihre Google Maps Timeline in animierte Reisevideos und führen Sie ein privates Reisetagebuch auf Ihrem Telefon.
 
-Timeline Visualizer verwandelt einen Google Maps Timeline-Export in ein privates Reisetagebuch auf Ihrem Telefon und erstellt daraus animierte Kartenvideos. Importieren Sie Timeline.json einmal, kehren Sie mit neueren Exporten zurück, und das Tagebuch behält für jeden Zeitraum die besten verfügbaren Routendetails.
+Importieren Sie Ihren Timeline-Export, wählen Sie eine Reise oder einen Datumsbereich, sehen Sie Ihre Route in der Vorschau an und erstellen Sie ein MP4 zum Ansehen oder Teilen.
 
 Ihr Reisetagebuch aufbauen
 • Importieren Sie Timeline.json für ein Tagebuch, das auf diesem Gerät bleibt
@@ -36,7 +36,6 @@ Wechseln Sie in der unteren Navigationsleiste zwischen „Bibliothek“, „Erst
 Auf Privatsphäre ausgelegt
 Ihre Timeline-Datei und Ihr Reisetagebuch werden nie hochgeladen, und das Tagebuch ist von Android-Sicherung und Geräteübertragung ausgeschlossen. Routen, Titel und generierte Videos werden auf Ihrem Gerät verarbeitet. Es werden keine Google-Anmelde-, Analyse-, Werbe- oder Standortberechtigungen verwendet.
 
-
-Um die Karte zu zeichnen, fordert die App Kartenkacheln von CARTO an. Zu diesen Anfragen gehören Kachelkoordinaten des Kartenbereichs und normale Netzwerkinformationen, die möglicherweise Orte in Ihrem Timeline bis CARTO offenbaren. Die App erklärt dies vor dem Laden des ersten Timeline und ermöglicht den Abbruch.
+Um die Karte zu zeichnen, fordert die App Kartenkacheln von CARTO an. Diese Anfragen enthalten Kachelkoordinaten des Kartenbereichs und normale Netzwerkinformationen, wodurch Orte aus Ihrer Timeline gegenüber CARTO offengelegt werden können. Die App erklärt dies vor dem Laden der ersten Timeline und ermöglicht den Abbruch.
 
 Timeline Visualizer ist eine unabhängige Open-Source-App. Es ist weder mit Google verbunden noch wird es von Google unterstützt. Google Maps ist eine Marke von Google LLC.

@@ -1,6 +1,6 @@
-Tahun-tahun perjalanan Anda tetap di ponsel dan dihidupkan kembali.
+Timeline Visualizer Original adalah aplikasi Android dari MahlerLab, pembuat proyek sumber terbuka Timeline Visualizer. Ubah Linimasa Google Maps Anda menjadi video perjalanan animasi dan simpan Jurnal Perjalanan pribadi di ponsel Anda.
 
-Timeline Visualizer mengubah ekspor Linimasa Google Maps menjadi Jurnal Perjalanan pribadi di ponsel Anda, lalu membuat video peta animasi darinya. Impor Timeline.json sekali, kembali dengan ekspor yang lebih baru, dan Jurnal menyimpan detail rute terbaik untuk setiap periode.
+Impor ekspor Timeline Anda, pilih perjalanan atau rentang tanggal, pratinjau rute Anda, lalu buat MP4 untuk ditonton atau dibagikan.
 
 Bangun Jurnal Perjalanan Anda
 • Impor Timeline.json untuk membuat Jurnal yang tetap di perangkat ini

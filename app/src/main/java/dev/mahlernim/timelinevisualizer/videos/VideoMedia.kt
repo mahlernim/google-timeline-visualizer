@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.Build
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import androidx.core.graphics.scale
@@ -55,7 +56,26 @@ class VideoMedia(private val context: Context) {
     fun createThumbnail(uri: Uri): Bitmap? {
         loadThumbnail(uri)?.let { return it }
         val retriever = MediaMetadataRetriever()
-        val frame = try { retriever.setDataSource(context, uri); retriever.getFrameAtTime(-1, MediaMetadataRetriever.OPTION_CLOSEST_SYNC) } finally { retriever.release() } ?: return null
+        val frame = try {
+            retriever.setDataSource(context, uri)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                // Decode for the library card, not at the video's potentially 4K resolution.
+                val scaledFrame = try {
+                    retriever.getScaledFrameAtTime(
+                        -1, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, THUMBNAIL_SIZE, THUMBNAIL_SIZE,
+                    )
+                } catch (_: RuntimeException) {
+                    null
+                }
+                // Some media decoders cannot provide a scaled frame. Preserve the legacy fallback for them.
+                scaledFrame ?: retriever.getFrameAtTime(-1, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+            } else {
+                // Android 8.0 does not provide scaled frame extraction.
+                retriever.getFrameAtTime(-1, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+            }
+        } finally {
+            retriever.release()
+        } ?: return null
         val scale = min(THUMBNAIL_SIZE.toFloat() / frame.width, THUMBNAIL_SIZE.toFloat() / frame.height).coerceAtMost(1f)
         val width = (frame.width * scale).toInt().coerceAtLeast(1)
         val height = (frame.height * scale).toInt().coerceAtLeast(1)

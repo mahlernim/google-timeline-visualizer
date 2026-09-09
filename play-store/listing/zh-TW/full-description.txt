@@ -1,6 +1,6 @@
-把多年的旅行留在手機裡，讓它動起來。
+Timeline Visualizer 原版是 MahlerLab 推出的 Android 應用程式，MahlerLab 建立了開源 Timeline Visualizer 專案。將您的 Google Maps Timeline 製成動畫旅行影片，並在手機中保留私密旅行記錄。
 
-Timeline Visualizer 會把 Google Maps Timeline 匯出檔案變成手機中私密的旅行記錄，再據此製作動畫地圖影片。匯入一次 Timeline.json，之後再匯入較新的檔案，旅行記錄就會為每個時段保留最詳細的路線。
+匯入 Timeline 匯出檔案，選擇旅行或日期範圍，預覽路線，然後建立可觀看或分享的 MP4。
 
 建立你的旅行記錄
 • 匯入 Timeline.json，建立只儲存在本機的旅行記錄
@@ -36,7 +36,6 @@ Timeline Visualizer 會把 Google Maps Timeline 匯出檔案變成手機中私�
 專為隱私而設計
 你的 Timeline 檔案和旅行記錄不會上傳，旅行記錄也不會進入 Android 備份或裝置移轉。路線、標題和產生的影片都在你的裝置上處理。不使用 Google 登入、分析、廣告或位置權限。
 
-
-為了繪製地圖，應用程式向 CARTO 請求地圖圖塊。這些請求包括地圖區域圖塊座標和正常網路訊息，這些訊息可能會顯示 Timeline 到 CARTO 中的位置。該應用程式會在加載第一個 Timeline 之前解釋這一點並允許您取消。
+為了繪製地圖，應用程式會向 CARTO 請求地圖圖塊。這些請求包含地圖區域的圖塊座標和一般網路資訊，可能會向 CARTO 洩露您 Timeline 中的地點。應用程式會在載入第一份 Timeline 前解釋這一點，並允許您取消。
 
 Timeline Visualizer是一個獨立的開源應用程式。它不隸屬於 Google，也不受其認可。 Google Maps 是 Google LLC 的商標。

@@ -1,1 +1,1 @@
-Un diario de viaje privado desde su Google Maps Timeline, con vídeos animados.
+La app original de MahlerLab para vídeos de Google Maps Timeline.

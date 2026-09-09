@@ -27,6 +27,8 @@ def test_listing_text_meets_play_limits():
         "fr-FR",
         "de-DE",
         "pt-BR",
+        "id-ID",
+        "vi-VN",
     ):
         listing = PLAY_STORE / "listing" / locale
         assert len((listing / "title.txt").read_text(encoding="utf-8").strip()) <= 30
