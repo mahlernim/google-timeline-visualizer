@@ -60,9 +60,15 @@ class VideoMedia(private val context: Context) {
             retriever.setDataSource(context, uri)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                 // Decode for the library card, not at the video's potentially 4K resolution.
-                retriever.getScaledFrameAtTime(
-                    -1, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, THUMBNAIL_SIZE, THUMBNAIL_SIZE,
-                )
+                val scaledFrame = try {
+                    retriever.getScaledFrameAtTime(
+                        -1, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, THUMBNAIL_SIZE, THUMBNAIL_SIZE,
+                    )
+                } catch (_: RuntimeException) {
+                    null
+                }
+                // Some media decoders cannot provide a scaled frame. Preserve the legacy fallback for them.
+                scaledFrame ?: retriever.getFrameAtTime(-1, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
             } else {
                 // Android 8.0 does not provide scaled frame extraction.
                 retriever.getFrameAtTime(-1, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)

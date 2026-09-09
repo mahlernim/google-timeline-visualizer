@@ -6,7 +6,6 @@ import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -52,14 +51,19 @@ class VideoThumbnailDecodeTest {
     }
 
     @Test
-    fun unavailableScaledFrameDoesNotFallBackToAFullResolutionAllocation() {
+    fun unavailableScaledFrameRetainsTheFullFrameCompatibilityFallback() {
         val uri = Uri.parse("content://example/no-scaled-thumbnail")
         val fullFrame = Bitmap.createBitmap(640, 360, Bitmap.Config.ARGB_8888)
         ShadowMediaMetadataRetriever.addFrame(context, uri, -1L, fullFrame)
         try {
-            assertNull(media.createThumbnail(uri))
+            val thumbnail = media.createThumbnail(uri)
+            assertNotNull(thumbnail)
+            assertEquals(320, thumbnail!!.width)
+            assertEquals(180, thumbnail.height)
+            assertTrue(fullFrame.isRecycled)
+            thumbnail.recycle()
         } finally {
-            fullFrame.recycle()
+            if (!fullFrame.isRecycled) fullFrame.recycle()
             media.deleteThumbnail(uri)
         }
     }
