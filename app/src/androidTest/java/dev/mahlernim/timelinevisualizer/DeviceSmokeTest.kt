@@ -1,5 +1,7 @@
 package dev.mahlernim.timelinevisualizer
 
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.graphics.Rect
 import android.net.Uri
 import android.view.View
@@ -30,6 +32,45 @@ import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class DeviceSmokeTest {
+    @Test
+    fun landscapeSystemBarsAndCutoutProtectTheContentRoot() {
+        assertLandscapeInsets(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+    }
+
+    @Test
+    fun reverseLandscapeSystemBarsAndCutoutProtectTheContentRoot() {
+        assertLandscapeInsets(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)
+    }
+
+    private fun assertLandscapeInsets(requestedOrientation: Int) {
+        completeJournalOnboarding()
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { it.requestedOrientation = requestedOrientation }
+            val deadline = System.currentTimeMillis() + 10_000L
+            var landscape = false
+            while (System.currentTimeMillis() < deadline && !landscape) {
+                scenario.onActivity { activity ->
+                    landscape = activity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE &&
+                        activity.findViewById<View>(android.R.id.content).width >
+                        activity.findViewById<View>(android.R.id.content).height
+                }
+                if (!landscape) Thread.sleep(50)
+            }
+            assertTrue(landscape)
+            scenario.onActivity { activity ->
+                val contentRoot = activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
+                val safeInsets = ViewCompat.getRootWindowInsets(contentRoot)?.getInsets(
+                    androidx.core.view.WindowInsetsCompat.Type.systemBars() or
+                        androidx.core.view.WindowInsetsCompat.Type.displayCutout(),
+                ) ?: error("Window insets were not available")
+
+                assertEquals(safeInsets.left, contentRoot.paddingLeft)
+                assertEquals(safeInsets.top, contentRoot.paddingTop)
+                assertEquals(safeInsets.right, contentRoot.paddingRight)
+            }
+        }
+    }
+
     @Test
     fun exportTrayClearsSystemNavigationDuringPlayback() {
         completeJournalOnboarding()
@@ -183,7 +224,7 @@ class DeviceSmokeTest {
                 activity.findViewById<AutoCompleteTextView>(R.id.languageDropdown)
                     .onItemClickListener?.onItemClick(null, null, 1, 0L)
             }
-            instrumentation.waitForIdleSync()
+            waitForLanguage(scenario, "ko")
             scenario.onActivity { activity ->
                 assertEquals("ko", activity.resources.configuration.locales[0].language)
                 assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.settingsScreen).visibility)
@@ -201,7 +242,7 @@ class DeviceSmokeTest {
                 activity.findViewById<AutoCompleteTextView>(R.id.languageDropdown)
                     .onItemClickListener?.onItemClick(null, null, 0, 0L)
             }
-            instrumentation.waitForIdleSync()
+            waitForLanguage(scenario, "en")
             scenario.onActivity { activity ->
                 assertEquals("en", activity.resources.configuration.locales[0].language)
                 assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.settingsScreen).visibility)
@@ -260,5 +301,21 @@ class DeviceSmokeTest {
             if (!enabled) Thread.sleep(50)
         }
         assertTrue(enabled)
+    }
+
+    private fun waitForLanguage(scenario: ActivityScenario<MainActivity>, language: String) {
+        val deadline = System.currentTimeMillis() + 10_000L
+        var selectedLanguage = ""
+        var resourceLanguage = ""
+        while (System.currentTimeMillis() < deadline) {
+            selectedLanguage = AppCompatDelegate.getApplicationLocales()[0]?.language.orEmpty()
+            scenario.onActivity { activity ->
+                resourceLanguage = activity.resources.configuration.locales[0].language
+            }
+            if (selectedLanguage == language && resourceLanguage == language) return
+            Thread.sleep(50)
+        }
+        assertEquals(language, selectedLanguage)
+        assertEquals(language, resourceLanguage)
     }
 }
