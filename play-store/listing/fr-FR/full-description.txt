@@ -36,7 +36,6 @@ Déplacez-vous entre Bibliothèque, Créer et Paramètres dans la barre de navig
 Conçu pour la confidentialité
 Votre fichier Timeline et votre carnet de voyage ne sont jamais téléversés, et le carnet est exclu de la sauvegarde et du transfert Android. Les itinéraires, les titres et les vidéos générées sont traités sur votre appareil. Aucune autorisation de connexion, d'analyse, de publicité ou de localisation Google n'est utilisée.
 
-
-Pour dessiner la carte, l'application demande des tuiles de carte à CARTO. Ces demandes incluent les coordonnées des tuiles de la zone cartographique et les informations normales du réseau, qui peuvent révéler des endroits de votre Timeline à CARTO. L'application explique cela avant le chargement du premier Timeline et vous permet d'annuler.
+Pour dessiner la carte, l'application demande des tuiles de carte à CARTO. Ces demandes incluent les coordonnées des tuiles de la zone cartographique et les informations normales du réseau, qui peuvent révéler à CARTO des lieux de votre Timeline. L'application explique cela avant le chargement de la première Timeline et vous permet d'annuler.
 
 Timeline Visualizer est une application open source indépendante. Il n'est ni affilié ni approuvé par Google. Google Maps est une marque commerciale de Google LLC.

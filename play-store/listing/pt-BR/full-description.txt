@@ -36,7 +36,6 @@ Mova-se entre Biblioteca, Criar e Configurações na barra de navegação inferi
 Projetado para privacidade
 Seu arquivo Timeline e seu diário de viagem nunca são enviados, e o diário fica fora do backup e da transferência do Android. As rotas, os títulos e os vídeos gerados são processados no seu aparelho. Nenhum login, análise, publicidade ou permissão de localização do Google é usado.
 
-
-Para desenhar o mapa, o aplicativo solicita blocos de mapa do CARTO. Essas solicitações incluem coordenadas de blocos de áreas do mapa e informações normais de rede, que podem revelar locais em seu Timeline a CARTO. O aplicativo explica isso antes do primeiro Timeline ser carregado e permite cancelar.
+Para desenhar o mapa, o aplicativo solicita blocos de mapa do CARTO. Essas solicitações incluem coordenadas de blocos da área do mapa e informações normais de rede, que podem revelar à CARTO locais em seu Timeline. O aplicativo explica isso antes de carregar o primeiro Timeline e permite cancelar.
 
 Timeline Visualizer é um aplicativo independente de código aberto. Não é afiliado ou endossado por Google. Google Maps é uma marca registrada da Google LLC.

@@ -36,7 +36,6 @@ Timeline Visualizer 原版是 MahlerLab 推出的 Android 應用程式，MahlerL
 專為隱私而設計
 你的 Timeline 檔案和旅行記錄不會上傳，旅行記錄也不會進入 Android 備份或裝置移轉。路線、標題和產生的影片都在你的裝置上處理。不使用 Google 登入、分析、廣告或位置權限。
 
-
-為了繪製地圖，應用程式向 CARTO 請求地圖圖塊。這些請求包括地圖區域圖塊座標和正常網路訊息，這些訊息可能會顯示 Timeline 到 CARTO 中的位置。該應用程式會在加載第一個 Timeline 之前解釋這一點並允許您取消。
+為了繪製地圖，應用程式會向 CARTO 請求地圖圖塊。這些請求包含地圖區域的圖塊座標和一般網路資訊，可能會向 CARTO 洩露您 Timeline 中的地點。應用程式會在載入第一份 Timeline 前解釋這一點，並允許您取消。
 
 Timeline Visualizer是一個獨立的開源應用程式。它不隸屬於 Google，也不受其認可。 Google Maps 是 Google LLC 的商標。

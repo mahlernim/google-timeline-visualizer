@@ -36,7 +36,6 @@ Wechseln Sie in der unteren Navigationsleiste zwischen „Bibliothek“, „Erst
 Auf Privatsphäre ausgelegt
 Ihre Timeline-Datei und Ihr Reisetagebuch werden nie hochgeladen, und das Tagebuch ist von Android-Sicherung und Geräteübertragung ausgeschlossen. Routen, Titel und generierte Videos werden auf Ihrem Gerät verarbeitet. Es werden keine Google-Anmelde-, Analyse-, Werbe- oder Standortberechtigungen verwendet.
 
-
-Um die Karte zu zeichnen, fordert die App Kartenkacheln von CARTO an. Zu diesen Anfragen gehören Kachelkoordinaten des Kartenbereichs und normale Netzwerkinformationen, die möglicherweise Orte in Ihrem Timeline bis CARTO offenbaren. Die App erklärt dies vor dem Laden des ersten Timeline und ermöglicht den Abbruch.
+Um die Karte zu zeichnen, fordert die App Kartenkacheln von CARTO an. Diese Anfragen enthalten Kachelkoordinaten des Kartenbereichs und normale Netzwerkinformationen, wodurch Orte aus Ihrer Timeline gegenüber CARTO offengelegt werden können. Die App erklärt dies vor dem Laden der ersten Timeline und ermöglicht den Abbruch.
 
 Timeline Visualizer ist eine unabhängige Open-Source-App. Es ist weder mit Google verbunden noch wird es von Google unterstützt. Google Maps ist eine Marke von Google LLC.
