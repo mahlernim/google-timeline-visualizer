@@ -16,7 +16,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import android.provider.Settings
 import android.provider.OpenableColumns
 import android.text.InputType
 import android.text.format.Formatter
@@ -364,6 +363,16 @@ class MainActivity : AppCompatActivity() {
         if (uri != null) importTimeline(uri)
     }
 
+    private val exportHelp = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            if (currentScreen == Screen.ONBOARDING) {
+                journalOnboardingStore.complete()
+                showJournalSetup(returnToCreate = false)
+            }
+            requestTimelineImport()
+        }
+    }
+
     private val createVideo = registerForActivityResult(ActivityResultContracts.CreateDocument("video/mp4")) { uri ->
         handleVideoDestinationResult(uri)
     }
@@ -546,12 +555,6 @@ class MainActivity : AppCompatActivity() {
         settingsScreen.cancelCustomizeButton.setOnClickListener { finishVideoCustomization(apply = false) }
         settingsScreen.applyCustomizeButton.setOnClickListener { finishVideoCustomization(apply = true) }
         settingsScreen.settingsImportTimelineButton.setOnClickListener { requestTimelineImport() }
-        onboarding.onboardingFileDisclosureButton.setOnClickListener {
-            toggleDisclosure(
-                onboarding.onboardingFileDisclosureButton,
-                onboarding.onboardingFileDisclosureDetail,
-            )
-        }
         settingsScreen.settingsWhyImportButton.setOnClickListener {
             toggleDisclosure(
                 settingsScreen.settingsWhyImportButton,
@@ -1041,11 +1044,6 @@ class MainActivity : AppCompatActivity() {
     private fun configureJournalOnboarding() {
         val pages = JournalOnboardingPages.all
         setDisclosureExpanded(
-            onboarding.onboardingFileDisclosureButton,
-            onboarding.onboardingFileDisclosureDetail,
-            expanded = false,
-        )
-        setDisclosureExpanded(
             settingsScreen.settingsWhyImportButton,
             settingsScreen.settingsWhyImportDetail,
             expanded = false,
@@ -1067,9 +1065,6 @@ class MainActivity : AppCompatActivity() {
                 showSettings(fromCreate = false)
             }
         }
-        onboarding.onboardingSkipButton.setOnClickListener {
-            onboarding.onboardingPager.currentItem = pages.lastIndex
-        }
         onboarding.onboardingLanguageButton.setOnClickListener { showOnboardingLanguagePicker() }
         onboarding.onboardingChooseFileButton.setOnClickListener {
             journalOnboardingStore.complete()
@@ -1077,8 +1072,6 @@ class MainActivity : AppCompatActivity() {
             requestTimelineImport()
         }
         onboarding.onboardingSetupMapsButton.setOnClickListener {
-            journalOnboardingStore.complete()
-            showJournalSetup(returnToCreate = false)
             showExportHelp()
         }
         onboarding.onboardingNotNowButton.setOnClickListener {
@@ -1097,11 +1090,6 @@ class MainActivity : AppCompatActivity() {
         settingsScreen.root.visibility = View.GONE
         playerScreen.root.visibility = View.GONE
         onboarding.root.visibility = View.VISIBLE
-        setDisclosureExpanded(
-            onboarding.onboardingFileDisclosureButton,
-            onboarding.onboardingFileDisclosureDetail,
-            expanded = false,
-        )
         setBottomNavigationVisible(false)
         binding.exportStatusTray.visibility = View.GONE
         applySystemBarInsets()
@@ -1116,17 +1104,26 @@ class MainActivity : AppCompatActivity() {
         listOf(
             onboarding.onboardingDotOne,
             onboarding.onboardingDotTwo,
-            onboarding.onboardingDotThree,
         ).forEachIndexed { index, dot ->
             dot.alpha = if (index == onboardingPage) 1f else 0.24f
         }
         onboarding.onboardingBackButton.visibility =
             if (onboardingPage > 0 || onboardingReplay) View.VISIBLE else View.INVISIBLE
-        onboarding.onboardingSkipButton.visibility = if (isFinal) View.INVISIBLE else View.VISIBLE
-        onboarding.onboardingLanguageButton.visibility = if (onboardingPage == 0) View.VISIBLE else View.GONE
+        onboarding.onboardingLanguageButton.visibility = View.VISIBLE
         updateOnboardingLanguageLabel()
         onboarding.onboardingNavigationActions.visibility = if (isFinal) View.GONE else View.VISIBLE
+        onboarding.onboardingNextButton.visibility = if (isFinal) View.GONE else View.VISIBLE
         onboarding.onboardingFinalActions.visibility = if (isFinal) View.VISIBLE else View.GONE
+        onboarding.onboardingPager.post {
+            val recycler = onboarding.onboardingPager.getChildAt(0) as androidx.recyclerview.widget.RecyclerView
+            val page = recycler.findViewHolderForAdapterPosition(onboardingPage)?.itemView as? android.view.ViewGroup
+            val contentHeight = page?.getChildAt(0)?.height ?: 0
+            if (contentHeight > 0 && onboarding.onboardingPager.layoutParams.height != contentHeight) {
+                onboarding.onboardingPager.layoutParams = onboarding.onboardingPager.layoutParams.apply {
+                    height = contentHeight
+                }
+            }
+        }
         val announcement = getString(
             R.string.onboarding_page_announcement,
             pageNumber,
@@ -6164,18 +6161,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showExportHelp() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.export_help_title)
-            .setMessage(R.string.export_help_message)
-            .setNegativeButton(android.R.string.cancel, null)
-            .setPositiveButton(R.string.open_location_settings) { _, _ ->
-                val settingsIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                runCatching { startActivity(settingsIntent) }
-                    .onFailure {
-                        Snackbar.make(binding.root, R.string.location_settings_unavailable, Snackbar.LENGTH_LONG).show()
-                    }
-            }
-            .show()
+        exportHelp.launch(Intent(this, ExportHelpActivity::class.java))
     }
 
     internal fun selectedDurationSeconds(): Int = routeDurationSeconds

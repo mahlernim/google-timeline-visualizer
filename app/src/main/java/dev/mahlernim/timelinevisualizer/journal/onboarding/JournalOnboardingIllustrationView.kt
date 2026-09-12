@@ -24,6 +24,8 @@ class JournalOnboardingIllustrationView @JvmOverloads constructor(
 
     private val JournalOnboardingIllustration.drawableRes: Int
         get() = when (this) {
+            JournalOnboardingIllustration.VIDEO -> R.drawable.onboarding_video_preview
+            JournalOnboardingIllustration.HANDOFF -> R.drawable.onboarding_import_handoff
             JournalOnboardingIllustration.JOURNAL -> R.drawable.onboarding_v11_journal
             JournalOnboardingIllustration.PRIVATE -> R.drawable.onboarding_v11_private
             JournalOnboardingIllustration.IMPORT -> R.drawable.onboarding_v11_import

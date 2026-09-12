@@ -33,6 +33,7 @@
                 <data android:mimeType="application/json" />
             </intent-filter>
         </activity>
+        <activity android:name=".ExportHelpActivity" android:exported="false" />
         <service
             android:name=".export.VideoExportService"
             android:exported="false"

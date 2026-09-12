@@ -1,0 +1,15 @@
+<resources>
+    <string name="onboarding_video_title">用视频重温你的旅程</string>
+    <string name="onboarding_video_body">开启 Google 地图时间轴后，行程会记录在你的设备上。Timeline Visualizer 可将这些记录制作成旅行轨迹动画视频。</string>
+    <string name="onboarding_import_title">准备好导入时间轴了吗？</string>
+    <string name="onboarding_import_body">导出 Google 地图时间轴文件，然后返回这里选择已保存的文件。</string>
+    <string name="onboarding_next">下一步</string>
+    <string name="onboarding_export_instructions">查看导出说明</string>
+    <string name="onboarding_choose_file">选择时间轴文件</string>
+    <string name="onboarding_explore">先探索应用</string>
+    <string name="onboarding_local_privacy">Timeline Visualizer 在你的设备上处理时间轴文件，绝不会将其上传到外部服务器。</string>
+    <string name="export_guide_title">导出时间轴文件</string>
+    <string name="export_guide_new_timeline">初次使用时间轴？在 Google 地图中开启它，即可开始记录今后的行程。开启前的旅行无法恢复。记录一些行程后，再回来导出文件。</string>
+    <string name="export_guide_steps">1. 打开手机的设置。\n\n2. 前往位置 → 位置信息服务 → 时间轴。\n\n3. 点击导出时间轴数据，将文件保存到容易找到的位置。文件通常名为 Timeline.json。\n\n4. 返回 Timeline Visualizer，点击选择时间轴文件。</string>
+    <string name="export_guide_settings_note">菜单名称可能因手机而异。下方按钮会打开位置设置，请从那里进入时间轴。</string>
+</resources>

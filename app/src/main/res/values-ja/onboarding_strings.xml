@@ -1,0 +1,15 @@
+<resources>
+    <string name="onboarding_video_title">旅の軌跡を動画で振り返る</string>
+    <string name="onboarding_video_body">Google マップのタイムラインをオンにすると、移動履歴が端末に記録されます。Timeline Visualizerはその履歴から旅のアニメーション動画を作ります。</string>
+    <string name="onboarding_import_title">タイムラインを取り込みましょう</string>
+    <string name="onboarding_import_body">Google マップのタイムラインファイルをエクスポートしてから、ここに戻って保存したファイルを選んでください。</string>
+    <string name="onboarding_next">次へ</string>
+    <string name="onboarding_export_instructions">エクスポート方法を見る</string>
+    <string name="onboarding_choose_file">タイムラインファイルを選択</string>
+    <string name="onboarding_explore">先にアプリを見る</string>
+    <string name="onboarding_local_privacy">Timeline Visualizerはタイムラインファイルを端末上で処理し、外部サーバーにはアップロードしません。</string>
+    <string name="export_guide_title">タイムラインファイルをエクスポート</string>
+    <string name="export_guide_new_timeline">タイムラインを初めて使いますか？ Google マップでオンにすると、今後の移動が記録されます。有効にする前の旅は復元できません。移動履歴がたまってからエクスポートしてください。</string>
+    <string name="export_guide_steps">1. スマートフォンの設定を開きます。\n\n2. 位置情報 → 位置情報サービス → タイムラインに進みます。\n\n3. タイムライン データをエクスポートをタップし、見つけやすい場所に保存します。通常のファイル名はTimeline.jsonです。\n\n4. Timeline Visualizerに戻り、タイムラインファイルを選択をタップします。</string>
+    <string name="export_guide_settings_note">メニュー名は端末によって異なる場合があります。下のボタンで位置情報の設定を開き、そこからタイムラインに進んでください。</string>
+</resources>

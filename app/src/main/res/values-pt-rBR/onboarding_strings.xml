@@ -1,0 +1,15 @@
+<resources>
+    <string name="onboarding_video_title">Reveja suas viagens em vídeo</string>
+    <string name="onboarding_video_body">Quando a Linha do tempo do Google Maps está ativada, ela registra suas viagens no seu dispositivo. O Timeline Visualizer transforma esse histórico em vídeos animados de viagem.</string>
+    <string name="onboarding_import_title">Pronto para importar sua Linha do tempo?</string>
+    <string name="onboarding_import_body">Exporte seu arquivo da Linha do tempo do Google Maps, volte aqui e escolha o arquivo salvo.</string>
+    <string name="onboarding_next">Próximo</string>
+    <string name="onboarding_export_instructions">Ver instruções de exportação</string>
+    <string name="onboarding_choose_file">Escolher arquivo da Linha do tempo</string>
+    <string name="onboarding_explore">Explorar o app primeiro</string>
+    <string name="onboarding_local_privacy">O Timeline Visualizer processa seu arquivo da Linha do tempo no seu dispositivo e nunca o envia a servidores externos.</string>
+    <string name="export_guide_title">Exporte seu arquivo da Linha do tempo</string>
+    <string name="export_guide_new_timeline">Nunca usou a Linha do tempo? Ative-a no Google Maps para registrar futuras viagens. Ela não recupera viagens anteriores à ativação. Exporte o arquivo depois que algumas viagens forem registradas.</string>
+    <string name="export_guide_steps">1. Abra as configurações do celular.\n\n2. Acesse Localização → Serviços de localização → Linha do tempo.\n\n3. Toque em Exportar dados da Linha do tempo e salve o arquivo em um lugar fácil de encontrar. Geralmente ele se chama Timeline.json.\n\n4. Volte ao Timeline Visualizer e toque em Escolher arquivo da Linha do tempo.</string>
+    <string name="export_guide_settings_note">Os nomes dos menus podem variar conforme o celular. O botão abaixo abre as configurações de localização. Acesse a Linha do tempo a partir daí.</string>
+</resources>

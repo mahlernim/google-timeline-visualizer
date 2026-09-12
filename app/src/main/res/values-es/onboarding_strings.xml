@@ -1,0 +1,15 @@
+<resources>
+    <string name="onboarding_video_title">Revive tus viajes en vídeo</string>
+    <string name="onboarding_video_body">Cuando la cronología de Google Maps está activada, registra tus viajes en tu dispositivo. Timeline Visualizer convierte ese historial en vídeos animados de tus viajes.</string>
+    <string name="onboarding_import_title">¿Listo para importar tu cronología?</string>
+    <string name="onboarding_import_body">Exporta tu archivo de cronología de Google Maps, vuelve aquí y selecciona el archivo guardado.</string>
+    <string name="onboarding_next">Siguiente</string>
+    <string name="onboarding_export_instructions">Ver instrucciones de exportación</string>
+    <string name="onboarding_choose_file">Elegir archivo de cronología</string>
+    <string name="onboarding_explore">Explorar primero la aplicación</string>
+    <string name="onboarding_local_privacy">Timeline Visualizer procesa tu archivo de cronología en tu dispositivo y nunca lo sube a servidores externos.</string>
+    <string name="export_guide_title">Exporta tu archivo de cronología</string>
+    <string name="export_guide_new_timeline">¿Nunca has usado la cronología? Actívala en Google Maps para registrar futuros viajes. No puede recuperar viajes anteriores a su activación. Exporta cuando se hayan registrado algunos viajes.</string>
+    <string name="export_guide_steps">1. Abre los ajustes de tu teléfono.\n\n2. Ve a Ubicación → Servicios de ubicación → Cronología.\n\n3. Toca Exportar datos de la cronología y guarda el archivo donde puedas encontrarlo fácilmente. Suele llamarse Timeline.json.\n\n4. Vuelve a Timeline Visualizer y toca Elegir archivo de cronología.</string>
+    <string name="export_guide_settings_note">Los nombres de los menús pueden variar según el teléfono. El botón de abajo abre los ajustes de ubicación; desde allí, entra en Cronología.</string>
+</resources>
