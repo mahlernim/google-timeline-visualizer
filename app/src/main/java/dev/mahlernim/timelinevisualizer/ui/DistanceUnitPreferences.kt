@@ -9,9 +9,9 @@ class DistanceUnitPreferences(context: Context) {
 
     fun load(): DistanceUnitPreference = runCatching {
         enumValueOf<DistanceUnitPreference>(
-            preferences.getString(KEY_DISTANCE_UNIT, null) ?: return DistanceUnitPreference.AUTOMATIC,
+            preferences.getString(KEY_DISTANCE_UNIT, null) ?: return DistanceUnitPreference.KILOMETERS,
         )
-    }.getOrDefault(DistanceUnitPreference.AUTOMATIC)
+    }.getOrDefault(DistanceUnitPreference.KILOMETERS)
 
     fun save(preference: DistanceUnitPreference) {
         preferences.edit { putString(KEY_DISTANCE_UNIT, preference.name) }

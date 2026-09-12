@@ -56,7 +56,6 @@ import dev.mahlernim.timelinevisualizer.render.TripDetection
 import dev.mahlernim.timelinevisualizer.render.VideoAspectRatio
 import dev.mahlernim.timelinevisualizer.presets.PresetRepository
 import dev.mahlernim.timelinevisualizer.presets.PresetValues
-import dev.mahlernim.timelinevisualizer.render.DistanceUnit
 import dev.mahlernim.timelinevisualizer.render.DistanceUnitPreference
 import dev.mahlernim.timelinevisualizer.ui.CameraSettingsPreferences
 import dev.mahlernim.timelinevisualizer.ui.DistanceUnitPreferences
@@ -756,17 +755,10 @@ class MainActivityTest {
             activity.getString(R.string.aspect_square),
             activity.findViewById<AutoCompleteTextView>(R.id.aspectRatioDropdown).text.toString(),
         )
-        val automaticDistance = DistanceUnit.automatic(
-            android.content.res.Resources.getSystem().configuration.locales[0],
+        assertEquals(
+            activity.getString(R.string.distance_unit_kilometers),
+            activity.findViewById<AutoCompleteTextView>(R.id.distanceUnitDropdown).text.toString(),
         )
-        val automaticDistanceName = activity.getString(
-            if (automaticDistance == DistanceUnit.MILES) {
-                R.string.distance_unit_miles
-            } else {
-                R.string.distance_unit_kilometers
-            },
-        )
-        assertEquals(automaticDistanceName, activity.findViewById<AutoCompleteTextView>(R.id.distanceUnitDropdown).text.toString())
         assertEquals(2, activity.findViewById<AutoCompleteTextView>(R.id.distanceUnitDropdown).adapter.count)
         assertTrue(
             !activity.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(
