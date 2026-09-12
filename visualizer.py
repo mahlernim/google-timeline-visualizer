@@ -1329,6 +1329,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument('--end-date', type=str, default=None, help="End date (YYYY-MM-DD or YYYY-MM)")
     parser.add_argument('--output', '-o', default='travel_history.mp4', help="Output video path (.mp4)")
     parser.add_argument('--title', '-t', default="My Trips", help="Title displayed on video ({year} and {name} supported)")
+    parser.add_argument('--hide-dates', action='store_true', help='Hide dates in the video while keeping distance visible')
     parser.add_argument('--name', default="", help="Name for title template substitution")
     parser.add_argument('--duration', '-d', type=bounded_int("duration", 10, 300), default=DEFAULT_DURATION,
                         help="Total video duration in seconds, including the ending (10 to 300)")
@@ -1590,7 +1591,7 @@ def _main_inner(argv: Optional[List[str]] = None) -> int:
         # Subtitle text: date and distance
         curr_dt = timestamps[frame_idx]
         formatted_dist = format_distance(f['d'], args.unit)
-        subtitle_text.set_text(f"{curr_dt.strftime('%B %Y')}  •  {formatted_dist}")
+        subtitle_text.set_text(formatted_dist if args.hide_dates else f"{curr_dt.strftime('%B %Y')}  •  {formatted_dist}")
 
         return map_layer, old_trail_line, recent_trail_line, overview_trail_line, head_glow, head_point, subtitle_text
 

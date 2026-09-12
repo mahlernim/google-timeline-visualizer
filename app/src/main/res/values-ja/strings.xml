@@ -574,4 +574,6 @@
     <string name="simplify_route_detail_summary">長期間の動画では、要約されたタイムラインのアクティビティを使って見やすいルートを作成します。オフの場合は、利用可能な最も詳細なルートを使います。</string>
     <string name="keep_past_routes_visible">過去のルートを表示したままにする</string>
     <string name="keep_past_routes_visible_summary">移動済みのルートを薄い背景の軌跡として表示します。オフの場合、古い移動は消えていきます。</string>
+    <string name="hide_dates">日付を隠す</string>
+    <string name="hide_dates_summary">動画の日付を非表示にします。距離は引き続き表示されます。</string>
 </resources>

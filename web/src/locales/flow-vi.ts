@@ -1,5 +1,7 @@
 /** Vietnamese landing and guided-flow strings. Mirrors FLOW_STRINGS.en exactly. */
 export const flowVi = {
+  hideDates: "Ẩn ngày tháng",
+  hideDatesSummary: "Ẩn ngày tháng trong video. Khoảng cách vẫn hiển thị.",
   heroTitle: "Hành trình của bạn, sống động.",
   heroBody:
     "Biến Dòng thời gian Google Maps thành hành trình để xem và chia sẻ. Dòng thời gian luôn ở trên thiết bị của bạn.",

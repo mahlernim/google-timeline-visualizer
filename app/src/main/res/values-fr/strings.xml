@@ -577,4 +577,6 @@
     <string name="simplify_route_detail_summary">Utilise l’activité Timeline résumée pour créer un trajet plus clair dans les vidéos couvrant une longue période. Si cette option est désactivée, le trajet le plus détaillé disponible est utilisé.</string>
     <string name="keep_past_routes_visible">Garder les anciens trajets visibles</string>
     <string name="keep_past_routes_visible_summary">Affiche les trajets terminés sous forme de trace discrète en arrière-plan. Si cette option est désactivée, les anciens déplacements s’estompent.</string>
+    <string name="hide_dates">Masquer les dates</string>
+    <string name="hide_dates_summary">Masque les dates dans la vidéo. La distance reste visible.</string>
 </resources>

@@ -11,6 +11,7 @@ data class RenderText(
     val distanceUnit: String,
     val attribution: String,
     val distanceScale: Double = 1.0,
+    val hideDates: Boolean = false,
 ) {
     val locale: Locale get() = Locale.forLanguageTag(localeTag).takeUnless { it.language.isBlank() } ?: Locale.ENGLISH
 
@@ -21,6 +22,10 @@ data class RenderText(
         runCatching { DateTimeFormatter.ofPattern(datePattern, locale) }
             .getOrElse { DateTimeFormatter.ofPattern(DEFAULT_DATE_PATTERN, locale) }
     }
+
+    fun formatSubtitle(date: java.time.ZonedDateTime, kilometers: Double): String =
+        if (hideDates) formatDistance(kilometers)
+        else "${dateFormatter.format(date)}  ·  ${formatDistance(kilometers)}"
 
     fun formatDistance(kilometers: Double): String {
         val number = NumberFormat.getNumberInstance(locale).apply { maximumFractionDigits = 0 }

@@ -575,4 +575,6 @@
     <string name="simplify_route_detail_summary">Verwendet zusammengefasste Timeline-Aktivitäten für eine übersichtlichere Route in Videos über lange Zeiträume. Wenn die Option deaktiviert ist, wird die detaillierteste verfügbare Route verwendet.</string>
     <string name="keep_past_routes_visible">Vergangene Routen sichtbar lassen</string>
     <string name="keep_past_routes_visible_summary">Zeigt abgeschlossene Routen als dezente Spur im Hintergrund. Wenn die Option deaktiviert ist, werden ältere Bewegungen ausgeblendet.</string>
+    <string name="hide_dates">Datumsangaben ausblenden</string>
+    <string name="hide_dates_summary">Blendet Datumsangaben im Video aus. Die Entfernung bleibt sichtbar.</string>
 </resources>

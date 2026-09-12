@@ -476,3 +476,22 @@ describe('fading travel trail', () => {
     expect(overview.calls.filter((call) => call.method === 'lineTo').length).toBeGreaterThan(1000);
   });
 });
+
+
+describe('hide dates', () => {
+  it.each(['March 2026', 'Mar 2, 2026 – Mar 9, 2026'])('changes only the subtitle for %s', (periodLabel) => {
+    for (const format of FORMATS) {
+      for (const frame of [{ journeyProgress: 0.5, outroProgress: 0 }, { journeyProgress: 1, outroProgress: 1 }]) {
+        const shown = recordingCanvas(format.width, format.height);
+        const hidden = recordingCanvas(format.width, format.height);
+        const text = { title: 'Journey', periodLabel, separator: ' · ', formatDistance: () => '123 km' };
+        drawFrame(shown.canvas, preparedAt(format), frame, text);
+        drawFrame(hidden.canvas, preparedAt(format), frame, { ...text, hideDates: true });
+        const normalized = shown.calls.map((call) => call.method === 'fillText' && call.args[0] === `${periodLabel} · 123 km`
+          ? { ...call, args: ['123 km', ...call.args.slice(1)] } : call);
+        expect(hidden.calls).toEqual(normalized);
+        expect(hidden.calls.filter((call) => call.method === 'fillText').map((call) => call.args[0])).toContain('123 km');
+      }
+    }
+  });
+});

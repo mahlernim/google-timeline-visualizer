@@ -282,6 +282,7 @@ class MainActivity : AppCompatActivity() {
     private var distanceUnitPreference = DistanceUnitPreference.KILOMETERS
     private var videoFormatSupported = true
     private var locationFilterMode = LocationFilterMode.CONSERVATIVE
+    private var hideDates = false
     private var simplifyRouteDetail = false
     private var routeDurationSeconds = VideoDuration.DEFAULT_SECONDS
     private val applyTitleChanges = Runnable { commitTitlePreferences() }
@@ -663,6 +664,8 @@ class MainActivity : AppCompatActivity() {
         restoreDraftSettings(savedInstanceState)
         configureLocationFiltering()
         configureTimelineDisplay()
+        savedInstanceState?.takeIf { it.containsKey(STATE_DRAFT_HIDE_DATES) }
+            ?.let { applyHideDates(it.getBoolean(STATE_DRAFT_HIDE_DATES)) }
         configureLanguageSelection()
         configureCameraPreparation()
         configureMonthDropdowns()
@@ -782,6 +785,7 @@ class MainActivity : AppCompatActivity() {
         outState.putString(STATE_PLAYER_URI, playerUri?.toString())
         outState.putLong(STATE_PLAYER_POSITION, playerPositionMs)
         outState.putBoolean(STATE_PLAYER_PLAYING, playerPlayWhenReady)
+        outState.putBoolean(STATE_DRAFT_HIDE_DATES, hideDates)
         outState.putString(STATE_DRAFT_CAMERA, cameraSettings.cameraMovement.name)
         outState.putString(STATE_DRAFT_PACING, cameraSettings.longTripCompression.name)
         outState.putString(STATE_DRAFT_QUALITY, cameraSettings.videoQuality.name)
@@ -915,6 +919,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun resetCreateEntry() {
+        applyHideDates(settingsViewModel.state.value.hideDates)
         currentCreateStep = CreateStep.TYPE
         activeProjectId = null
         activeSuggestionId = null
@@ -1158,6 +1163,7 @@ class MainActivity : AppCompatActivity() {
         val dialog = BottomSheetDialog(this)
         dialog.setContentView(sheet.root)
         var working = cameraSettings
+        sheet.hideDatesSwitch.isChecked = hideDates
 
         val aspectLabels = listOf(R.string.aspect_square, R.string.aspect_portrait, R.string.aspect_landscape).map(::getString)
         val cameraLabels = mapViewLabelResources.map(::getString)
@@ -1255,6 +1261,7 @@ class MainActivity : AppCompatActivity() {
         }
         sheet.cancelButton.setOnClickListener { dialog.dismiss() }
         sheet.applyButton.setOnClickListener {
+            applyHideDates(sheet.hideDatesSwitch.isChecked)
             applyAdvancedSettings(working)
             syncPresetMatch()
             renderCreateStep()
@@ -3742,7 +3749,19 @@ class MainActivity : AppCompatActivity() {
         locationFilterMode = LocationFilterMode.CONSERVATIVE
     }
 
+    private fun applyHideDates(enabled: Boolean) {
+        hideDates = enabled
+        editor.timelineView.renderText = currentRenderText()
+        editor.timelineView.invalidate()
+    }
+
     private fun configureTimelineDisplay() {
+        applyHideDates(settingsViewModel.state.value.hideDates)
+        settingsScreen.hideDatesSwitch.isChecked = hideDates
+        settingsScreen.hideDatesSwitch.setOnCheckedChangeListener { _, checked ->
+            settingsViewModel.updateHideDates(checked)
+            applyHideDates(checked)
+        }
         simplifyRouteDetail = settingsViewModel.state.value.simplifyRouteDetail
         settingsScreen.simplifyRouteDetailSwitch.isChecked = simplifyRouteDetail
         settingsScreen.simplifyRouteDetailSwitch.setOnCheckedChangeListener { _, checked ->
@@ -4651,6 +4670,7 @@ class MainActivity : AppCompatActivity() {
         settingsScreen.videoQualityDropdown.isEnabled = !exporting
         settingsScreen.frameRateDropdown.isEnabled = !exporting
         settingsScreen.resetAdvancedSettingsButton.isEnabled = !exporting
+        settingsScreen.hideDatesSwitch.isEnabled = !exporting
         settingsScreen.simplifyRouteDetailSwitch.isEnabled = !exporting
         settingsScreen.keepPastRoutesVisibleSwitch.isEnabled = !exporting
         renderPresetSelection()
@@ -5658,7 +5678,7 @@ class MainActivity : AppCompatActivity() {
                 R.string.preset_value_format,
                 getString(R.string.resolution),
                 snapshotResolutionLabel(snapshot),
-            )
+            ) + if (snapshot.hideDates) "\n" + getString(R.string.hide_dates) else ""
         }
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.settings_details)
@@ -5687,6 +5707,7 @@ class MainActivity : AppCompatActivity() {
                 dataSource = currentVideoDataSource(),
                 exportShortEdge = cameraSettings.effectiveExportFormat.shortEdge,
                 exportFrameRate = cameraSettings.effectiveExportFormat.frameRate.toString(),
+                hideDates = hideDates,
             ),
         ),
     )
@@ -6141,6 +6162,7 @@ class MainActivity : AppCompatActivity() {
             distanceUnit = distanceUnit.symbol,
             attribution = getString(R.string.map_attribution),
             distanceScale = distanceUnit.kilometersMultiplier,
+            hideDates = hideDates,
         )
     }
 
@@ -6310,6 +6332,7 @@ class MainActivity : AppCompatActivity() {
         private const val PROJECT_ACTION_EDIT = 1
         private const val PROJECT_ACTION_DELETE = 2
         private const val STATE_VIDEO_TITLE_EDITED = "video_title_edited_v2"
+        private const val STATE_DRAFT_HIDE_DATES = "draft_hide_dates"
         private const val STATE_DRAFT_DURATION = "draft_duration_v2"
         private const val STATE_SETTINGS_RETURN_TO_CREATE = "settings_return_to_create_v3"
         private const val STATE_JOURNAL_SETUP_MODE = "journal_setup_mode_v1"

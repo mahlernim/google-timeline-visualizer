@@ -62,6 +62,7 @@ class VideoExportRequestStoreTest {
                 "mi",
                 "attribution",
                 distanceScale = 0.621371192237334,
+                hideDates = true,
             ),
             cameraSettings = CameraSettings(
                 cameraMovement = CameraMovement.FIXED,
@@ -271,6 +272,23 @@ class VideoExportRequestStoreTest {
         assertEquals(FrameRate.of(60), restored.cameraSettings.effectiveExportFormat.frameRate)
         assertNull(restored.projectId)
         assertEquals(VideoDataSource.SEMANTIC, restored.dataSource)
+    }
+
+    @Test
+    fun readsVersionSixteenWithDatesVisible() {
+        writeModernRequest(version = 16) { output ->
+            output.writeBoolean(false) // No custom export format.
+            output.writeBoolean(true) // Keep past routes visible.
+            output.writeBoolean(false) // No project.
+            output.writeBoolean(false) // No preset.
+            output.writeUTF(VideoDataSource.SEMANTIC.name)
+            output.writeInt(0) // Points.
+            output.writeInt(0) // Breaks.
+            output.writeInt(0) // Transfers; helper appends the empty episodes list.
+        }
+        val restored = store.load()!!
+        assertEquals(false, restored.renderText.hideDates)
+        assertEquals(true, restored.cameraSettings.keepPastRoutesVisible)
     }
 
     @Test

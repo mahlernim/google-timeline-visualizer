@@ -36,6 +36,7 @@ export interface OverlayText {
   /** Already resolved and guaranteed non-empty by the caller. */
   readonly title: string;
   readonly periodLabel: string;
+  readonly hideDates?: boolean;
   readonly separator: string;
   readonly formatDistance: (kilometers: number) => string;
 }
@@ -371,7 +372,7 @@ export function drawFrame(
   context.font = `${20 * scale}px -apple-system, BlinkMacSystemFont, sans-serif`;
   const distanceLabel = text.formatDistance(currentDistance);
   context.fillText(
-    `${text.periodLabel}${text.separator}${distanceLabel}`,
+    text.hideDates ? distanceLabel : `${text.periodLabel}${text.separator}${distanceLabel}`,
     card.centerX,
     108 * scale,
     card.width - 36 * scale,

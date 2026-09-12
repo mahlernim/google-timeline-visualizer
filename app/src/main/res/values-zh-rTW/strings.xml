@@ -567,4 +567,6 @@
     <string name="simplify_route_detail_summary">在長時間範圍的影片中使用摘要後的時間軸活動來產生更清晰的路線。關閉時使用可用的最詳細路線。</string>
     <string name="keep_past_routes_visible">保留過去的路線</string>
     <string name="keep_past_routes_visible_summary">將已完成的路線顯示為淡色背景軌跡。關閉時，較早的移動會逐漸消失。</string>
+    <string name="hide_dates">隱藏日期</string>
+    <string name="hide_dates_summary">隱藏影片中的日期，距離仍會顯示。</string>
 </resources>

@@ -621,4 +621,6 @@
     <plurals name="journal_coverage_days">
         <item quantity="other">%d ngày</item>
     </plurals>
+    <string name="hide_dates">Ẩn ngày tháng</string>
+    <string name="hide_dates_summary">Ẩn ngày tháng trong video. Khoảng cách vẫn hiển thị.</string>
 </resources>

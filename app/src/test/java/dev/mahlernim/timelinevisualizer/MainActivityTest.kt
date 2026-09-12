@@ -1,6 +1,7 @@
 package dev.mahlernim.timelinevisualizer
 
 import android.app.Notification
+import com.google.android.material.materialswitch.MaterialSwitch
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -63,6 +64,7 @@ import dev.mahlernim.timelinevisualizer.ui.DistanceUnitPreferences
 import dev.mahlernim.timelinevisualizer.ui.AppLanguage
 import dev.mahlernim.timelinevisualizer.ui.TimelineView
 import org.junit.After
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNotEquals
@@ -1624,6 +1626,8 @@ class MainActivityTest {
 
         var dialog = ShadowDialog.getLatestDialog() as BottomSheetDialog
         assertTrue(dialog.isShowing)
+        assertFalse(dialog.findViewById<MaterialSwitch>(R.id.hideDatesSwitch)!!.isChecked)
+        dialog.findViewById<MaterialSwitch>(R.id.hideDatesSwitch)!!.isChecked = true
         val originalFrameRate = dialog.findViewById<AutoCompleteTextView>(R.id.frameRateDropdown)!!.text.toString()
         dialog.findViewById<AutoCompleteTextView>(R.id.cameraMovementDropdown)!!
             .onItemClickListener?.onItemClick(null, null, 3, 3L)
@@ -1644,6 +1648,8 @@ class MainActivityTest {
             originalFrameRate,
             dialog.findViewById<AutoCompleteTextView>(R.id.frameRateDropdown)!!.text.toString(),
         )
+        assertFalse(dialog.findViewById<MaterialSwitch>(R.id.hideDatesSwitch)!!.isChecked)
+        dialog.findViewById<MaterialSwitch>(R.id.hideDatesSwitch)!!.isChecked = true
         dialog.findViewById<AutoCompleteTextView>(R.id.cameraMovementDropdown)!!
             .onItemClickListener?.onItemClick(null, null, 2, 2L)
         dialog.findViewById<AutoCompleteTextView>(R.id.frameRateDropdown)!!
@@ -1660,7 +1666,12 @@ class MainActivityTest {
             activity.getString(R.string.frame_rate_value, 60),
             dialog.findViewById<AutoCompleteTextView>(R.id.frameRateDropdown)!!.text.toString(),
         )
+        assertTrue(dialog.findViewById<MaterialSwitch>(R.id.hideDatesSwitch)!!.isChecked)
         dialog.dismiss()
+        assertTrue(activity.findViewById<dev.mahlernim.timelinevisualizer.ui.TimelineView>(R.id.timelineView).renderText.hideDates)
+        assertFalse(dev.mahlernim.timelinevisualizer.ui.TimelineDisplayPreferences(context).hideDates())
+        controller.recreate()
+        assertTrue(controller.get().findViewById<dev.mahlernim.timelinevisualizer.ui.TimelineView>(R.id.timelineView).renderText.hideDates)
         assertEquals(CameraSettings.DEFAULT, CameraSettingsPreferences(context).load())
     }
 
