@@ -30,7 +30,7 @@
 
 ## Store presence and policy
 
-- Upload the 512횞512 app icon and 1024횞500 feature graphic
+- Upload the 512×512 app icon and 1024×500 feature graphic
 - Paste and proofread the listing text for English, Korean, Japanese, Simplified
   Chinese, Traditional Chinese, Spanish, French, German, Brazilian Portuguese,
   Indonesian, and Vietnamese
