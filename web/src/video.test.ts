@@ -1,3 +1,4 @@
+import { drawJourneyFrame } from './renderer';
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -258,6 +259,15 @@ describe('createJourneyMp4', () => {
     });
     encoder.cancel.mockClear().mockResolvedValue(undefined);
     encoder.buffer = mp4Buffer();
+  });
+
+  it.each([false, true])('passes hideDates=%s to every exported frame', async (hideDates) => {
+    vi.mocked(drawJourneyFrame).mockClear();
+    const overlay = { ...options.overlay, hideDates };
+    await createJourneyMp4(canvas, journey, { ...options, overlay });
+    const calls = vi.mocked(drawJourneyFrame).mock.calls;
+    expect(calls).toHaveLength(options.durationSeconds * format.frameRate);
+    expect(calls.every((call) => call[3] === overlay)).toBe(true);
   });
 
   it('rejects an oversized estimate before starting the encoder', async () => {

@@ -33,6 +33,7 @@ const startDate = el<HTMLInputElement>('start-date');
 const endDate = el<HTMLInputElement>('end-date');
 const exact = el<HTMLInputElement>('exact-date-toggle');
 const advanced = el<HTMLInputElement>('advanced-toggle');
+const hideDates = el<HTMLInputElement>('hide-dates');
 const raw = el<HTMLInputElement>('raw-signals-toggle');
 const filter = el<HTMLSelectElement>('location-filter');
 const camera = el<HTMLSelectElement>('camera-movement');
@@ -156,6 +157,7 @@ function overlay(): OverlayText {
   return {
     title: title.value.trim() || i18n.t('defaultVideoTitle'),
     periodLabel: period(),
+    hideDates: hideDates.checked,
     separator: i18n.strings.listSeparator,
     formatDistance: (km) => locale.formatDistance(km, unit),
   };

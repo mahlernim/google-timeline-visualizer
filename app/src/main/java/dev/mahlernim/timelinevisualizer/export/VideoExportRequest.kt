@@ -59,6 +59,7 @@ class VideoExportRequestStore internal constructor(
             output.writeUTF(request.renderText.distanceUnit)
             output.writeUTF(request.renderText.attribution)
             output.writeDouble(request.renderText.distanceScale)
+            output.writeBoolean(request.renderText.hideDates)
             output.writeUTF(request.cameraSettings.cameraMovement.name)
             output.writeUTF(request.cameraSettings.longTripCompression.name)
             output.writeUTF(request.cameraSettings.videoQuality.name)
@@ -143,6 +144,7 @@ class VideoExportRequestStore internal constructor(
                         distanceUnit = distanceUnit,
                         attribution = attribution,
                         distanceScale = distanceScale,
+                        hideDates = if (version >= 17) input.readBoolean() else false,
                     )
                     cameraSettings = if (version >= 4) {
                         val movement = enumOrDefault(input.readUTF(), CameraMovement.STEADY)
@@ -289,7 +291,7 @@ class VideoExportRequestStore internal constructor(
     }
 
     companion object {
-        private const val CURRENT_FILE_VERSION = 16
+        private const val CURRENT_FILE_VERSION = 17
         private const val MAX_POINT_COUNT = 2_000_000
         private const val MAX_SEMANTIC_EPISODE_COUNT = 100_000
         private const val REQUEST_FILE = "pending-video-export.bin"

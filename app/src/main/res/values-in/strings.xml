@@ -627,4 +627,6 @@
     <string name="simplify_route_detail_summary">Gunakan aktivitas Linimasa yang diringkas untuk rute yang lebih rapi dalam video riwayat panjang. Saat nonaktif, rute tersedia yang paling terperinci digunakan.</string>
     <string name="keep_past_routes_visible">Tetap tampilkan rute sebelumnya</string>
     <string name="keep_past_routes_visible_summary">Tampilkan rute yang selesai sebagai jejak latar belakang samar. Saat nonaktif, pergerakan lama memudar.</string>
+    <string name="hide_dates">Sembunyikan tanggal</string>
+    <string name="hide_dates_summary">Sembunyikan tanggal dalam video. Jarak tetap terlihat.</string>
 </resources>

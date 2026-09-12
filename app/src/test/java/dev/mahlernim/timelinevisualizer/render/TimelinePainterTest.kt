@@ -28,6 +28,35 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class TimelinePainterTest {
     @Test
+    fun hidingDatesChangesPixelsOnlyInTheSubtitleLine() {
+        val journey = Journey.from(listOf(point(37.5, 127.0), point(35.1, 129.0)), 2025)
+        for ((width, height) in listOf(480 to 480, 480 to 854, 854 to 480)) {
+            for (frame in listOf(TimelineFrame(0.5f, 0f), TimelineFrame(1f, 1f))) {
+                val shown = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                val hidden = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                val painter = TimelinePainter()
+                painter.draw(Canvas(shown), width, height, journey, frame, 30, "Journey", RenderText.ENGLISH) { null }
+                painter.draw(Canvas(hidden), width, height, journey, frame, 30, "Journey", RenderText.ENGLISH.copy(hideDates = true)) { null }
+                val scale = min(width, height) / 720f
+                val shownPixels = IntArray(width * height)
+                val hiddenPixels = IntArray(width * height)
+                shown.getPixels(shownPixels, 0, width, 0, 0, width, height)
+                hidden.getPixels(hiddenPixels, 0, width, 0, 0, width, height)
+                var changed = 0
+                shownPixels.indices.forEach { index ->
+                    if (shownPixels[index] != hiddenPixels[index]) {
+                        changed++
+                        assertTrue("Changed outside subtitle at y=${index / width}", index / width in (80 * scale).toInt()..(115 * scale).toInt())
+                    }
+                }
+                assertTrue("Hiding dates must change the rendered subtitle", changed > 0)
+                shown.recycle()
+                hidden.recycle()
+            }
+        }
+    }
+
+    @Test
     fun pastRouteCacheGrowsIncrementallyAndRebuildsAfterBackwardSeek() {
         val journey = Journey.from(
             listOf(point(0.0, 0.0), point(0.0, 1.0), point(0.0, 2.0)),

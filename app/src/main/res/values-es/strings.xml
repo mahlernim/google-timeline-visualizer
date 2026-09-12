@@ -577,4 +577,6 @@
     <string name="simplify_route_detail_summary">Usa la actividad resumida de Timeline para crear una ruta más clara en vídeos de periodos largos. Si está desactivado, se usa la ruta más detallada disponible.</string>
     <string name="keep_past_routes_visible">Mantener visibles las rutas anteriores</string>
     <string name="keep_past_routes_visible_summary">Muestra las rutas completadas como un rastro tenue de fondo. Si está desactivado, los movimientos anteriores se desvanecen.</string>
+    <string name="hide_dates">Ocultar fechas</string>
+    <string name="hide_dates_summary">Oculta las fechas en el vídeo. La distancia sigue visible.</string>
 </resources>
