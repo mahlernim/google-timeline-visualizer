@@ -86,6 +86,10 @@ android {
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true
+        unitTests.all {
+            // Robolectric loads multiple Android SDKs, exceeding the default 512 MB test heap.
+            it.maxHeapSize = "1g"
+        }
     }
 
 }
