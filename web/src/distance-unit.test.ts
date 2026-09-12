@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   automaticDistanceUnit,
   convertDistanceFromKilometers,
   isDistanceUnitPreference,
   resolveDistanceUnit,
+  readDistanceUnitPreference,
 } from './distance-unit';
 
 describe('distance units', () => {
@@ -35,5 +36,25 @@ describe('distance units', () => {
   it('converts display values without changing the kilometer source value', () => {
     expect(convertDistanceFromKilometers(10, 'kilometers')).toBe(10);
     expect(convertDistanceFromKilometers(10, 'miles')).toBeCloseTo(6.21371192237334, 12);
+  });
+});
+
+
+describe('stored distance preference', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it.each([null, 'invalid'])('defaults to kilometers in the US when stored value is %s', (stored) => {
+    vi.stubGlobal('window', { localStorage: { getItem: () => stored } });
+    expect(resolveDistanceUnit(readDistanceUnitPreference(), ['en-US'])).toBe('kilometers');
+  });
+
+  it.each(['automatic', 'kilometers', 'miles'])('preserves saved %s', (stored) => {
+    vi.stubGlobal('window', { localStorage: { getItem: () => stored } });
+    expect(readDistanceUnitPreference()).toBe(stored);
+  });
+
+  it('defaults to kilometers when storage access is blocked', () => {
+    vi.stubGlobal('window', { get localStorage() { throw new Error('blocked'); } });
+    expect(readDistanceUnitPreference()).toBe('kilometers');
   });
 });

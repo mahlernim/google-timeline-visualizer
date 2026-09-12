@@ -51,7 +51,7 @@ export function readDistanceUnitPreference(): DistanceUnitPreference {
   } catch {
     // A blocked storage API has the same behavior as an unset preference.
   }
-  return 'automatic';
+  return 'kilometers';
 }
 
 export function writeDistanceUnitPreference(preference: DistanceUnitPreference): void {
