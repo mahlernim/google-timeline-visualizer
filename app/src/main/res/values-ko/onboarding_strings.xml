@@ -1,0 +1,15 @@
+<resources>
+    <string name="onboarding_video_title">내 여행을 동영상으로 다시 보기</string>
+    <string name="onboarding_video_body">Google 지도 타임라인을 켜면 이동 기록이 내 기기에 저장됩니다. Timeline Visualizer는 이 기록으로 움직이는 여행 동영상을 만듭니다.</string>
+    <string name="onboarding_import_title">타임라인을 가져올 준비가 되셨나요?</string>
+    <string name="onboarding_import_body">Google 지도 타임라인 파일을 내보낸 뒤 여기로 돌아와 저장한 파일을 선택하세요.</string>
+    <string name="onboarding_next">다음</string>
+    <string name="onboarding_export_instructions">내보내기 방법 보기</string>
+    <string name="onboarding_choose_file">타임라인 파일 선택</string>
+    <string name="onboarding_explore">앱 먼저 둘러보기</string>
+    <string name="onboarding_local_privacy">Timeline Visualizer는 타임라인 파일을 기기에서 처리하며 외부 서버에 업로드하지 않습니다.</string>
+    <string name="export_guide_title">타임라인 파일 내보내기</string>
+    <string name="export_guide_new_timeline">타임라인이 처음인가요? Google 지도에서 타임라인을 켜면 앞으로의 이동을 기록합니다. 켜기 전의 여행은 복원할 수 없습니다. 이동 기록이 쌓인 뒤 파일을 내보내세요.</string>
+    <string name="export_guide_steps">1. 휴대전화의 설정을 여세요.\n\n2. 위치 → 위치 서비스 → 타임라인으로 이동하세요.\n\n3. 타임라인 데이터 내보내기를 누르고 찾기 쉬운 곳에 파일을 저장하세요. 보통 Timeline.json이라는 이름입니다.\n\n4. Timeline Visualizer로 돌아와 타임라인 파일 선택을 누르세요.</string>
+    <string name="export_guide_settings_note">메뉴 이름은 휴대전화마다 다를 수 있습니다. 아래 버튼은 위치 설정을 엽니다. 거기에서 타임라인으로 이동하세요.</string>
+</resources>

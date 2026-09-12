@@ -1,0 +1,15 @@
+<resources>
+    <string name="onboarding_video_title">Watch your travels replay</string>
+    <string name="onboarding_video_body">When Google Maps Timeline is turned on, it records your travels on your device. Timeline Visualizer turns that history into animated travel videos.</string>
+    <string name="onboarding_import_title">Ready to bring in your Timeline?</string>
+    <string name="onboarding_import_body">Export your Google Maps Timeline file, then return here and choose the saved file.</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_export_instructions">Show export instructions</string>
+    <string name="onboarding_choose_file">Choose Timeline file</string>
+    <string name="onboarding_explore">Explore the app first</string>
+    <string name="onboarding_local_privacy">Timeline Visualizer processes your Timeline file on your device and never uploads it to external servers.</string>
+    <string name="export_guide_title">Export your Timeline file</string>
+    <string name="export_guide_new_timeline">New to Timeline? Turn it on in Google Maps to start recording future journeys. It cannot recover trips from before it was enabled. Return to export after some journeys have been recorded.</string>
+    <string name="export_guide_steps">1. Open your phone’s Settings.\n\n2. Go to Location → Location services → Timeline.\n\n3. Tap Export Timeline data and save the file somewhere easy to find. It is usually named Timeline.json.\n\n4. Return to Timeline Visualizer and tap Choose Timeline file.</string>
+    <string name="export_guide_settings_note">Menu names may vary by phone. The button below opens Location settings; continue to Timeline from there.</string>
+</resources>

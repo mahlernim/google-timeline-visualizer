@@ -1,0 +1,15 @@
+<resources>
+    <string name="onboarding_video_title">Revivez vos voyages en vidéo</string>
+    <string name="onboarding_video_body">Lorsque la chronologie Google Maps est activée, elle enregistre vos trajets sur votre appareil. Timeline Visualizer transforme cet historique en vidéos de voyage animées.</string>
+    <string name="onboarding_import_title">Prêt à importer votre chronologie ?</string>
+    <string name="onboarding_import_body">Exportez votre fichier de chronologie Google Maps, puis revenez ici pour sélectionner le fichier enregistré.</string>
+    <string name="onboarding_next">Suivant</string>
+    <string name="onboarding_export_instructions">Voir les instructions d’exportation</string>
+    <string name="onboarding_choose_file">Choisir le fichier de chronologie</string>
+    <string name="onboarding_explore">Explorer d’abord l’application</string>
+    <string name="onboarding_local_privacy">Timeline Visualizer traite votre fichier de chronologie sur votre appareil et ne l’envoie jamais à des serveurs externes.</string>
+    <string name="export_guide_title">Exportez votre fichier de chronologie</string>
+    <string name="export_guide_new_timeline">Vous découvrez la chronologie ? Activez-la dans Google Maps pour enregistrer vos prochains trajets. Elle ne peut pas récupérer les voyages antérieurs à son activation. Exportez le fichier après avoir enregistré quelques trajets.</string>
+    <string name="export_guide_steps">1. Ouvrez les paramètres de votre téléphone.\n\n2. Accédez à Localisation → Services de localisation → Chronologie.\n\n3. Appuyez sur Exporter les données de la chronologie et enregistrez le fichier dans un endroit facile à retrouver. Il s’appelle généralement Timeline.json.\n\n4. Revenez dans Timeline Visualizer et appuyez sur Choisir le fichier de chronologie.</string>
+    <string name="export_guide_settings_note">Les noms des menus peuvent varier selon le téléphone. Le bouton ci-dessous ouvre les paramètres de localisation. Accédez ensuite à la chronologie.</string>
+</resources>

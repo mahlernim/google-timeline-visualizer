@@ -1,0 +1,9 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="960dp" android:height="640dp" android:viewportWidth="960" android:viewportHeight="640">
+    <path android:fillColor="@color/onboarding_paper" android:strokeColor="@color/onboarding_ink" android:strokeWidth="12" android:pathData="M230,90 H730 Q760,90 760,120 V520 Q760,550 730,550 H230 Q200,550 200,520 V120 Q200,90 230,90 Z" />
+    <path android:fillColor="@android:color/transparent" android:strokeColor="@color/onboarding_muted" android:strokeWidth="8" android:pathData="M200,155 H760 M310,155 V550 M560,155 V550 M200,330 H760" android:strokeAlpha="0.3" />
+    <path android:fillColor="@android:color/transparent" android:strokeColor="@color/onboarding_route" android:strokeWidth="18" android:strokeLineCap="round" android:pathData="M270,470 C400,440 330,320 450,300 C580,280 530,240 660,210" />
+    <path android:fillColor="@color/onboarding_ink" android:pathData="M660,210 L638,180 A28,28 0,1 1,682 180 Z" />
+    <path android:fillColor="@color/onboarding_paper" android:pathData="M670,160 A10,10 0,1 1,650 160 A10,10 0,1 1,670 160 Z" />
+    <path android:fillColor="@color/onboarding_route" android:pathData="M710,450 A60,60 0,1 1,590 450 A60,60 0,1 1,710 450 Z" />
+    <path android:fillColor="@color/onboarding_paper" android:pathData="M634,419 L680,450 L634,481 Z" />
+</vector>

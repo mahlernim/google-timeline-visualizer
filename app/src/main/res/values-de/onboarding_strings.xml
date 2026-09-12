@@ -1,0 +1,15 @@
+<resources>
+    <string name="onboarding_video_title">Erlebe deine Reisen als Video</string>
+    <string name="onboarding_video_body">Wenn die Google Maps-Zeitachse aktiviert ist, zeichnet sie deine Reisen auf deinem Gerät auf. Timeline Visualizer erstellt daraus animierte Reisevideos.</string>
+    <string name="onboarding_import_title">Bereit, deine Zeitachse zu importieren?</string>
+    <string name="onboarding_import_body">Exportiere deine Google Maps-Zeitachsendatei. Kehre dann hierher zurück und wähle die gespeicherte Datei aus.</string>
+    <string name="onboarding_next">Weiter</string>
+    <string name="onboarding_export_instructions">Exportanleitung anzeigen</string>
+    <string name="onboarding_choose_file">Zeitachsendatei auswählen</string>
+    <string name="onboarding_explore">Zuerst die App erkunden</string>
+    <string name="onboarding_local_privacy">Timeline Visualizer verarbeitet deine Zeitachsendatei auf deinem Gerät und lädt sie niemals auf externe Server hoch.</string>
+    <string name="export_guide_title">Zeitachsendatei exportieren</string>
+    <string name="export_guide_new_timeline">Neu bei der Zeitachse? Aktiviere sie in Google Maps, um künftige Reisen aufzuzeichnen. Reisen vor der Aktivierung lassen sich damit nicht wiederherstellen. Exportiere die Datei, sobald einige Reisen aufgezeichnet wurden.</string>
+    <string name="export_guide_steps">1. Öffne die Einstellungen deines Smartphones.\n\n2. Gehe zu Standort → Standortdienste → Zeitachse.\n\n3. Tippe auf Zeitachsendaten exportieren und speichere die Datei an einem leicht auffindbaren Ort. Sie heißt meist Timeline.json.\n\n4. Kehre zu Timeline Visualizer zurück und tippe auf Zeitachsendatei auswählen.</string>
+    <string name="export_guide_settings_note">Die Menünamen können je nach Smartphone variieren. Die Schaltfläche unten öffnet die Standorteinstellungen. Gehe von dort zur Zeitachse.</string>
+</resources>

@@ -1,0 +1,15 @@
+<resources>
+    <string name="onboarding_video_title">Putar ulang perjalanan Anda</string>
+    <string name="onboarding_video_body">Saat Linimasa Google Maps diaktifkan, perjalanan Anda direkam di perangkat Anda. Timeline Visualizer mengubah riwayat tersebut menjadi video perjalanan animasi.</string>
+    <string name="onboarding_import_title">Siap mengimpor Linimasa Anda?</string>
+    <string name="onboarding_import_body">Ekspor file Linimasa Google Maps Anda, lalu kembali ke sini dan pilih file yang disimpan.</string>
+    <string name="onboarding_next">Berikutnya</string>
+    <string name="onboarding_export_instructions">Lihat petunjuk ekspor</string>
+    <string name="onboarding_choose_file">Pilih file Linimasa</string>
+    <string name="onboarding_explore">Jelajahi aplikasi dahulu</string>
+    <string name="onboarding_local_privacy">Timeline Visualizer memproses file Linimasa di perangkat Anda dan tidak pernah mengunggahnya ke server eksternal.</string>
+    <string name="export_guide_title">Ekspor file Linimasa Anda</string>
+    <string name="export_guide_new_timeline">Baru menggunakan Linimasa? Aktifkan di Google Maps untuk mulai merekam perjalanan mendatang. Perjalanan sebelum diaktifkan tidak dapat dipulihkan. Ekspor setelah beberapa perjalanan direkam.</string>
+    <string name="export_guide_steps">1. Buka Setelan ponsel Anda.\n\n2. Buka Lokasi → Layanan lokasi → Linimasa.\n\n3. Ketuk Ekspor data Linimasa dan simpan file di tempat yang mudah ditemukan. Namanya biasanya Timeline.json.\n\n4. Kembali ke Timeline Visualizer dan ketuk Pilih file Linimasa.</string>
+    <string name="export_guide_settings_note">Nama menu dapat berbeda di setiap ponsel. Tombol di bawah membuka setelan Lokasi; lanjutkan ke Linimasa dari sana.</string>
+</resources>

@@ -1,0 +1,34 @@
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="?attr/colorSurface" android:fillViewport="true">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="20dp">
+        <com.google.android.material.button.MaterialButton android:id="@+id/exportGuideBack"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:minHeight="48dp" android:text="@string/back" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:accessibilityHeading="true" android:text="@string/export_guide_title"
+            android:textAppearance="?attr/textAppearanceHeadlineMedium" android:textStyle="bold" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="16dp" android:padding="14dp"
+            android:background="@drawable/onboarding_note_background"
+            android:text="@string/export_guide_new_timeline" android:textAppearance="?attr/textAppearanceBodyMedium" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="20dp" android:lineSpacingExtra="4dp"
+            android:text="@string/export_guide_steps" android:textAppearance="?attr/textAppearanceBodyLarge" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="16dp" android:text="@string/export_guide_settings_note"
+            android:textAppearance="?attr/textAppearanceBodyMedium" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/exportGuideSettings"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="20dp" android:minHeight="48dp" android:text="@string/open_location_settings" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/exportGuideChooseFile"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:minHeight="48dp" android:text="@string/onboarding_choose_file" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:text="@string/onboarding_local_privacy"
+            android:textAppearance="?attr/textAppearanceBodySmall" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

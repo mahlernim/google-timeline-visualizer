@@ -19,7 +19,7 @@
 
 ## Release
 
-- Version name `3.0.17` and version code `59`
+- Version name `3.0.18` and version code `60`
 - Publish this update to production only, preserving testing tracks and countries
 - Upload the signed `playRelease` Android App Bundle
 - On first enrollment, preserve the existing app-signing key so GitHub and Play installs remain update-compatible

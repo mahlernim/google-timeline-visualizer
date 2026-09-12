@@ -58,10 +58,9 @@ class JournalOnboardingUiTest {
 
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.journalOnboardingScreen).visibility)
         assertEquals(View.GONE, activity.findViewById<View>(R.id.bottomNavigation).visibility)
-        assertEquals("Turn your journeys into a Travel Journal", activity.findViewById<TextView>(R.id.onboardingPageTitle).text)
+        assertEquals("Watch your travels replay", activity.findViewById<TextView>(R.id.onboardingPageTitle).text)
         assertEquals(1f, activity.findViewById<View>(R.id.onboardingDotOne).alpha)
         assertEquals(0.24f, activity.findViewById<View>(R.id.onboardingDotTwo).alpha)
-        assertEquals(0.24f, activity.findViewById<View>(R.id.onboardingDotThree).alpha)
         assertEquals(View.INVISIBLE, activity.findViewById<View>(R.id.onboardingBackButton).visibility)
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.onboardingNextButton).visibility)
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.onboardingLanguageButton).visibility)
@@ -84,22 +83,22 @@ class JournalOnboardingUiTest {
         val activity = launchActivity()
         waitForOnboarding(activity)
         activity.findViewById<View>(R.id.onboardingNextButton).performClick()
-        waitUntil { activity.findViewById<TextView>(R.id.onboardingPageTitle).text == "Your journeys, your device" }
+        waitUntil { activity.findViewById<TextView>(R.id.onboardingPageTitle).text == "Ready to bring in your Timeline?" }
 
         controller = requireNotNull(controller).recreate()
         val recreated = requireNotNull(controller).get()
-        waitUntil { recreated.findViewById<TextView>(R.id.onboardingPageTitle).text == "Your journeys, your device" }
+        waitUntil { recreated.findViewById<TextView>(R.id.onboardingPageTitle).text == "Ready to bring in your Timeline?" }
 
         assertEquals(View.VISIBLE, recreated.findViewById<View>(R.id.journalOnboardingScreen).visibility)
         assertEquals(View.VISIBLE, recreated.findViewById<View>(R.id.onboardingBackButton).visibility)
-        assertEquals(View.GONE, recreated.findViewById<View>(R.id.onboardingLanguageButton).visibility)
+        assertEquals(View.VISIBLE, recreated.findViewById<View>(R.id.onboardingLanguageButton).visibility)
     }
 
     @Test
     fun notNowPersistsAndLeavesASetupCardInTheLibrary() {
         var activity = launchActivity()
         waitForOnboarding(activity)
-        activity.findViewById<View>(R.id.onboardingSkipButton).performClick()
+        activity.findViewById<View>(R.id.onboardingNextButton).performClick()
         waitUntil { activity.findViewById<View>(R.id.onboardingFinalActions).visibility == View.VISIBLE }
         activity.findViewById<View>(R.id.onboardingNotNowButton).performClick()
 
@@ -115,19 +114,51 @@ class JournalOnboardingUiTest {
     }
 
     @Test
-    fun finalPageShowsActionsAndExpandsTheLocalFileExplanation() {
+    fun finalPageShowsInlinePrivacyAndBackReturnsToTheIntroduction() {
         val activity = launchActivity()
         waitForOnboarding(activity)
-        activity.findViewById<View>(R.id.onboardingSkipButton).performClick()
+        activity.findViewById<View>(R.id.onboardingNextButton).performClick()
         waitUntil { activity.findViewById<View>(R.id.onboardingFinalActions).visibility == View.VISIBLE }
 
-        val detail = activity.findViewById<TextView>(R.id.onboardingFileDisclosureDetail)
-        assertEquals("Start your Travel Journal", activity.findViewById<TextView>(R.id.onboardingPageTitle).text)
-        assertEquals(View.GONE, detail.visibility)
-        activity.findViewById<View>(R.id.onboardingFileDisclosureButton).performClick()
-
+        val detail = activity.findViewById<TextView>(R.id.onboardingPrivacyNote)
         assertEquals(View.VISIBLE, detail.visibility)
-        assertTrue(detail.text.contains("read locally"))
+        assertTrue(detail.text.contains("never uploads it to external servers"))
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.onboardingBackButton).visibility)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.onboardingNextButton).visibility)
+        activity.findViewById<View>(R.id.onboardingBackButton).performClick()
+        waitUntil { activity.findViewById<View>(R.id.onboardingFinalActions).visibility == View.GONE }
+        assertFalse(JournalOnboardingStore(context).isCompleted())
+    }
+
+    @Test
+    fun openingExportGuideDoesNotCompleteOnboardingAndItsResultOpensThePicker() {
+        context.getSharedPreferences("display", Context.MODE_PRIVATE)
+            .edit().putBoolean("map_privacy_accepted_v1", true).commit()
+        val activity = launchActivity()
+        waitForOnboarding(activity)
+        activity.findViewById<View>(R.id.onboardingNextButton).performClick()
+        waitUntil { activity.findViewById<View>(R.id.onboardingFinalActions).visibility == View.VISIBLE }
+        activity.findViewById<View>(R.id.onboardingSetupMapsButton).performClick()
+        val guide = shadowOf(activity).nextStartedActivityForResult
+        assertEquals(ExportHelpActivity::class.java.name, guide.intent.component?.className)
+        assertFalse(JournalOnboardingStore(context).isCompleted())
+        shadowOf(activity).receiveResult(guide.intent, android.app.Activity.RESULT_OK, Intent())
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(JournalOnboardingStore(context).isCompleted())
+        assertEquals(Intent.ACTION_OPEN_DOCUMENT, shadowOf(activity).nextStartedActivityForResult.intent.action)
+    }
+
+    @Test
+    fun cancellingExportGuideLeavesTheFinalOnboardingPageAvailable() {
+        val activity = launchActivity()
+        waitForOnboarding(activity)
+        activity.findViewById<View>(R.id.onboardingNextButton).performClick()
+        waitUntil { activity.findViewById<View>(R.id.onboardingFinalActions).visibility == View.VISIBLE }
+        activity.findViewById<View>(R.id.onboardingSetupMapsButton).performClick()
+        val guide = shadowOf(activity).nextStartedActivityForResult
+        shadowOf(activity).receiveResult(guide.intent, android.app.Activity.RESULT_CANCELED, Intent())
+        assertFalse(JournalOnboardingStore(context).isCompleted())
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.onboardingFinalActions).visibility)
     }
 
     @Test

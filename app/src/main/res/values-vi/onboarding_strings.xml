@@ -1,0 +1,15 @@
+<resources>
+    <string name="onboarding_video_title">Xem lại chuyến đi qua video</string>
+    <string name="onboarding_video_body">Khi Dòng thời gian của Google Maps được bật, các chuyến đi được ghi lại trên thiết bị của bạn. Timeline Visualizer biến lịch sử đó thành video hành trình sinh động.</string>
+    <string name="onboarding_import_title">Sẵn sàng nhập Dòng thời gian?</string>
+    <string name="onboarding_import_body">Xuất tệp Dòng thời gian Google Maps, rồi quay lại đây và chọn tệp đã lưu.</string>
+    <string name="onboarding_next">Tiếp theo</string>
+    <string name="onboarding_export_instructions">Xem hướng dẫn xuất</string>
+    <string name="onboarding_choose_file">Chọn tệp Dòng thời gian</string>
+    <string name="onboarding_explore">Khám phá ứng dụng trước</string>
+    <string name="onboarding_local_privacy">Timeline Visualizer xử lý tệp Dòng thời gian trên thiết bị của bạn và không bao giờ tải tệp lên máy chủ bên ngoài.</string>
+    <string name="export_guide_title">Xuất tệp Dòng thời gian</string>
+    <string name="export_guide_new_timeline">Chưa từng dùng Dòng thời gian? Hãy bật trong Google Maps để ghi lại các chuyến đi sắp tới. Không thể khôi phục chuyến đi trước khi bật. Hãy xuất tệp sau khi đã ghi lại một số chuyến đi.</string>
+    <string name="export_guide_steps">1. Mở phần Cài đặt trên điện thoại.\n\n2. Vào Vị trí → Dịch vụ vị trí → Dòng thời gian.\n\n3. Nhấn Xuất dữ liệu Dòng thời gian và lưu tệp ở nơi dễ tìm. Tệp thường có tên Timeline.json.\n\n4. Quay lại Timeline Visualizer và nhấn Chọn tệp Dòng thời gian.</string>
+    <string name="export_guide_settings_note">Tên menu có thể khác nhau tùy điện thoại. Nút bên dưới mở cài đặt Vị trí; từ đó hãy vào Dòng thời gian.</string>
+</resources>

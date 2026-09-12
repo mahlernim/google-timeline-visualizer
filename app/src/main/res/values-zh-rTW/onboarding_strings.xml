@@ -1,0 +1,15 @@
+<resources>
+    <string name="onboarding_video_title">用影片重溫你的旅程</string>
+    <string name="onboarding_video_body">開啟 Google 地圖時間軸後，行程會記錄在你的裝置上。Timeline Visualizer 可將這些記錄製作成旅行軌跡動畫影片。</string>
+    <string name="onboarding_import_title">準備好匯入時間軸了嗎？</string>
+    <string name="onboarding_import_body">匯出 Google 地圖時間軸檔案，然後回到這裡選擇已儲存的檔案。</string>
+    <string name="onboarding_next">下一步</string>
+    <string name="onboarding_export_instructions">查看匯出說明</string>
+    <string name="onboarding_choose_file">選擇時間軸檔案</string>
+    <string name="onboarding_explore">先探索應用程式</string>
+    <string name="onboarding_local_privacy">Timeline Visualizer 在你的裝置上處理時間軸檔案，絕不會將其上傳至外部伺服器。</string>
+    <string name="export_guide_title">匯出時間軸檔案</string>
+    <string name="export_guide_new_timeline">初次使用時間軸？在 Google 地圖中開啟它，即可開始記錄今後的行程。開啟前的旅行無法復原。累積一些行程後，再回來匯出檔案。</string>
+    <string name="export_guide_steps">1. 開啟手機的設定。\n\n2. 前往位置 → 定位服務 → 時間軸。\n\n3. 輕觸匯出時間軸資料，將檔案儲存至容易找到的位置。檔案通常名為 Timeline.json。\n\n4. 回到 Timeline Visualizer，輕觸選擇時間軸檔案。</string>
+    <string name="export_guide_settings_note">選單名稱可能因手機而異。下方按鈕會開啟位置設定，請從那裡進入時間軸。</string>
+</resources>
