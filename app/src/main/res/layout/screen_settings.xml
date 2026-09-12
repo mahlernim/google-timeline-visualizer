@@ -157,6 +157,8 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="@string/timeline_data" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/hideDatesSwitch" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/hide_dates" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/hide_dates_summary" android:textAppearance="?attr/textAppearanceBodySmall" />
         <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/simplifyRouteDetailSwitch" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/simplify_route_detail" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/simplify_route_detail_summary" android:textAppearance="?attr/textAppearanceBodySmall" />
         <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/keepPastRoutesVisibleSwitch" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/keep_past_routes_visible" />

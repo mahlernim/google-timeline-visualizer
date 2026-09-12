@@ -6,6 +6,12 @@ import androidx.core.content.edit
 class TimelineDisplayPreferences(context: Context) {
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
+    fun hideDates(): Boolean = preferences.getBoolean(KEY_HIDE_DATES, false)
+
+    fun setHideDates(enabled: Boolean) {
+        preferences.edit { putBoolean(KEY_HIDE_DATES, enabled) }
+    }
+
     fun simplifyRouteDetail(): Boolean = preferences.getBoolean(KEY_SIMPLIFY_ROUTE_DETAIL, false)
 
     fun setSimplifyRouteDetail(enabled: Boolean) {
@@ -22,6 +28,7 @@ class TimelineDisplayPreferences(context: Context) {
 
     private companion object {
         const val PREFERENCES_NAME = "timeline-display-settings"
+        const val KEY_HIDE_DATES = "hide-dates"
         const val KEY_SIMPLIFY_ROUTE_DETAIL = "simplify-route-detail"
         const val KEY_KEEP_PAST_ROUTES_VISIBLE = "keep-past-routes-visible"
     }

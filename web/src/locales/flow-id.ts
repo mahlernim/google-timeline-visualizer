@@ -1,4 +1,6 @@
 export const flowId = {
+  hideDates: "Sembunyikan tanggal",
+  hideDatesSummary: "Sembunyikan tanggal dalam video. Jarak tetap terlihat.",
   heroTitle: 'Hidupkan perjalanan Anda.',
   heroBody: 'Ubah Linimasa Google Maps menjadi perjalanan yang dapat ditonton dan dibagikan. Linimasa tetap di perangkat Anda.',
   demoLabel: 'Perjalanan nyata. Dibuat dengan Timeline Visualizer.',

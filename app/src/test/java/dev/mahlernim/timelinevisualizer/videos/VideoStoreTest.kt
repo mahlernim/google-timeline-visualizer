@@ -103,10 +103,19 @@ class VideoStoreTest {
             dataSource = VideoDataSource.JOURNAL,
             exportShortEdge = 1440,
             exportFrameRate = "59.94",
+            hideDates = true,
         )
         store.upsert(record("content://trip", "Tokyo", 300L).copy(settingsSnapshot = snapshot))
 
         assertEquals(snapshot, VideoStore(context).list().single().settingsSnapshot)
+    }
+
+    @Test
+    fun olderSnapshotsWithoutHideDatesKeepDatesVisible() {
+        context.getSharedPreferences("creations", Context.MODE_PRIVATE).edit {
+            putString("records_v1", """[{"uri":"content://old","settings":{"aspect":"SQUARE","camera":"STEADY","trip":"BALANCED","framing":"OFF","pacing":"BALANCED","resolution":"HIGH"}}]""")
+        }
+        assertEquals(false, VideoStore(context).list().single().settingsSnapshot!!.hideDates)
     }
 
     private fun record(uri: String, title: String, createdAt: Long) = VideoRecord(

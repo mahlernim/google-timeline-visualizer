@@ -3,6 +3,8 @@ import { flowId } from './locales/flow-id';
 import { flowVi } from './locales/flow-vi';
 export const FLOW_STRINGS = {
   "en": {
+    "hideDates": "Hide dates",
+    "hideDatesSummary": "Hide dates in the video. Distance stays visible.",
     "heroTitle": "Your places, in motion.",
     "heroBody": "Turn your Google Maps Timeline into a journey you can watch and share. Your Timeline stays on your device.",
     "demoLabel": "A real journey. Made with Timeline Visualizer.",
@@ -61,6 +63,8 @@ export const FLOW_STRINGS = {
     "changeFile": "Choose a different file"
   },
   "ko": {
+    "hideDates": "날짜 숨기기",
+    "hideDatesSummary": "영상에서 날짜를 숨깁니다. 거리는 계속 표시됩니다.",
     "heroTitle": "내가 다녀온 곳을 영상으로.",
     "heroBody": "Google Maps 타임라인을 보고 공유할 수 있는 여행 영상으로 만들어 보세요. 타임라인은 기기에만 남습니다.",
     "demoLabel": "실제 여행입니다. Timeline Visualizer로 만들었습니다.",
@@ -119,6 +123,8 @@ export const FLOW_STRINGS = {
     "changeFile": "다른 파일 선택"
   },
   "ja": {
+    "hideDates": "日付を隠す",
+    "hideDatesSummary": "動画の日付を非表示にします。距離は引き続き表示されます。",
     "heroTitle": "訪れた場所を、動画に。",
     "heroBody": "Google マップのタイムラインを、見て共有できる旅の動画に。タイムラインはお使いの端末内に保存されます。",
     "demoLabel": "実際の旅です。Timeline Visualizerで作成しました。",
@@ -177,6 +183,8 @@ export const FLOW_STRINGS = {
     "changeFile": "別のファイルを選択"
   },
   "zh-CN": {
+    "hideDates": "隐藏日期",
+    "hideDatesSummary": "隐藏视频中的日期，距离仍会显示。",
     "heroTitle": "让走过的地方动起来。",
     "heroBody": "将 Google 地图时间轴变成可观看和分享的旅程视频。时间轴始终留在您的设备上。",
     "demoLabel": "真实旅程。使用 Timeline Visualizer 制作。",
@@ -235,6 +243,8 @@ export const FLOW_STRINGS = {
     "changeFile": "选择其他文件"
   },
   "zh-TW": {
+    "hideDates": "隱藏日期",
+    "hideDatesSummary": "隱藏影片中的日期，距離仍會顯示。",
     "heroTitle": "讓走過的地方動起來。",
     "heroBody": "將 Google 地圖時間軸變成可觀看及分享的旅程影片。時間軸始終留在您的裝置上。",
     "demoLabel": "真實旅程。使用 Timeline Visualizer 製作。",
@@ -293,6 +303,8 @@ export const FLOW_STRINGS = {
     "changeFile": "選擇其他檔案"
   },
   "es": {
+    "hideDates": "Ocultar fechas",
+    "hideDatesSummary": "Oculta las fechas en el vídeo. La distancia sigue visible.",
     "heroTitle": "Tus lugares, en movimiento.",
     "heroBody": "Convierte tu cronología de Google Maps en un viaje que puedes ver y compartir. La cronología permanece en tu dispositivo.",
     "demoLabel": "Un viaje real. Creado con Timeline Visualizer.",
@@ -351,6 +363,8 @@ export const FLOW_STRINGS = {
     "changeFile": "Elegir otro archivo"
   },
   "fr": {
+    "hideDates": "Masquer les dates",
+    "hideDatesSummary": "Masque les dates dans la vidéo. La distance reste visible.",
     "heroTitle": "Vos lieux prennent vie.",
     "heroBody": "Transformez votre historique Google Maps en un voyage à regarder et à partager. Votre historique reste sur votre appareil.",
     "demoLabel": "Un vrai voyage. Créé avec Timeline Visualizer.",
@@ -409,6 +423,8 @@ export const FLOW_STRINGS = {
     "changeFile": "Choisir un autre fichier"
   },
   "de": {
+    "hideDates": "Datumsangaben ausblenden",
+    "hideDatesSummary": "Blendet Datumsangaben im Video aus. Die Entfernung bleibt sichtbar.",
     "heroTitle": "Deine Orte in Bewegung.",
     "heroBody": "Verwandle deine Google Maps-Zeitachse in eine Reise zum Ansehen und Teilen. Deine Zeitachse bleibt auf deinem Gerät.",
     "demoLabel": "Eine echte Reise. Erstellt mit Timeline Visualizer.",
@@ -467,6 +483,8 @@ export const FLOW_STRINGS = {
     "changeFile": "Andere Datei wählen"
   },
   "pt-BR": {
+    "hideDates": "Ocultar datas",
+    "hideDatesSummary": "Oculta as datas no vídeo. A distância continua visível.",
     "heroTitle": "Seus lugares em movimento.",
     "heroBody": "Transforme sua Linha do tempo do Google Maps em uma viagem para assistir e compartilhar. Seus dados ficam no seu dispositivo.",
     "demoLabel": "Uma viagem real. Criada com Timeline Visualizer.",

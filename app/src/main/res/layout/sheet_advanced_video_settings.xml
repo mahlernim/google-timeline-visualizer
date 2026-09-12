@@ -16,6 +16,9 @@
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/advanced_video_settings" android:textAppearance="?attr/textAppearanceHeadlineSmall" android:textStyle="bold" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:layout_marginBottom="16dp" android:text="@string/advanced_video_settings_summary" android:textAppearance="?attr/textAppearanceBodyMedium" />
 
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/hideDatesSwitch" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/hide_dates" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/hide_dates_summary" android:textAppearance="?attr/textAppearanceBodySmall" />
+
         <com.google.android.material.textfield.TextInputLayout style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/aspect_ratio">
             <AutoCompleteTextView android:id="@+id/aspectRatioDropdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>

@@ -577,4 +577,6 @@
     <string name="simplify_route_detail_summary">Usa a atividade resumida da Linha do tempo para criar uma rota mais clara em vídeos de períodos longos. Quando desativado, usa a rota mais detalhada disponível.</string>
     <string name="keep_past_routes_visible">Manter rotas anteriores visíveis</string>
     <string name="keep_past_routes_visible_summary">Mostra as rotas concluídas como um rastro discreto ao fundo. Quando desativado, os movimentos anteriores desaparecem.</string>
+    <string name="hide_dates">Ocultar datas</string>
+    <string name="hide_dates_summary">Oculta as datas no vídeo. A distância continua visível.</string>
 </resources>

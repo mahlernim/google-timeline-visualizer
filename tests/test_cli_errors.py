@@ -217,3 +217,11 @@ def test_formats_match_shared_fixture_and_custom_pairs():
         for aspect, dimensions in aspects.items():
             assert visualizer.resolve_video_dimensions(short_edge, aspect) == tuple(dimensions)
             assert visualizer.resolve_video_dimensions('480', 'square', *dimensions) == tuple(dimensions)
+
+
+def test_hide_dates_is_opt_in(tmp_path):
+    source = tmp_path / 'timeline.json'
+    source.write_text('{}')
+    parser = build_argument_parser()
+    assert parser.parse_args(['--input', str(source)]).hide_dates is False
+    assert parser.parse_args(['--input', str(source), '--hide-dates']).hide_dates is True

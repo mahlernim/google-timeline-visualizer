@@ -588,4 +588,6 @@
     <string name="simplify_route_detail_summary">긴 기간의 동영상에서 요약된 타임라인 활동을 사용해 경로를 더 간결하게 표시합니다. 끄면 사용 가능한 가장 자세한 경로를 사용합니다.</string>
     <string name="keep_past_routes_visible">지난 경로 계속 표시</string>
     <string name="keep_past_routes_visible_summary">지나온 경로를 흐린 배경 선으로 표시합니다. 끄면 오래된 이동 경로가 사라집니다.</string>
+    <string name="hide_dates">날짜 숨기기</string>
+    <string name="hide_dates_summary">영상에서 날짜를 숨깁니다. 거리는 계속 표시됩니다.</string>
 </resources>
