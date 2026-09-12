@@ -19,7 +19,7 @@
 
 ## Release
 
-- Version name `3.0.17` and version code `59`
+- Version name `3.0.18` and version code `60`
 - Publish this update to production only, preserving testing tracks and countries
 - Upload the signed `playRelease` Android App Bundle
 - On first enrollment, preserve the existing app-signing key so GitHub and Play installs remain update-compatible
@@ -30,7 +30,7 @@
 
 ## Store presence and policy
 
-- Upload the 512×512 app icon and 1024×500 feature graphic
+- Upload the 512횞512 app icon and 1024횞500 feature graphic
 - Paste and proofread the listing text for English, Korean, Japanese, Simplified
   Chinese, Traditional Chinese, Spanish, French, German, Brazilian Portuguese,
   Indonesian, and Vietnamese
