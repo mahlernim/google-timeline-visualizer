@@ -280,7 +280,7 @@ class MainActivity : AppCompatActivity() {
     }
     private val videoEncoderProfiles by lazy { VideoEncoderSupport.deviceProfiles() }
     private var cameraSettings = CameraSettings.DEFAULT
-    private var distanceUnitPreference = DistanceUnitPreference.AUTOMATIC
+    private var distanceUnitPreference = DistanceUnitPreference.KILOMETERS
     private var videoFormatSupported = true
     private var locationFilterMode = LocationFilterMode.CONSERVATIVE
     private var simplifyRouteDetail = false

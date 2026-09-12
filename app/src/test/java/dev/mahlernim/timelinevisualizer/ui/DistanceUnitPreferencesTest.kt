@@ -2,6 +2,8 @@ package dev.mahlernim.timelinevisualizer.ui
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import dev.mahlernim.timelinevisualizer.render.DistanceUnit
+import java.util.Locale
 import dev.mahlernim.timelinevisualizer.render.DistanceUnitPreference
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -24,8 +26,16 @@ class DistanceUnitPreferencesTest {
     fun tearDown() = preferences.clear()
 
     @Test
-    fun automaticIsTheDefault() {
-        assertEquals(DistanceUnitPreference.AUTOMATIC, preferences.load())
+    fun kilometersAreTheDefaultEvenInTheUs() {
+        assertEquals(DistanceUnitPreference.KILOMETERS, preferences.load())
+        assertEquals(DistanceUnit.KILOMETERS, preferences.load().resolve(Locale.US))
+    }
+
+    @Test
+    fun preservesSavedAutomaticPreference() {
+        preferences.save(DistanceUnitPreference.AUTOMATIC)
+
+        assertEquals(DistanceUnitPreference.AUTOMATIC, DistanceUnitPreferences(context).load())
     }
 
     @Test
@@ -36,10 +46,10 @@ class DistanceUnitPreferencesTest {
     }
 
     @Test
-    fun invalidStoredValuesFallBackToAutomatic() {
+    fun invalidStoredValuesFallBackToKilometers() {
         context.getSharedPreferences("distance-unit-settings", Context.MODE_PRIVATE)
             .edit().putString("distance-unit", "NAUTICAL_MILES").commit()
 
-        assertEquals(DistanceUnitPreference.AUTOMATIC, preferences.load())
+        assertEquals(DistanceUnitPreference.KILOMETERS, preferences.load())
     }
 }
