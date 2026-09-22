@@ -3,6 +3,7 @@ package dev.mahlernim.timelinevisualizer.render
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.text.LineBreaker
 import android.text.Layout
 import android.text.SpannableString
 import android.text.Spanned
@@ -75,7 +76,7 @@ internal class RecapCardLayout private constructor(val blocks: List<Block>) {
                     fun measure() = StaticLayout.Builder.obtain(value, 0, value.length, paint, maxWidth.toInt().coerceAtLeast(1))
                         .setAlignment(Layout.Alignment.ALIGN_NORMAL)
                         .setIncludePad(false)
-                        .setBreakStrategy(if (role == "punchline") Layout.BREAK_STRATEGY_BALANCED else Layout.BREAK_STRATEGY_HIGH_QUALITY)
+                        .setBreakStrategy(if (role == "punchline") LineBreaker.BREAK_STRATEGY_BALANCED else LineBreaker.BREAK_STRATEGY_HIGH_QUALITY)
                         .setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_NORMAL)
                         .build()
                     var layout = measure()
