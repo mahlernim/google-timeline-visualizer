@@ -31,6 +31,7 @@ data class SemanticCameraEpisode(
     val end: Instant,
     val origin: GeoPoint,
     val destination: GeoPoint,
+    val activityType: String? = null,
 ) {
     init {
         require(end >= start)
@@ -252,6 +253,7 @@ class JournalRouteService(
                     end = Instant.ofEpochMilli(record.endEpochMillis),
                     origin = origin,
                     destination = destination,
+                    activityType = record.activityType,
                 )
             }
             coveredByNewerSnapshots.addAll(records.map(StoredSemanticRecord::interval))
@@ -651,6 +653,7 @@ class JournalRouteService(
             startEpochMillis = ordered.minOf { it.row.startEpochMillis },
             endEpochMillis = ordered.maxOf { it.row.endEpochMillis },
             points = normalize(ordered.flatMap(DecodedRow::points)),
+            activityType = ordered.map { it.row.activityType }.distinct().singleOrNull(),
         )
     }
 
@@ -660,6 +663,7 @@ class JournalRouteService(
         startEpochMillis = row.startEpochMillis,
         endEpochMillis = row.endEpochMillis,
         points = points,
+        activityType = row.activityType,
     )
 
     private fun StoredSemanticRecord.fragmentsOutside(
@@ -747,6 +751,7 @@ class JournalRouteService(
         val startEpochMillis: Long,
         val endEpochMillis: Long,
         val points: List<GeoPoint>,
+        val activityType: String? = null,
     ) {
         val interval = MillisInterval(startEpochMillis, endEpochMillis)
     }

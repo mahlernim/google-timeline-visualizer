@@ -99,6 +99,8 @@ class VideoExportRequestStore internal constructor(
                 output.writeLong(episode.destination.instant.toEpochMilli())
                 output.writeDouble(episode.destination.latitude)
                 output.writeDouble(episode.destination.longitude)
+                output.writeBoolean(episode.activityType != null)
+                episode.activityType?.let(output::writeUTF)
             }
         }
         if (!temporaryFile.renameTo(requestFile)) {
@@ -255,6 +257,7 @@ class VideoExportRequestStore internal constructor(
                                 latitude = input.readDouble(),
                                 longitude = input.readDouble(),
                             ),
+                            activityType = if (version >= 18 && input.readBoolean()) input.readUTF() else null,
                         )
                     }
                 } else {
@@ -291,7 +294,7 @@ class VideoExportRequestStore internal constructor(
     }
 
     companion object {
-        private const val CURRENT_FILE_VERSION = 17
+        private const val CURRENT_FILE_VERSION = 18
         private const val MAX_POINT_COUNT = 2_000_000
         private const val MAX_SEMANTIC_EPISODE_COUNT = 100_000
         private const val REQUEST_FILE = "pending-video-export.bin"

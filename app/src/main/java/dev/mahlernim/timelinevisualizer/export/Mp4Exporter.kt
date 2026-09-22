@@ -173,7 +173,7 @@ class Mp4Exporter(
         try {
             for (frame in 0 until frameCount) {
                 coroutineContext.ensureActive()
-                val animationFrame = animationFrame(frame, journeyFrameCount, fps)
+                val animationFrame = animationFrame(frame, journeyFrameCount, fps, outroFrameCount)
                 val inputIndex = awaitEncoderInputBuffer(
                     dequeue = { codec.dequeueInputBuffer(10_000) },
                     drain = { drain(false) },
@@ -336,7 +336,7 @@ class Mp4Exporter(
         internal fun videoFrameCounts(durationSeconds: Int, fps: FrameRate): Pair<Int, Int> {
             val frameCount = fps.frameCount(durationSeconds)
             val outroFrameCount = minOf(
-                (TimelineAnimation.OUTRO_SECONDS * fps.value).roundToInt(),
+                (TimelineAnimation.outroDurationSeconds(durationSeconds) * fps.value).roundToInt(),
                 frameCount - 1,
             )
             return frameCount - outroFrameCount to outroFrameCount
@@ -377,7 +377,7 @@ class Mp4Exporter(
                     painter.requiredTiles(
                         painter.viewport(
                             journey,
-                            animationFrame(frame, journeyFrameCount, fps),
+                            animationFrame(frame, journeyFrameCount, fps, outroFrameCount),
                             width,
                             height,
                             cameraSettings,
@@ -398,16 +398,18 @@ class Mp4Exporter(
             )
         }
 
-        internal fun animationFrame(frame: Int, journeyFrameCount: Int, fps: FrameRate): TimelineFrame =
+        internal fun animationFrame(
+            frame: Int,
+            journeyFrameCount: Int,
+            fps: FrameRate,
+            outroFrameCount: Int = (TimelineAnimation.OUTRO_SECONDS * fps.value).roundToInt(),
+        ): TimelineFrame =
             if (frame < journeyFrameCount) {
                 val progress = if (journeyFrameCount == 1) 1f else frame.toFloat() / (journeyFrameCount - 1)
                 TimelineFrame(progress, 0f)
             } else {
                 val outroElapsed = (frame - journeyFrameCount).toFloat() / fps.value.toFloat()
-                TimelineFrame(
-                    1f,
-                    (outroElapsed / TimelineAnimation.OUTRO_TRANSITION_SECONDS).coerceIn(0f, 1f),
-                )
+                TimelineAnimation.outroFrame(outroElapsed, (outroFrameCount / fps.value).toFloat())
             }
 
         private fun Int.toEven(): Int = if (this % 2 == 0) this else this + 1

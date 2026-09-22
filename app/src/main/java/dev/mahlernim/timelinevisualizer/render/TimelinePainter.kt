@@ -36,6 +36,15 @@ data class Viewport(
 )
 
 class TimelinePainter {
+    private var cachedRecapJourney: Journey? = null
+    private var cachedRecap: RecapSnapshot? = null
+    private var cachedRecapText: RenderText? = null
+    private var cachedRecapWidth = 0
+    private var cachedRecapHeight = 0
+    private var cachedRecapLayout: RecapCardLayout? = null
+    internal var recapAnalysisCount: Int = 0
+        private set
+    private val recapShadePaint = Paint().apply { color = Color.argb(235, 53, 43, 64) }
     private var cachedJourney: Journey? = null
     private var cachedPrepared: PreparedJourney? = null
     private var cachedCameraJourney: Journey? = null
@@ -1216,7 +1225,39 @@ class TimelinePainter {
         }
         headPaint.alpha = previousHeadAlpha
         headRingPaint.alpha = previousRingAlpha
-        drawOverlay(canvas, width, height, current, title, renderText)
+        val recapAlpha = frame.recapProgress.coerceIn(0f, 1f)
+        if (recapAlpha == 0f) {
+            drawOverlay(canvas, width, height, current, title, renderText)
+        } else if (recapAlpha < 1f) {
+            val layer = canvas.saveLayerAlpha(0f, 0f, width.toFloat(), height.toFloat(), ((1f - recapAlpha) * 255).toInt())
+            drawOverlay(canvas, width, height, current, title, renderText)
+            canvas.restoreToCount(layer)
+        }
+        if (recapAlpha > 0f) {
+            val layer = if (recapAlpha < 1f) {
+                canvas.saveLayerAlpha(0f, 0f, width.toFloat(), height.toFloat(), (recapAlpha * 255).toInt())
+            } else canvas.save()
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), recapShadePaint)
+            recapLayout(journey, width, height, renderText).draw(canvas)
+            canvas.restoreToCount(layer)
+        }
+        drawAttribution(canvas, width, height, renderText, recapAlpha)
+    }
+
+    internal fun recapLayout(journey: Journey, width: Int, height: Int, renderText: RenderText): RecapCardLayout {
+        if (cachedRecapJourney !== journey) {
+            cachedRecapJourney = journey
+            cachedRecap = RecapAnalyzer.analyze(journey)
+            recapAnalysisCount++
+            cachedRecapLayout = null
+        }
+        if (cachedRecapLayout == null || cachedRecapText != renderText || cachedRecapWidth != width || cachedRecapHeight != height) {
+            cachedRecapLayout = RecapCardLayout.create(width, height, checkNotNull(cachedRecap), renderText)
+            cachedRecapText = renderText
+            cachedRecapWidth = width
+            cachedRecapHeight = height
+        }
+        return checkNotNull(cachedRecapLayout)
     }
 
     private fun drawBackground(canvas: Canvas, width: Int, height: Int) {
@@ -1267,7 +1308,6 @@ class TimelinePainter {
         canvas.drawRoundRect(card, 24f * scale, 24f * scale, cardPaint)
         titlePaint.textSize = 34f * scale
         bodyPaint.textSize = 20f * scale
-        attributionPaint.textSize = 13f * scale
         val displayTitle = title.ifBlank { renderText.fallbackTitle }
         val availableWidth = card.width() - 36f * scale
         while (titlePaint.textSize > 20f * scale && titlePaint.measureText(displayTitle) > availableWidth) {
@@ -1284,7 +1324,13 @@ class TimelinePainter {
             108f * scale,
             bodyPaint,
         )
-        canvas.drawText(renderText.attribution, width - 12f * scale, height - 12f * scale, attributionPaint)
+    }
+
+    private fun drawAttribution(canvas: Canvas, width: Int, height: Int, text: RenderText, recapAlpha: Float) {
+        val scale = overlayScale(width, height)
+        attributionPaint.textSize = 13f * scale
+        attributionPaint.color = if (recapAlpha > 0.5f) Color.argb(220, 255, 248, 253) else Color.argb(185, 36, 25, 29)
+        canvas.drawText(text.attribution, width - 12f * scale, height - 12f * scale, attributionPaint)
     }
 
     private fun worldToScreen(point: WorldPoint, viewport: Viewport, width: Int, height: Int): Pair<Float, Float> {

@@ -20,8 +20,8 @@ class Mp4ExporterTileCoverageTest {
     fun selectedDurationIncludesTheOutroFrames() {
         val (journeyFrames, outroFrames) = Mp4Exporter.videoFrameCounts(90, FrameRate.of(30))
 
-        assertEquals(2_655, journeyFrames)
-        assertEquals(45, outroFrames)
+        assertEquals(2_565, journeyFrames)
+        assertEquals(135, outroFrames)
         assertEquals(2_700, journeyFrames + outroFrames)
     }
 
@@ -55,7 +55,7 @@ class Mp4ExporterTileCoverageTest {
                     painter.requiredTiles(
                         painter.viewport(
                             journey,
-                            Mp4Exporter.animationFrame(frame, journeyFrames, fps),
+                            Mp4Exporter.animationFrame(frame, journeyFrames, fps, outroFrames),
                             VIDEO_WIDTH,
                             VIDEO_HEIGHT,
                             settings,

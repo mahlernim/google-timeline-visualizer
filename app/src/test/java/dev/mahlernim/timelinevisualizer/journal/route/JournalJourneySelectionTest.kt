@@ -106,6 +106,7 @@ class JournalJourneySelectionTest {
                     end = points.last().instant,
                     origin = points.first(),
                     destination = points.last(),
+                    activityType = "IN_AIRPLANE",
                 ),
             ),
         )
@@ -113,8 +114,33 @@ class JournalJourneySelectionTest {
         val journey = route.journeyForRange(TimelinePeriod.sameYear(2026), ZoneOffset.UTC)
 
         assertEquals(1, journey.semanticEpisodes.size)
+        assertEquals("IN_AIRPLANE", journey.semanticEpisodes.single().activityType)
         assertTrue(journey.semanticEpisodes.single().displacementKm > 1_000.0)
         assertEquals(listOf(true), journey.legs.map { it.isTransfer })
+    }
+
+    @Test
+    fun activityLabelSurvivesExactDateCropping() {
+        val points = listOf(
+            GeoPoint(Instant.parse("2026-01-01T23:00:00Z"), 0.0, 0.0),
+            GeoPoint(Instant.parse("2026-01-02T01:00:00Z"), 0.1, 0.0),
+            GeoPoint(Instant.parse("2026-01-02T02:00:00Z"), 0.2, 0.0),
+            GeoPoint(Instant.parse("2026-01-03T01:00:00Z"), 0.3, 0.0),
+        )
+        val route = JournalRoute(
+            timeline = Timeline(points),
+            spans = listOf(span(RouteSource.DETAILED, *points.toTypedArray())),
+            detailedInputCount = 4,
+            detailedUsableCount = 4,
+            semanticUsableCount = 2,
+            cameraEpisodes = listOf(SemanticCameraEpisode(points.first().instant, points.last().instant, points.first(), points.last(), "CYCLING")),
+        )
+        val date = LocalDate.parse("2026-01-02")
+        val journey = route.journeyForDateRange(date, date, ZoneOffset.UTC)
+        val episode = journey.semanticEpisodes.single()
+        assertEquals("CYCLING", episode.activityType)
+        assertEquals(0.0, episode.startKm, 0.0)
+        assertEquals(journey.knownDistanceKm, episode.endKm, 1e-9)
     }
 
     @Test

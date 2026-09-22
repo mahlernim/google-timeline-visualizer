@@ -63,6 +63,13 @@ def test_release_workflow_requires_the_carto_project_key() -> None:
     assert 'test -n "$CARTO_BASEMAP_API_KEY"' in workflow
 
 
+def test_preview_release_does_not_replace_latest_stable() -> None:
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+    assert 'if [[ "$RELEASE_TAG" == *-* ]]; then' in workflow
+    assert 'release_flags+=(--prerelease --latest=false)' in workflow
+    assert '"${release_flags[@]}"' in workflow
+
+
 def test_repository_normalizes_text_without_touching_release_binaries() -> None:
     attributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
 

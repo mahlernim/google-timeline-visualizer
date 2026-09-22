@@ -12,7 +12,7 @@ class DurationRecommendationTest {
             frame(centerX = 0.60, spanY = 0.025),
         )
 
-        assertEquals(10, DurationRecommendation.recommend(frames, aspect = 1.0, largeTransferCount = 0))
+        assertEquals(15, DurationRecommendation.recommend(frames, aspect = 1.0, largeTransferCount = 0))
         assertEquals(15, DurationRecommendation.recommend(frames, aspect = 1.0, largeTransferCount = 2))
     }
 
@@ -29,7 +29,7 @@ class DurationRecommendationTest {
     fun recommendsBeyondTheDefaultForAJumpHeavyRoute() {
         val frames = (0..25).map { frame(centerX = it * 0.01, spanY = 0.01) }
 
-        assertEquals(35, DurationRecommendation.recommend(frames, aspect = 1.0, largeTransferCount = 3))
+        assertEquals(40, DurationRecommendation.recommend(frames, aspect = 1.0, largeTransferCount = 3))
     }
 
     private fun frame(centerX: Double, spanY: Double = 0.10) = TimelinePainter.CameraFrame(

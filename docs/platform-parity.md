@@ -24,10 +24,16 @@ system integrations remain explicit instead of being hidden behind silent fallba
 | Preservation reminders | Yes | No | No |
 | Background export and notifications | Yes | No | No |
 | On-device video library | Yes | No | No |
+| Stats and punchline ending | Android 3.1.0 preview | No | No |
 
 The Android-only rows depend on persistent private application storage or Android
 services. They are not parity defects for the CLI or web app. A future port should
 be treated as a separate product design and privacy review.
+
+The stats ending and its longer reading hold are being tested in an Android preview.
+The CLI and web keep the current overview ending until the wording, label coverage,
+and readability have been validated with testers. Total selected duration remains
+unchanged on every platform.
 
 When Android changes a portable parser, filter, camera, timing, overlay, export, or
 privacy behavior, update the corresponding Python and TypeScript tests and this table

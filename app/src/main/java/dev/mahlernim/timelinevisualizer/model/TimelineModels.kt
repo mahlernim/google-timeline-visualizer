@@ -259,6 +259,7 @@ data class JourneySemanticEpisode(
     val endKm: Double,
     val origin: GeoPoint,
     val destination: GeoPoint,
+    val activityType: String? = null,
 ) {
     val lengthKm: Double get() = endKm - startKm
     val displacementKm: Double get() = haversineKm(origin, destination)

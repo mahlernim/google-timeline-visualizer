@@ -75,6 +75,7 @@ private fun JournalRoute.journeyFromSpans(
             endKm = endKm,
             origin = episode.origin,
             destination = episode.destination,
+            activityType = episode.activityType,
         )
     }.sortedBy(JourneySemanticEpisode::startKm)
     return journey.copy(semanticEpisodes = projectedEpisodes)

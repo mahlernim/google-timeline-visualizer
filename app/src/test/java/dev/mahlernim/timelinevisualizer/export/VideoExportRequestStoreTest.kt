@@ -204,6 +204,7 @@ class VideoExportRequestStoreTest {
             endKm = base.cumulativeDistanceKm[1],
             origin = points[0],
             destination = points[1],
+            activityType = "IN_AIRPLANE",
         )
         val request = VideoExportRequest(
             outputUri = "content://documents/semantic-camera.mp4",
@@ -292,6 +293,39 @@ class VideoExportRequestStoreTest {
     }
 
     @Test
+    fun readsPublishedVersionSeventeenWithHiddenDatesAndUnlabeledEpisodes() {
+        val point = GeoPoint(Instant.parse("2026-01-01T12:00:00Z"), 35.0, 139.0)
+        writeModernRequest(version = 17, appendEmptySection = false) { output ->
+            output.writeBoolean(false) // No custom format.
+            output.writeBoolean(true) // Keep past routes visible.
+            output.writeBoolean(false) // No project.
+            output.writeBoolean(false) // No preset.
+            output.writeUTF(VideoDataSource.JOURNAL.name)
+            output.writeInt(2)
+            repeat(2) { index ->
+                output.writeLong(point.instant.plusSeconds(index * 3600L).toEpochMilli())
+                output.writeDouble(point.latitude + index * 0.1)
+                output.writeDouble(point.longitude)
+            }
+            output.writeInt(0) // Breaks.
+            output.writeInt(0) // Transfers.
+            output.writeInt(1) // Current production episode, no activityType field.
+            output.writeDouble(0.0)
+            output.writeDouble(10.0)
+            repeat(2) { index ->
+                output.writeLong(point.instant.plusSeconds(index * 3600L).toEpochMilli())
+                output.writeDouble(point.latitude + index * 0.1)
+                output.writeDouble(point.longitude)
+            }
+        }
+        val restored = store.load()!!
+        assertEquals(true, restored.renderText.hideDates)
+        assertEquals(true, restored.cameraSettings.keepPastRoutesVisible)
+        assertEquals(1, restored.journey.semanticEpisodes.size)
+        assertNull(restored.journey.semanticEpisodes.single().activityType)
+    }
+
+    @Test
     fun readsTripsLabFourVersionTenAssociationsWithoutExportFormat() {
         writeModernRequest(version = 10) { output ->
             output.writeBoolean(true)
@@ -337,7 +371,7 @@ class VideoExportRequestStoreTest {
         assertEquals(1, restored.journey.points.size)
     }
 
-    private fun writeModernRequest(version: Int, extra: (DataOutputStream) -> Unit) {
+    private fun writeModernRequest(version: Int, appendEmptySection: Boolean = true, extra: (DataOutputStream) -> Unit) {
         val requestFile = File(context.filesDir, "pending-video-export.bin")
         DataOutputStream(requestFile.outputStream().buffered()).use { output ->
             output.writeInt(version)
@@ -354,13 +388,14 @@ class VideoExportRequestStoreTest {
             output.writeUTF("km")
             output.writeUTF("attribution")
             output.writeDouble(1.0)
+            if (version >= 17) output.writeBoolean(true)
             output.writeUTF(CameraMovement.STEADY.name)
             output.writeUTF(LongTripCompression.BALANCED.name)
             output.writeUTF(VideoQuality.STANDARD.name)
             output.writeUTF(TripDetection.BALANCED.name)
             output.writeUTF(LocalFraming.BALANCED.name)
             extra(output)
-            output.writeInt(0)
+            if (appendEmptySection) output.writeInt(0)
         }
     }
 
