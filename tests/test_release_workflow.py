@@ -70,6 +70,11 @@ def test_preview_release_does_not_replace_latest_stable() -> None:
     assert '"${release_flags[@]}"' in workflow
 
 
+def test_release_setup_does_not_request_removed_sdk_tools_package() -> None:
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+    assert 'packages: platform-tools' in workflow
+
+
 def test_repository_normalizes_text_without_touching_release_binaries() -> None:
     attributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
 
