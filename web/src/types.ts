@@ -50,6 +50,8 @@ export interface TimelineFrame {
 }
 
 export interface PreparedJourney {
+  vectorBackground?: { draw(canvas: HTMLCanvasElement, view: Viewport, signal?: AbortSignal): Promise<void>; dispose(): void };
+  cartoLogo?: HTMLImageElement;
   points: GeoPoint[];
   worldPoints: WorldPoint[];
   overviewRouteSegments: WorldPoint[][];

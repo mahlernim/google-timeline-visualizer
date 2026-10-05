@@ -4,7 +4,7 @@ import { cameraViewportAt, blendViewport } from '../src/camera';
 import { easeOutCubic, frameAtElapsedSeconds } from '../src/animation';
 import { prepareJourney, drawJourneyFrame, drawFrame, releaseJourney } from '../src/renderer';
 import type { GeoPoint } from '../src/types';
-import { ReusedVectorMap, VectorMap } from './vector-map';
+import { ReusedVectorMap, VectorMap } from '../src/vector/vector-map';
 
 const key = import.meta.env.VITE_CARTO_BASEMAP_API_KEY?.trim() ?? '';
 const overlay = { title: 'Synthetic comparison', periodLabel: 'Seoul · 서울 · 東京', separator: ' · ', formatDistance: (km: number) => `${km.toFixed(0)} km` };

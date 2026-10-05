@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   blendViewport,
   buildCameraTrack,
@@ -10,6 +10,8 @@ import {
   ASPECT_EPSILON,
   cartoTileUrl,
   drawFrame,
+  drawJourneyFrame,
+  releaseJourney,
   MAP_ATTRIBUTION,
   MIN_PREVIEW_SHORT_EDGE,
   previewCanvasSize,
@@ -493,5 +495,35 @@ describe('hide dates', () => {
         expect(hidden.calls.filter((call) => call.method === 'fillText').map((call) => call.args[0])).toContain('123 km');
       }
     }
+  });
+});
+
+
+describe('vector export integration', () => {
+  const text = { title: 'Journey', periodLabel: '2026', separator: ' · ', formatDistance: () => '123 km' };
+  it('draws the vector background before overlays and releases it', async () => {
+    const output = recordingCanvas(480,480);
+    const draw = vi.fn(async (_canvas: HTMLCanvasElement, _view: Viewport, _signal?: AbortSignal) => { output.calls.push({method:'vector',args:[]}); });
+    const dispose = vi.fn();
+    const journey = { ...preparedAt(FORMATS[0]), tiles: new Map(), vectorBackground: {draw,dispose}, cartoLogo: {} as HTMLImageElement };
+    await drawJourneyFrame(output.canvas,journey,{journeyProgress:1,outroProgress:1},text);
+    expect(draw).toHaveBeenCalledOnce();
+    expect(draw.mock.calls[0][0]).toBe(output.canvas);
+    const view = draw.mock.calls[0][1];
+    expect(view.minX).toBeCloseTo(journey.overviewViewport.minX,12);
+    expect(view.maxY).toBeCloseTo(journey.overviewViewport.maxY,12);
+    expect(output.calls[0].method).toBe('vector');
+    expect(output.calls.some(call => call.method === 'clearRect')).toBe(false);
+    expect(output.calls.filter(call => call.method === 'drawImage')).toHaveLength(1);
+    expect(output.calls.some(call => call.method === 'fillText' && call.args[0] === MAP_ATTRIBUTION)).toBe(true);
+    releaseJourney(journey);
+    expect(dispose).toHaveBeenCalledOnce();
+  });
+  it('propagates cancellation without painting a partial frame', async () => {
+    const output = recordingCanvas(480,480);
+    const aborted = new DOMException('Cancelled','AbortError');
+    const journey = { ...preparedAt(FORMATS[0]), vectorBackground: {draw:vi.fn(async () => { throw aborted; }),dispose:vi.fn()} };
+    await expect(drawJourneyFrame(output.canvas,journey,{journeyProgress:.5,outroProgress:0},text)).rejects.toBe(aborted);
+    expect(output.calls).toEqual([]);
   });
 });

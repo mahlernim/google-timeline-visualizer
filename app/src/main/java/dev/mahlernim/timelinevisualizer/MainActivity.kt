@@ -283,6 +283,7 @@ class MainActivity : AppCompatActivity() {
     private var videoFormatSupported = true
     private var locationFilterMode = LocationFilterMode.CONSERVATIVE
     private var hideDates = false
+    private var vectorMapExport = false
     private var simplifyRouteDetail = false
     private var routeDurationSeconds = VideoDuration.DEFAULT_SECONDS
     private val applyTitleChanges = Runnable { commitTitlePreferences() }
@@ -3756,6 +3757,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun configureTimelineDisplay() {
+        val vectorPrefs = getSharedPreferences("vector-preview", MODE_PRIVATE)
+        vectorMapExport = vectorPrefs.getBoolean("enabled",false)
+        settingsScreen.vectorMapExportSwitch.isChecked = vectorMapExport
+        settingsScreen.vectorMapExportSwitch.setOnCheckedChangeListener { _, checked ->
+            vectorMapExport = checked
+            vectorPrefs.edit().putBoolean("enabled",checked).apply()
+        }
+        settingsScreen.cartoLogoLink.setOnClickListener { startActivity(Intent(Intent.ACTION_VIEW,Uri.parse("https://carto.com/"))) }
+
         applyHideDates(settingsViewModel.state.value.hideDates)
         settingsScreen.hideDatesSwitch.isChecked = hideDates
         settingsScreen.hideDatesSwitch.setOnCheckedChangeListener { _, checked ->
@@ -4288,6 +4298,7 @@ class MainActivity : AppCompatActivity() {
             projectId = project?.id,
             presetName = selectedPreset()?.name,
             dataSource = currentVideoDataSource(),
+            useVectorBasemap = vectorMapExport,
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val request = pendingExport ?: return
@@ -4670,6 +4681,7 @@ class MainActivity : AppCompatActivity() {
         settingsScreen.videoQualityDropdown.isEnabled = !exporting
         settingsScreen.frameRateDropdown.isEnabled = !exporting
         settingsScreen.resetAdvancedSettingsButton.isEnabled = !exporting
+        settingsScreen.vectorMapExportSwitch.isEnabled = !exporting
         settingsScreen.hideDatesSwitch.isEnabled = !exporting
         settingsScreen.simplifyRouteDetailSwitch.isEnabled = !exporting
         settingsScreen.keepPastRoutesVisibleSwitch.isEnabled = !exporting

@@ -157,6 +157,9 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="@string/timeline_data" android:textAppearance="?attr/textAppearanceTitleMedium" android:textStyle="bold" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/vectorMapExportSwitch" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/vector_map_export" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/vector_map_export_help" android:textAppearance="?attr/textAppearanceBodySmall" />
+        <ImageButton android:id="@+id/cartoLogoLink" android:layout_width="100dp" android:layout_height="48dp" android:src="@drawable/carto_logo" android:scaleType="fitCenter" android:padding="4dp" android:background="?attr/selectableItemBackground" android:contentDescription="@string/carto_website" />
         <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/hideDatesSwitch" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/hide_dates" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/hide_dates_summary" android:textAppearance="?attr/textAppearanceBodySmall" />
         <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/simplifyRouteDetailSwitch" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/simplify_route_detail" />

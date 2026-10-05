@@ -30,6 +30,7 @@ data class VideoExportRequest(
     val projectId: String? = null,
     val presetName: String? = null,
     val dataSource: VideoDataSource = VideoDataSource.SEMANTIC,
+    val useVectorBasemap: Boolean = false,
 ) {
     val period: TimelinePeriod get() = journey.period
 }
@@ -100,6 +101,7 @@ class VideoExportRequestStore internal constructor(
                 output.writeDouble(episode.destination.latitude)
                 output.writeDouble(episode.destination.longitude)
             }
+            output.writeBoolean(request.useVectorBasemap)
         }
         if (!temporaryFile.renameTo(requestFile)) {
             temporaryFile.copyTo(requestFile, overwrite = true)
@@ -279,6 +281,7 @@ class VideoExportRequestStore internal constructor(
                     projectId = projectId,
                     presetName = presetName,
                     dataSource = dataSource,
+                    useVectorBasemap = if (version >= 18) input.readBoolean() else false,
                 )
             }
         }.getOrNull()
@@ -291,7 +294,7 @@ class VideoExportRequestStore internal constructor(
     }
 
     companion object {
-        private const val CURRENT_FILE_VERSION = 17
+        private const val CURRENT_FILE_VERSION = 18
         private const val MAX_POINT_COUNT = 2_000_000
         private const val MAX_SEMANTIC_EPISODE_COUNT = 100_000
         private const val REQUEST_FILE = "pending-video-export.bin"

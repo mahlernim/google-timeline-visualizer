@@ -29,6 +29,29 @@ jobs:
           java-version: "17"
       - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+          run_install: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - name: Test and package web preview
+        if: contains(env.RELEASE_TAG, '-vector-preview.')
+        env:
+          VITE_CARTO_BASEMAP_API_KEY: ${{ secrets.CARTO_BASEMAP_API_KEY }}
+        run: |
+          test -n "$VITE_CARTO_BASEMAP_API_KEY"
+          pnpm --dir web install --frozen-lockfile
+          pnpm --dir web test
+          pnpm --dir web build
+          mkdir -p web-preview/google-timeline-visualizer
+          cp -R web/dist/. web-preview/google-timeline-visualizer/
+          cp docs/vector-preview-web-README.txt web-preview/README.txt
+          (cd web-preview && zip -qr "../TimelineVisualizer-web-${RELEASE_TAG}.zip" .)
+          sha256sum "TimelineVisualizer-web-${RELEASE_TAG}.zip" > "TimelineVisualizer-web-${RELEASE_TAG}.zip.sha256"
       - name: Restore release signing key
         env:
           SIGNING_KEY_BASE64: ${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}
@@ -84,8 +107,16 @@ jobs:
             --arg releaseUrl "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${RELEASE_TAG}" \
             '{versionCode: $versionCode, versionName: $versionName, releaseUrl: $releaseUrl}' \
             > update.json
+          release_flags=()
+          extra_assets=()
+          if [[ "$RELEASE_TAG" == *-* ]]; then
+            release_flags+=(--prerelease --latest=false)
+          fi
+          if [[ "$RELEASE_TAG" == *-vector-preview.* ]]; then
+            extra_assets+=("TimelineVisualizer-web-${RELEASE_TAG}.zip" "TimelineVisualizer-web-${RELEASE_TAG}.zip.sha256")
+          fi
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" "$apk" "$apk.sha256" update.json --clobber
+            gh release upload "$RELEASE_TAG" "$apk" "$apk.sha256" update.json "${extra_assets[@]}" --clobber
           else
             gh release create "$RELEASE_TAG" \
               "$apk" \
@@ -93,5 +124,6 @@ jobs:
               update.json \
               --title "Timeline Visualizer ${RELEASE_TAG#v}" \
               --notes-file "docs/release-notes-${RELEASE_TAG}.md" \
-              --verify-tag
+              --verify-tag \
+              "${release_flags[@]}" "${extra_assets[@]}"
           fi

@@ -17,8 +17,8 @@ android {
         applicationId = "dev.mahlernim.timelinevisualizer"
         minSdk = 26
         targetSdk = 36
-        versionCode = 60
-        versionName = "3.0.18"
+        versionCode = 62
+        versionName = "3.1.0-vector-preview.1"
         manifestPlaceholders["appLabel"] = "@string/app_name"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -126,8 +126,6 @@ dependencies {
     androidTestImplementation("androidx.test:core-ktx:1.7.0")
     androidTestImplementation("androidx.test.ext:junit-ktx:1.3.0")
     androidTestImplementation("androidx.test:runner:1.7.0")
-    // The native library must be in the target debug APK for instrumentation class loading.
-    // No MapLibre dependency is included in release APKs.
-    debugImplementation("org.maplibre.gl:android-sdk:13.6.1")
-    androidTestImplementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("org.maplibre.gl:android-sdk:13.6.1")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }

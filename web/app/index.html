@@ -210,6 +210,10 @@
         <div class="privacy-notice">
           <strong data-i18n="privacyNoticeTitle">Before loading the map</strong>
           <p data-i18n="privacyNoticeBody">Your Timeline file is never uploaded. CARTO receives the tile coordinates for map areas in the selected journey, along with normal network information such as your IP address. This may reveal places in your Timeline to CARTO.</p>
+          <label><input id="vector-basemap" type="checkbox"> Use vector maps (preview)</label>
+          <p>Vector maps use fewer map tiles in our samples, but video creation can be slower. Fine labels may look slightly softer.</p>
+          <a href="https://carto.com/" target="_blank" rel="noopener noreferrer"><img src="../carto-logo.svg" alt="CARTO" width="82" height="32"></a>
+          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a>
           <label class="checkbox-row">
             <input id="map-consent" type="checkbox" />
             <span data-i18n="mapConsentLabel">I understand and want to load the map</span>
@@ -242,6 +246,7 @@
       </div>
       </form>
       <footer>
+        <a href="https://carto.com/" target="_blank" rel="noopener noreferrer"><img src="../carto-logo.svg" alt="CARTO" width="82" height="32"></a>
         <p data-i18n="footerNoAccount">No account, location permission, or Timeline upload is required.</p>
         <p data-i18n="footerMapAttribution">Map data © OpenStreetMap contributors and © CARTO.</p>
         <p class="original-credit" data-flow="originalCredit">The original Timeline Visualizer by mahlerlab</p>

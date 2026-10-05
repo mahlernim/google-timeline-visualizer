@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { authenticatedCartoUrl, vectorCamera } from '../prototypes/vector-map';
-import { expandedViewport, reusableBackground, cropRectangle } from '../prototypes/background-cache';
+import { authenticatedCartoUrl, vectorCamera } from './vector/vector-map';
+import { expandedViewport, reusableBackground, cropRectangle } from './vector/background-cache';
 
 describe('vector prototype projection and credential scope', () => {
   it('matches the existing normalized Mercator viewport with a 512px world at zoom zero', () => {

@@ -1,5 +1,5 @@
 import { Map as LibreMap } from 'maplibre-gl';
-import type { RenderSize, Viewport } from '../src/types';
+import type { RenderSize, Viewport } from '../types';
 import { OVERSCAN, expandedViewport, reusableBackground, cropRectangle } from './background-cache';
 
 export function vectorCamera(view: Viewport, size: RenderSize) {
@@ -20,11 +20,12 @@ export function authenticatedCartoUrl(raw: string, key: string): string {
   return url.toString();
 }
 
-/** Prototype only. One renderer and resource cache per run, with exact camera synchronization. */
+/** Export preview. One renderer and resource cache per run, with exact camera synchronization. */
 export class VectorMap {
   private readonly map: LibreMap;
   private readonly container: HTMLDivElement;
   private failure: Error | null = null;
+  private disposed = false;
   private cancelPending?: () => void;
   readonly requests: Record<string, number> = {};
   renders = 0;
@@ -33,6 +34,7 @@ export class VectorMap {
     this.container = document.createElement('div');
     Object.assign(this.container.style, { position: 'fixed', left: '-10000px', top: '0', width: `${size.width}px`, height: `${size.height}px` });
     document.body.append(this.container);
+    try {
     this.map = new LibreMap({
       container: this.container, interactive: false, attributionControl: false,
       style: authenticatedCartoUrl('https://basemaps.cartocdn.com/gl/positron-gl-style/style.json', key),
@@ -46,12 +48,17 @@ export class VectorMap {
         return { url: authenticatedCartoUrl(url, key) };
       },
     });
+    } catch {
+      this.container.remove();
+      throw new Error("Vector map could not initialize");
+    }
     // Never retain provider error text because it can include credential-bearing URLs.
     this.map.on('error', () => { this.failure = new Error('Vector resource failed to load'); this.cancelPending?.(); });
   }
 
   async draw(canvas: HTMLCanvasElement, view: Viewport, signal?: AbortSignal): Promise<void> {
     signal?.throwIfAborted();
+    if (this.disposed) throw new Error('Vector renderer disposed');
     if (this.failure) throw this.failure;
     await new Promise<void>((resolve, reject) => {
       const cleanup = () => {
@@ -76,6 +83,8 @@ export class VectorMap {
   }
 
   dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
     this.cancelPending?.(); this.map.remove(); this.container.remove();
   }
 }

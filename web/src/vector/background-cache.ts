@@ -1,4 +1,4 @@
-import type { RenderSize, Viewport } from '../src/types';
+import type { RenderSize, Viewport } from '../types';
 
 export const OVERSCAN = 1.5;
 export const MAX_SCALE_CHANGE = 0.02;

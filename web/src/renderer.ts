@@ -147,6 +147,7 @@ export async function prepareJourney(
   durationSeconds = 15,
   signal?: AbortSignal,
   _onProgress?: (completed: number, total: number) => void,
+  basemap: 'raster' | 'vector' = 'raster',
 ): Promise<PreparedJourney> {
   if (points.length < 2) {
     throw new AppError('errorTooFewPoints', 'Select a period containing at least two location points.');
@@ -166,7 +167,20 @@ export async function prepareJourney(
     size,
   );
   signal?.throwIfAborted();
-  const tileCache = new TileCache<ImageBitmap>(async (key, tileSignal) => {
+  let vectorBackground: PreparedJourney['vectorBackground'];
+  let cartoLogo: HTMLImageElement | undefined;
+  if (basemap === 'vector') {
+    const { ReusedVectorMap } = await import('./vector/vector-map');
+    signal?.throwIfAborted();
+    vectorBackground = new ReusedVectorMap(size, import.meta.env.VITE_CARTO_BASEMAP_API_KEY?.trim() ?? '');
+    try {
+      cartoLogo = new Image();
+      cartoLogo.src = import.meta.env.BASE_URL + 'carto-logo.svg';
+      await cartoLogo.decode();
+      signal?.throwIfAborted();
+    } catch (error) { vectorBackground.dispose(); throw error; }
+  }
+  const tileCache = basemap === 'vector' ? undefined : new TileCache<ImageBitmap>(async (key, tileSignal) => {
     const [zoom, x, y] = key.split('/').map(Number);
     const response = await fetch(cartoTileUrl({ zoom, x, y }), { signal: tileSignal });
     if (!response.ok) throw new AppError('errorPreviewFailed', 'Map images could not be loaded. Please try again.');
@@ -174,9 +188,10 @@ export async function prepareJourney(
     if (tileSignal.aborted) { image.close(); tileSignal.throwIfAborted(); }
     return image;
   });
-  signal?.addEventListener('abort', () => tileCache.dispose(), { once: true });
+  signal?.addEventListener('abort', () => { tileCache?.dispose(); vectorBackground?.dispose(); }, { once: true });
   return {
     ...journey,
+    vectorBackground, cartoLogo,
     durationSeconds,
     overviewRouteSegments: overviewSegments,
     size,
@@ -393,6 +408,21 @@ export async function drawJourneyFrame(
   canvas: HTMLCanvasElement, journey: PreparedJourney, frame: TimelineFrame,
   text: OverlayText, signal?: AbortSignal,
 ): Promise<void> {
+  if (journey.vectorBackground) {
+    const current = cameraViewportAt(journey.cameraTrack, frame.journeyProgress);
+    const view = frame.outroProgress <= 0 ? current : blendViewport(current, journey.overviewViewport, easeOutCubic(frame.outroProgress), journey.size);
+    await journey.vectorBackground.draw(canvas, view, signal);
+    drawFrame(canvas, journey, frame, text, false);
+    const context = canvas.getContext('2d')!;
+    if (journey.cartoLogo) {
+      const width = Math.max(66, Math.min(canvas.width, canvas.height) * .15);
+      const height = width * 64 / 164;
+      context.fillStyle = 'rgba(255,255,255,.9)';
+      context.fillRect(4,canvas.height-height-8,width+8,height+4);
+      context.drawImage(journey.cartoLogo,8,canvas.height-height-6,width,height);
+    }
+    return;
+  }
   if (!journey.tileCache) { drawFrame(canvas, journey, frame, text); return; }
   signal?.throwIfAborted();
   const context = canvas.getContext('2d');
@@ -429,6 +459,7 @@ export async function drawJourneyFrame(
 }
 
 export function releaseJourney(journey: PreparedJourney | null): void {
+  journey?.vectorBackground?.dispose();
   journey?.tileCache?.dispose();
   journey?.tiles.clear();
 }
