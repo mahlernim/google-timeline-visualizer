@@ -11,7 +11,7 @@ export default mergeConfig(base, defineConfig({
         if (!req.url?.startsWith('/_prototype-output/')) return next();
         const name = req.url.slice('/_prototype-output/'.length);
         if (req.method !== 'POST' || req.headers.origin !== 'http://127.0.0.1:4173'
-          || !/^(city|long|dateline)-(raster|vector)-(480|720|1080)(-(0|120|239))?\.(mp4|png|json)$/.test(name)) {
+          || !/^\d{13}\/(city|long|dateline)-(raster|vector|reuse)-(480|720|1080)(-(0|120|239))?\.(mp4|png|json)$/.test(name)) {
           res.statusCode=400; res.end(); return;
         }
         try {
@@ -21,9 +21,9 @@ export default mergeConfig(base, defineConfig({
             if (length>50*1024*1024) throw new Error('Evidence exceeds limit');
             chunks.push(Buffer.from(chunk));
           }
-          const directory=resolve(import.meta.dirname,'../app/build/vector-prototype-web');
+          const directory=resolve(import.meta.dirname,'../app/build/vector-reuse-web',name.split('/')[0]);
           await mkdir(directory,{recursive:true});
-          await writeFile(resolve(directory,name),Buffer.concat(chunks));
+          await writeFile(resolve(directory,name.split('/')[1]),Buffer.concat(chunks));
           res.end('saved');
         } catch { res.statusCode=500; res.end('Could not save prototype evidence'); }
       });

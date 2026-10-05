@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Matrix
+import android.graphics.Paint
 import android.os.Build
 import android.os.Debug
 import android.os.SystemClock
@@ -54,7 +56,7 @@ class VectorBasemapBenchmarkTest {
         assumeTrue("Opt in to the network benchmark", InstrumentationRegistry.getArguments().getString("runVectorBenchmark") == "true")
         val context = ApplicationProvider.getApplicationContext<Context>()
         require(BuildConfig.CARTO_BASEMAP_API_KEY.isNotBlank()) { "Supply a CARTO benchmark key at build time" }
-        val output = File(context.getExternalFilesDir(null), "vector-comparison").apply { mkdirs() }
+        val output = File(context.getExternalFilesDir(null), "vector-reuse-comparison").apply { mkdirs() }
         val vectorRequests = AtomicInteger()
         val rasterRequests = AtomicInteger()
         val certificate = signingSha1(context)
@@ -84,7 +86,9 @@ class VectorBasemapBenchmarkTest {
                     GeoPoint(Instant.parse("2026-01-01T00:00:00Z").plusSeconds(index * 86400L), lat, lon)
                 }, 2026)
                 val settings = CameraSettings.DEFAULT.copy(cameraMovement = CameraMovement.CLOSE_UP)
-                for (mode in listOf("raster", "vector")) {
+                val modes = listOf("raster", "vector", "reuse")
+                val reverse = InstrumentationRegistry.getArguments().getString("benchmarkOrder") == "reverse"
+                for (mode in if (reverse) modes.reversed() else modes) {
                     val painter = TimelinePainter()
                     val tiles = TileRepository(context, connectionFactory = { url ->
                         rasterRequests.incrementAndGet()
@@ -93,10 +97,15 @@ class VectorBasemapBenchmarkTest {
                             setRequestProperty("X-Android-Cert", certificate)
                         }
                     })
-                    val beforeRequests = if (mode == "vector") vectorRequests.get() else rasterRequests.get()
+                    val beforeRequests = if (mode != "raster") vectorRequests.get() else rasterRequests.get()
                     val begun = SystemClock.elapsedRealtimeNanos()
-                    val snapshotter = if (mode == "vector") withContext(Dispatchers.Main) {
-                        MapSnapshotter(context, MapSnapshotter.Options(480,480)
+                    val mapSize = if (mode == "reuse") 720 else 480
+                    var cachedView: Viewport? = null
+                    var cachedBitmap: Bitmap? = null
+                    var mapRenders = 0
+                    val paint = Paint(Paint.FILTER_BITMAP_FLAG)
+                    val snapshotter = if (mode != "raster") withContext(Dispatchers.Main) {
+                        MapSnapshotter(context, MapSnapshotter.Options(mapSize,mapSize)
                             .withPixelRatio(1f).withLogo(false).withAttribution(false)
                             .withStyleBuilder(org.maplibre.android.maps.Style.Builder().fromUri("https://basemaps.cartocdn.com/gl/positron-gl-style/style.json")))
                     } else null
@@ -104,32 +113,47 @@ class VectorBasemapBenchmarkTest {
                     val times = mutableListOf<Double>()
                     var firstFrameMs = 0.0
                     try {
-                        for (index in 0 until 61) {
-                            val frame = if (index < 49) TimelineFrame(index / 48f,0f) else TimelineFrame(1f,(index-48)/12f)
+                        for (index in 0 until 240) {
+                            val frame = if (index < 192) TimelineFrame(index / 191f,0f) else TimelineFrame(1f,(index-191)/48f)
                             val view = painter.viewport(journey,frame,480,480,settings)
                             val start = SystemClock.elapsedRealtimeNanos()
                             val canvas = Canvas(canvasBitmap)
                             canvas.drawColor(android.graphics.Color.WHITE)
                             if (snapshotter != null) {
-                                val image = capture(snapshotter, view)
-                                val target = camera(view).target!!
-                                val center = image.pixelForLatLng(target)
-                                assertEquals(240f, center.x, 2f)
-                                assertEquals(240f, center.y, 2f)
-                                if (index == 0) File(output,"$name-vector-raw.png").outputStream().use {
-                                    image.bitmap.compress(Bitmap.CompressFormat.PNG,100,it)
+                                if (mode != "reuse" || cachedView == null || !reusable(cachedView!!,view)) {
+                                    val backgroundView = if (mode == "reuse") expanded(view) else view
+                                    val image = capture(snapshotter, backgroundView, mapSize)
+                                    val center = image.pixelForLatLng(camera(backgroundView,mapSize).target!!)
+                                    assertEquals(mapSize / 2f, center.x, 2f)
+                                    assertEquals(mapSize / 2f, center.y, 2f)
+                                    cachedBitmap?.recycle()
+                                    cachedBitmap = image.bitmap
+                                    cachedView = backgroundView
+                                    mapRenders++
+                                }
+                                val background = cachedBitmap!!
+                                val coverage = cachedView!!
+                                val cropX = (view.minX-coverage.minX)/(coverage.maxX-coverage.minX)*mapSize
+                                val cropY = (view.minY-coverage.minY)/(coverage.maxY-coverage.minY)*mapSize
+                                val cropWidth = (view.maxX-view.minX)/(coverage.maxX-coverage.minX)*mapSize
+                                val cropHeight = (view.maxY-view.minY)/(coverage.maxY-coverage.minY)*mapSize
+                                assertTrue("Crop must stay inside cached image",cropX >= -0.001 && cropY >= -0.001 && cropX+cropWidth <= mapSize+0.001 && cropY+cropHeight <= mapSize+0.001)
+                                val sx = 480 / cropWidth
+                                val sy = 480 / cropHeight
+                                val transform = Matrix().apply { setValues(floatArrayOf(sx.toFloat(),0f,(-cropX*sx).toFloat(),0f,sy.toFloat(),(-cropY*sy).toFloat(),0f,0f,1f)) }
+                                canvas.drawBitmap(background,transform,paint)
+                                if (index == 0) File(output,"$name-$mode-raw.png").outputStream().use {
+                                    canvasBitmap.compress(Bitmap.CompressFormat.PNG,100,it)
                                 }
                                 var opaque = 0
                                 val colors = mutableSetOf<Int>()
                                 for (y in 20 until 460 step 20) for (x in 20 until 460 step 20) {
-                                    val pixel = image.bitmap.getPixel(x,y)
+                                    val pixel = background.getPixel(x*mapSize/480,y*mapSize/480)
                                     if (android.graphics.Color.alpha(pixel) >= 250) opaque++
                                     colors.add(pixel)
                                 }
                                 assertTrue("Vector background must be opaque",opaque >= 480)
                                 assertTrue("Vector background must contain map detail", colors.size > 3)
-                                canvas.drawBitmap(image.bitmap,0f,0f,null)
-                                image.bitmap.recycle()
                             } else {
                                 for (tile in painter.requiredTiles(view)) requireNotNull(tiles.load(tile.id)) { "Raster tile failed" }
                             }
@@ -137,27 +161,30 @@ class VectorBasemapBenchmarkTest {
                                 tiles = { tiles.cached(it) }, drawMapBackground = mode == "raster")
                             times.add((SystemClock.elapsedRealtimeNanos()-start)/1e6)
                             if (index == 0) firstFrameMs = (SystemClock.elapsedRealtimeNanos()-begun)/1e6
-                            if (index in listOf(0,30,60)) File(output,"$name-$mode-$index.png").outputStream().use {
+                            if (index in listOf(0,120,239)) File(output,"$name-$mode-$index.png").outputStream().use {
                                 canvasBitmap.compress(Bitmap.CompressFormat.PNG,100,it)
                             }
                         }
                         val sorted = times.drop(1).sorted()
-                        report.put(JSONObject().put("route",name).put("mode",mode).put("frames",61)
+                        report.put(JSONObject().put("route",name).put("mode",mode).put("order",if (reverse) "reverse" else "forward").put("frames",240).put("mapRenders",mapRenders).put("reusedFrames",if (mode == "reuse") 240-mapRenders else 0)
+                            .put("backgroundCacheBytes",if (mode == "reuse") mapSize*mapSize*4 else 0)
                             .put("firstFrameMs",firstFrameMs).put("medianFrameMs",sorted[sorted.size/2])
                             .put("p95FrameMs",sorted[(sorted.size*.95).toInt()])
                             .put("totalMs",(SystemClock.elapsedRealtimeNanos()-begun)/1e6)
-                            .put("httpRequests",(if (mode == "vector") vectorRequests.get() else rasterRequests.get())-beforeRequests)
+                            .put("httpRequests",(if (mode != "raster") vectorRequests.get() else rasterRequests.get())-beforeRequests)
                             .put("nativeHeapBytes",Debug.getNativeHeapAllocatedSize())
                             .put("sdk",Build.VERSION.SDK_INT).put("device",Build.MODEL)
-                            .put("notes","Single emulator run, 61 sampled frames, rendering only, no MP4 encoding. Disk/network caches may be warm. Memory is a process snapshot, not peak."))
+                            .put("notes","Single host-GPU emulator run, 240 frames, rendering only, no MP4 encoding. Disk/network caches may be warm. Memory is a process snapshot, not peak."))
                         File(output,"metrics.json").writeText(report.toString(2))
+                        println("VECTOR_BENCHMARK $name $mode renders=$mapRenders complete")
                     } finally {
+                        cachedBitmap?.recycle()
                         canvasBitmap.recycle()
                         withContext(Dispatchers.Main) { snapshotter?.cancel() }
                     }
                 }
             }
-            assertTrue(report.length() == 4)
+            assertTrue(report.length() == 6)
         } finally {
             withContext(Dispatchers.Main) { HttpRequestUtil.setOkHttpClient(null) }
             client.dispatcher.executorService.shutdown()
@@ -165,23 +192,34 @@ class VectorBasemapBenchmarkTest {
         }
     }
 
-    private fun camera(view: Viewport): CameraPosition {
+    private fun camera(view: Viewport, size: Int): CameraPosition {
         val latitude = atan(sinh(Math.PI*(1-2*(view.minY+view.maxY)/2))) * 180 / Math.PI
         val longitude = (view.minX+view.maxX)/2 * 360-180
         return CameraPosition.Builder().target(LatLng(latitude,longitude))
-            .zoom(log2(480/(512*(view.maxX-view.minX)))).build()
+            .zoom(log2(size/(512*(view.maxX-view.minX)))).build()
     }
 
-    private suspend fun capture(snapshotter: MapSnapshotter, view: Viewport): MapSnapshot = withContext(Dispatchers.Main) {
+    private suspend fun capture(snapshotter: MapSnapshotter, view: Viewport, size: Int): MapSnapshot = withContext(Dispatchers.Main) {
         withTimeout(30_000) {
             suspendCancellableCoroutine { continuation ->
-                snapshotter.setCameraPosition(camera(view))
+                snapshotter.setCameraPosition(camera(view,size))
                 continuation.invokeOnCancellation { android.os.Handler(android.os.Looper.getMainLooper()).post { snapshotter.cancel() } }
                 snapshotter.start({ image ->
                     if (continuation.isActive) continuation.resume(image) else image.bitmap.recycle()
                 }, { _ -> if (continuation.isActive) continuation.resumeWithException(IllegalStateException("Vector snapshot failed")) })
             }
         }
+    }
+
+    private fun expanded(view: Viewport): Viewport {
+        val dx = (view.maxX-view.minX)*0.25
+        val dy = (view.maxY-view.minY)*0.25
+        return view.copy(minX=view.minX-dx,maxX=view.maxX+dx,minY=view.minY-dy,maxY=view.maxY+dy)
+    }
+
+    private fun reusable(cached: Viewport, view: Viewport): Boolean {
+        val scale = (cached.maxX-cached.minX)/1.5/(view.maxX-view.minX)
+        return kotlin.math.abs(scale-1) <= 0.02 && view.minX >= cached.minX && view.maxX <= cached.maxX && view.minY >= cached.minY && view.maxY <= cached.maxY
     }
 
     @Suppress("DEPRECATION")

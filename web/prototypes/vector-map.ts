@@ -1,5 +1,6 @@
 import { Map as LibreMap } from 'maplibre-gl';
 import type { RenderSize, Viewport } from '../src/types';
+import { OVERSCAN, expandedViewport, reusableBackground, cropRectangle } from './background-cache';
 
 export function vectorCamera(view: Viewport, size: RenderSize) {
   const x = (view.minX + view.maxX) / 2;
@@ -26,6 +27,7 @@ export class VectorMap {
   private failure: Error | null = null;
   private cancelPending?: () => void;
   readonly requests: Record<string, number> = {};
+  renders = 0;
 
   constructor(size: RenderSize, key: string) {
     this.container = document.createElement('div');
@@ -34,7 +36,9 @@ export class VectorMap {
     this.map = new LibreMap({
       container: this.container, interactive: false, attributionControl: false,
       style: authenticatedCartoUrl('https://basemaps.cartocdn.com/gl/positron-gl-style/style.json', key),
-      center: [126.98, 37.56], zoom: 10, pixelRatio: 1,
+      center: [126.98, 37.56], zoom: 10, minZoom: -2, pixelRatio: 1,
+      // Match the app's Mercator viewport, including wide overviews and overscan.
+      transformConstrain: (center, zoom) => ({ center, zoom }),
       fadeDuration: 0, renderWorldCopies: true,
       canvasContextAttributes: { preserveDrawingBuffer: true },
       transformRequest: (url, type) => {
@@ -68,9 +72,44 @@ export class VectorMap {
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Canvas unavailable');
     context.drawImage(this.map.getCanvas(), 0, 0, canvas.width, canvas.height);
+    this.renders++;
   }
 
   dispose(): void {
     this.cancelPending?.(); this.map.remove(); this.container.remove();
   }
+}
+
+/** One temporary oversized bitmap. Rebuild after a 2% scale change or coverage miss. */
+export class ReusedVectorMap {
+  private readonly background = document.createElement('canvas');
+  private readonly renderer: VectorMap;
+  private cached?: Viewport;
+  reusedFrames = 0;
+  get requests() { return this.renderer.requests; }
+  get renders() { return this.renderer.renders; }
+  get cacheBytes() { return this.background.width * this.background.height * 4; }
+
+  constructor(size: RenderSize, key: string) {
+    this.background.width = Math.round(size.width * OVERSCAN);
+    this.background.height = Math.round(size.height * OVERSCAN);
+    this.renderer = new VectorMap(this.background, key);
+  }
+
+  async draw(canvas: HTMLCanvasElement, view: Viewport, signal?: AbortSignal) {
+    signal?.throwIfAborted();
+    if (!this.cached || !reusableBackground(this.cached, view)) {
+      const expanded = expandedViewport(view);
+      await this.renderer.draw(this.background, expanded, signal);
+      this.cached = expanded;
+    } else this.reusedFrames++;
+    const crop = cropRectangle(this.cached, view, this.background);
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas unavailable');
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(this.background, crop.x, crop.y, crop.width, crop.height, 0, 0, canvas.width, canvas.height);
+  }
+
+  dispose() { this.renderer.dispose(); this.background.width = this.background.height = 0; }
 }

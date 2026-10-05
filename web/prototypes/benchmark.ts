@@ -4,7 +4,7 @@ import { cameraViewportAt, blendViewport } from '../src/camera';
 import { easeOutCubic, frameAtElapsedSeconds } from '../src/animation';
 import { prepareJourney, drawJourneyFrame, drawFrame, releaseJourney } from '../src/renderer';
 import type { GeoPoint } from '../src/types';
-import { VectorMap } from './vector-map';
+import { ReusedVectorMap, VectorMap } from './vector-map';
 
 const key = import.meta.env.VITE_CARTO_BASEMAP_API_KEY?.trim() ?? '';
 const overlay = { title: 'Synthetic comparison', periodLabel: 'Seoul · 서울 · 東京', separator: ' · ', formatDistance: (km: number) => `${km.toFixed(0)} km` };
@@ -18,8 +18,10 @@ const select = (id: string) => document.getElementById(id) as HTMLSelectElement;
 const status = document.getElementById('status')!;
 const results: unknown[] = [];
 const urls: string[] = [];
+const modes = ['raster', 'vector', 'reuse'];
+let runId = '';
 async function save(name: string, body: Blob | string) {
-  const response = await fetch(`/_prototype-output/${name}`,{method:'POST',body});
+  const response = await fetch(`/_prototype-output/${runId}/${name}`,{method:'POST',body});
   if (!response.ok) throw new Error('Run with vite.prototype.config.ts to preserve comparison evidence');
 }
 document.getElementById('cancel')!.onclick = () => controller?.abort();
@@ -28,8 +30,9 @@ document.getElementById('run')!.onclick = async () => {
   const cancel = document.getElementById('cancel') as HTMLButtonElement;
   run.disabled = true; cancel.disabled = false; controller = new AbortController();
   results.length = 0;
+  runId = String(Date.now());
   urls.splice(0).forEach(url => URL.revokeObjectURL(url));
-  for (const mode of ['raster', 'vector']) document.getElementById(`${mode}-result`)!.replaceChildren();
+  for (const mode of modes) document.getElementById(`${mode}-result`)!.replaceChildren();
   document.getElementById('metrics')!.textContent = '';
   status.textContent = 'Preparing comparison';
   const size = Number(select('size').value);
@@ -37,13 +40,13 @@ document.getElementById('run')!.onclick = async () => {
   const points: GeoPoint[] = routes[route].map(([latitude,longitude], i) => ({latitude,longitude,instant:new Date(Date.UTC(2026,0,1+i))}));
   try {
     if (!key) throw new Error('A CARTO test key must be supplied to the development server');
-    for (const mode of ['raster', 'vector']) {
+    for (const mode of select('order').value === 'reverse' ? [...modes].reverse() : modes) {
       performance.clearResourceTimings();
       const canvas = document.getElementById(mode) as HTMLCanvasElement;
       canvas.width = canvas.height = size;
       const begun = performance.now();
       const journey = await prepareJourney(points, canvas, 'close-up', 10, controller.signal);
-      const vector = mode === 'vector' ? new VectorMap(canvas, key) : null;
+      const vector = mode === 'reuse' ? new ReusedVectorMap(canvas, key) : mode === 'vector' ? new VectorMap(canvas, key) : null;
       const buffer = new Mp4Buffer();
       const target = new StreamTarget(new WritableStream({ write: ({data, position}) => buffer.write(data, position) }));
       const output = new Output({ format: new Mp4OutputFormat(), target });
@@ -81,7 +84,7 @@ document.getElementById('run')!.onclick = async () => {
         holder.replaceChildren(video, link);
         const carto = performance.getEntriesByType('resource').filter(entry => new URL(entry.name).hostname.endsWith('basemaps.cartocdn.com'));
         const sorted = frameMs.slice(1).sort((a,b)=>a-b);
-        const metrics = {mode,route,size,frames:240,firstFrameMs,totalMs:performance.now()-begun,
+        const metrics = {runId,mode,route,size,frames:240,mapRenders:vector?.renders,reusedFrames:vector instanceof ReusedVectorMap ? vector.reusedFrames : 0,backgroundCacheBytes:vector instanceof ReusedVectorMap ? vector.cacheBytes : 0,firstFrameMs,totalMs:performance.now()-begun,
           steadyFrameMedianMs:sorted[Math.floor(sorted.length*.5)],steadyFrameP95Ms:sorted[Math.floor(sorted.length*.95)],
           cartoResourceLoads:carto.length,vectorRequests:vector?.requests,mp4Bytes:blob.size,
           rasterDecodedCacheBytes:journey.tileCache?.residentBytes,
@@ -93,7 +96,7 @@ document.getElementById('run')!.onclick = async () => {
       } catch (error) { await output.cancel().catch(()=>{}); throw error; }
       finally { vector?.dispose(); releaseJourney(journey); }
     }
-    status.textContent = 'Comparison complete';
+    status.textContent = `Comparison complete (${runId})`;
   } catch (error) { status.textContent = controller.signal.aborted ? 'Comparison cancelled' : error instanceof Error ? error.message : 'Comparison failed'; }
   finally { run.disabled = false; cancel.disabled = true; }
 };

@@ -1,9 +1,10 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CARTO vector comparison</title>
-<style>body{font:16px system-ui;max-width:1100px;margin:30px auto;padding:20px;background:#faf8fa;color:#24191d}button,select{padding:10px;margin:6px}canvas,video{width:min(100%,480px);background:#eee}section{display:flex;gap:20px;flex-wrap:wrap}pre{white-space:pre-wrap;font-size:13px}a{color:#8e124f}</style></head>
+<style>body{font:16px system-ui;max-width:1100px;margin:30px auto;padding:20px;background:#faf8fa;color:#24191d}button,select{padding:10px;margin:6px}canvas,video{width:min(100%,480px);background:#eee}section>div{max-width:480px}video{display:block}section{display:flex;gap:20px;flex-wrap:wrap}pre{white-space:pre-wrap;font-size:13px}a{color:#8e124f}</style></head>
 <body><h1>CARTO raster and vector comparison</h1><p>Synthetic routes only. Both versions use the app's camera and overlays. Prototype for local testing.</p>
 <label>Route <select id="route"><option value="city">Seoul city</option><option value="long">Seoul to Tokyo</option><option value="dateline">Across the date line</option></select></label>
 <label>Size <select id="size"><option>480</option><option>720</option><option>1080</option></select></label>
+<label>Order <select id="order"><option value="forward">Raster first</option><option value="reverse">Reuse first</option></select></label>
 <button id="run">Compare 10-second videos</button><button id="cancel" disabled>Cancel</button>
-<p id="status">Ready</p><section><div><h2>Raster</h2><canvas id="raster" width="480" height="480"></canvas><div id="raster-result"></div></div><div><h2>Vector Positron</h2><canvas id="vector" width="480" height="480"></canvas><div id="vector-result"></div></div></section>
+<p id="status">Ready</p><section><div><h2>Raster</h2><canvas id="raster" width="480" height="480"></canvas><div id="raster-result"></div></div><div><h2>Vector Positron</h2><canvas id="vector" width="480" height="480"></canvas><div id="vector-result"></div></div><div><h2>Vector with background reuse</h2><canvas id="reuse" width="480" height="480"></canvas><div id="reuse-result"></div></div></section>
 <p>© OpenStreetMap contributors · <a href="https://carto.com">CARTO</a></p><pre id="metrics"></pre><script type="module" src="./benchmark.ts"></script></body></html>
