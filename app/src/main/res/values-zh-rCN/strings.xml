@@ -569,4 +569,8 @@
     <string name="keep_past_routes_visible_summary">将已完成的路线显示为淡色背景轨迹。关闭时，较早的移动会逐渐消失。</string>
     <string name="hide_dates">隐藏日期</string>
     <string name="hide_dates_summary">隐藏视频中的日期，距离仍会显示。</string>
+    <string name="vector_map">矢量地图</string>
+    <string name="vector_map_summary">在预览和视频中使用矢量地图。如果设备无法加载，请关闭此选项以使用图像地图。</string>
+    <string name="vector_map_failed">无法加载矢量地图。请检查网络后重试，或在设置中关闭矢量地图以使用图像地图。</string>
+    <string name="carto_link">CARTO 底图网站</string>
 </resources>

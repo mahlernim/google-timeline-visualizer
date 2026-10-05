@@ -579,4 +579,8 @@
     <string name="keep_past_routes_visible_summary">Mostra as rotas concluídas como um rastro discreto ao fundo. Quando desativado, os movimentos anteriores desaparecem.</string>
     <string name="hide_dates">Ocultar datas</string>
     <string name="hide_dates_summary">Oculta as datas no vídeo. A distância continua visível.</string>
+    <string name="vector_map">Mapa vetorial</string>
+    <string name="vector_map_summary">Usa mapas vetoriais nas prévias e nos vídeos. Desative para usar mapas de imagem se houver problemas no dispositivo.</string>
+    <string name="vector_map_failed">Não foi possível carregar o mapa vetorial. Verifique a conexão e tente novamente ou desative Mapa vetorial nas configurações.</string>
+    <string name="carto_link">Site de mapas da CARTO</string>
 </resources>

@@ -35,6 +35,8 @@ class TileRepository internal constructor(
         it.openConnection() as HttpURLConnection
     },
 ) {
+    private val authentication = CartoAuthentication(context.applicationContext)
+
     private data class MemoryTile(val bitmap: Bitmap, val expiresAtMillis: Long)
 
     private val legacyCacheDirectory = File(context.cacheDir, "carto-tiles")
@@ -87,6 +89,7 @@ class TileRepository internal constructor(
             connection.connectTimeout = 10_000
             connection.readTimeout = 15_000
             connection.setRequestProperty("User-Agent", "TimelineVisualizer-Android/1.0")
+            authentication.headers.forEach { (name, value) -> connection.setRequestProperty(name, value) }
             if (connection.responseCode !in 200..299) return@withContext null
             connection.inputStream.use { input -> temp.outputStream().use(input::copyTo) }
             try {

@@ -686,6 +686,7 @@
             <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" app:cardCornerRadius="20dp" app:strokeWidth="0dp">
                 <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content">
                     <dev.mahlernim.timelinevisualizer.ui.TimelineView android:id="@+id/timelineView" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:background="@color/map_surface" android:clickable="true" android:contentDescription="@string/timeline_preview" />
+                    <ImageButton android:id="@+id/cartoLogoLink" android:layout_width="88dp" android:layout_height="48dp" android:layout_gravity="bottom|start" android:background="#E6FFFFFF" android:padding="8dp" android:scaleType="fitCenter" android:src="@drawable/carto_logo" android:contentDescription="@string/carto_link" />
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/playButton"
                         style="@style/Widget.Material3.Button.TonalButton"

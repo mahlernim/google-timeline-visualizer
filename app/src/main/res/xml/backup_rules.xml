@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
+    <exclude domain="file" path="mbgl-offline.db" />
+    <exclude domain="file" path="mbgl-offline.db-shm" />
+    <exclude domain="file" path="mbgl-offline.db-wal" />
     <exclude domain="file" path="timeline-imports/" />
     <exclude domain="file" path="creation-thumbnails/" />
     <exclude domain="file" path="pending-video-export.bin" />

@@ -127,13 +127,14 @@ class VideoExportService : Service() {
             ),
         )
         try {
-            val overview = Mp4Exporter(contentResolver, TileRepository(applicationContext)).export(
+            val overview = Mp4Exporter(contentResolver, TileRepository(applicationContext), applicationContext).export(
                 uri,
                 request.journey,
                 request.title,
                 request.durationSeconds,
                 request.renderText,
                 request.cameraSettings,
+                useVectorBasemap = request.useVectorBasemap,
             ) { progress ->
                 val snapshot = VideoExportSnapshot(
                     status = VideoExportStatus.RUNNING,

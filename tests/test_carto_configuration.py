@@ -15,8 +15,14 @@ def test_python_tile_url_encodes_the_project_key() -> None:
     )
 
 
-def test_pages_build_prefers_web_key_with_existing_key_fallback() -> None:
+def test_pages_build_requires_dedicated_web_key() -> None:
     workflow = (ROOT / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")
 
-    assert "VITE_CARTO_BASEMAP_API_KEY: ${{ secrets.CARTO_WEB_BASEMAP_API_KEY || secrets.CARTO_BASEMAP_API_KEY }}" in workflow
+    assert "VITE_CARTO_BASEMAP_API_KEY: ${{ secrets.CARTO_WEB_BASEMAP_API_KEY }}" in workflow
     assert 'test -n "$VITE_CARTO_BASEMAP_API_KEY"' in workflow
+
+
+def test_android_release_requires_dedicated_android_key() -> None:
+    workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+    assert "CARTO_ANDROID_BASEMAP_API_KEY: ${{ secrets.CARTO_ANDROID_BASEMAP_API_KEY }}" in workflow
+    assert "secrets.CARTO_BASEMAP_API_KEY" not in workflow

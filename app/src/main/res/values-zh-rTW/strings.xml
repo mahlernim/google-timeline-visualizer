@@ -569,4 +569,8 @@
     <string name="keep_past_routes_visible_summary">將已完成的路線顯示為淡色背景軌跡。關閉時，較早的移動會逐漸消失。</string>
     <string name="hide_dates">隱藏日期</string>
     <string name="hide_dates_summary">隱藏影片中的日期，距離仍會顯示。</string>
+    <string name="vector_map">向量地圖</string>
+    <string name="vector_map_summary">在預覽和影片中使用向量地圖。如果裝置無法載入，請關閉此選項以使用影像地圖。</string>
+    <string name="vector_map_failed">無法載入向量地圖。請檢查網路後重試，或在設定中關閉向量地圖以使用影像地圖。</string>
+    <string name="carto_link">CARTO 底圖網站</string>
 </resources>

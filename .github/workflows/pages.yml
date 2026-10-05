@@ -54,7 +54,7 @@ jobs:
       - name: Build web app with CARTO project key
         env:
           VITE_STABLE_APK_URL: ${{ steps.apk.outputs.url }}
-          VITE_CARTO_BASEMAP_API_KEY: ${{ secrets.CARTO_WEB_BASEMAP_API_KEY || secrets.CARTO_BASEMAP_API_KEY }}
+          VITE_CARTO_BASEMAP_API_KEY: ${{ secrets.CARTO_WEB_BASEMAP_API_KEY }}
         run: |
           test -n "$VITE_CARTO_BASEMAP_API_KEY"
           pnpm build

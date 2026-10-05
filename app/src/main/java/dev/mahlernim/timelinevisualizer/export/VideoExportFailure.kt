@@ -32,6 +32,9 @@ internal fun classifyVideoExportFailure(context: Context, error: Throwable): Vid
             unsupported.reason.describe(context, unsupported.format),
         )
     }
+    if (causes.any { it is dev.mahlernim.timelinevisualizer.render.VectorMapException }) {
+        return VideoExportFailure(VideoExportFailureKind.MAP_UNAVAILABLE, context.getString(R.string.vector_map_failed))
+    }
     if (causes.any { it is MapTilePreparationException }) {
         return VideoExportFailure(
             VideoExportFailureKind.MAP_UNAVAILABLE,

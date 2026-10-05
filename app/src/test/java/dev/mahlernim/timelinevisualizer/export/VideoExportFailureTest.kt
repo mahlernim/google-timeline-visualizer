@@ -30,6 +30,15 @@ class VideoExportFailureTest {
     }
 
     @Test
+    fun vectorFailureGivesLocalizedRecoveryWithoutProviderUrls() {
+        assertFailure(
+            dev.mahlernim.timelinevisualizer.render.VectorMapException(),
+            VideoExportFailureKind.MAP_UNAVAILABLE,
+            R.string.vector_map_failed,
+        )
+    }
+
+    @Test
     fun classifiesCodecFlags() {
         assertEquals(VideoExportFailureKind.ENCODER_TEMPORARY, classifyCodecFailure(true, false))
         assertEquals(VideoExportFailureKind.ENCODER_TEMPORARY, classifyCodecFailure(false, true))

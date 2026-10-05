@@ -28,6 +28,8 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
       - uses: gradle/actions/setup-gradle@v5
       - name: Restore release signing key
         env:
@@ -35,13 +37,13 @@ jobs:
         run: echo "$SIGNING_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/timeline-visualizer-release.jks"
       - name: Test and build signed GitHub APK and Play bundle
         env:
-          CARTO_BASEMAP_API_KEY: ${{ secrets.CARTO_BASEMAP_API_KEY }}
+          CARTO_ANDROID_BASEMAP_API_KEY: ${{ secrets.CARTO_ANDROID_BASEMAP_API_KEY }}
           ANDROID_SIGNING_STORE_FILE: ${{ runner.temp }}/timeline-visualizer-release.jks
           ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
           ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
           ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
         run: |
-          test -n "$CARTO_BASEMAP_API_KEY"
+          test -n "$CARTO_ANDROID_BASEMAP_API_KEY"
           ./gradlew test lint assembleGithubRelease bundlePlayRelease --stacktrace
       - name: Verify signed GitHub APK
         run: |
