@@ -489,7 +489,13 @@ sourceInput.addEventListener('change', () => { const selected = sourceInput.file
 el('continue-raw-data').addEventListener('click', () => { rawDialog.close(); showStep(1); });
 el('open-google-maps').addEventListener('click', () => { window.open('https://maps.google.com/', '_blank', 'noopener,noreferrer'); });
 rawDialog.addEventListener('cancel', () => { stop(); resetSource(); refresh(); });
-mapStyle.addEventListener('change', () => { stop(); releasePreview(); releaseResult(); });
+mapStyle.addEventListener('change', () => {
+  stop();
+  releaseResult();
+  statusText = () => '';
+  errorText = null;
+  refresh();
+});
 cancel.addEventListener('click', stop);
 back.addEventListener('click', () => showStep(Math.max(0, step - 1)));
 document.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((button) => {
