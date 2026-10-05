@@ -13,3 +13,11 @@ export class AppError extends Error {
     this.name = 'AppError';
   }
 }
+
+/** Never include provider response text or credential-bearing URLs. */
+export class VectorMapError extends Error {
+  constructor() {
+    super('Vector map unavailable');
+    this.name = 'VectorMapError';
+  }
+}

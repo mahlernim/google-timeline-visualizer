@@ -22,7 +22,7 @@ export const de: Strings = {
   headerTitle: 'Video erstellen',
 
   fileCardTitle: 'Timeline-Datei',
-  fileCardIntro: "Wähle deine exportierte Zeitachsendatei. Die Datei bleibt auf diesem Gerät. Vom Kartenanbieter werden nur Kartenbilder angefordert.",
+  fileCardIntro: "Wähle deine exportierte Zeitachsendatei. Die Datei bleibt auf diesem Gerät. Vom Kartenanbieter werden nur Kartenressourcen angefordert.",
   exportHelpSummary: 'Timeline auf dem iPhone exportieren',
   exportHelpStep1: 'Öffnen Sie Google Maps und tippen Sie auf Ihr Profilbild.',
   exportHelpStep2: "Öffne Einstellungen und dann Standort und Datenschutz (bisher Persönliche Inhalte).",
@@ -174,7 +174,7 @@ export const de: Strings = {
   periodRange: '{start} – {end}',
 
   errorAccuracyLimit: 'Null oder eine positive Zahl eingeben oder das Feld leer lassen.',
-  errorMapConsent: 'Bestätigen Sie den Datenschutzhinweis zur Karte, bevor Kartenbilder von CARTO angefordert werden.',
+  errorMapConsent: 'Bestätigen Sie den Datenschutzhinweis zur Karte, bevor Kartenressourcen von CARTO angefordert werden.',
   errorMalformedJson: 'Diese Datei enthält kein gültiges oder vollständiges JSON.',
   errorLegacyFormat: 'Dies ist ein älteres Google Takeout-Format. Exportieren Sie die Timeline-Daten stattdessen vom Telefon.',
   errorRawSignalsOnly: 'Dieser Export enthält Rohsignale, aber keine rekonstruierten Timeline-Reisen.',

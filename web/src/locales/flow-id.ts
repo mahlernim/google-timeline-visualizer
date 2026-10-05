@@ -1,4 +1,9 @@
 export const flowId = {
+    "mapStyle": "Gaya peta",
+    "mapVector": "Peta vektor",
+    "mapRaster": "Peta gambar (kompatibilitas)",
+    "mapStyleHelp": "Peta vektor mungkin memerlukan waktu lebih lama untuk membuat video. Jika peta tidak dimuat, coba peta gambar.",
+    "vectorFailed": "Peta vektor tidak dapat dimuat. Coba lagi, turunkan resolusi, atau pilih peta gambar.",
   hideDates: "Sembunyikan tanggal",
   hideDatesSummary: "Sembunyikan tanggal dalam video. Jarak tetap terlihat.",
   heroTitle: 'Hidupkan perjalanan Anda.',

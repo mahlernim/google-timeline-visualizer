@@ -24,7 +24,7 @@ export const ko: Strings = {
   headerTitle: '동영상 만들기',
 
   fileCardTitle: '타임라인 파일',
-  fileCardIntro: "내보낸 타임라인 파일을 선택하세요. 파일은 이 기기에 남으며, 지도 제공업체에는 지도 이미지만 요청합니다.",
+  fileCardIntro: "내보낸 타임라인 파일을 선택하세요. 파일은 이 기기에 남으며, 지도 제공업체에는 지도 리소스만 요청합니다.",
   exportHelpSummary: 'iPhone에서 타임라인 내보내는 방법',
   exportHelpStep1: 'Google 지도를 열고 프로필 사진을 탭하세요.',
   exportHelpStep2: "설정에서 위치 및 개인정보 보호(이전 명칭 개인 콘텐츠)를 여세요.",
@@ -168,7 +168,7 @@ export const ko: Strings = {
   periodRange: '{start} – {end}',
 
   errorAccuracyLimit: '0 이상의 정확도 한도를 입력하거나 비워 두세요.',
-  errorMapConsent: 'CARTO에 지도 이미지를 요청하기 전에 지도 개인정보 안내를 확인해 주세요.',
+  errorMapConsent: 'CARTO에 지도 리소스를 요청하기 전에 지도 개인정보 안내를 확인해 주세요.',
   errorMalformedJson: '올바르거나 완전한 JSON 파일이 아닙니다.',
   errorLegacyFormat: '이 파일은 이전 Google 테이크아웃 형식입니다. 휴대전화에서 타임라인 데이터를 내보내 주세요.',
   errorRawSignalsOnly: '이 내보내기 파일에는 원시 신호만 있고 재구성된 타임라인 이동 경로가 없습니다.',

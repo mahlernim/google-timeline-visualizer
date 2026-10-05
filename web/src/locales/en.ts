@@ -22,7 +22,7 @@ export const en: Strings = {
   headerTitle: 'Create video',
 
   fileCardTitle: 'Timeline file',
-  fileCardIntro: "Choose your exported Timeline file. The file stays on this device, and only map images are requested from the map provider.",
+  fileCardIntro: "Choose your exported Timeline file. The file stays on this device, and only map resources are requested from the map provider.",
   exportHelpSummary: 'How to export Timeline on iPhone',
   exportHelpStep1: 'Open Google Maps and tap your profile picture.',
   exportHelpStep2: "Open Settings, then Location & Privacy (formerly Personal content).",
@@ -174,7 +174,7 @@ export const en: Strings = {
   periodRange: '{start} – {end}',
 
   errorAccuracyLimit: 'Enter a non-negative accuracy limit, or leave it blank.',
-  errorMapConsent: 'Confirm the map privacy notice before requesting map images from CARTO.',
+  errorMapConsent: 'Confirm the map privacy notice before requesting map resources from CARTO.',
   errorMalformedJson: 'This is not a valid or complete JSON file.',
   errorLegacyFormat: 'This is an older Google Takeout format. Export Timeline data from your phone instead.',
   errorRawSignalsOnly: 'This export contains raw signals but no reconstructed Timeline journeys.',

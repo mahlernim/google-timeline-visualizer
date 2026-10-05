@@ -3,6 +3,11 @@ import { flowId } from './locales/flow-id';
 import { flowVi } from './locales/flow-vi';
 export const FLOW_STRINGS = {
   "en": {
+    "mapStyle": "Map style",
+    "mapVector": "Vector map",
+    "mapRaster": "Image map (compatibility)",
+    "mapStyleHelp": "Vector maps may take longer to create a video. If the map cannot load, try the image map.",
+    "vectorFailed": "The vector map could not load. Try again, lower the resolution, or select the image map.",
     "hideDates": "Hide dates",
     "hideDatesSummary": "Hide dates in the video. Distance stays visible.",
     "heroTitle": "Your places, in motion.",
@@ -63,6 +68,11 @@ export const FLOW_STRINGS = {
     "changeFile": "Choose a different file"
   },
   "ko": {
+    "mapStyle": "지도 스타일",
+    "mapVector": "벡터 지도",
+    "mapRaster": "이미지 지도 (호환 모드)",
+    "mapStyleHelp": "벡터 지도는 영상 제작에 시간이 더 걸릴 수 있습니다. 지도가 로드되지 않으면 이미지 지도를 선택하세요.",
+    "vectorFailed": "벡터 지도를 불러오지 못했습니다. 다시 시도하거나 해상도를 낮추거나 이미지 지도를 선택하세요.",
     "hideDates": "날짜 숨기기",
     "hideDatesSummary": "영상에서 날짜를 숨깁니다. 거리는 계속 표시됩니다.",
     "heroTitle": "내가 다녀온 곳을 영상으로.",
@@ -123,6 +133,11 @@ export const FLOW_STRINGS = {
     "changeFile": "다른 파일 선택"
   },
   "ja": {
+    "mapStyle": "地図の種類",
+    "mapVector": "ベクター地図",
+    "mapRaster": "画像地図（互換モード）",
+    "mapStyleHelp": "ベクター地図は動画の作成に時間がかかる場合があります。読み込めない場合は画像地図をお試しください。",
+    "vectorFailed": "ベクター地図を読み込めませんでした。再試行するか、解像度を下げるか、画像地図を選択してください。",
     "hideDates": "日付を隠す",
     "hideDatesSummary": "動画の日付を非表示にします。距離は引き続き表示されます。",
     "heroTitle": "訪れた場所を、動画に。",
@@ -183,6 +198,11 @@ export const FLOW_STRINGS = {
     "changeFile": "別のファイルを選択"
   },
   "zh-CN": {
+    "mapStyle": "地图样式",
+    "mapVector": "矢量地图",
+    "mapRaster": "图像地图（兼容模式）",
+    "mapStyleHelp": "矢量地图制作视频可能需要更长时间。如果地图无法加载，请尝试图像地图。",
+    "vectorFailed": "无法加载矢量地图。请重试、降低分辨率或选择图像地图。",
     "hideDates": "隐藏日期",
     "hideDatesSummary": "隐藏视频中的日期，距离仍会显示。",
     "heroTitle": "让走过的地方动起来。",
@@ -243,6 +263,11 @@ export const FLOW_STRINGS = {
     "changeFile": "选择其他文件"
   },
   "zh-TW": {
+    "mapStyle": "地圖樣式",
+    "mapVector": "向量地圖",
+    "mapRaster": "圖像地圖（相容模式）",
+    "mapStyleHelp": "向量地圖製作影片可能需要較長時間。如果地圖無法載入，請嘗試圖像地圖。",
+    "vectorFailed": "無法載入向量地圖。請重試、降低解析度或選擇圖像地圖。",
     "hideDates": "隱藏日期",
     "hideDatesSummary": "隱藏影片中的日期，距離仍會顯示。",
     "heroTitle": "讓走過的地方動起來。",
@@ -303,6 +328,11 @@ export const FLOW_STRINGS = {
     "changeFile": "選擇其他檔案"
   },
   "es": {
+    "mapStyle": "Estilo de mapa",
+    "mapVector": "Mapa vectorial",
+    "mapRaster": "Mapa de imágenes (compatibilidad)",
+    "mapStyleHelp": "Los mapas vectoriales pueden tardar más en crear el vídeo. Si el mapa no carga, prueba el mapa de imágenes.",
+    "vectorFailed": "No se pudo cargar el mapa vectorial. Inténtalo de nuevo, reduce la resolución o elige el mapa de imágenes.",
     "hideDates": "Ocultar fechas",
     "hideDatesSummary": "Oculta las fechas en el vídeo. La distancia sigue visible.",
     "heroTitle": "Tus lugares, en movimiento.",
@@ -363,6 +393,11 @@ export const FLOW_STRINGS = {
     "changeFile": "Elegir otro archivo"
   },
   "fr": {
+    "mapStyle": "Style de carte",
+    "mapVector": "Carte vectorielle",
+    "mapRaster": "Carte en images (compatibilité)",
+    "mapStyleHelp": "La création de la vidéo peut être plus lente avec une carte vectorielle. Si la carte ne charge pas, essayez la carte en images.",
+    "vectorFailed": "Impossible de charger la carte vectorielle. Réessayez, réduisez la résolution ou choisissez la carte en images.",
     "hideDates": "Masquer les dates",
     "hideDatesSummary": "Masque les dates dans la vidéo. La distance reste visible.",
     "heroTitle": "Vos lieux prennent vie.",
@@ -423,6 +458,11 @@ export const FLOW_STRINGS = {
     "changeFile": "Choisir un autre fichier"
   },
   "de": {
+    "mapStyle": "Kartenstil",
+    "mapVector": "Vektorkarte",
+    "mapRaster": "Bildkarte (Kompatibilität)",
+    "mapStyleHelp": "Mit Vektorkarten kann die Videoerstellung länger dauern. Falls die Karte nicht lädt, versuche die Bildkarte.",
+    "vectorFailed": "Die Vektorkarte konnte nicht geladen werden. Versuche es erneut, verringere die Auflösung oder wähle die Bildkarte.",
     "hideDates": "Datumsangaben ausblenden",
     "hideDatesSummary": "Blendet Datumsangaben im Video aus. Die Entfernung bleibt sichtbar.",
     "heroTitle": "Deine Orte in Bewegung.",
@@ -483,6 +523,11 @@ export const FLOW_STRINGS = {
     "changeFile": "Andere Datei wählen"
   },
   "pt-BR": {
+    "mapStyle": "Estilo do mapa",
+    "mapVector": "Mapa vetorial",
+    "mapRaster": "Mapa de imagens (compatibilidade)",
+    "mapStyleHelp": "Mapas vetoriais podem levar mais tempo para criar o vídeo. Se o mapa não carregar, tente o mapa de imagens.",
+    "vectorFailed": "Não foi possível carregar o mapa vetorial. Tente novamente, reduza a resolução ou escolha o mapa de imagens.",
     "hideDates": "Ocultar datas",
     "hideDatesSummary": "Oculta as datas no vídeo. A distância continua visível.",
     "heroTitle": "Seus lugares em movimento.",

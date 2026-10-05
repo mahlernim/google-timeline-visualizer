@@ -1,6 +1,6 @@
 # Timeline Visualizer web app privacy
 
-**Effective date:** August 28, 2026
+**Effective date:** October 5, 2026
 
 **Developer:** MahlerLab
 
@@ -30,8 +30,10 @@ and generated media are not added to analytics events by the application.
 
 ## Map requests
 
-After you accept the map privacy notice, the web app requests raster map tiles
-from CARTO. Those requests contain zoom, x, and y tile identifiers plus normal
+After you accept the map privacy notice, the web app requests vector map tiles
+from CARTO by default. You can select image maps as a compatibility option. The
+vector renderer also requests style, font, and symbol resources from CARTO. Map
+tile requests contain zoom, x, and y tile identifiers plus normal
 network information such as the IP address and user agent. Tile identifiers
 correspond to geographic areas in the selected journey and may reveal those
 areas to CARTO.
@@ -76,9 +78,10 @@ reliably. It does not cache the selected Timeline JSON or generated MP4. Closing
 or reloading the page clears the active Timeline data. Browser site settings can
 be used to remove cached application files.
 
-Map tiles are held only in the current page's memory while preparing or rendering
-a journey. The application service worker does not place CARTO tiles in persistent
-browser storage.
+The renderer keeps map resources and a reusable background image in page memory
+while preparing or rendering a journey, then releases them when the work finishes
+or is cancelled. The application service worker does not store CARTO resources.
+The browser may cache network responses according to the provider's HTTP headers.
 
 ## Third parties
 

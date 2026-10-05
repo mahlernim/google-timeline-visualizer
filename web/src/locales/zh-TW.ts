@@ -19,7 +19,7 @@ export const zhTW: Strings = {
   headerTitle: '建立影片',
 
   fileCardTitle: '時間軸檔案',
-  fileCardIntro: "請選擇您匯出的時間軸檔案。檔案會留在這部裝置上，只會向地圖供應商請求地圖圖像。",
+  fileCardIntro: "請選擇您匯出的時間軸檔案。檔案會留在這部裝置上，只會向地圖供應商請求地圖資源。",
   exportHelpSummary: '如何在 iPhone 上匯出時間軸',
   exportHelpStep1: '開啟 Google 地圖，輕觸您的個人資料圖片。',
   exportHelpStep2: "開啟設定，再選擇位置資訊和隱私權（原個人內容）。",
@@ -163,7 +163,7 @@ export const zhTW: Strings = {
   periodRange: '{start} – {end}',
 
   errorAccuracyLimit: '請輸入零或正數的精準度上限，或將此欄留白。',
-  errorMapConsent: '向 CARTO 請求地圖圖像前，請先確認地圖隱私權聲明。',
+  errorMapConsent: '向 CARTO 請求地圖資源前，請先確認地圖隱私權聲明。',
   errorMalformedJson: '這個檔案不是有效或完整的 JSON 檔案。',
   errorLegacyFormat: '這是舊版的 Google Takeout 格式。請改從手機匯出時間軸資料。',
   errorRawSignalsOnly: '此匯出檔含有原始訊號，但沒有重建的時間軸行程。',

@@ -24,7 +24,7 @@ export const zhCN: Strings = {
   headerTitle: '创建视频',
 
   fileCardTitle: 'Timeline 文件',
-  fileCardIntro: "选择您导出的时间轴文件。文件保留在此设备上，仅会向地图提供商请求地图图像。",
+  fileCardIntro: "选择您导出的时间轴文件。文件保留在此设备上，仅会向地图提供商请求地图资源。",
   exportHelpSummary: '如何在 iPhone 上导出 Timeline',
   exportHelpStep1: '打开 Google 地图，点按您的个人资料照片。',
   exportHelpStep2: "打开设置，然后选择位置信息和隐私（原个人内容）。",
@@ -168,7 +168,7 @@ export const zhCN: Strings = {
   periodRange: '{start} – {end}',
 
   errorAccuracyLimit: '请输入非负的精度上限，或者留空。',
-  errorMapConsent: '在向 CARTO 请求地图图像之前，请先确认地图隐私声明。',
+  errorMapConsent: '在向 CARTO 请求地图资源之前，请先确认地图隐私声明。',
   errorMalformedJson: '此文件不是有效或完整的 JSON 文件。',
   errorLegacyFormat: '这是旧版 Google Takeout 格式。请改为从手机导出 Timeline 数据。',
   errorRawSignalsOnly: '此导出文件包含原始信号，但没有重建的 Timeline 旅程。',

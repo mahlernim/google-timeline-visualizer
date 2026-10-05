@@ -23,7 +23,7 @@ export const fr: Strings = {
   headerTitle: 'Créer une vidéo',
 
   fileCardTitle: 'Fichier Timeline',
-  fileCardIntro: "Choisissez votre fichier Trajets exporté. Le fichier reste sur cet appareil, et seules les images de carte sont demandées au fournisseur de carte.",
+  fileCardIntro: "Choisissez votre fichier Trajets exporté. Le fichier reste sur cet appareil, et seules les ressources cartographiques sont demandées au fournisseur de carte.",
   exportHelpSummary: 'Comment exporter Timeline sur iPhone',
   exportHelpStep1: 'Ouvrez Google Maps et appuyez sur votre photo de profil.',
   exportHelpStep2: "Ouvrez Paramètres, puis Localisation et confidentialité (anciennement Contenu personnel).",
@@ -183,7 +183,7 @@ export const fr: Strings = {
   periodRange: '{start} – {end}',
 
   errorAccuracyLimit: 'Saisissez zéro ou un nombre positif, ou laissez ce champ vide.',
-  errorMapConsent: 'Confirmez l’avis de confidentialité de la carte avant de demander des images de carte à CARTO.',
+  errorMapConsent: 'Confirmez l’avis de confidentialité de la carte avant de demander des ressources cartographiques à CARTO.',
   errorMalformedJson: 'Ce fichier ne contient pas de JSON valide ou complet.',
   errorLegacyFormat: 'Il s’agit d’un ancien format Google Takeout. Exportez les données Timeline depuis votre téléphone.',
   errorRawSignalsOnly: 'Cette exportation contient des signaux bruts, mais aucun voyage Timeline reconstitué.',

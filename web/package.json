@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@streamparser/json": "0.0.26",
+    "maplibre-gl": "5.24.0",
     "mediabunny": "1.55.1"
   },
   "devDependencies": {
