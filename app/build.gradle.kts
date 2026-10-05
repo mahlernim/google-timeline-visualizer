@@ -126,4 +126,8 @@ dependencies {
     androidTestImplementation("androidx.test:core-ktx:1.7.0")
     androidTestImplementation("androidx.test.ext:junit-ktx:1.3.0")
     androidTestImplementation("androidx.test:runner:1.7.0")
+    // The native library must be in the target debug APK for instrumentation class loading.
+    // No MapLibre dependency is included in release APKs.
+    debugImplementation("org.maplibre.gl:android-sdk:13.6.1")
+    androidTestImplementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
