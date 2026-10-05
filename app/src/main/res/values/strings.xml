@@ -643,6 +643,6 @@
     <string name="hide_dates">Hide dates</string>
     <string name="hide_dates_summary">Hide dates in the video. Distance stays visible.</string>
     <string name="vector_map_export" translatable="false">Vector map export (preview)</string>
-    <string name="vector_map_export_help" translatable="false">Use CARTO vectors for new video exports. The interactive map stays raster. Exports may be slower and fine labels softer. Choose a format no larger than 1920 pixels on either side.</string>
+    <string name="vector_map_export_help" translatable="false">Use CARTO vectors for new video exports. The interactive map stays raster. Exports may be slower and fine labels softer. Choose a format no larger than 1920 pixels on either side. Vector export requires a Vulkan-capable device.</string>
     <string name="carto_website" translatable="false">CARTO website</string>
 </resources>

@@ -27,6 +27,14 @@ class VectorExportDeviceTest {
     @Test fun createsMp4AfterCancellationInSquareAndLandscape() = runBlocking {
         assumeTrue(InstrumentationRegistry.getArguments().getString("runVectorExport") == "true")
         val context = ApplicationProvider.getApplicationContext<Context>()
+        @Suppress("DEPRECATION")
+        val permissions = context.packageManager.getPackageInfo(context.packageName,android.content.pm.PackageManager.GET_PERMISSIONS).requestedPermissions.orEmpty()
+        assertFalse(permissions.contains("android.permission.ACCESS_FINE_LOCATION"))
+        assertFalse(permissions.contains("android.permission.ACCESS_COARSE_LOCATION"))
+        assertFalse(permissions.contains("android.permission.ACCESS_WIFI_STATE"))
+        @Suppress("DEPRECATION")
+        val features = context.packageManager.getPackageInfo(context.packageName,android.content.pm.PackageManager.GET_CONFIGURATIONS).reqFeatures.orEmpty()
+        assertFalse(features.any { it.name == android.content.pm.PackageManager.FEATURE_VULKAN_HARDWARE_VERSION && it.flags and android.content.pm.FeatureInfo.FLAG_REQUIRED != 0 })
         val folder = File(context.getExternalFilesDir(null), "vector-preview-export").apply { mkdirs() }
         val journey = Journey.from(listOf(37.55 to 126.92,37.57 to 126.98,37.58 to 127.02,37.54 to 127.06).mapIndexed { i, (lat,lon) ->
             GeoPoint(Instant.parse("2026-01-01T00:00:00Z").plusSeconds(i*86400L),lat,lon)

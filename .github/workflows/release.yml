@@ -75,7 +75,17 @@ jobs:
           test -n "$build_tools_dir"
           "$build_tools_dir/apksigner" verify --verbose --print-certs "$apk_path"
 
-          package_line="$("$build_tools_dir/aapt" dump badging "$apk_path" | head -n 1)"
+          "$build_tools_dir/aapt" dump permissions "$apk_path" > apk-permissions.txt
+          if grep -Eq 'android.permission.ACCESS_(FINE_LOCATION|COARSE_LOCATION|WIFI_STATE)' apk-permissions.txt; then
+            echo "Unexpected device location or Wi-Fi permission in export app" >&2
+            exit 1
+          fi
+          "$build_tools_dir/aapt" dump badging "$apk_path" > apk-badging.txt
+          if grep -q "^uses-feature: name='android.hardware.vulkan.version'" apk-badging.txt; then
+            echo "Optional vector backend must not restrict raster device compatibility" >&2
+            exit 1
+          fi
+          package_line="$(head -n 1 apk-badging.txt)"
           package_name="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<< "$package_line")"
           version_code="$(sed -n "s/.*versionCode='\([^']*\)'.*/\1/p" <<< "$package_line")"
           version_name="$(sed -n "s/.*versionName='\([^']*\)'.*/\1/p" <<< "$package_line")"

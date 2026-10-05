@@ -104,6 +104,9 @@ class VectorBasemapRenderer private constructor(context: Context, private val wi
             require(BuildConfig.CARTO_BASEMAP_API_KEY.isNotBlank()) { "Vector map key is unavailable in this build." }
             require(maxOf(width,height)<=1920) { "Vector preview supports dimensions up to 1920 pixels. Choose a smaller format or raster." }
             val app = context.applicationContext
+            require(app.packageManager.hasSystemFeature(PackageManager.FEATURE_VULKAN_HARDWARE_VERSION, 0x400003)) {
+                "Vector preview is unavailable on this device. Switch to raster and retry."
+            }
             if (!initialized) {
                 MapLibre.getInstance(app)
                 @Suppress("DEPRECATION")
