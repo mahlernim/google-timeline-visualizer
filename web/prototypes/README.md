@@ -1,6 +1,6 @@
 # CARTO vector experiment
 
-This opt-in experiment compares the existing raster renderer with CARTO Positron through MapLibre. It does not switch the production web app or Android release to vector maps. Android's MapLibre dependency is debug-only.
+This directory retains the synthetic benchmarks used to develop the opt-in vector export preview. The preview now includes MapLibre in Android release builds and supports vector export in the main web app. Raster remains the default. The public site and stable Android release have not migrated. The observations below describe the earlier experiments.
 
 Use synthetic routes for comparison. Never put a real API key in source, a command argument, a report, or a committed environment file.
 
@@ -20,17 +20,17 @@ The test compares 240 480-pixel frames per route, including the outro, for all t
 
 The prototype authenticates CARTO requests with the key, Android package, and actual installed signing certificate. A restricted test key must allow the debug signing certificate. Production should use separate web and Android keys. Allow all applicable Play signing certificates and the independently verified GitHub APK certificate on the Android key. New restricted keys have not been exercised by this experiment.
 
-## Observations on 2026-10-05
+## Initial observations on 2026-10-05
 
 Single desktop runs at 480 pixels exported the city, long-distance, and date-line journeys in roughly 0.9 to 1.0 seconds with raster and 5.0 to 5.3 seconds with vector. Vector tile request transformations numbered 8 to 9 versus 17 to 24 observed raster tile loads. Style, glyph, and sprite requests are additional. These are not billing measurements, and caches may be warm. Totals include three saved PNG frames.
 
-The vector loop currently waits for MapLibre's idle event for every frame, limiting throughput near display refresh. This implementation needs export optimization before migration.
+The initial per-frame vector loop waits for MapLibre's idle event for every frame, limiting throughput near display refresh. This implementation needs export optimization before migration.
 
 The Android host-GPU emulator rendered the city sample in 2.7 seconds with raster and 30.8 seconds with vector. The long-distance sample took 1.5 and 4.9 seconds respectively. Caches were warm. Native heap values are process snapshots, not isolated overhead or peak memory. A software-GPU run produced corrupt snapshots and was rejected after visual inspection. Do not extrapolate emulator timing to phones.
 
-Positron retains the pale appearance but changes roads, labels, and their placement. Screenshots and encoded web videos show aligned route overlays. Web cancellation was exercised during active vector rendering. Android cancellation and full video export still need device validation.
+Positron retains the pale appearance but changes roads, labels, and their placement. Screenshots and encoded web videos show aligned route overlays. Web cancellation was exercised during active vector rendering. At this stage, Android cancellation and full video export had not been validated.
 
-Before production migration, optimize the render pipeline, test representative phones and output sizes, measure cold and warm resource use and peak memory, verify restricted-key rejection and acceptance, and add the linked CARTO logo requested by the provider. Existing textual attribution is retained in this prototype but is not completion of the provider's logo requirement.
+Production migration still requires representative phone and output-size tests, cold and warm resource use and peak-memory measurements, and restricted-key rejection and acceptance checks. The initial prototype only retained textual attribution. The integrated preview now adds the CARTO logo to exported frames and links to CARTO in the web app and Android settings.
 
 
 ## Background reuse experiment
@@ -51,4 +51,13 @@ A single 1080-pixel city run took 5.31 s with per-frame vector rendering and 3.4
 
 Two opposite-order host-GPU emulator runs took 5.68 to 6.68 s with per-frame city rendering and 4.40 to 5.48 s with reuse. Long-route results were 4.45 to 4.50 s and 1.57 to 1.62 s. The reuse mode rendered 86 city backgrounds and 25 long-route backgrounds for 240 frames each. These Android runs are rendering-only, with no MP4 encoding or physical-phone validation. Differences from the earlier 61-frame trial include frame sampling and emulator/cache state, so compare modes within these runs rather than timing against the earlier trial.
 
-The experiment improves vector throughput but retains a speed and visual tradeoff relative to the raster baseline. No production renderer or key configuration is switched by this branch.
+The experiment improves vector throughput but retains a speed and visual tradeoff relative to the raster baseline. The preview is opt-in and does not change the default renderer or deployed key configuration.
+
+
+## Integrated preview validation
+
+The real Android MP4 exporter completed two synthetic 10-second videos after a deliberately cancelled export. The API 35 host-GPU emulator produced 480 by 480 and 852 by 480 output, each independently decoded as 240 frames at 24 fps. Export wall time was 6.21 and 5.42 seconds respectively, including the final overview image. These are single emulator observations, not phone performance estimates.
+
+The normal web app completed its vector preview and a 15-second 480 by 480 MP4. Request persistence retains the vector selection, while version 17 requests continue with raster. Android interactive playback remains raster in this preview.
+
+For an opt-in full Android export check, run `VectorExportDeviceTest` with instrumentation argument `runVectorExport=true`. Use synthetic data and preserve the `vector-preview-export` output directory before another run.
