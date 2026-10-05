@@ -42,6 +42,7 @@ class TimelineView @JvmOverloads constructor(
     private val afterNextFrameRendered = mutableListOf<() -> Unit>()
     private var cameraPreparationJob: Job? = null
     private var cameraPreparationGeneration = 0
+    private var cameraTrackReady = false
     private var vectorRenderer: VectorBasemapRenderer? = null
     private var vectorRenderJob: Job? = null
     private var frameRevision = 0L
@@ -152,7 +153,7 @@ class TimelineView @JvmOverloads constructor(
             return
         }
         if (useVectorBasemap) {
-            if (isCameraReady && vectorRenderJob == null) renderVectorFrame(data)
+            if (cameraTrackReady && vectorRenderJob == null) renderVectorFrame(data)
             frame?.let { canvas.drawBitmap(it, 0f, 0f, null) }
             return
         }
@@ -228,6 +229,7 @@ class TimelineView @JvmOverloads constructor(
     private fun restartCameraPreparation() {
         releaseVectorRenderer()
         cameraPreparationJob?.cancel()
+        cameraTrackReady = false
         cameraPreparationGeneration += 1
         val generation = cameraPreparationGeneration
         val data = journey
@@ -256,7 +258,8 @@ class TimelineView @JvmOverloads constructor(
                         return@withContext
                     }
                     painter.installCameraPreparation(data, targetWidth, targetHeight, settings, preparation)
-                    setCameraReady(true)
+                    cameraTrackReady = true
+                    if (!useVectorBasemap) setCameraReady(true)
                     markFrameDirty()
                 }
             } catch (cancelled: CancellationException) {
@@ -293,11 +296,13 @@ class TimelineView @JvmOverloads constructor(
                 painter.draw(canvas, targetWidth, targetHeight, data, animation, duration, title, text, settings,
                     drawMapBackground = false, tiles = { null })
                 frameDirty = revision != frameRevision
+                setCameraReady(true)
                 notifyFrameRendered()
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Exception) {
                 if (generation == cameraPreparationGeneration) {
+                    cameraTrackReady = false
                     setCameraReady(false)
                     onCameraPreparationFailed?.invoke(VectorMapException())
                 }

@@ -38,13 +38,14 @@ class VectorBasemapRenderer private constructor(context: Context, private val wi
         .withPixelRatio(1f).withLogo(false).withAttribution(false)
         .withStyleBuilder(Style.Builder().fromUri("https://basemaps.cartocdn.com/gl/positron-gl-style/style.json")))
     private var coverage: Viewport? = null
+    private var requestedCoverage: Viewport? = null
     private var background: Bitmap? = null
     private val paint = Paint(Paint.FILTER_BITMAP_FLAG)
     private val logo = requireNotNull(context.getDrawable(R.drawable.carto_logo))
 
     suspend fun draw(canvas: Canvas, view: Viewport) {
         check(!closed) { "Vector renderer is closed" }
-        val previous = coverage
+        val previous = requestedCoverage
         if (previous == null || !reusable(previous, view)) {
             val next = expanded(view)
             val geometry = snapshotGeometry(next, mapWidth)
@@ -91,6 +92,7 @@ class VectorBasemapRenderer private constructor(context: Context, private val wi
                     background?.recycle()
                     background = rendered.bitmap
                     coverage = rendered.viewport
+                    requestedCoverage = next
                 }
             } catch (_: TimeoutCancellationException) {
                 throw VectorMapException()
@@ -120,6 +122,7 @@ class VectorBasemapRenderer private constructor(context: Context, private val wi
         background?.recycle()
         background = null
         coverage = null
+        requestedCoverage = null
     }
 
     private data class RenderedBackground(val bitmap: Bitmap, val viewport: Viewport)
@@ -134,6 +137,8 @@ class VectorBasemapRenderer private constructor(context: Context, private val wi
             if (BuildConfig.CARTO_BASEMAP_API_KEY.isBlank()) throw VectorMapException()
             require(width > 0 && height > 0)
             val app = context.applicationContext
+            val activityManager = app.getSystemService(android.app.ActivityManager::class.java)
+            if (activityManager.deviceConfigurationInfo.reqGlEsVersion < 0x30000) throw VectorMapException()
             if (!initialized) {
                 org.maplibre.android.log.Logger.setVerbosity(org.maplibre.android.log.Logger.NONE)
                 MapLibre.getInstance(app)

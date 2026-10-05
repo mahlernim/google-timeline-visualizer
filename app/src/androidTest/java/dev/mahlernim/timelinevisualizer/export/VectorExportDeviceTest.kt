@@ -56,7 +56,7 @@ class VectorExportDeviceTest {
         val folder = File(context.getExternalFilesDir(null), "vector-preview-export").apply { mkdirs() }
         for ((label, view) in listOf(
             "global" to Viewport(-.1, 1.1, -.1, 1.1, 0),
-            "dateline" to Viewport(.96, 1.04, .46, .54, 4),
+            "dateline" to Viewport(.96, 1.04, .50, .58, 4),
         )) {
             val renderer = VectorBasemapRenderer.create(context, 480, 480)
             val bitmap = Bitmap.createBitmap(480, 480, Bitmap.Config.ARGB_8888)
@@ -66,6 +66,18 @@ class VectorExportDeviceTest {
                 assertTrue(bitmap.getPixel(240, 240) != android.graphics.Color.TRANSPARENT)
             } finally { renderer.close(); bitmap.recycle() }
         }
+    }
+
+    @Test fun rendersLargeLandscapeWithoutUnboundedOverscan() = runBlocking {
+        assumeTrue(InstrumentationRegistry.getArguments().getString("runVectorExport") == "true")
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val renderer = VectorBasemapRenderer.create(context, 3412, 1920)
+        val bitmap = Bitmap.createBitmap(3412, 1920, Bitmap.Config.ARGB_8888)
+        try {
+            val view = Viewport(.851, .853, .3865, .3865 + .002 * 1920 / 3412, 12)
+            renderer.draw(android.graphics.Canvas(bitmap), view)
+            assertTrue(bitmap.getPixel(1706, 960) != android.graphics.Color.TRANSPARENT)
+        } finally { renderer.close(); bitmap.recycle() }
     }
 
     @Test fun createsMp4AfterCancellationInSquareAndLandscape() = runBlocking {
