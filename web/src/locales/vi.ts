@@ -11,7 +11,7 @@ export const vi: Strings = {
   headerTitle: "Tạo video",
   fileCardTitle: "Tệp Dòng thời gian",
   fileCardIntro:
-    "Chọn tệp Dòng thời gian đã xuất. Tệp chỉ ở trên thiết bị này và nhà cung cấp bản đồ chỉ nhận yêu cầu ảnh bản đồ.",
+    "Chọn tệp Dòng thời gian đã xuất. Tệp chỉ ở trên thiết bị này và nhà cung cấp bản đồ chỉ nhận yêu cầu tài nguyên bản đồ.",
   exportHelpSummary: "Cách xuất Dòng thời gian trên iPhone",
   exportHelpStep1: "Mở Google Maps rồi chạm vào ảnh hồ sơ.",
   exportHelpStep2:
@@ -155,7 +155,7 @@ export const vi: Strings = {
   periodRange: "{start} – {end}",
   errorAccuracyLimit: "Nhập giới hạn độ chính xác không âm hoặc để trống.",
   errorMapConsent:
-    "Hãy xác nhận thông báo quyền riêng tư của bản đồ trước khi yêu cầu ảnh bản đồ từ CARTO.",
+    "Hãy xác nhận thông báo quyền riêng tư của bản đồ trước khi yêu cầu tài nguyên bản đồ từ CARTO.",
   errorMalformedJson: "Đây không phải tệp JSON hợp lệ hoặc đầy đủ.",
   errorLegacyFormat:
     "Đây là định dạng Google Takeout cũ. Hãy xuất dữ liệu trên Dòng thời gian từ điện thoại.",

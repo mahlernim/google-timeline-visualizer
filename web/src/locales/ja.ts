@@ -22,7 +22,7 @@ export const ja: Strings = {
   headerTitle: '動画を作成',
 
   fileCardTitle: 'タイムライン ファイル',
-  fileCardIntro: "書き出したタイムラインファイルを選択してください。ファイルはこの端末内に保持され、地図プロバイダに要求するのは地図画像だけです。",
+  fileCardIntro: "書き出したタイムラインファイルを選択してください。ファイルはこの端末内に保持され、地図プロバイダに要求するのは地図リソースだけです。",
   exportHelpSummary: 'iPhoneでタイムラインを書き出す方法',
   exportHelpStep1: 'Google マップを開き、プロフィール写真をタップします。',
   exportHelpStep2: "設定から「位置情報とプライバシー」（旧「個人的なコンテンツ」）を開きます。",
@@ -166,7 +166,7 @@ export const ja: Strings = {
   periodRange: '{start} – {end}',
 
   errorAccuracyLimit: '0以上の数値を入力するか、空欄にしてください。',
-  errorMapConsent: 'CARTOに地図画像を要求する前に、地図のプライバシーに関する説明を確認してください。',
+  errorMapConsent: 'CARTOに地図リソースを要求する前に、地図のプライバシーに関する説明を確認してください。',
   errorMalformedJson: '有効または完全な JSON ファイルではありません。',
   errorLegacyFormat: '以前の Google Takeout 形式です。端末からタイムライン データを書き出してください。',
   errorRawSignalsOnly: 'この書き出しには未処理のシグナルのみが含まれ、再構成されたタイムラインの移動経路がありません。',

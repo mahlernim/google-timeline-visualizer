@@ -44,10 +44,21 @@ into memory. This can take longer, and remains cancellable.
 The preview uses at most a 640-pixel longest edge and 15 fps, independent of export
 resolution. Preview and export share a fading trail based on 2.5 seconds of travel,
 bounded to 80 through 2,000 km and never longer than the journey. Older routes
-clear during travel; the complete route appears in the ending overview. Maps are loaded as each frame needs them, using two simultaneous
-requests and a 32 MiB decoded-image cache. Tiles are drawn before eviction, including
-frames that need more tiles than fit in the cache. Failed map loads report an error
-rather than creating a video with missing tiles.
+clear during travel; the complete route appears in the ending overview. Vector maps are the default. MapLibre GL JS loads CARTO Positron only after map
+consent and uses the same Mercator camera as the route overlays. Each journey
+reuses one oversized background, refreshing when coverage runs out or scale
+changes by more than 2%. The background's longest edge is capped at 4,096 pixels,
+so its bitmap uses at most 64 MiB, excluding SDK, GPU, and encoder memory. This can
+soften labels at large output sizes. Vector rendering can take longer than image
+maps despite reducing tile requests in the tested journeys.
+
+The map style selector offers image maps for browsers without working WebGL or
+for users who prefer the previous renderer. It keeps the two simultaneous tile
+loads and 32 MiB decoded-image cache. There is no automatic fallback that silently
+adds raster requests. Failed loads stop export and show recovery guidance.
+Cancellation and completion release the map, background, and listeners. Every
+export retains OpenStreetMap/CARTO attribution, and vector videos include the CARTO
+logo. The application footer links the provider logo to CARTO.
 
 The encoder loads only when entering Export. Only the selected configuration is
 probed, with serialized, cached probes. Full-size canvases exist only during export.
@@ -113,3 +124,12 @@ It loops with inline play/pause controls. Reduced motion, data saving, and autop
 restrictions require manual playback. Neither the video nor application modules
 are precached on a cold landing visit. The fictional JSON remains a parser fixture
 and is not offered as an import action.
+
+## CARTO web configuration
+
+GitHub Pages uses `CARTO_WEB_BASEMAP_API_KEY` when configured and falls back to the
+existing `CARTO_BASEMAP_API_KEY`. Local builds use `VITE_CARTO_BASEMAP_API_KEY`.
+A browser-delivered key is visible to visitors. Configure a separate web key and
+provider-supported restrictions for the deployed origin when provisioning it.
+This deployment change does not create, rotate, or restrict a provider key.
+MapLibre and the encoder remain deferred, outside the landing-page precache.

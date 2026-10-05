@@ -1,5 +1,10 @@
 /** Vietnamese landing and guided-flow strings. Mirrors FLOW_STRINGS.en exactly. */
 export const flowVi = {
+    "mapStyle": "Kiểu bản đồ",
+    "mapVector": "Bản đồ vectơ",
+    "mapRaster": "Bản đồ ảnh (tương thích)",
+    "mapStyleHelp": "Bản đồ vectơ có thể mất nhiều thời gian hơn để tạo video. Nếu bản đồ không tải được, hãy thử bản đồ ảnh.",
+    "vectorFailed": "Không tải được bản đồ vectơ. Hãy thử lại, giảm độ phân giải hoặc chọn bản đồ ảnh.",
   hideDates: "Ẩn ngày tháng",
   hideDatesSummary: "Ẩn ngày tháng trong video. Khoảng cách vẫn hiển thị.",
   heroTitle: "Hành trình của bạn, sống động.",

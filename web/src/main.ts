@@ -10,7 +10,7 @@ import { buildVideoFormat, createFormatProbe, estimatedOutputBytes, MAX_OUTPUT_B
 import type { VideoAspectRatio, ResolvedVideoFormat } from './video-format';
 import { ImportError } from './import-types';
 import type { TimelineScan, RangeRequest } from './import-types';
-import { AppError } from './errors';
+import { AppError, VectorMapError } from './errors';
 import { cumulativeDistances } from './geo';
 import { populateLanguageSelect } from './language-select';
 import { DEFAULT_RAW_ACCURACY, validateWebSettings } from './web-settings';
@@ -33,6 +33,7 @@ const startDate = el<HTMLInputElement>('start-date');
 const endDate = el<HTMLInputElement>('end-date');
 const exact = el<HTMLInputElement>('exact-date-toggle');
 const advanced = el<HTMLInputElement>('advanced-toggle');
+const mapStyle = el<HTMLSelectElement>('map-style');
 const hideDates = el<HTMLInputElement>('hide-dates');
 const raw = el<HTMLInputElement>('raw-signals-toggle');
 const filter = el<HTMLSelectElement>('location-filter');
@@ -194,6 +195,7 @@ function fail(error: unknown): void {
   if (['rangeTooLarge', 'invalidDates', 'invalidSettings', 'importFailed', 'outputTooLarge'].includes(code)) {
     errorText = () => f(code as FlowKey);
   } else if (parseKeys[code]) errorText = () => i18n.t(parseKeys[code]);
+  else if (error instanceof VectorMapError) errorText = () => f('vectorFailed');
   else if (error instanceof AppError) errorText = () => i18n.t(error.code);
   else errorText = () => i18n.t('errorPreviewFailed');
   renderStatus();
@@ -422,7 +424,7 @@ previewButton.addEventListener('click', async () => {
     canvas.height = size.height;
     canvas.style.setProperty('--preview-aspect', String(format.width / format.height));
     canvas.hidden = false;
-    prepared = await renderer.prepareJourney(points, size, currentCamera(), currentDuration(), signal);
+    prepared = await renderer.prepareJourney(points, size, currentCamera(), currentDuration(), signal, undefined, mapStyle.value === 'raster' ? 'raster' : 'vector');
     const text = overlay();
     const frames = QUICK_PREVIEW_SECONDS * 15;
     for (let frame = 0; frame <= frames; frame += 1) {
@@ -434,6 +436,8 @@ previewButton.addEventListener('click', async () => {
       // Waiting only for the remaining frame time keeps map loading from creating a burst.
       await new Promise<void>((resolve) => window.setTimeout(resolve, Math.max(0, 1000 / 15 - (performance.now() - started))));
     }
+    renderer.releaseJourney(prepared);
+    prepared = null;
     statusText = () => i18n.t('progressPreviewComplete');
   });
 });
@@ -454,7 +458,7 @@ createButton.addEventListener('click', async () => {
     try {
       wakeLock = await navigator.wakeLock?.request('screen').catch(() => null) ?? null;
       signal.throwIfAborted();
-      journey = await renderer.prepareJourney(points, format, currentCamera(), currentDuration(), signal);
+      journey = await renderer.prepareJourney(points, format, currentCamera(), currentDuration(), signal, undefined, mapStyle.value === 'raster' ? 'raster' : 'vector');
       const blob = await videoEncoder.createJourneyMp4(exportCanvas, journey, {
         format, durationSeconds: currentDuration(), overlay: overlay(), signal,
         onProgress: (fraction) => {
@@ -485,6 +489,13 @@ sourceInput.addEventListener('change', () => { const selected = sourceInput.file
 el('continue-raw-data').addEventListener('click', () => { rawDialog.close(); showStep(1); });
 el('open-google-maps').addEventListener('click', () => { window.open('https://maps.google.com/', '_blank', 'noopener,noreferrer'); });
 rawDialog.addEventListener('cancel', () => { stop(); resetSource(); refresh(); });
+mapStyle.addEventListener('change', () => {
+  stop();
+  releaseResult();
+  statusText = () => '';
+  errorText = null;
+  refresh();
+});
 cancel.addEventListener('click', stop);
 back.addEventListener('click', () => showStep(Math.max(0, step - 1)));
 document.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((button) => {

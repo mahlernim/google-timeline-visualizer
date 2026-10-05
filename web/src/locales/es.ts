@@ -23,7 +23,7 @@ export const es: Strings = {
   headerTitle: 'Crear vídeo',
 
   fileCardTitle: 'Archivo Timeline',
-  fileCardIntro: "Elige el archivo de Cronología que has exportado. El archivo permanece en este dispositivo y solo se solicitan imágenes del mapa al proveedor de mapas.",
+  fileCardIntro: "Elige el archivo de Cronología que has exportado. El archivo permanece en este dispositivo y solo se solicitan recursos del mapa al proveedor de mapas.",
   exportHelpSummary: 'Cómo exportar Timeline en iPhone',
   exportHelpStep1: 'Abre Google Maps y toca tu imagen de perfil.',
   exportHelpStep2: "Abre Ajustes y luego Ubicación y privacidad (antes Contenido personal).",
@@ -183,7 +183,7 @@ export const es: Strings = {
   periodRange: '{start} – {end}',
 
   errorAccuracyLimit: 'Introduce un límite de precisión no negativo o deja el campo vacío.',
-  errorMapConsent: 'Confirma el aviso de privacidad del mapa antes de solicitar imágenes de mapa a CARTO.',
+  errorMapConsent: 'Confirma el aviso de privacidad del mapa antes de solicitar recursos de mapa a CARTO.',
   errorMalformedJson: 'Este archivo no es un JSON válido o completo.',
   errorLegacyFormat: 'Este es un formato antiguo de Google Takeout. Exporta los datos de Timeline desde tu teléfono.',
   errorRawSignalsOnly: 'Esta exportación contiene señales sin procesar, pero no viajes de Timeline reconstruidos.',
