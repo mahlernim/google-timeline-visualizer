@@ -642,4 +642,8 @@
     <string name="keep_past_routes_visible_summary">Show completed routes as a faint background trail. When off, older movement fades out.</string>
     <string name="hide_dates">Hide dates</string>
     <string name="hide_dates_summary">Hide dates in the video. Distance stays visible.</string>
+    <string name="vector_map">Vector map</string>
+    <string name="vector_map_summary">Use vector maps for previews and videos. Turn off for image maps if your device has trouble loading vectors.</string>
+    <string name="vector_map_failed">The vector map could not load. Check your connection and retry, or turn off Vector map in Settings to use image maps.</string>
+    <string name="carto_link">CARTO basemaps website</string>
 </resources>

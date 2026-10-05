@@ -629,4 +629,8 @@
     <string name="keep_past_routes_visible_summary">Tampilkan rute yang selesai sebagai jejak latar belakang samar. Saat nonaktif, pergerakan lama memudar.</string>
     <string name="hide_dates">Sembunyikan tanggal</string>
     <string name="hide_dates_summary">Sembunyikan tanggal dalam video. Jarak tetap terlihat.</string>
+    <string name="vector_map">Peta vektor</string>
+    <string name="vector_map_summary">Gunakan peta vektor untuk pratinjau dan video. Nonaktifkan untuk menggunakan peta gambar jika perangkat kesulitan memuatnya.</string>
+    <string name="vector_map_failed">Peta vektor tidak dapat dimuat. Periksa koneksi dan coba lagi, atau nonaktifkan Peta vektor di Setelan untuk menggunakan peta gambar.</string>
+    <string name="carto_link">Situs peta dasar CARTO</string>
 </resources>

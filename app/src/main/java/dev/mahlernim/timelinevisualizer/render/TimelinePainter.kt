@@ -1126,7 +1126,7 @@ class TimelinePainter {
             RenderText.ENGLISH,
             cameraSettings,
             allowCameraTrackBuild,
-            tiles,
+            tiles = tiles,
         )
     }
 
@@ -1141,13 +1141,16 @@ class TimelinePainter {
         renderText: RenderText = RenderText.ENGLISH,
         cameraSettings: CameraSettings = CameraSettings.DEFAULT,
         allowCameraTrackBuild: Boolean = true,
+        drawMapBackground: Boolean = true,
         tiles: (TileId) -> Bitmap?,
     ) {
         if (journey.points.isEmpty() || width <= 0 || height <= 0) return
         val viewport = viewport(journey, frame, width, height, cameraSettings, allowCameraTrackBuild)
         val prepared = if (allowCameraTrackBuild) prepare(journey) else null
-        drawBackground(canvas, width, height)
-        drawTiles(canvas, width, height, viewport, tiles)
+        if (drawMapBackground) {
+            drawBackground(canvas, width, height)
+            drawTiles(canvas, width, height, viewport, tiles)
+        }
 
         val current = if (!allowCameraTrackBuild && frame.journeyProgress <= 0f) {
             journey.positionAtDistance(0.0)

@@ -576,4 +576,8 @@
     <string name="keep_past_routes_visible_summary">移動済みのルートを薄い背景の軌跡として表示します。オフの場合、古い移動は消えていきます。</string>
     <string name="hide_dates">日付を隠す</string>
     <string name="hide_dates_summary">動画の日付を非表示にします。距離は引き続き表示されます。</string>
+    <string name="vector_map">ベクトル地図</string>
+    <string name="vector_map_summary">プレビューと動画にベクトル地図を使用します。読み込めない場合はオフにして画像地図を使用してください。</string>
+    <string name="vector_map_failed">ベクトル地図を読み込めませんでした。接続を確認して再試行するか、設定でベクトル地図をオフにしてください。</string>
+    <string name="carto_link">CARTO 地図のウェブサイト</string>
 </resources>

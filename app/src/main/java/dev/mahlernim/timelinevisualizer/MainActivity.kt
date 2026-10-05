@@ -283,6 +283,7 @@ class MainActivity : AppCompatActivity() {
     private var videoFormatSupported = true
     private var locationFilterMode = LocationFilterMode.CONSERVATIVE
     private var hideDates = false
+    private var vectorMapExport = true
     private var simplifyRouteDetail = false
     private var routeDurationSeconds = VideoDuration.DEFAULT_SECONDS
     private val applyTitleChanges = Runnable { commitTitlePreferences() }
@@ -3756,6 +3757,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun configureTimelineDisplay() {
+        val vectorPrefs = getSharedPreferences("basemap", MODE_PRIVATE)
+        vectorMapExport = vectorPrefs.getBoolean("vector", !BuildConfig.DEBUG || BuildConfig.CARTO_BASEMAP_API_KEY.isNotBlank())
+        editor.timelineView.useVectorBasemap = vectorMapExport
+        settingsScreen.vectorMapExportSwitch.isChecked = vectorMapExport
+        settingsScreen.vectorMapExportSwitch.setOnCheckedChangeListener { _, checked ->
+            vectorMapExport = checked
+            editor.timelineView.useVectorBasemap = checked
+            vectorPrefs.edit().putBoolean("vector", checked).apply()
+        }
+        editor.cartoLogoLink.setOnClickListener { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://carto.com/"))) }
+
         applyHideDates(settingsViewModel.state.value.hideDates)
         settingsScreen.hideDatesSwitch.isChecked = hideDates
         settingsScreen.hideDatesSwitch.setOnCheckedChangeListener { _, checked ->
@@ -3913,8 +3925,9 @@ class MainActivity : AppCompatActivity() {
         editor.timelineView.onCameraPreparationFailed = { error ->
             Log.e(TAG, "Timeline camera preparation failed", error)
             updateCameraPreparationUi()
-            editor.statusText.setText(R.string.preview_preparation_failed)
-            Snackbar.make(binding.root, R.string.preview_preparation_failed, Snackbar.LENGTH_INDEFINITE)
+            val message = if (error is dev.mahlernim.timelinevisualizer.render.VectorMapException) R.string.vector_map_failed else R.string.preview_preparation_failed
+            editor.statusText.setText(message)
+            Snackbar.make(binding.root, message, Snackbar.LENGTH_INDEFINITE)
                 .setAction(R.string.retry) {
                     editor.statusText.setText(R.string.preparing_preview)
                     editor.timelineView.retryCameraPreparation()
@@ -4288,6 +4301,7 @@ class MainActivity : AppCompatActivity() {
             projectId = project?.id,
             presetName = selectedPreset()?.name,
             dataSource = currentVideoDataSource(),
+            useVectorBasemap = vectorMapExport,
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val request = pendingExport ?: return
@@ -4670,6 +4684,7 @@ class MainActivity : AppCompatActivity() {
         settingsScreen.videoQualityDropdown.isEnabled = !exporting
         settingsScreen.frameRateDropdown.isEnabled = !exporting
         settingsScreen.resetAdvancedSettingsButton.isEnabled = !exporting
+        settingsScreen.vectorMapExportSwitch.isEnabled = !exporting
         settingsScreen.hideDatesSwitch.isEnabled = !exporting
         settingsScreen.simplifyRouteDetailSwitch.isEnabled = !exporting
         settingsScreen.keepPastRoutesVisibleSwitch.isEnabled = !exporting

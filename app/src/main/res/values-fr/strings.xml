@@ -579,4 +579,8 @@
     <string name="keep_past_routes_visible_summary">Affiche les trajets terminés sous forme de trace discrète en arrière-plan. Si cette option est désactivée, les anciens déplacements s’estompent.</string>
     <string name="hide_dates">Masquer les dates</string>
     <string name="hide_dates_summary">Masque les dates dans la vidéo. La distance reste visible.</string>
+    <string name="vector_map">Carte vectorielle</string>
+    <string name="vector_map_summary">Utilise des cartes vectorielles pour les aperçus et les vidéos. Désactivez cette option pour utiliser des cartes sous forme d’images en cas de problème.</string>
+    <string name="vector_map_failed">Impossible de charger la carte vectorielle. Vérifiez la connexion et réessayez, ou désactivez Carte vectorielle dans les paramètres.</string>
+    <string name="carto_link">Site web des cartes CARTO</string>
 </resources>

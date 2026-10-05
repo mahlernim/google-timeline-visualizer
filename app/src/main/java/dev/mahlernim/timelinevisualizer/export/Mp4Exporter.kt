@@ -48,6 +48,7 @@ internal class InsufficientJourneyDataException :
 class Mp4Exporter(
     private val contentResolver: ContentResolver,
     private val tileRepository: TileRepository,
+    private val context: android.content.Context? = null,
 ) {
     @OptIn(UnstableApi::class)
     suspend fun export(
@@ -57,6 +58,7 @@ class Mp4Exporter(
         durationSeconds: Int,
         renderText: RenderText,
         cameraSettings: CameraSettings = CameraSettings.DEFAULT,
+        useVectorBasemap: Boolean = false,
         onProgress: (ExportProgress) -> Unit,
     ): Bitmap = withContext(Dispatchers.Default) {
         if (journey.points.size < 2) throw InsufficientJourneyDataException()
@@ -76,7 +78,7 @@ class Mp4Exporter(
         val (journeyFrameCount, outroFrameCount) = videoFrameCounts(durationSeconds, fps)
         val frameCount = journeyFrameCount + outroFrameCount
 
-        val requiredTiles = requiredTilesForExport(
+        val requiredTiles = if (useVectorBasemap) emptyList() else requiredTilesForExport(
             painter,
             journey,
             width,
@@ -169,8 +171,10 @@ class Mp4Exporter(
             }
         }
 
+        var vector: dev.mahlernim.timelinevisualizer.render.VectorBasemapRenderer? = null
         var exportFailure: Throwable? = null
         try {
+            if (useVectorBasemap) vector = dev.mahlernim.timelinevisualizer.render.VectorBasemapRenderer.create(requireNotNull(context),width,height)
             for (frame in 0 until frameCount) {
                 coroutineContext.ensureActive()
                 val animationFrame = animationFrame(frame, journeyFrameCount, fps)
@@ -180,6 +184,7 @@ class Mp4Exporter(
                 )
 
                 val canvas = Canvas(bitmap)
+                vector?.draw(canvas,painter.viewport(journey,animationFrame,width,height,cameraSettings))
                 painter.draw(
                     canvas,
                     width,
@@ -190,8 +195,10 @@ class Mp4Exporter(
                     title,
                     renderText,
                     cameraSettings,
+                    drawMapBackground = !useVectorBasemap,
                     tiles = preparedTile,
                 )
+                vector?.drawLogo(canvas)
                 bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
                 argbToYuv420(pixels, yuv, width, height, encoder.colorFormat)
                 val input = codec.getInputBuffer(inputIndex) ?: error("Encoder input buffer is unavailable")
@@ -233,8 +240,14 @@ class Mp4Exporter(
             codec.queueInputBuffer(eosInputIndex, 0, 0, fps.timestampUs(frameCount), MediaCodec.BUFFER_FLAG_END_OF_STREAM)
             while (!drain(true)) coroutineContext.ensureActive()
             val overview = Bitmap.createBitmap(overviewWidth, overviewHeight, Bitmap.Config.ARGB_8888)
+            val overviewCanvas = Canvas(overview)
+            if (useVectorBasemap) {
+                vector?.close()
+                vector = dev.mahlernim.timelinevisualizer.render.VectorBasemapRenderer.create(requireNotNull(context),overviewWidth,overviewHeight)
+                vector?.draw(overviewCanvas,painter.viewport(journey,TimelineFrame(1f,1f),overviewWidth,overviewHeight,cameraSettings))
+            }
             painter.draw(
-                Canvas(overview),
+                overviewCanvas,
                 overviewWidth,
                 overviewHeight,
                 journey,
@@ -243,8 +256,10 @@ class Mp4Exporter(
                 title,
                 renderText,
                 cameraSettings,
+                drawMapBackground = !useVectorBasemap,
                 tiles = preparedTile,
             )
+            vector?.drawLogo(overviewCanvas)
             onProgress(ExportProgress(1f, ExportPhase.COMPLETE, 1, 1))
             overview
         } catch (error: Throwable) {
@@ -259,6 +274,12 @@ class Mp4Exporter(
                     val priorFailure = exportFailure ?: cleanupFailure
                     if (priorFailure == null) cleanupFailure = error else priorFailure.addSuppressed(error)
                 }
+            }
+            try {
+                vector?.close()
+            } catch (error: Throwable) {
+                val priorFailure = exportFailure ?: cleanupFailure
+                if (priorFailure == null) cleanupFailure = error else priorFailure.addSuppressed(error)
             }
             cleanUp { codec.stop() }
             cleanUp { codec.release() }

@@ -590,4 +590,8 @@
     <string name="keep_past_routes_visible_summary">지나온 경로를 흐린 배경 선으로 표시합니다. 끄면 오래된 이동 경로가 사라집니다.</string>
     <string name="hide_dates">날짜 숨기기</string>
     <string name="hide_dates_summary">영상에서 날짜를 숨깁니다. 거리는 계속 표시됩니다.</string>
+    <string name="vector_map">벡터 지도</string>
+    <string name="vector_map_summary">미리보기와 동영상에 벡터 지도를 사용합니다. 기기에서 벡터 지도를 불러오기 어려우면 꺼서 이미지 지도를 사용하세요.</string>
+    <string name="vector_map_failed">벡터 지도를 불러오지 못했습니다. 연결을 확인하고 다시 시도하거나 설정에서 벡터 지도를 꺼서 이미지 지도를 사용하세요.</string>
+    <string name="carto_link">CARTO 배경 지도 웹사이트</string>
 </resources>

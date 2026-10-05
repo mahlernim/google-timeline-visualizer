@@ -7,6 +7,9 @@ import android.util.AttributeSet
 import android.view.View
 import dev.mahlernim.timelinevisualizer.data.TileRepository
 import dev.mahlernim.timelinevisualizer.model.Journey
+import dev.mahlernim.timelinevisualizer.render.VectorBasemapRenderer
+import dev.mahlernim.timelinevisualizer.render.VectorMapException
+import kotlinx.coroutines.NonCancellable
 import dev.mahlernim.timelinevisualizer.render.CameraSettings
 import dev.mahlernim.timelinevisualizer.render.TileId
 import dev.mahlernim.timelinevisualizer.render.TimelineAnimation
@@ -39,6 +42,17 @@ class TimelineView @JvmOverloads constructor(
     private val afterNextFrameRendered = mutableListOf<() -> Unit>()
     private var cameraPreparationJob: Job? = null
     private var cameraPreparationGeneration = 0
+    private var vectorRenderer: VectorBasemapRenderer? = null
+    private var vectorRenderJob: Job? = null
+    private var frameRevision = 0L
+
+    var useVectorBasemap: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            restartCameraPreparation()
+            markFrameDirty()
+        }
 
     var onCameraPreparationChanged: ((ready: Boolean) -> Unit)? = null
     var onCameraPreparationFailed: ((error: Throwable) -> Unit)? = null
@@ -103,6 +117,7 @@ class TimelineView @JvmOverloads constructor(
     }
 
     override fun onDetachedFromWindow() {
+        releaseVectorRenderer()
         scope.cancel()
         cameraPreparationJob = null
         frame?.recycle()
@@ -134,6 +149,11 @@ class TimelineView @JvmOverloads constructor(
                 canvas.drawBitmap(it, 0f, 0f, null)
                 notifyFrameRendered()
             }
+            return
+        }
+        if (useVectorBasemap) {
+            if (isCameraReady && vectorRenderJob == null) renderVectorFrame(data)
+            frame?.let { canvas.drawBitmap(it, 0f, 0f, null) }
             return
         }
         val animationFrame = TimelineAnimation.frameAtOverallProgress(progress, journeyDurationSeconds)
@@ -206,6 +226,7 @@ class TimelineView @JvmOverloads constructor(
     }
 
     private fun restartCameraPreparation() {
+        releaseVectorRenderer()
         cameraPreparationJob?.cancel()
         cameraPreparationGeneration += 1
         val generation = cameraPreparationGeneration
@@ -248,6 +269,67 @@ class TimelineView @JvmOverloads constructor(
         }
     }
 
+    private fun renderVectorFrame(data: Journey) {
+        val generation = cameraPreparationGeneration
+        val revision = frameRevision
+        val targetWidth = width
+        val targetHeight = height
+        val duration = journeyDurationSeconds
+        val title = videoTitle
+        val text = renderText
+        val settings = cameraSettings
+        val animation = TimelineAnimation.frameAtOverallProgress(progress, duration)
+        val view = painter.viewport(data, animation, targetWidth, targetHeight, settings)
+        // Only one snapshot is in flight. A newer progress value queues the next frame,
+        // rather than cancelling every snapshot during playback.
+        vectorRenderJob = scope.launch(start = kotlinx.coroutines.CoroutineStart.LAZY) {
+            var next: Bitmap? = null
+            try {
+                val renderer = vectorRenderer ?: VectorBasemapRenderer.create(context, targetWidth, targetHeight)
+                    .also { vectorRenderer = it }
+                next = Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(next)
+                renderer.draw(canvas, view)
+                coroutineContext.ensureActive()
+                if (generation != cameraPreparationGeneration) return@launch
+                painter.draw(canvas, targetWidth, targetHeight, data, animation, duration, title, text, settings,
+                    drawMapBackground = false, tiles = { null })
+                frame?.recycle()
+                frame = next
+                frameCanvas = canvas
+                next = null
+                frameDirty = revision != frameRevision
+                notifyFrameRendered()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                if (generation == cameraPreparationGeneration) {
+                    setCameraReady(false)
+                    onCameraPreparationFailed?.invoke(VectorMapException())
+                }
+            } finally {
+                next?.recycle()
+                if (generation == cameraPreparationGeneration) {
+                    vectorRenderJob = null
+                    postInvalidateOnAnimation()
+                }
+            }
+        }
+        vectorRenderJob?.start()
+    }
+
+    private fun releaseVectorRenderer() {
+        val job = vectorRenderJob
+        job?.cancel()
+        vectorRenderJob = null
+        val renderer = vectorRenderer
+        vectorRenderer = null
+        if (renderer != null) scope.launch(NonCancellable + Dispatchers.Main.immediate) {
+            job?.join()
+            renderer.close()
+        }
+    }
+
     private fun setCameraReady(ready: Boolean) {
         if (isCameraReady == ready) return
         isCameraReady = ready
@@ -266,6 +348,7 @@ class TimelineView @JvmOverloads constructor(
     }
 
     private fun markFrameDirty() {
+        frameRevision += 1
         frameDirty = true
         if (redrawPosted) return
         redrawPosted = true

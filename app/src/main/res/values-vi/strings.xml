@@ -623,4 +623,8 @@
     </plurals>
     <string name="hide_dates">Ẩn ngày tháng</string>
     <string name="hide_dates_summary">Ẩn ngày tháng trong video. Khoảng cách vẫn hiển thị.</string>
+    <string name="vector_map">Bản đồ vectơ</string>
+    <string name="vector_map_summary">Dùng bản đồ vectơ cho bản xem trước và video. Tắt để dùng bản đồ dạng ảnh nếu thiết bị không tải được.</string>
+    <string name="vector_map_failed">Không thể tải bản đồ vectơ. Kiểm tra kết nối rồi thử lại hoặc tắt Bản đồ vectơ trong Cài đặt để dùng bản đồ dạng ảnh.</string>
+    <string name="carto_link">Trang web bản đồ nền CARTO</string>
 </resources>

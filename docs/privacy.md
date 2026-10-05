@@ -2,7 +2,7 @@
 
 [한국어](privacy.ko.md) · [日本語](privacy.ja.md)
 
-**Effective date:** August 27, 2026
+**Effective date:** October 5, 2026
 
 **Developer:** MahlerLab
 
@@ -36,7 +36,7 @@ excluded from Android backup and device transfer. Generated videos are written
 through Android's media storage interfaces. On Android 10 and later, completed MP4
 files are saved through MediaStore under
 `Movies/Timeline Visualizer`. Android 8 and 9 use the system Save As picker.
-Cached basemap image tiles remain in the app's temporary cache for no more than
+Cached basemap vector and image resources remain in the app's temporary cache for no more than
 30 days. The app deletes older tiles automatically. They can also be removed by
 clearing the app cache or uninstalling the app.
 
@@ -69,7 +69,9 @@ so video references and preview images are not copied to another device.
 
 ## Network use
 
-The app requests raster map tiles from CARTO. Those requests contain standard
+The app requests vector map tiles, styles, fonts, and sprites from CARTO. The optional
+image-map fallback requests raster tiles. Requests include the app package name
+and signing certificate fingerprint to authenticate the Android key. Tile requests contain standard
 zoom/x/y tile identifiers and normal network metadata such as an IP address and
 user agent. Tile identifiers correspond to geographic areas in the selected
 Timeline and may reveal those areas to CARTO. Before the first Timeline is loaded,

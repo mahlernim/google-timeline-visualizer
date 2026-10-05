@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
     <cloud-backup>
+        <exclude domain="file" path="mbgl-offline.db" />
+        <exclude domain="file" path="mbgl-offline.db-shm" />
+        <exclude domain="file" path="mbgl-offline.db-wal" />
         <exclude domain="file" path="timeline-imports/" />
         <exclude domain="file" path="creation-thumbnails/" />
         <exclude domain="file" path="pending-video-export.bin" />
@@ -19,6 +22,9 @@
         <exclude domain="sharedpref" path="trips_lab.xml" />
     </cloud-backup>
     <device-transfer>
+        <exclude domain="file" path="mbgl-offline.db" />
+        <exclude domain="file" path="mbgl-offline.db-shm" />
+        <exclude domain="file" path="mbgl-offline.db-wal" />
         <exclude domain="file" path="timeline-imports/" />
         <exclude domain="file" path="creation-thumbnails/" />
         <exclude domain="file" path="pending-video-export.bin" />

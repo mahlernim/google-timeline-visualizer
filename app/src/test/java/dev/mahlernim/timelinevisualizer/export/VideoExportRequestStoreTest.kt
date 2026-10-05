@@ -75,11 +75,13 @@ class VideoExportRequestStoreTest {
             projectId = "trip-123",
             presetName = "Cinematic",
             dataSource = VideoDataSource.RAW,
+            useVectorBasemap = true,
         )
 
         store.save(request)
         val restored = VideoExportRequestStore(context).load()!!
 
+        assertEquals(true, restored.useVectorBasemap)
         assertEquals(request.outputUri, restored.outputUri)
         assertEquals(request.title, restored.title)
         assertEquals(request.durationSeconds, restored.durationSeconds)
@@ -90,6 +92,22 @@ class VideoExportRequestStoreTest {
         assertEquals(request.presetName, restored.presetName)
         assertEquals(VideoDataSource.RAW, restored.dataSource)
         assertEquals(request.journey.points, restored.journey.points)
+    }
+
+    @Test
+    fun version17RequestsKeepRasterAfterUpgrade() {
+        store.save(VideoExportRequest(
+            outputUri = "content://documents/legacy.mp4",
+            journey = Journey.from(emptyList(), 2026),
+            title = "Legacy",
+            durationSeconds = 30,
+            useVectorBasemap = true,
+        ))
+        val file = File(context.filesDir, "pending-video-export.bin")
+        val bytes = file.readBytes().dropLast(1).toByteArray()
+        java.nio.ByteBuffer.wrap(bytes).putInt(17)
+        file.writeBytes(bytes)
+        assertEquals(false, store.load()!!.useVectorBasemap)
     }
 
     @Test

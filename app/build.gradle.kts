@@ -4,7 +4,7 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
-val cartoBasemapApiKey = providers.environmentVariable("CARTO_BASEMAP_API_KEY")
+val cartoBasemapApiKey = providers.environmentVariable("CARTO_ANDROID_BASEMAP_API_KEY")
     .getOrElse("")
     .replace("\\", "\\\\")
     .replace("\"", "\\\"")
@@ -17,8 +17,8 @@ android {
         applicationId = "dev.mahlernim.timelinevisualizer"
         minSdk = 26
         targetSdk = 36
-        versionCode = 60
-        versionName = "3.0.18"
+        versionCode = 65
+        versionName = "3.1.0"
         manifestPlaceholders["appLabel"] = "@string/app_name"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -43,6 +43,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Manual authenticated smoke builds use the existing release identity.
+            if (providers.gradleProperty("signedDeviceTests").isPresent) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -99,6 +105,8 @@ room {
 }
 
 dependencies {
+    implementation("org.maplibre.gl:android-sdk-opengl:13.6.1")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("androidx.activity:activity-ktx:1.12.4")
     implementation("androidx.core:core-ktx:1.18.0")
