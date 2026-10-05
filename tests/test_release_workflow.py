@@ -59,8 +59,8 @@ def test_release_workflow_uses_production_version_when_flavors_override_it() -> 
 def test_release_workflow_requires_the_carto_project_key() -> None:
     workflow = WORKFLOW.read_text(encoding="utf-8")
 
-    assert "CARTO_BASEMAP_API_KEY: ${{ secrets.CARTO_BASEMAP_API_KEY }}" in workflow
-    assert 'test -n "$CARTO_BASEMAP_API_KEY"' in workflow
+    assert "CARTO_ANDROID_BASEMAP_API_KEY: ${{ secrets.CARTO_ANDROID_BASEMAP_API_KEY }}" in workflow
+    assert 'test -n "$CARTO_ANDROID_BASEMAP_API_KEY"' in workflow
 
 
 def test_repository_normalizes_text_without_touching_release_binaries() -> None:

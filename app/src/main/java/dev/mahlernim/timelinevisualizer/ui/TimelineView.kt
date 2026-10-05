@@ -280,24 +280,18 @@ class TimelineView @JvmOverloads constructor(
         val settings = cameraSettings
         val animation = TimelineAnimation.frameAtOverallProgress(progress, duration)
         val view = painter.viewport(data, animation, targetWidth, targetHeight, settings)
+        val canvas = frameCanvas ?: return
         // Only one snapshot is in flight. A newer progress value queues the next frame,
         // rather than cancelling every snapshot during playback.
         vectorRenderJob = scope.launch(start = kotlinx.coroutines.CoroutineStart.LAZY) {
-            var next: Bitmap? = null
             try {
                 val renderer = vectorRenderer ?: VectorBasemapRenderer.create(context, targetWidth, targetHeight)
                     .also { vectorRenderer = it }
-                next = Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.ARGB_8888)
-                val canvas = Canvas(next)
                 renderer.draw(canvas, view)
                 coroutineContext.ensureActive()
                 if (generation != cameraPreparationGeneration) return@launch
                 painter.draw(canvas, targetWidth, targetHeight, data, animation, duration, title, text, settings,
                     drawMapBackground = false, tiles = { null })
-                frame?.recycle()
-                frame = next
-                frameCanvas = canvas
-                next = null
                 frameDirty = revision != frameRevision
                 notifyFrameRendered()
             } catch (cancelled: CancellationException) {
@@ -308,7 +302,6 @@ class TimelineView @JvmOverloads constructor(
                     onCameraPreparationFailed?.invoke(VectorMapException())
                 }
             } finally {
-                next?.recycle()
                 if (generation == cameraPreparationGeneration) {
                     vectorRenderJob = null
                     postInvalidateOnAnimation()

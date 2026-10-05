@@ -30,6 +30,16 @@ class VectorMapPolicyTest {
         }
     }
 
+    @Test fun worldViewsClipPolesWithoutNegativeNativeZoom() {
+        val geometry = VectorBasemapRenderer.snapshotGeometry(Viewport(-.4, 1.4, -.4, 1.4, 0), 720)
+        assertEquals(0.0, geometry.viewport.minY, 0.0)
+        assertEquals(1.0, geometry.viewport.maxY, 0.0)
+        assertTrue(geometry.width >= 512 * 1.8)
+        assertTrue(geometry.height <= 513)
+        val portrait = VectorBasemapRenderer.snapshotGeometry(Viewport(.1, .9, -.5, 1.5, 0), 720)
+        assertEquals(900, portrait.height)
+    }
+
     @Test fun reuseRejectsUncoveredPanAndZoomChanges() {
         val view = Viewport(.45, .55, .45, .55, 8)
         val cached = VectorBasemapRenderer.expanded(view)
