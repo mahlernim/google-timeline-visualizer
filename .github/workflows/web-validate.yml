@@ -31,7 +31,8 @@ jobs:
           run_install: false
       - uses: actions/setup-node@v5
         with:
-          node-version: "24"
+          node-version: "^24.22.1"
+          check-latest: true
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile

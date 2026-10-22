@@ -84,6 +84,9 @@ Cancel waits for resource cleanup before another job can start.
 
 ## Development and deployment
 
+Use Node.js 24.22.1 or a newer 24.x release and pnpm 11.19.0. CI checks for the
+latest 24.x release at or above that security baseline.
+
 ```sh
 cd web
 pnpm install --frozen-lockfile

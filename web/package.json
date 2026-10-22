@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": "^24.22.1"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/check-web-build.mjs",
