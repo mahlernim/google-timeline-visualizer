@@ -573,4 +573,5 @@
     <string name="vector_map_summary">在预览和视频中使用矢量地图。如果设备无法加载，请关闭此选项以使用图像地图。</string>
     <string name="vector_map_failed">无法加载矢量地图。请检查网络后重试，或在设置中关闭矢量地图以使用图像地图。</string>
     <string name="carto_link">CARTO 底图网站</string>
+    <string name="trip_time_zone">行程时区</string>
 </resources>

@@ -5,6 +5,7 @@ import androidx.core.content.edit
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.LocalDate
+import java.time.ZoneId
 import java.util.UUID
 
 class TripsStore(context: Context) {
@@ -23,6 +24,7 @@ class TripsStore(context: Context) {
         end: LocalDate,
         kind: TripKind,
         titleMode: ProjectTitleMode = ProjectTitleMode.CUSTOM,
+        tripZone: ZoneId = ZoneId.systemDefault(),
     ): TripProject = TripProject(
         id = UUID.randomUUID().toString(),
         title = title.trim().ifBlank { defaultTitle(kind, start) },
@@ -31,6 +33,7 @@ class TripsStore(context: Context) {
         kind = kind,
         createdAtMillis = System.currentTimeMillis(),
         titleMode = titleMode,
+        tripZone = tripZone,
     ).also(::upsert)
 
     fun remove(id: String) {
@@ -58,6 +61,7 @@ class TripsStore(context: Context) {
                 put("kind", project.kind.name)
                 put("createdAtMillis", project.createdAtMillis)
                 put("titleMode", project.titleMode.name)
+                put("tripZone", project.tripZone.id)
             })
         }
         preferences.edit { putString(KEY_PROJECTS, array.toString()) }
@@ -81,6 +85,7 @@ class TripsStore(context: Context) {
                         endDate = end,
                         kind = kind,
                         createdAtMillis = item.optLong("createdAtMillis", 0L),
+                        tripZone = runCatching { ZoneId.of(item.getString("tripZone")) }.getOrElse { ZoneId.systemDefault() },
                         titleMode = runCatching {
                             ProjectTitleMode.valueOf(item.optString("titleMode"))
                         }.getOrDefault(ProjectTitleMode.CUSTOM),

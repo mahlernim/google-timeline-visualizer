@@ -158,6 +158,7 @@ import dev.mahlernim.timelinevisualizer.ui.AppLanguage
 import dev.mahlernim.timelinevisualizer.ui.LocationFilterPreferences
 import dev.mahlernim.timelinevisualizer.ui.SelectionArrayAdapter
 import dev.mahlernim.timelinevisualizer.ui.SettingsViewModel
+import dev.mahlernim.timelinevisualizer.ui.showTripZonePicker
 import dev.mahlernim.timelinevisualizer.ui.TimelineDisplayPreferences
 import dev.mahlernim.timelinevisualizer.videos.GeneratedMediaRepository
 import dev.mahlernim.timelinevisualizer.videos.VideoMedia
@@ -282,6 +283,7 @@ class MainActivity : AppCompatActivity() {
     private var distanceUnitPreference = DistanceUnitPreference.KILOMETERS
     private var videoFormatSupported = true
     private var locationFilterMode = LocationFilterMode.CONSERVATIVE
+    private var tripZone = ZoneId.systemDefault()
     private var hideDates = false
     private var vectorMapExport = true
     private var simplifyRouteDetail = false
@@ -419,6 +421,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        savedInstanceState?.getString(STATE_TRIP_ZONE)?.let { tripZone = ZoneId.of(it) }
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         exportTrayBaseBottomMargin = (binding.exportStatusTray.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
@@ -786,6 +789,7 @@ class MainActivity : AppCompatActivity() {
         outState.putString(STATE_PLAYER_URI, playerUri?.toString())
         outState.putLong(STATE_PLAYER_POSITION, playerPositionMs)
         outState.putBoolean(STATE_PLAYER_PLAYING, playerPlayWhenReady)
+        outState.putString(STATE_TRIP_ZONE, tripZone.id)
         outState.putBoolean(STATE_DRAFT_HIDE_DATES, hideDates)
         outState.putString(STATE_DRAFT_CAMERA, cameraSettings.cameraMovement.name)
         outState.putString(STATE_DRAFT_PACING, cameraSettings.longTripCompression.name)
@@ -920,6 +924,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun resetCreateEntry() {
+        applyTripZone(ZoneId.systemDefault())
         applyHideDates(settingsViewModel.state.value.hideDates)
         currentCreateStep = CreateStep.TYPE
         activeProjectId = null
@@ -1372,7 +1377,10 @@ class MainActivity : AppCompatActivity() {
             editor.detectionCustomRangeButton.isEnabled = !tripDetectionRunning
             renderTripSuggestions()
         }
-        if (isProject) updateProjectDateLabel()
+        if (isProject) {
+            editor.tripZoneButton.text = getString(R.string.preset_value_format, getString(R.string.trip_time_zone), tripZone.id)
+            updateProjectDateLabel()
+        }
         updateRawDataAvailability()
         if (isPreview) editor.previewSettingsSummary.text = currentVideoSettingsSummary()
     }
@@ -1385,7 +1393,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun selectedJournalRangeReady(): Boolean = currentProjectDates()?.let { (start, end) ->
-        val zone = ZoneId.systemDefault()
+        val zone = tripZone
         journalRouteCovers(
             start.atStartOfDay(zone).toInstant(),
             end.plusDays(1).atStartOfDay(zone).toInstant(),
@@ -1493,7 +1501,7 @@ class MainActivity : AppCompatActivity() {
             CreateStep.PROJECT -> {
                 if (BuildConfig.IS_JOURNAL_LAB) {
                     val dates = currentProjectDates()
-                    val zone = ZoneId.systemDefault()
+                    val zone = tripZone
                     val routeReady = dates?.let { (start, end) ->
                         journalRouteCovers(
                             start.atStartOfDay(zone).toInstant(),
@@ -1536,7 +1544,7 @@ class MainActivity : AppCompatActivity() {
             card.tripBadge.setText(R.string.trip_badge)
             card.tripTitle.text = project.title
             card.tripDetails.text = projectDisplayRange(project)
-            showTripCoverage(card, coverageFor(project.startDate, project.endDate))
+            showTripCoverage(card, coverageFor(project.startDate, project.endDate, project.tripZone))
             card.tripPrimaryButton.setText(R.string.use_trip)
             card.tripPrimaryButton.setOnClickListener { openProject(project) }
             card.root.setOnClickListener { openProject(project) }
@@ -1983,7 +1991,7 @@ class MainActivity : AppCompatActivity() {
             onComplete?.invoke(JournalRouteLoadOutcome.READY)
             return
         }
-        val zone = ZoneId.systemDefault()
+        val zone = tripZone
         val requestedStart = startDate.atStartOfDay(zone).toInstant()
         val requestedEndExclusive = endDateInclusive.plusDays(1).atStartOfDay(zone).toInstant()
         if (journalRouteCovers(requestedStart, requestedEndExclusive)) {
@@ -2229,10 +2237,10 @@ class MainActivity : AppCompatActivity() {
         renderTimeline = timeline
         val loaded = timeline
         if (loaded != null) {
-            val period = TimelinePeriod.sameYear(loaded.years.first())
+            val period = TimelinePeriod.sameYear(loaded.yearsIn(tripZone).first())
             configureYears(
                 loaded = loaded,
-                initialJourney = route.journeyForRange(period),
+                initialJourney = route.journeyForRange(period, tripZone),
                 ignoredCount = 0,
                 availableYears = semanticDateBounds()?.let { (start, end) ->
                     (start.year..end.year).toList().sortedDescending()
@@ -2288,11 +2296,11 @@ class MainActivity : AppCompatActivity() {
                 timeline = loaded
                 renderTimeline = loaded
                 tripSuggestions = refreshRequestedTripSuggestions(loaded)
-                val period = rawSignalsPeriod() ?: TimelinePeriod.sameYear(loaded.years.first())
+                val period = rawSignalsPeriod() ?: TimelinePeriod.sameYear(loaded.yearsIn(tripZone).first())
                 pendingImportCompletionUri = uri
                 configureYears(
                     loaded,
-                    loaded.forRange(period),
+                    loaded.forRange(period, tripZone),
                     result.rejectedCount,
                     startInRawMode = true,
                 )
@@ -2812,7 +2820,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun formatPointRange(points: List<GeoPoint>): String {
         if (points.isEmpty()) return getString(R.string.timeline_range_unavailable)
-        val zone = ZoneId.systemDefault()
+        val zone = tripZone
         return formatTimelineRange(
             points.minOf { it.instant }.atZone(zone).toLocalDate(),
             points.maxOf { it.instant }.atZone(zone).toLocalDate(),
@@ -2822,13 +2830,13 @@ class MainActivity : AppCompatActivity() {
     private fun prepareTimeline(loaded: Timeline): PreparedTimeline {
         val filtered = LocationOutlierFilter.filter(loaded.points, locationFilterMode)
         val rendered = if (filtered.points === loaded.points) loaded else Timeline(filtered.points)
-        val initialPeriod = TimelinePeriod.sameYear(loaded.years.first())
-        val initialJourney = rendered.forRange(initialPeriod)
+        val initialPeriod = TimelinePeriod.sameYear(loaded.yearsIn(tripZone).first())
+        val initialJourney = rendered.forRange(initialPeriod, tripZone)
         return PreparedTimeline(
             source = loaded,
             render = rendered,
             initialJourney = initialJourney,
-            ignoredCount = (loaded.countForRange(initialPeriod) - initialJourney.points.size).coerceAtLeast(0),
+            ignoredCount = (loaded.countForRange(initialPeriod, tripZone) - initialJourney.points.size).coerceAtLeast(0),
         )
     }
 
@@ -2837,22 +2845,10 @@ class MainActivity : AppCompatActivity() {
         initialJourney: Journey,
         ignoredCount: Int,
         startInRawMode: Boolean = false,
-        availableYears: List<Int> = loaded.years,
+        availableYears: List<Int> = loaded.yearsIn(tripZone),
     ) {
-        val years = availableYears.ifEmpty { loaded.years }
-        val labels = years.map { NumberFormat.getIntegerInstance().apply { isGroupingUsed = false }.format(it) }
-        editor.startYearDropdown.setAdapter(SelectionArrayAdapter(this, labels))
-        editor.endYearDropdown.setAdapter(SelectionArrayAdapter(this, labels))
-        makeDropdownOpenReliably(editor.startYearDropdown)
-        makeDropdownOpenReliably(editor.endYearDropdown)
-        editor.startYearDropdown.setOnItemClickListener { _, _, position, _ ->
-            selectedStartYear = years[position]
-            normalizeRange(changedStart = true)
-        }
-        editor.endYearDropdown.setOnItemClickListener { _, _, position, _ ->
-            selectedEndYear = years[position]
-            normalizeRange(changedStart = false)
-        }
+        val years = availableYears.ifEmpty { loaded.yearsIn(tripZone) }
+        configureYearDropdowns(years)
         selectedStartYear = years.first()
         selectedEndYear = years.first()
         exactDateRangeEnabled = false
@@ -2870,11 +2866,27 @@ class MainActivity : AppCompatActivity() {
         updateResolvedTitle()
     }
 
+    private fun configureYearDropdowns(years: List<Int>) {
+        val labels = years.map { NumberFormat.getIntegerInstance().apply { isGroupingUsed = false }.format(it) }
+        editor.startYearDropdown.setAdapter(SelectionArrayAdapter(this, labels))
+        editor.endYearDropdown.setAdapter(SelectionArrayAdapter(this, labels))
+        makeDropdownOpenReliably(editor.startYearDropdown)
+        makeDropdownOpenReliably(editor.endYearDropdown)
+        editor.startYearDropdown.setOnItemClickListener { _, _, position, _ ->
+            selectedStartYear = years[position]
+            normalizeRange(changedStart = true)
+        }
+        editor.endYearDropdown.setOnItemClickListener { _, _, position, _ ->
+            selectedEndYear = years[position]
+            normalizeRange(changedStart = false)
+        }
+    }
+
     private fun selectRange() {
         if (BuildConfig.IS_JOURNAL_LAB) {
             val requestedDates = currentProjectDates()
             if (requestedDates != null) {
-                val zone = ZoneId.systemDefault()
+                val zone = tripZone
                 val requestedStart = requestedDates.first.atStartOfDay(zone).toInstant()
                 val requestedEnd = requestedDates.second.plusDays(1).atStartOfDay(zone).toInstant()
                 if (!journalRouteCovers(requestedStart, requestedEnd)) {
@@ -2893,9 +2905,10 @@ class MainActivity : AppCompatActivity() {
                 route.journeyForDateRange(
                     start = selectedStartDate ?: return,
                     endInclusive = selectedEndDate ?: return,
+                    zone = tripZone,
                 )
             } else {
-                route.journeyForRange(period)
+                route.journeyForRange(period, tripZone)
             }
             applySelectedJourney(selected, ignoredCount = 0)
             return
@@ -2903,9 +2916,9 @@ class MainActivity : AppCompatActivity() {
         if (rawSignalsEnabled) {
             val period = rawSignalsPeriod() ?: return
             val selected = if (exactDateRangeEnabled && selectedStartDate != null && selectedEndDate != null) {
-                renderRawSignalsTimeline?.forDateRange(selectedStartDate!!, selectedEndDate!!)
+                renderRawSignalsTimeline?.forDateRange(selectedStartDate!!, selectedEndDate!!, tripZone)
             } else {
-                renderRawSignalsTimeline?.forRange(period)
+                renderRawSignalsTimeline?.forRange(period, tripZone)
             } ?: Journey.from(emptyList(), period)
             applySelectedJourney(selected, rawSignalProcessing?.rejectedCount ?: 0)
             return
@@ -2914,14 +2927,14 @@ class MainActivity : AppCompatActivity() {
         val selected = if (exactDateRangeEnabled) {
             val start = selectedStartDate ?: return
             val end = selectedEndDate ?: return
-            renderTimeline?.forDateRange(start, end)
+            renderTimeline?.forDateRange(start, end, tripZone)
         } else {
-            renderTimeline?.forRange(period)
+            renderTimeline?.forRange(period, tripZone)
         } ?: return
         val unfilteredCount = if (exactDateRangeEnabled) {
-            timeline?.countForDateRange(selectedStartDate ?: return, selectedEndDate ?: return)
+            timeline?.countForDateRange(selectedStartDate ?: return, selectedEndDate ?: return, tripZone)
         } else {
-            timeline?.countForRange(period)
+            timeline?.countForRange(period, tripZone)
         }
         val ignoredCount = ((unfilteredCount ?: selected.points.size) - selected.points.size).coerceAtLeast(0)
         applySelectedJourney(selected, ignoredCount)
@@ -3038,6 +3051,33 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun applyTripZone(zone: ZoneId) {
+        if (tripZone == zone) return
+        tripZone = zone
+        editor.timelineView.renderText = currentRenderText()
+        val bounds = if (BuildConfig.IS_JOURNAL_LAB) semanticDateBounds() else null
+        val years = bounds?.let { (first, last) -> (last.year downTo first.year).toList() }
+            ?: timeline?.yearsIn(zone).orEmpty()
+        if (years.isNotEmpty()) configureYearDropdowns(years)
+    }
+
+    private fun changeProjectZone(zone: ZoneId) {
+        if (tripZone == zone) return
+        applyTripZone(zone)
+        val (first, last) = activeDateBounds()
+        val start = activeStartDate?.coerceIn(first, last) ?: first
+        val end = activeEndDate?.coerceIn(start, last) ?: last
+        val dates = when (activeProjectKind) {
+            TripKind.MONTHLY_RECAP -> RecapPeriodRules.monthly(YearMonth.from(start), YearMonth.from(end))
+            TripKind.YEARLY_RECAP -> RecapPeriodRules.yearly(start.year, end.year)
+            else -> start to end
+        }
+        activeStartDate = dates.first
+        activeEndDate = dates.second
+        if (timeline != null) applyActiveProjectDates() else prepareActiveProjectRoute()
+        renderCreateStep()
+    }
+
     private fun configureExactDates() {
         editor.exactDateSwitch.setOnCheckedChangeListener { _, checked ->
             exactDateRangeEnabled = checked
@@ -3048,6 +3088,9 @@ class MainActivity : AppCompatActivity() {
             updateResolvedTitle()
             selectRange()
             if (currentCreateStep == CreateStep.PROJECT) updateProjectDateLabel()
+        }
+        editor.tripZoneButton.setOnClickListener {
+            showTripZonePicker(tripZone, ::changeProjectZone)
         }
         editor.exactDateRangeButton.setOnClickListener { showExactDatePicker() }
         editor.rawSignalsSwitch.setOnCheckedChangeListener { _, checked ->
@@ -3098,7 +3141,7 @@ class MainActivity : AppCompatActivity() {
     private fun rawSignalsPeriod(): TimelinePeriod? {
         val points = renderRawSignalsTimeline?.points ?: return null
         if (points.isEmpty()) return null
-        val zone = ZoneId.systemDefault()
+        val zone = tripZone
         return TimelinePeriod(
             YearMonth.from(points.first().instant.atZone(zone)),
             YearMonth.from(points.last().instant.atZone(zone)),
@@ -3157,7 +3200,7 @@ class MainActivity : AppCompatActivity() {
 
     internal fun rawDataAvailability(points: List<GeoPoint>): String {
         if (points.isEmpty()) return getString(R.string.raw_data_unavailable)
-        val zone = ZoneId.systemDefault()
+        val zone = tripZone
         val first = points.minOf { it.instant }.atZone(zone).toLocalDate()
         val last = points.maxOf { it.instant }.atZone(zone).toLocalDate()
         val date = formatExactDate(first)
@@ -4673,6 +4716,7 @@ class MainActivity : AppCompatActivity() {
         editor.endMonthDropdown.isEnabled = !exporting
         editor.exactDateSwitch.isEnabled = !exporting
         editor.rawSignalsSwitch.isEnabled = !exporting
+        editor.tripZoneButton.isEnabled = !exporting
         editor.exactDateRangeButton.isEnabled = !exporting
         editor.ownerInput.isEnabled = !exporting
         editor.titleInput.isEnabled = !exporting
@@ -4876,12 +4920,14 @@ class MainActivity : AppCompatActivity() {
         TripDetector.detect(
             timeline = loaded,
             request = TripDetectionRequest(start, end),
+            zone = tripZone,
             nameResolver = OfflineDestinationNameResolver(applicationContext),
         ).filterNot { it.id in dismissed }
     }
 
     private fun startManualProject(kind: TripKind) {
-        val zone = ZoneId.systemDefault()
+        applyTripZone(ZoneId.systemDefault())
+        val zone = tripZone
         val bounds = if (kind == TripKind.RAW_DATA) rawDateBounds() else semanticDateBounds()
         if (bounds == null) return
         val latest = bounds.second
@@ -4992,7 +5038,7 @@ class MainActivity : AppCompatActivity() {
         })
         card.tripTitle.text = project.title
         card.tripDetails.text = "${projectDisplayRange(project)} · ${getString(R.string.videos_count, videos.size)}"
-        if (project.kind == TripKind.TRIP) showTripCoverage(card, coverageFor(project.startDate, project.endDate))
+        if (project.kind == TripKind.TRIP) showTripCoverage(card, coverageFor(project.startDate, project.endDate, project.tripZone))
         card.tripPrimaryButton.setText(R.string.create_video_for_trip)
         card.tripPrimaryButton.setOnClickListener { openProject(project) }
         card.tripMenuButton.visibility = View.VISIBLE
@@ -5080,18 +5126,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun coverageFor(start: LocalDate, end: LocalDate): TripCoverage? =
+    private fun coverageFor(start: LocalDate, end: LocalDate, zone: ZoneId = tripZone): TripCoverage? =
         if (BuildConfig.IS_JOURNAL_LAB) {
-            val zone = ZoneId.systemDefault()
             val rangeLoaded = journalRouteCovers(
                 start.atStartOfDay(zone).toInstant(),
                 end.plusDays(1).atStartOfDay(zone).toInstant(),
             )
             activeJournalRoute?.takeIf { rangeLoaded }?.let { route ->
-                TripCoverageCalculator.calculateConnected(route.connectedTimelines(), start, end)
+                TripCoverageCalculator.calculateConnected(route.connectedTimelines(), start, end, zone)
             }
         } else {
-            (renderTimeline ?: timeline)?.let { TripCoverageCalculator.calculate(it, start, end) }
+            (renderTimeline ?: timeline)?.let { TripCoverageCalculator.calculate(it, start, end, zone) }
         }
 
     private fun showTripCoverage(card: ItemTripBinding, coverage: TripCoverage?) {
@@ -5116,13 +5161,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun addRecapCandidates(projects: List<TripProject>) {
         val loaded = timeline ?: return
-        val zone = ZoneId.systemDefault()
+        val zone = tripZone
         val latestAvailableMonth = loaded.points.maxOfOrNull { YearMonth.from(it.instant.atZone(zone)) } ?: return
         val currentMonth = YearMonth.now(zone)
         val latestMonth = if (latestAvailableMonth >= currentMonth) currentMonth.minusMonths(1) else latestAvailableMonth
         val monthlyStart = latestMonth.atDay(1)
         val monthlyEnd = latestMonth.atEndOfMonth()
-        val monthlyHasData = loaded.forRange(TimelinePeriod(latestMonth, latestMonth)).points.isNotEmpty()
+        val monthlyHasData = loaded.forRange(TimelinePeriod(latestMonth, latestMonth), tripZone).points.isNotEmpty()
         if (monthlyHasData && projects.none { it.kind == TripKind.MONTHLY_RECAP && it.startDate == monthlyStart }) {
             addRecapCandidate(
                 title = suggestedProjectTitle(TripKind.MONTHLY_RECAP, monthlyStart, monthlyEnd),
@@ -5131,7 +5176,7 @@ class MainActivity : AppCompatActivity() {
                 kind = TripKind.MONTHLY_RECAP,
             )
         }
-        loaded.years.take(2).forEach { year ->
+        loaded.yearsIn(tripZone).take(2).forEach { year ->
             val start = LocalDate.of(year, 1, 1)
             if (projects.none { it.kind == TripKind.YEARLY_RECAP && it.startDate == start }) {
                 addRecapCandidate(
@@ -5151,7 +5196,7 @@ class MainActivity : AppCompatActivity() {
         card.tripDetails.text = projectDateRange(start, end)
         card.tripPrimaryButton.setText(R.string.create_video_for_trip)
         card.tripPrimaryButton.setOnClickListener {
-            openProject(tripsStore.create(title, start, end, kind, ProjectTitleMode.AUTOMATIC))
+            openProject(tripsStore.create(title, start, end, kind, ProjectTitleMode.AUTOMATIC, tripZone))
         }
         home.recapsList.addView(card.root)
     }
@@ -5179,6 +5224,7 @@ class MainActivity : AppCompatActivity() {
         ?: getString(R.string.suggested_trip_title)
 
     private fun openProject(project: TripProject) {
+        applyTripZone(project.tripZone)
         activeProjectId = project.id
         activeSuggestionId = null
         activeProjectKind = project.kind
@@ -5395,7 +5441,7 @@ class MainActivity : AppCompatActivity() {
     private fun semanticDateBounds(): Pair<LocalDate, LocalDate>? {
         if (rawOnlyImport) return null
         val points = timeline?.points.orEmpty()
-        val zone = ZoneId.systemDefault()
+        val zone = tripZone
         if (points.isNotEmpty()) {
             val loadedStart = points.minOf { it.instant }
             val loadedEnd = points.maxOf { it.instant }
@@ -5421,27 +5467,28 @@ class MainActivity : AppCompatActivity() {
     private fun rawDateBounds(): Pair<LocalDate, LocalDate>? {
         val points = renderRawSignalsTimeline?.points.orEmpty()
         if (points.isEmpty()) return null
-        val zone = ZoneId.systemDefault()
+        val zone = tripZone
         return points.minOf { it.instant }.atZone(zone).toLocalDate() to
             points.maxOf { it.instant }.atZone(zone).toLocalDate()
     }
 
     private fun activeDateBounds(): Pair<LocalDate, LocalDate> =
         (if (!BuildConfig.IS_JOURNAL_LAB && activeProjectKind == TripKind.RAW_DATA) rawDateBounds() else semanticDateBounds())
-            ?: ((selectedStartDate ?: LocalDate.now()) to (selectedEndDate ?: LocalDate.now()))
+            ?: ((selectedStartDate ?: LocalDate.now(tripZone)) to (selectedEndDate ?: LocalDate.now(tripZone)))
 
     private fun saveActiveProject(asNew: Boolean): TripProject? {
         val (start, end) = currentProjectDates() ?: return null
         val title = editor.projectTitleInput.text?.toString().orEmpty()
         val existing = if (!asNew) activeProjectId?.let { id -> tripsStore.list().firstOrNull { it.id == id } } else null
         val saved = if (existing == null) {
-            tripsStore.create(title, start, end, activeProjectKind, activeProjectTitleMode)
+            tripsStore.create(title, start, end, activeProjectKind, activeProjectTitleMode, tripZone)
         } else {
             existing.copy(
                 title = title.trim().ifBlank { existing.title },
                 startDate = start,
                 endDate = end,
                 titleMode = activeProjectTitleMode,
+                tripZone = tripZone,
             ).also(tripsStore::upsert)
         }
         activeProjectId = saved.id
@@ -5680,7 +5727,7 @@ class MainActivity : AppCompatActivity() {
         val message = if (snapshot == null) {
             record.presetName ?: getString(R.string.settings_unavailable)
         } else {
-            presetValueSummary(
+            val style = presetValueSummary(
                 PresetValues(
                     snapshot.aspectRatio,
                     snapshot.cameraMovement,
@@ -5693,7 +5740,12 @@ class MainActivity : AppCompatActivity() {
                 R.string.preset_value_format,
                 getString(R.string.resolution),
                 snapshotResolutionLabel(snapshot),
-            ) + if (snapshot.hideDates) "\n" + getString(R.string.hide_dates) else ""
+            )
+            listOfNotNull(
+                style,
+                snapshot.tripZoneId?.let { getString(R.string.preset_value_format, getString(R.string.trip_time_zone), it) },
+                getString(R.string.hide_dates).takeIf { snapshot.hideDates },
+            ).joinToString("\n")
         }
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.settings_details)
@@ -5723,6 +5775,7 @@ class MainActivity : AppCompatActivity() {
                 exportShortEdge = cameraSettings.effectiveExportFormat.shortEdge,
                 exportFrameRate = cameraSettings.effectiveExportFormat.frameRate.toString(),
                 hideDates = hideDates,
+                tripZoneId = tripZone.id,
             ),
         ),
     )
@@ -6176,6 +6229,7 @@ class MainActivity : AppCompatActivity() {
             datePattern = getString(R.string.render_date_pattern),
             distanceUnit = distanceUnit.symbol,
             attribution = getString(R.string.map_attribution),
+            tripZone = tripZone,
             distanceScale = distanceUnit.kilometersMultiplier,
             hideDates = hideDates,
         )
@@ -6231,7 +6285,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     internal fun journalRouteCoversForTest(start: LocalDate, end: LocalDate): Boolean {
-        val zone = ZoneId.systemDefault()
+        val zone = tripZone
         return journalRouteCovers(
             start.atStartOfDay(zone).toInstant(),
             end.plusDays(1).atStartOfDay(zone).toInstant(),
@@ -6347,6 +6401,7 @@ class MainActivity : AppCompatActivity() {
         private const val PROJECT_ACTION_EDIT = 1
         private const val PROJECT_ACTION_DELETE = 2
         private const val STATE_VIDEO_TITLE_EDITED = "video_title_edited_v2"
+        private const val STATE_TRIP_ZONE = "trip_zone"
         private const val STATE_DRAFT_HIDE_DATES = "draft_hide_dates"
         private const val STATE_DRAFT_DURATION = "draft_duration_v2"
         private const val STATE_SETTINGS_RETURN_TO_CREATE = "settings_return_to_create_v3"

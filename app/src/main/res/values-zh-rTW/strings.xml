@@ -573,4 +573,5 @@
     <string name="vector_map_summary">在預覽和影片中使用向量地圖。如果裝置無法載入，請關閉此選項以使用影像地圖。</string>
     <string name="vector_map_failed">無法載入向量地圖。請檢查網路後重試，或在設定中關閉向量地圖以使用影像地圖。</string>
     <string name="carto_link">CARTO 底圖網站</string>
+    <string name="trip_time_zone">行程時區</string>
 </resources>

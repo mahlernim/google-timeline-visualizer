@@ -104,6 +104,7 @@ class VideoStoreTest {
             exportShortEdge = 1440,
             exportFrameRate = "59.94",
             hideDates = true,
+            tripZoneId = "Asia/Tokyo",
         )
         store.upsert(record("content://trip", "Tokyo", 300L).copy(settingsSnapshot = snapshot))
 

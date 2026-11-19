@@ -7,8 +7,11 @@ import android.net.Uri
 import android.os.Looper
 import android.view.View
 import android.widget.AutoCompleteTextView
+import android.widget.ListView
+import android.widget.SearchView
 import android.widget.TextView
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.datepicker.MaterialDatePicker
 import androidx.test.core.app.ApplicationProvider
 import dev.mahlernim.timelinevisualizer.data.TimelineSourceStore
 import dev.mahlernim.timelinevisualizer.journal.JournalOnboardingStore
@@ -25,7 +28,10 @@ import dev.mahlernim.timelinevisualizer.trips.TripSuggestion
 import dev.mahlernim.timelinevisualizer.videos.VideoDataSource
 import java.io.File
 import java.time.Instant
+import dev.mahlernim.timelinevisualizer.ui.TimelineView
 import java.time.LocalDate
+import java.time.ZoneId
+import java.util.TimeZone
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -421,6 +427,46 @@ class JournalLabUiTest {
 
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.projectStepGroup).visibility)
         assertTrue(activity.findViewById<View>(R.id.wizardContinueButton).isEnabled)
+    }
+
+    @Test
+    fun tripZoneControlsPickerBoundsAndPreviewAcrossNewYear() {
+        val previous = TimeZone.getDefault()
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+            val activity = launchActivity()
+            val start = Instant.parse("2027-01-01T00:10:00Z")
+            val file = rawTimeline("new-year", 37.5, -122.0, start.toString())
+            activity.importTimeline(Uri.fromFile(file))
+            waitForImportedRoute(activity)
+            activity.startManualProjectForTest(TripKind.TRIP)
+            val december = LocalDate.of(2026, 12, 31)
+            assertFalse(activity.applyExactDateRange(december, december))
+
+            activity.findViewById<View>(R.id.tripZoneButton).performClick()
+            val dialog = requireNotNull(ShadowDialog.getLatestDialog())
+            dialog.findViewById<SearchView>(R.id.zoneSearch).setQuery("los angeles", false)
+            val choices = dialog.findViewById<ListView>(R.id.zones)
+            assertEquals("America/Los_Angeles", choices.getItemAtPosition(0))
+            choices.performItemClick(null, 0, 0L)
+            activity.findViewById<View>(R.id.exactDateRangeButton).performClick()
+            activity.supportFragmentManager.executePendingTransactions()
+            val calendar = activity.supportFragmentManager.findFragmentByTag("exact-date-range") as MaterialDatePicker<*>
+            val utcMidnight = Instant.parse("2026-12-31T00:00:00Z").toEpochMilli()
+            assertEquals(androidx.core.util.Pair(utcMidnight, utcMidnight), calendar.selection)
+            calendar.dismissNow()
+            assertTrue(activity.applyExactDateRange(december, december))
+            assertFalse(activity.applyExactDateRange(december.plusDays(1), december.plusDays(1)))
+            waitUntil { activity.currentJourneyPoints().size == 2 && activity.journalRouteCoversForTest(december, december) }
+
+            val preview = activity.findViewById<TimelineView>(R.id.timelineView).renderText
+            TimeZone.setDefault(TimeZone.getTimeZone("Asia/Tokyo"))
+            assertEquals(ZoneId.of("America/Los_Angeles"), preview.tripZone)
+            assertTrue(preview.formatSubtitle(start, 1.0).contains("December 2026"))
+            assertEquals(listOf(start, start.plusSeconds(600)), activity.currentJourneyPoints().map { it.instant })
+        } finally {
+            TimeZone.setDefault(previous)
+        }
     }
 
     @Test

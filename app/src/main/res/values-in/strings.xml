@@ -633,4 +633,5 @@
     <string name="vector_map_summary">Gunakan peta vektor untuk pratinjau dan video. Nonaktifkan untuk menggunakan peta gambar jika perangkat kesulitan memuatnya.</string>
     <string name="vector_map_failed">Peta vektor tidak dapat dimuat. Periksa koneksi dan coba lagi, atau nonaktifkan Peta vektor di Setelan untuk menggunakan peta gambar.</string>
     <string name="carto_link">Situs peta dasar CARTO</string>
+    <string name="trip_time_zone">Zona waktu perjalanan</string>
 </resources>

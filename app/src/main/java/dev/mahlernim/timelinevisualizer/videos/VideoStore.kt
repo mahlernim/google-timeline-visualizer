@@ -27,6 +27,7 @@ data class VideoSettingsSnapshot(
     val exportShortEdge: Int? = null,
     val exportFrameRate: String? = null,
     val hideDates: Boolean = false,
+    val tripZoneId: String? = null,
 )
 
 data class VideoRecord(
@@ -103,6 +104,7 @@ class VideoStore(private val context: Context) : VideoRecordRepository {
                         put("resolution", snapshot.resolution.name)
                         put("dataSource", snapshot.dataSource.name)
                         put("hideDates", snapshot.hideDates)
+                        snapshot.tripZoneId?.let { put("tripZone", it) }
                         snapshot.exportShortEdge?.let { put("exportShortEdge", it) }
                         snapshot.exportFrameRate?.let { put("exportFrameRate", it) }
                     })
@@ -168,6 +170,7 @@ class VideoStore(private val context: Context) : VideoRecordRepository {
             exportShortEdge = optionalPositiveInt("exportShortEdge"),
             exportFrameRate = optString("exportFrameRate").takeIf(String::isNotBlank),
             hideDates = optBoolean("hideDates", false),
+            tripZoneId = optString("tripZone").takeIf(String::isNotBlank),
         )
     }.getOrNull()
 

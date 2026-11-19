@@ -14,10 +14,28 @@ import org.robolectric.annotation.Config
 import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.ZoneId
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class JourneyTest {
+    @Test
+    fun exactDaysIncludeBothRepeatedHoursAtTheEndOfDaylightSavingTime() {
+        val zone = ZoneId.of("America/New_York")
+        val day = LocalDate.of(2026, 11, 1)
+        val points = listOf(
+            "2026-11-01T03:59:59Z",
+            "2026-11-01T04:00:00Z",
+            "2026-11-01T05:30:00Z",
+            "2026-11-01T06:30:00Z",
+            "2026-11-02T04:59:59Z",
+            "2026-11-02T05:00:00Z",
+        ).map { GeoPoint(Instant.parse(it), 0.0, 0.0) }
+        val timeline = Timeline(points)
+        assertEquals(points.subList(1, 5), timeline.forDateRange(day, day, zone).points)
+        assertEquals(4, timeline.countForDateRange(day, day, zone))
+    }
+
     @Test
     fun sectionsPreserveRouteBreaksWithoutAddingMissingDistance() {
         val firstSection = listOf(
