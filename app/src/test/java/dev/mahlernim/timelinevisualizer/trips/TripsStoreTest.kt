@@ -3,6 +3,7 @@ package dev.mahlernim.timelinevisualizer.trips
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import java.time.LocalDate
+import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
@@ -30,6 +31,7 @@ class TripsStoreTest {
             LocalDate.parse("2026-04-02"),
             LocalDate.parse("2026-04-06"),
             TripKind.TRIP,
+            tripZone = ZoneId.of("Asia/Tokyo"),
         )
         store.dismissSuggestion("suggestion-1")
 
@@ -76,5 +78,6 @@ class TripsStoreTest {
 
         assertEquals(ProjectTitleMode.CUSTOM, restored.titleMode)
         assertEquals("My recap", restored.title)
+        assertEquals(ZoneId.systemDefault(), restored.tripZone)
     }
 }

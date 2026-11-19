@@ -18,6 +18,7 @@ import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.File
 import java.time.Instant
+import java.time.ZoneId
 import dev.mahlernim.timelinevisualizer.videos.VideoDataSource
 
 data class VideoExportRequest(
@@ -102,6 +103,7 @@ class VideoExportRequestStore internal constructor(
                 output.writeDouble(episode.destination.longitude)
             }
             output.writeBoolean(request.useVectorBasemap)
+            output.writeUTF(request.renderText.tripZone.id)
         }
         if (!temporaryFile.renameTo(requestFile)) {
             temporaryFile.copyTo(requestFile, overwrite = true)
@@ -262,6 +264,8 @@ class VideoExportRequestStore internal constructor(
                 } else {
                     emptyList()
                 }
+                val useVectorBasemap = version >= 18 && input.readBoolean()
+                val tripZone = if (version >= 19) ZoneId.of(input.readUTF()) else ZoneId.systemDefault()
                 VideoExportRequest(
                     outputUri = outputUri,
                     journey = Journey.fromBreakIndices(
@@ -276,12 +280,12 @@ class VideoExportRequestStore internal constructor(
                     ),
                     title = title,
                     durationSeconds = durationSeconds,
-                    renderText = renderText,
+                    renderText = renderText.copy(tripZone = tripZone),
                     cameraSettings = cameraSettings,
                     projectId = projectId,
                     presetName = presetName,
                     dataSource = dataSource,
-                    useVectorBasemap = if (version >= 18) input.readBoolean() else false,
+                    useVectorBasemap = useVectorBasemap,
                 )
             }
         }.getOrNull()
@@ -294,7 +298,7 @@ class VideoExportRequestStore internal constructor(
     }
 
     companion object {
-        private const val CURRENT_FILE_VERSION = 18
+        private const val CURRENT_FILE_VERSION = 19
         private const val MAX_POINT_COUNT = 2_000_000
         private const val MAX_SEMANTIC_EPISODE_COUNT = 100_000
         private const val REQUEST_FILE = "pending-video-export.bin"

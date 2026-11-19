@@ -646,4 +646,5 @@
     <string name="vector_map_summary">Use vector maps for previews and videos. Turn off for image maps if your device has trouble loading vectors.</string>
     <string name="vector_map_failed">The vector map could not load. Check your connection and retry, or turn off Vector map in Settings to use image maps.</string>
     <string name="carto_link">CARTO basemaps website</string>
+    <string name="trip_time_zone">Trip time zone</string>
 </resources>

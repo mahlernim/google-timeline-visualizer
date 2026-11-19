@@ -580,4 +580,5 @@
     <string name="vector_map_summary">プレビューと動画にベクトル地図を使用します。読み込めない場合はオフにして画像地図を使用してください。</string>
     <string name="vector_map_failed">ベクトル地図を読み込めませんでした。接続を確認して再試行するか、設定でベクトル地図をオフにしてください。</string>
     <string name="carto_link">CARTO 地図のウェブサイト</string>
+    <string name="trip_time_zone">旅行のタイムゾーン</string>
 </resources>

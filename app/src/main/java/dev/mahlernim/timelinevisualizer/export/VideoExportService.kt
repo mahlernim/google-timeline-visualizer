@@ -297,6 +297,7 @@ class VideoExportService : Service() {
                     exportShortEdge = request.cameraSettings.effectiveExportFormat.shortEdge,
                     exportFrameRate = request.cameraSettings.effectiveExportFormat.frameRate.toString(),
                     hideDates = request.renderText.hideDates,
+                    tripZoneId = request.renderText.tripZone.id,
                 ),
             ),
         )

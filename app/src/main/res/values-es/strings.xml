@@ -583,4 +583,5 @@
     <string name="vector_map_summary">Usa mapas vectoriales en vistas previas y vídeos. Desactívalo para usar mapas de imagen si no se cargan en tu dispositivo.</string>
     <string name="vector_map_failed">No se pudo cargar el mapa vectorial. Comprueba la conexión y reintenta, o desactiva Mapa vectorial en Ajustes para usar mapas de imagen.</string>
     <string name="carto_link">Sitio web de mapas de CARTO</string>
+    <string name="trip_time_zone">Zona horaria del viaje</string>
 </resources>

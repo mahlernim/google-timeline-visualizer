@@ -627,4 +627,5 @@
     <string name="vector_map_summary">Dùng bản đồ vectơ cho bản xem trước và video. Tắt để dùng bản đồ dạng ảnh nếu thiết bị không tải được.</string>
     <string name="vector_map_failed">Không thể tải bản đồ vectơ. Kiểm tra kết nối rồi thử lại hoặc tắt Bản đồ vectơ trong Cài đặt để dùng bản đồ dạng ảnh.</string>
     <string name="carto_link">Trang web bản đồ nền CARTO</string>
+    <string name="trip_time_zone">Múi giờ chuyến đi</string>
 </resources>

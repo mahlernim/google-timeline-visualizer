@@ -581,4 +581,5 @@
     <string name="vector_map_summary">Vektorkarten für Vorschau und Videos verwenden. Bei Ladeproblemen deaktivieren, um Bildkarten zu verwenden.</string>
     <string name="vector_map_failed">Die Vektorkarte konnte nicht geladen werden. Verbindung prüfen und erneut versuchen oder Vektorkarte in den Einstellungen deaktivieren.</string>
     <string name="carto_link">CARTO-Kartenwebsite</string>
+    <string name="trip_time_zone">Zeitzone der Reise</string>
 </resources>

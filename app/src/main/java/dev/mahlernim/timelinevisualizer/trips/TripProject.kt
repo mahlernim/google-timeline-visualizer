@@ -1,6 +1,7 @@
 package dev.mahlernim.timelinevisualizer.trips
 
 import java.time.LocalDate
+import java.time.ZoneId
 
 enum class TripKind { TRIP, MONTHLY_RECAP, YEARLY_RECAP, CUSTOM_RECAP, RAW_DATA }
 
@@ -16,6 +17,7 @@ data class TripProject(
     val kind: TripKind,
     val createdAtMillis: Long,
     val titleMode: ProjectTitleMode = ProjectTitleMode.CUSTOM,
+    val tripZone: ZoneId = ZoneId.systemDefault(),
 )
 data class TripSuggestion(
     val id: String,

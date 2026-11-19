@@ -37,7 +37,13 @@ data class Timeline(
         }
         ordered
     }
-    val years: List<Int> = points.asSequence().map { it.year }.distinct().sortedDescending().toList()
+    private val importZone = ZoneId.systemDefault()
+    val years: List<Int> = collectYears(importZone)
+
+    fun yearsIn(zone: ZoneId): List<Int> = if (zone == importZone) years else collectYears(zone)
+
+    private fun collectYears(zone: ZoneId): List<Int> =
+        points.asSequence().map { it.instant.atZone(zone).year }.distinct().sortedDescending().toList()
 
     fun forYear(year: Int): Journey {
         return forRange(year, Month.JANUARY.value, Month.DECEMBER.value)
@@ -53,8 +59,7 @@ data class Timeline(
         )
     }
 
-    fun forRange(period: TimelinePeriod): Journey {
-        val zone = ZoneId.systemDefault()
+    fun forRange(period: TimelinePeriod, zone: ZoneId = ZoneId.systemDefault()): Journey {
         val selected = if (chronological) {
             chronologicalRange(
                 lowerMatches = { point -> yearMonth(point, zone) >= period.start },
@@ -69,8 +74,7 @@ data class Timeline(
         return Journey.from(selected, period)
     }
 
-    fun countForRange(period: TimelinePeriod): Int {
-        val zone = ZoneId.systemDefault()
+    fun countForRange(period: TimelinePeriod, zone: ZoneId = ZoneId.systemDefault()): Int {
         return points.count {
             val date = it.instant.atZone(zone)
             val month = YearMonth.of(date.year, date.monthValue)
@@ -78,9 +82,8 @@ data class Timeline(
         }
     }
 
-    fun forDateRange(start: LocalDate, endInclusive: LocalDate): Journey {
+    fun forDateRange(start: LocalDate, endInclusive: LocalDate, zone: ZoneId = ZoneId.systemDefault()): Journey {
         require(endInclusive >= start)
-        val zone = ZoneId.systemDefault()
         val selected = if (chronological) {
             chronologicalRange(
                 lowerMatches = { point -> point.instant.atZone(zone).toLocalDate() >= start },
@@ -98,9 +101,8 @@ data class Timeline(
         )
     }
 
-    fun countForDateRange(start: LocalDate, endInclusive: LocalDate): Int {
+    fun countForDateRange(start: LocalDate, endInclusive: LocalDate, zone: ZoneId = ZoneId.systemDefault()): Int {
         require(endInclusive >= start)
-        val zone = ZoneId.systemDefault()
         return points.count {
             val date = it.instant.atZone(zone).toLocalDate()
             date >= start && date <= endInclusive

@@ -17,6 +17,7 @@ import dev.mahlernim.timelinevisualizer.render.TripDetection
 import dev.mahlernim.timelinevisualizer.render.VideoQuality
 import java.time.Instant
 import java.time.YearMonth
+import java.time.ZoneId
 import java.io.DataOutputStream
 import java.io.File
 import org.junit.After
@@ -63,6 +64,7 @@ class VideoExportRequestStoreTest {
                 "attribution",
                 distanceScale = 0.621371192237334,
                 hideDates = true,
+                tripZone = ZoneId.of("Pacific/Auckland"),
             ),
             cameraSettings = CameraSettings(
                 cameraMovement = CameraMovement.FIXED,
@@ -95,18 +97,27 @@ class VideoExportRequestStoreTest {
     }
 
     @Test
-    fun version17RequestsKeepRasterAfterUpgrade() {
+    fun legacyRequestsKeepTheirMapSettingAndUseTheDeviceZone() {
         store.save(VideoExportRequest(
             outputUri = "content://documents/legacy.mp4",
             journey = Journey.from(emptyList(), 2026),
             title = "Legacy",
             durationSeconds = 30,
+            renderText = RenderText.ENGLISH.copy(tripZone = ZoneId.of("UTC")),
             useVectorBasemap = true,
         ))
         val file = File(context.filesDir, "pending-video-export.bin")
-        val bytes = file.readBytes().dropLast(1).toByteArray()
-        java.nio.ByteBuffer.wrap(bytes).putInt(17)
-        file.writeBytes(bytes)
+        // Version 18 ended at the map flag, before the length-prefixed "UTC" field.
+        val version18 = file.readBytes().dropLast(2 + 3).toByteArray()
+        java.nio.ByteBuffer.wrap(version18).putInt(18)
+        file.writeBytes(version18)
+        val restored = requireNotNull(store.load())
+        assertEquals(true, restored.useVectorBasemap)
+        assertEquals(ZoneId.systemDefault(), restored.renderText.tripZone)
+
+        val version17 = version18.copyOf(version18.size - 1)
+        java.nio.ByteBuffer.wrap(version17).putInt(17)
+        file.writeBytes(version17)
         assertEquals(false, store.load()!!.useVectorBasemap)
     }
 

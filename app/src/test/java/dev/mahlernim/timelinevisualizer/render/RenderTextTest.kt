@@ -10,14 +10,14 @@ class RenderTextTest {
 
     @Test
     fun hiddenDatesLeaveOnlyLocalizedDistanceWithoutASeparator() {
-        assertEquals("August 2025  ·  123 km", RenderText.ENGLISH.formatSubtitle(august2025, 123.0))
+        assertEquals("August 2025  ·  123 km", RenderText.ENGLISH.formatSubtitle(august2025.toInstant(), 123.0))
         val hidden = RenderText.ENGLISH.copy(hideDates = true)
-        assertEquals("123 km", hidden.formatSubtitle(august2025, 123.0))
-        assertEquals("0 km", hidden.formatSubtitle(august2025, 0.0))
+        assertEquals("123 km", hidden.formatSubtitle(august2025.toInstant(), 123.0))
+        assertEquals("0 km", hidden.formatSubtitle(august2025.toInstant(), 0.0))
         assertEquals("62 mi", hidden.copy(distanceUnit = "mi", distanceScale = DistanceUnit.MILES.kilometersMultiplier)
-            .formatSubtitle(august2025, 100.0))
+            .formatSubtitle(august2025.toInstant(), 100.0))
         assertEquals("123 km", hidden.copy(localeTag = "ja", datePattern = "yyyy年M月")
-            .formatSubtitle(august2025, 123.0))
+            .formatSubtitle(august2025.toInstant(), 123.0))
     }
 
     @Test

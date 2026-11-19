@@ -16,7 +16,6 @@ import dev.mahlernim.timelinevisualizer.model.MutableRenderSampleLocation
 import dev.mahlernim.timelinevisualizer.model.WebMercator
 import dev.mahlernim.timelinevisualizer.model.WorldPoint
 import java.time.Duration
-import java.time.ZoneId
 import java.util.Locale
 import kotlin.math.floor
 import kotlin.math.ln
@@ -1282,7 +1281,7 @@ class TimelinePainter {
         }
         canvas.drawText(fittedTitle, card.centerX(), 72f * scale, titlePaint)
         canvas.drawText(
-            renderText.formatSubtitle(position.point.instant.atZone(ZoneId.systemDefault()), position.knownDistanceKm),
+            renderText.formatSubtitle(position.point.instant, position.knownDistanceKm),
             card.centerX(),
             108f * scale,
             bodyPaint,
