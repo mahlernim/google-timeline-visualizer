@@ -274,6 +274,8 @@
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="middle"
             android:text="@string/trip_time_zone" />
 
         <TextView
